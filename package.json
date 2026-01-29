@@ -1,0 +1,37 @@
+{
+  "name": "localess-js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "workspaces": [
+    "packages/*",
+    "playgrounds/*"
+  ],
+  "scripts": {
+    "build": "npm run build:client && npm run build:react",
+    "build:client": "npm run build --workspace=@localess/client",
+    "build:react": "npm run build --workspace=@localess/react"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lessify/localess-js.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Lessify/localess-js/issues"
+  },
+  "homepage": "https://github.com/Lessify/localess-js#readme",
+  "peerDependencies": {
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "tsup": "^8.5.1",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">= 20.0.0"
+  }
+}
