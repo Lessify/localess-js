@@ -8,7 +8,8 @@
     "playgrounds/*"
   ],
   "scripts": {
-    "build": "npm run build:client && npm run build:react",
+    "build": "npm run build:client && npm run build:react && npm run build:cli",
+    "build:cli": "npm run build --workspace=@localess/cli",
     "build:client": "npm run build --workspace=@localess/client",
     "build:react": "npm run build --workspace=@localess/react"
   },

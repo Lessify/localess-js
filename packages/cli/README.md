@@ -6,7 +6,7 @@
 
 ----
 
-# Localess JavaScript / TypeScript Client SDK
+# Localess Command Line
 
 This client SDK is designed to work with the Localess API. It provides a simple way to interact with the Localess API from your JavaScript or TypeScript application.
 
@@ -18,18 +18,18 @@ This client SDK is designed to work with the Localess API. It provides a simple 
 
 ### NPM
 ````bash
-npm install @localess/client@latest
+npm install @localess/js-client@latest
 ````
 
 ### Yarn
 ````bash
-yarn add @localess/client@latest
+yarn add @localess/js-client@latest
 ````
 
 ## Client
 
 ````ts
-import {localessClient} from "@localess/client";
+import {localessClient} from "@localess/js-client";
 
 const llClient = localessClient({
   // A fully qualified domain name with protocol (http/https) and port.
@@ -55,7 +55,7 @@ llClient.getTranslations('en')
 It will automatically inject Localess Sync Script in to the HTML page.
 
 ````ts
-import {loadLocalessSync} from "@localess/client";
+import {loadLocalessSync} from "@localess/js-client";
 
 // A fully qualified domain name with protocol (http/https) and port.
 loadLocalessSync('https://my-localess.web.app')

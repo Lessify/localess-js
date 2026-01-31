@@ -12,14 +12,14 @@
     "typescript"
   ],
   "author": "Lessify",
-  "homepage": "https://github.com/Lessify/localess-react",
+  "homepage": "https://github.com/Lessify/localess-js",
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Lessify/localess-react.git"
+    "url": "git+https://github.com/Lessify/localess-js.git"
   },
   "bugs": {
-    "url": "https://github.com/Lessify/localess-react/issues"
+    "url": "https://github.com/Lessify/localess-js/issues"
   },
   "files": [
     "dist"

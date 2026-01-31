@@ -1,5 +1,5 @@
 import {FG_BLUE, RESET} from "./utils";
-import {Content, ContentAsset, ContentData, Links, Translations} from "./models";
+import {Content, ContentAsset, ContentData, Links, Space, Translations} from "./models";
 import {ICache, NoCache, TTLCache} from "./cache";
 import {OpenAPIObject} from "openapi3-ts/oas30";
 
@@ -75,6 +75,11 @@ export type ContentFetchParams = {
 
 export interface LocalessClient {
   /**
+   * Get space information
+   * @returns {Promise<Space>}
+   */
+  getSpace(): Promise<Space>
+  /**
    * Get all links
    * @param params{LinksFetchParams} - Fetch parameters
    * @returns {Promise<Links>}
@@ -138,6 +143,40 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
   const cache: ICache<any> = options.cacheTTL === false ? new NoCache<any>() : new TTLCache<any>(options.cacheTTL);
 
   return {
+
+    async getSpace(): Promise<Space> {
+      if (options.debug) {
+        console.log(LOG_GROUP, 'getSpace()');
+      }
+      let url = `${options.origin}/api/v1/spaces/${options.spaceId}?token=${options.token}`;
+      if (options.debug) {
+        console.log(LOG_GROUP, 'getSpace fetch url : ', url);
+      }
+
+      // Check if response is in cache
+      if (cache.has(url)) {
+        if (options.debug) {
+          console.log(LOG_GROUP, 'getSpace cache hit');
+        }
+        return cache.get(url) as Space;
+      }
+
+      try {
+        const response = await fetch(url, fetchOptions)
+        if (options.debug) {
+          console.log(LOG_GROUP, 'getSpace status : ', response.status);
+        }
+        const data = await response.json();
+
+        // Store response in cache
+        cache.set(url, data);
+
+        return data as Space;
+      } catch (error) {
+        console.error(LOG_GROUP, 'getSpace error : ', error);
+        return {} as Space;
+      }
+    },
 
     async getLinks(params?: LinksFetchParams): Promise<Links> {
       if (options.debug) {
