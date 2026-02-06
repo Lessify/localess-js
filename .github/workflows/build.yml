@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build all packages
+      run: npm run build
+
+    - name: Verify build outputs
+      run: |
+        test -f packages/client/dist/index.js || (echo "Client CJS build missing" && exit 1)
+        test -f packages/client/dist/index.mjs || (echo "Client ESM build missing" && exit 1)
+        test -f packages/client/dist/index.d.ts || (echo "Client types missing" && exit 1)
+        test -f packages/react/dist/index.js || (echo "React CJS build missing" && exit 1)
+        test -f packages/react/dist/index.mjs || (echo "React ESM build missing" && exit 1)
+        test -f packages/react/dist/index.d.ts || (echo "React types missing" && exit 1)
+        test -f packages/cli/dist/index.js || (echo "CLI CJS build missing" && exit 1)
+        test -f packages/cli/dist/index.mjs || (echo "CLI ESM build missing" && exit 1)
+        test -f packages/cli/dist/index.d.ts || (echo "CLI types missing" && exit 1)
+        echo "All build outputs verified successfully"

@@ -8,5 +8,4 @@ export * from './content-rich-text';
 export * from './links';
 export * from './locale';
 export * from './references';
-export * from './space';
 export * from './translations';
