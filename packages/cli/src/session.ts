@@ -95,3 +95,14 @@ export async function persistSession(data:SessionOptions) {
     throw new Error('Cannot persist session: missing required fields.');
   }
 }
+
+export async function clearSession() {
+  // Write empty JSON to the file
+  try {
+    await access(CREDENTIALS_PATH)
+    await writeFile(CREDENTIALS_PATH, '{}', { mode: 0o600 });
+  }
+  catch (error) {
+    throw new Error('Failed to clear session credentials.');
+  }
+}
