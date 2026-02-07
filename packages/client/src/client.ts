@@ -1,7 +1,6 @@
 import {FG_BLUE, RESET} from "./utils";
 import {Content, ContentAsset, ContentData, Links, Translations} from "./models";
 import {ICache, NoCache, TTLCache} from "./cache";
-import {OpenAPIObject} from "openapi3-ts/oas30";
 
 export type LocalessClientOptions = {
   /**
@@ -102,12 +101,6 @@ export interface LocalessClient {
    * @param locale{string} - Locale identifier (ISO 639-1)
    */
   getTranslations(locale: string): Promise<Translations>;
-
-  /**
-   * Get OpenAPI specification
-   * Requires Token with Development Tools permission
-   */
-  getOpenApi(): Promise<OpenAPIObject>
 
   syncScriptUrl(): string
 
@@ -310,39 +303,6 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       } catch (error: any) {
         console.error(LOG_GROUP, 'getTranslations error : ', error);
         return {} as Translations;
-      }
-    },
-
-    async getOpenApi(): Promise<OpenAPIObject> {
-      if (options.debug) {
-        console.log(LOG_GROUP, 'getOpenApi()');
-      }
-      let url = `${options.origin}/api/v1/spaces/${options.spaceId}/open-api?token=${options.token}`;
-      if (options.debug) {
-        console.log(LOG_GROUP, 'getOpenApi fetch url : ', url);
-      }
-
-      // Check if response is in cache
-      if (cache.has(url)) {
-        if (options.debug) {
-          console.log(LOG_GROUP, 'getTranslations cache hit');
-        }
-        return cache.get(url) as OpenAPIObject;
-      }
-
-      try {
-        const response = await fetch(url, fetchOptions)
-        if (options.debug) {
-          console.log(LOG_GROUP, 'getOpenApi status : ', response.status);
-        }
-        const data = await response.json();
-        // Store response in cache
-        cache.set(url, data);
-
-        return data as OpenAPIObject;
-      } catch (error) {
-        console.error(LOG_GROUP, 'getOpenApi error : ', error);
-        return {} as OpenAPIObject;
       }
     },
 
