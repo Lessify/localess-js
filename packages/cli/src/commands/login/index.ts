@@ -39,6 +39,9 @@ export const loginCommand = new Command('login')
       } catch (e) {
         console.error('Login failed');
       }
+    } else if(session.isLoggedIn && session.method === 'env') {
+      console.log('Already logged in with environment variables.');
+      console.log('If you want to log in with different credentials, Please provide all required options: --origin, --space, and --token');
     } else {
       console.log('Please provide all required options: --origin, --space, and --token');
       console.log('Or set the following environment variables: LOCALESS_ORIGIN, LOCALESS_SPACE, and LOCALESS_TOKEN');

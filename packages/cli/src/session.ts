@@ -15,9 +15,9 @@ export type SessionOptions = {
 };
 
 export type Session = {
-  token?: string;
-  space?: string;
-  origin?: string;
+  token: string;
+  space: string;
+  origin: string;
   isLoggedIn: true;
   method?: 'env' | 'file';
 } | {
@@ -39,7 +39,7 @@ export async function getSession(): Promise<Session> {
 
   // If all required data is present, mark the session as logged in
   if (token && space && origin) {
-    console.log(`Login in using environment variables.`);
+    console.debug(`Login in using environment variables.`);
     return {
       isLoggedIn: true,
       space: space,
@@ -58,7 +58,7 @@ export async function getSession(): Promise<Session> {
       return session;
     }
     if (parsedContent.origin && parsedContent.token && parsedContent.space) {
-      console.log(`Login in using credentials file.`);
+      console.debug(`Login in using credentials file.`);
       return {
         isLoggedIn: true,
         space: parsedContent.space,
@@ -70,7 +70,7 @@ export async function getSession(): Promise<Session> {
   } catch (e) {
     console.error('No credentials found. Please log in using the "localess login" command.');
   }
-  console.log('Not logged in.');
+  console.debug('Not logged in.');
   return session;
 }
 
