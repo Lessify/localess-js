@@ -1,6 +1,5 @@
 import {afterEach, beforeEach, describe, it} from 'vitest';
 import {typesCommand} from "./index";
-import {clearSession} from "../../session";
 
 describe('types command', () => {
   beforeEach(() => {

@@ -1,7 +1,12 @@
 import {Command} from "commander";
 import {localessClient} from "../../client";
 import {getSession} from "../../session";
-import {compile} from 'json-schema-to-typescript'
+import openapiTS, { astToString } from "openapi-typescript";
+import {join} from "node:path";
+import process from "node:process";
+import {DEFAULT_CONFIG_DIR, writeToFile} from "../../file";
+
+const TYPES_PATH = join(process.cwd(), DEFAULT_CONFIG_DIR, 'localess.d.ts');
 
 type TypesOptions = {
 
@@ -24,11 +29,19 @@ export const typesCommand = new Command('types')
       token: session.token,
     });
 
+    console.log('Fetching OpenAPI specification from Localess...');
     const specification = await client.getOpenApi();
-
+    console.log('Generating types from OpenAPI specification...');
     try {
-      const dts = await compile(specification.components?.schemas || {}, 'OpenAPI')
-      console.log(dts);
+      const minimalSpec = {
+        openapi: '3.0.0',
+        info: { title: 'Schemas Only', version: '1.0.0' },
+        components: { schemas: specification.components?.schemas || {} },
+      };
+      const ast =  await openapiTS(minimalSpec, {exportType: true, rootTypes: true, rootTypesNoSchemaPrefix: true})
+      const contents = astToString(ast);
+      await writeToFile(TYPES_PATH, contents);
+      console.log(`Types generated successfully at ${TYPES_PATH}`);
     } catch (e) {
       console.error(e);
     }

@@ -1,6 +1,7 @@
-import {access, readFile, mkdir, writeFile} from 'node:fs/promises';
-import {join, parse} from 'node:path';
+import {access, readFile} from 'node:fs/promises';
+import {join} from 'node:path';
 import * as process from "node:process";
+import {DEFAULT_CONFIG_DIR, writeToFile} from "./file";
 
 export type SessionData = {
   token: string;
@@ -24,7 +25,7 @@ export type Session = {
   isLoggedIn: false;
 }
 
-const CREDENTIALS_PATH = join(process.cwd(), '.localess', 'credentials.json');
+const CREDENTIALS_PATH = join(process.cwd(), DEFAULT_CONFIG_DIR, 'credentials.json');
 
 export async function getSession(): Promise<Session> {
   // Session creation logic here
@@ -76,21 +77,9 @@ export async function getSession(): Promise<Session> {
 
 export async function persistSession(data:SessionOptions) {
   if (data.origin && data.token && data.space) {
-    // Get the directory path
-    const resolvedPath = parse(CREDENTIALS_PATH).dir;
-    // Ensure the directory exists
-    try {
-      await mkdir(resolvedPath, { recursive: true });
-    }
-    catch (error) {
-      return; // Exit early if the directory creation fails
-    }
-    // Write the file
-    try {
-      await writeFile(CREDENTIALS_PATH, JSON.stringify(data, null, 2), { mode: 0o600 });
-    }
-    catch (error) {
-    }
+    await writeToFile(CREDENTIALS_PATH, JSON.stringify(data, null, 2), { mode: 0o600 });
+    console.log('Add session credentials to file system.');
+    console.log('Add .localess to .gitignore to avoid committing them to your repository.');
   } else {
     throw new Error('Cannot persist session: missing required fields.');
   }
@@ -100,7 +89,7 @@ export async function clearSession() {
   // Write empty JSON to the file
   try {
     await access(CREDENTIALS_PATH)
-    await writeFile(CREDENTIALS_PATH, '{}', { mode: 0o600 });
+    await writeToFile(CREDENTIALS_PATH, '{}', { mode: 0o600 });
   }
   catch (error) {
     throw new Error('Failed to clear session credentials.');
