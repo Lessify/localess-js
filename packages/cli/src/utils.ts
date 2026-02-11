@@ -55,3 +55,22 @@ export const isBrowser = () => typeof window !== 'undefined';
 export const isServer = () => typeof window === 'undefined';
 
 export const isIframe = () => isBrowser() && window.self !== window.top;
+
+export function dotToNestedObject(input: Record<string, string>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(input)) {
+    const parts = key.split('.');
+    let current = result;
+    for (let i = 0; i < parts.length; i++) {
+      if (i === parts.length - 1) {
+        current[parts[i]] = value;
+      } else {
+        if (!(parts[i] in current)) {
+          current[parts[i]] = {};
+        }
+        current = current[parts[i]] as Record<string, unknown>;
+      }
+    }
+  }
+  return result;
+}
