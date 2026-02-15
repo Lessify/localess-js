@@ -5,3 +5,13 @@ export interface Translations {
 
   [key: string]: string;
 }
+
+export type TranslationUpdate = {
+  type: TranslationUpdateType;
+  values: Translations;
+}
+
+export enum TranslationUpdateType {
+  ADD_MISSING = 'add-missing',
+  UPDATE_EXISTING = 'update-existing',
+}

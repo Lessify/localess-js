@@ -1,5 +1,14 @@
 import {FG_BLUE, RESET} from "./utils";
-import {Content, ContentAsset, ContentData, Links, Space, Translations} from "./models";
+import {
+  Content,
+  ContentAsset,
+  ContentData,
+  Links,
+  Space,
+  Translations,
+  TranslationUpdate,
+  TranslationUpdateType
+} from "./models";
 import {ICache, NoCache, TTLCache} from "./cache";
 import type {OpenAPI3} from "openapi-typescript";
 
@@ -107,6 +116,15 @@ export interface LocalessClient {
    * @param locale{string} - Locale identifier (ISO 639-1)
    */
   getTranslations(locale: string): Promise<Translations>;
+
+  /**
+   * Update translations for the given locale
+   * @param locale - Locale identifier (ISO 639-1)
+   * @param type{TranslationUpdateType} - Type of update to perform (add-missing or update-existing)
+   * @param values - Key-Value Object. Where Key is Translation ID and Value is Translated Content
+   * @returns {Promise<void>}
+   */
+  updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<void>;
 
   /**
    * Get OpenAPI specification
@@ -349,6 +367,37 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       } catch (error: any) {
         console.error(LOG_GROUP, 'getTranslations error : ', error);
         return {} as Translations;
+      }
+    },
+
+    async updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<void> {
+      if (options.debug) {
+        console.log(LOG_GROUP, 'updateTranslations() locale : ', locale);
+        console.log(LOG_GROUP, 'updateTranslations() type : ', type);
+        console.log(LOG_GROUP, 'updateTranslations() values : ', JSON.stringify(values));
+      }
+      let url = `${options.origin}/api/v1/spaces/${options.spaceId}/translations/${locale}`;
+      if (options.debug) {
+        console.log(LOG_GROUP, 'updateTranslations fetch url : ', url);
+      }
+      const body: TranslationUpdate = {
+        type,
+        values,
+      }
+      try {
+        const response = await fetch(url, {
+          ...fetchOptions,
+          method: 'POST',
+          headers: {
+            'X-API-KEY': options.token,
+          },
+          body: JSON.stringify(body),
+        });
+        if (options.debug) {
+          console.log(LOG_GROUP, 'updateTranslations status : ', response.status);
+        }
+      } catch (error: any) {
+        console.error(LOG_GROUP, 'updateTranslations error : ', error);
       }
     },
 
