@@ -8,55 +8,49 @@
 
 # Localess Command Line
 
-This client SDK is designed to work with the Localess API. It provides a simple way to interact with the Localess API from your JavaScript or TypeScript application.
+A powerful CLI tool to interact with your Localess spaces.
 
-> **Important:** 
-> The Client is designed to be used on the server side only, as it requires your **Localess API Token** to be kept secret.
-> Do not use this client in your frontend application, as it exposes your API Token to the public.
+## Features
 
-## Installation
+- 🔐 **Authentication** - Secure login system and CI environments.
+- 🛡️ **Type Safety** - Generate TypeScript type definitions for your Localess content schemas, ensuring type safety in your frontend applications.
+- 🌐 **Translations** - Sync and manage translations for your Localess space.
 
-### NPM
-````bash
-npm install @localess/js-client@latest
-````
 
-### Yarn
-````bash
-yarn add @localess/js-client@latest
-````
+## Login
+The CLI provides a `login` command to authenticate with your Localess account. This command prompts you for your email and password, and securely stores an authentication token for future API requests.
+### Usage
 
-## Client
+#### Login with your Localess from CLI:
+```bash
+localess login --origin <localess_api_origin> --space <space_id> --token <space_access_token>
+```
+#### Login with your Localess with environment variables:
+```bash
+export LOCALESS_ORIGIN=<localess_api_origin>
+export LOCALESS_SPACE=<space_id>
+export LOCALESS_TOKEN=<space_access_token>  
+localess login
+```
 
-````ts
-import {localessClient} from "@localess/js-client";
+## Logout
+The CLI provides a `logout` command to clear your authentication token and log you out of your Localess account.
+### Usage
+```bash
+localess logout
+```
 
-const llClient = localessClient({
-  // A fully qualified domain name with protocol (http/https) and port.
-  origin: 'https://my-localess.web.app',
-  // Localess space ID, cna be found in the Localess Space settings
-  spaceId: 'I1LoVe2LocaLess4Rever',
-  // Localess API token, can be found in the Localess Space settings
-  token: 'Baz00KaT0KeN8S3CureLL'
-});
+## Generate TypeScript Types
 
-// Fetch all Content Links
-llClient.getLinks()
-// Fetch content by SLUG
-llClient.getContentBySlug('docs/overview')
-// Fetch content by ID
-llClient.getContentById('FRnIT7CUABoRCdSVVGGs')
-// Fetch translations by locale
-llClient.getTranslations('en') 
-````
+The CLI provides a `types` command to generate TypeScript definitions for your Localess content schemas. This command fetches your space's OpenAPI schema and writes a `localess.d.ts` file to your project, allowing for strong typing in your codebase.
 
-## Sync with Visual Editor
+### Usage
 
-It will automatically inject Localess Sync Script in to the HTML page.
+```bash
+localess types
+```
 
-````ts
-import {loadLocalessSync} from "@localess/js-client";
+- You must be logged in (`localess login`) before running this command.
+- The generated types file will be saved as `./.localess/localess.d.ts` in your current working directory.
 
-// A fully qualified domain name with protocol (http/https) and port.
-loadLocalessSync('https://my-localess.web.app')
-````
+You can then import these types in your TypeScript project for improved type safety when working with Localess content.
