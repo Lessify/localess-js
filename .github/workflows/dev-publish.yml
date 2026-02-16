@@ -27,7 +27,7 @@ jobs:
         run: |
           DATE=$(date +"%Y%m%d%H%M%S")
           for pkg in packages/*/package.json; do
-            jq ".version |= sub("-dev\\.[0-9]+"; "") | .version += "-dev.$DATE"" $pkg > tmp.$$.json && mv tmp.$$.json $pkg
+            jq '.version |= sub("-dev\\.[0-9]+"; "") | .version += "-dev.'"$DATE"'"' $pkg > tmp.$$.json && mv tmp.$$.json $pkg
           done
         shell: bash
 
@@ -42,4 +42,3 @@ jobs:
             fi
           done
         shell: bash
-
