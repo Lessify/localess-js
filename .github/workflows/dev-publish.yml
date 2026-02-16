@@ -38,7 +38,7 @@ jobs:
           for pkg in packages/*/package.json; do
             pkgdir=$(dirname $pkg)
             if ! grep -q '"private"\s*:\s*true' $pkg; then
-              npm publish --tag dev --access public --workspace $(basename $pkgdir)
+              npm publish --tag dev --access public --workspace $pkgdir
             fi
           done
         shell: bash
