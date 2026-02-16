@@ -16,6 +16,11 @@ A powerful CLI tool to interact with your Localess spaces.
 - 🛡️ **Type Safety** - Generate TypeScript type definitions for your Localess content schemas, ensuring type safety in your frontend applications.
 - 🌐 **Translations** - Sync and manage translations for your Localess space.
 
+## Setup
+
+```bash
+npm install @localess/cli -D
+```
 
 ## Login
 The CLI provides a `login` command to authenticate with your Localess account. This command prompts you for your email and password, and securely stores an authentication token for future API requests.
