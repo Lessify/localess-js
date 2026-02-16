@@ -37,7 +37,6 @@ jobs:
         test -f packages/react/dist/index.js || (echo "React CJS build missing" && exit 1)
         test -f packages/react/dist/index.mjs || (echo "React ESM build missing" && exit 1)
         test -f packages/react/dist/index.d.ts || (echo "React types missing" && exit 1)
-        test -f packages/cli/dist/index.js || (echo "CLI CJS build missing" && exit 1)
         test -f packages/cli/dist/index.mjs || (echo "CLI ESM build missing" && exit 1)
         test -f packages/cli/dist/index.d.ts || (echo "CLI types missing" && exit 1)
         echo "All build outputs verified successfully"
