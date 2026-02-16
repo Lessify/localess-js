@@ -10,7 +10,8 @@ export type TranslationsPushOptions = {
   type: TranslationUpdateType
 }
 
-export const translationsPushCommand = new Command('push [locale]')
+export const translationsPushCommand = new Command('push')
+  .argument('<locale>', 'Locale to push')
   .description('Push locale translations to Localess')
   .requiredOption('-f, --file <path>', 'Path to the translations file to push')
   .option('-t, --type <type>', `Push type. Possible values are : ${Object.values(TranslationUpdateType)}`, TranslationUpdateType.ADD_MISSING)
