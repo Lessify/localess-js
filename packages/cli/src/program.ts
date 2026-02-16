@@ -2,6 +2,7 @@ import {Command} from "commander";
 import {loginCommand} from "./commands/login";
 import {logoutCommand} from "./commands/logout";
 import {typesCommand} from "./commands/types";
+import {translationsCommand} from "./commands/translations";
 
 export const program = new Command();
 
@@ -13,4 +14,5 @@ program
 
 program.addCommand(loginCommand)
 program.addCommand(logoutCommand)
+program.addCommand(translationsCommand)
 program.addCommand(typesCommand)

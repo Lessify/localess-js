@@ -4,7 +4,7 @@ import {getSession} from "../../session";
 import openapiTS, { astToString } from "openapi-typescript";
 import {join} from "node:path";
 import process from "node:process";
-import {DEFAULT_CONFIG_DIR, writeToFile} from "../../file";
+import {DEFAULT_CONFIG_DIR, writeFile} from "../../file";
 
 const TYPES_PATH = join(process.cwd(), DEFAULT_CONFIG_DIR, 'localess.d.ts');
 
@@ -40,7 +40,7 @@ export const typesCommand = new Command('types')
       };
       const ast =  await openapiTS(minimalSpec, {exportType: true, rootTypes: true, rootTypesNoSchemaPrefix: true})
       const contents = astToString(ast);
-      await writeToFile(TYPES_PATH, contents);
+      await writeFile(TYPES_PATH, contents);
       console.log(`Types generated successfully at ${TYPES_PATH}`);
     } catch (e) {
       console.error(e);

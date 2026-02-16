@@ -15,3 +15,7 @@ export enum TranslationUpdateType {
   ADD_MISSING = 'add-missing',
   UPDATE_EXISTING = 'update-existing',
 }
+
+export function isTranslationUpdateType(value: string): boolean {
+  return value in TranslationUpdateType;
+}

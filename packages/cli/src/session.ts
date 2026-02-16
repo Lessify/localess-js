@@ -1,7 +1,7 @@
 import {access, readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import * as process from "node:process";
-import {DEFAULT_CONFIG_DIR, writeToFile} from "./file";
+import {DEFAULT_CONFIG_DIR, writeFile} from "./file";
 
 export type SessionData = {
   token: string;
@@ -76,7 +76,7 @@ export async function getSession(): Promise<Session> {
 
 export async function persistSession(data:SessionOptions) {
   if (data.origin && data.token && data.space) {
-    await writeToFile(CREDENTIALS_PATH, JSON.stringify(data, null, 2), { mode: 0o600 });
+    await writeFile(CREDENTIALS_PATH, JSON.stringify(data, null, 2), { mode: 0o600 });
     console.log('Add session credentials to file system.');
     console.log('Add .localess to .gitignore to avoid committing them to your repository.');
   } else {
@@ -88,7 +88,7 @@ export async function clearSession() {
   // Write empty JSON to the file
   try {
     await access(CREDENTIALS_PATH)
-    await writeToFile(CREDENTIALS_PATH, '{}', { mode: 0o600 });
+    await writeFile(CREDENTIALS_PATH, '{}', { mode: 0o600 });
   }
   catch (error) {
     throw new Error('Failed to clear session credentials.');
