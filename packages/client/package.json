@@ -28,7 +28,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Lessify/localess-js.git"
+    "url": "git+https://github.com/Lessify/localess-js.git",
+    "directory": "packages/client"
   },
   "bugs": {
     "url": "https://github.com/Lessify/localess-js/issues"

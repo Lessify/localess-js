@@ -16,7 +16,8 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Lessify/localess-js.git"
+    "url": "git+https://github.com/Lessify/localess-js.git",
+    "directory": "packages/react"
   },
   "bugs": {
     "url": "https://github.com/Lessify/localess-js/issues"

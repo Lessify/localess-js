@@ -12,29 +12,31 @@
   "author": "Lessify",
   "homepage": "https://github.com/Lessify/localess-js",
   "sideEffects": false,
-  "bin": {
-    "localess": "./dist/index.mjs"
-  },
+
   "files": [
     "dist"
   ],
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs"
     }
   },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "localess": "./dist/index.mjs"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Lessify/localess-js.git"
+    "url": "git+https://github.com/Lessify/localess-js.git",
+    "directory": "packages/cli"
   },
   "bugs": {
     "url": "https://github.com/Lessify/localess-js/issues"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --shims",
+    "build": "tsup src/index.ts --format cjs,esm --dts --shims",
     "test": "vitest"
   },
   "license": "MIT",
