@@ -69,9 +69,8 @@ export async function getSession(): Promise<Session> {
       };
     }
   } catch (e) {
-    console.error('No credentials found. Please log in using the "localess login" command.');
+    // console.error('No credentials found. Please log in using the "localess login" command.');
   }
-  console.debug('Not logged in.');
   return session;
 }
 

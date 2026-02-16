@@ -14,8 +14,6 @@ export const loginCommand = new Command('login')
   .option('-s, --space <space>', 'Space ID to login to')
   .option('-o, --origin <origin>', 'Origin of the Localess instance')
   .action(async (options: LoginOptions) => {
-    console.log('Logging in with options:', options);
-
     const session = await getSession()
 
     if (session.isLoggedIn && session.method === 'file') {
