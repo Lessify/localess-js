@@ -1,9 +1,9 @@
 import {Command} from "commander";
 import {getSession} from "../../../session";
 import {localessClient} from "../../../client";
-import {isTranslationUpdateType, Translations, TranslationUpdateType} from "../../../models";
+import {Translations, TranslationUpdateType} from "../../../models";
 import {readFile} from "../../../file";
-import {zLocaleTranslationsSchema} from "../../../models/translation.zod";
+import {zLocaleTranslationsSchema, zTranslationUpdateTypeSchema} from "../../../models/translation.zod";
 
 export type TranslationsPushOptions = {
   file: string;
@@ -18,7 +18,7 @@ export const translationsPushCommand = new Command('push')
   .action(async (locale: string, options: TranslationsPushOptions) => {
     console.log('Pushing translations with arguments:', locale);
     console.log('Pushing translations with options:', options);
-    if (!isTranslationUpdateType(options.type)) {
+    if (zTranslationUpdateTypeSchema.safeParse(options.type).success!) {
       console.error('Invalid type provided. Possible values are :', Object.values(TranslationUpdateType));
       return;
     }
