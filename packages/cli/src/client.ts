@@ -393,6 +393,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
           },
           body: JSON.stringify(body),
         });
+        console.log(LOG_GROUP, 'updateTranslations : ', await response.json());
         if (options.debug) {
           console.log(LOG_GROUP, 'updateTranslations status : ', response.status);
         }
