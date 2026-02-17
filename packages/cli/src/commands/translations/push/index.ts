@@ -18,7 +18,7 @@ export const translationsPushCommand = new Command('push')
   .action(async (locale: string, options: TranslationsPushOptions) => {
     console.log('Pushing translations with arguments:', locale);
     console.log('Pushing translations with options:', options);
-    if (zTranslationUpdateTypeSchema.safeParse(options.type).success!) {
+    if (!zTranslationUpdateTypeSchema.safeParse(options.type).success) {
       console.error('Invalid type provided. Possible values are :', Object.values(TranslationUpdateType));
       return;
     }
