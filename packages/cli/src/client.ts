@@ -88,6 +88,7 @@ export interface LocalessClient {
    * @returns {Promise<Space>}
    */
   getSpace(): Promise<Space>
+
   /**
    * Get all links
    * @param params{LinksFetchParams} - Fetch parameters
@@ -124,7 +125,7 @@ export interface LocalessClient {
    * @param values - Key-Value Object. Where Key is Translation ID and Value is Translated Content
    * @returns {Promise<void>}
    */
-  updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<void>;
+  updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<any>;
 
   /**
    * Get OpenAPI specification
@@ -370,7 +371,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
     },
 
-    async updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<void> {
+    async updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<any> {
       if (options.debug) {
         console.log(LOG_GROUP, 'updateTranslations() locale : ', locale);
         console.log(LOG_GROUP, 'updateTranslations() type : ', type);
@@ -393,10 +394,10 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
           },
           body: JSON.stringify(body),
         });
-        console.log(LOG_GROUP, 'updateTranslations : ', await response.json());
         if (options.debug) {
           console.log(LOG_GROUP, 'updateTranslations status : ', response.status);
         }
+        return response.json();
       } catch (error: any) {
         console.error(LOG_GROUP, 'updateTranslations error : ', error);
       }

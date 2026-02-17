@@ -44,6 +44,7 @@ export const translationsPushCommand = new Command('push')
       return;
     }
     console.log('Pushing translations to Localess with locale:', locale, 'and type:', options.type);
-    await client.updateTranslations(locale, options.type, translationValues);
+    const message = await client.updateTranslations(locale, options.type, translationValues);
     console.log('Successfully pushed translations to Localess');
+    console.log('Summary:', message);
   });
