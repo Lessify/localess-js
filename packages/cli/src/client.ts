@@ -6,7 +6,7 @@ import {
   Links,
   Space,
   Translations,
-  TranslationUpdate,
+  TranslationUpdate, TranslationUpdateResponse,
   TranslationUpdateType
 } from "./models";
 import {ICache, NoCache, TTLCache} from "./cache";
@@ -125,7 +125,7 @@ export interface LocalessClient {
    * @param values - Key-Value Object. Where Key is Translation ID and Value is Translated Content
    * @returns {Promise<void>}
    */
-  updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<any>;
+  updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<TranslationUpdateResponse | undefined>;
 
   /**
    * Get OpenAPI specification
@@ -371,7 +371,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
     },
 
-    async updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<any> {
+    async updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<TranslationUpdateResponse | undefined> {
       if (options.debug) {
         console.log(LOG_GROUP, 'updateTranslations() locale : ', locale);
         console.log(LOG_GROUP, 'updateTranslations() type : ', type);

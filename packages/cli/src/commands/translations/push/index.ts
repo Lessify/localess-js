@@ -45,6 +45,13 @@ export const translationsPushCommand = new Command('push')
     }
     console.log('Pushing translations to Localess with locale:', locale, 'and type:', options.type);
     const message = await client.updateTranslations(locale, options.type, translationValues);
-    console.log('Successfully pushed translations to Localess');
-    console.log('Summary:', message);
+    if (message) {
+      console.log('Successfully pushed translations to Localess');
+      console.log('Summary:', message.message);
+      if (message.ids) {
+        console.log('Updated translation IDs:', message.ids);
+      }
+    } else {
+      console.log('Something went wrong while pushing translations to Localess');
+    }
   });

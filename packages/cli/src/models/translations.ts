@@ -15,3 +15,8 @@ export enum TranslationUpdateType {
   ADD_MISSING = 'add-missing',
   UPDATE_EXISTING = 'update-existing',
 }
+
+export type TranslationUpdateResponse = {
+  message: string;
+  ids?: string[];
+}
