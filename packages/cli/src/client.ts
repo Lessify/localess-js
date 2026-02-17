@@ -386,10 +386,10 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
       try {
         const response = await fetch(url, {
-          ...fetchOptions,
           method: 'POST',
           headers: {
             'X-API-KEY': options.token,
+            ...fetchOptions.headers
           },
           body: JSON.stringify(body),
         });
