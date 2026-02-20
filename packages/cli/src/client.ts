@@ -40,6 +40,14 @@ export type LocalessClientOptions = {
    * Set to false to disable caching.
    */
   cacheTTL?: number | false; // in milliseconds
+  /**
+   * Number of times to retry failed fetch requests (network errors or 5xx). Default: 3
+   */
+  retryCount?: number;
+  /**
+   * Delay in ms between retries. Default: 500ms
+   */
+  retryDelay?: number;
 }
 
 export type LinksFetchParams = {
@@ -151,6 +159,40 @@ export interface LocalessClient {
 const LOG_GROUP = `${FG_BLUE}[Localess:Client]${RESET}`
 
 /**
+ * Helper: fetch with retry logic
+ */
+async function fetchWithRetry(url: string, options: RequestInit, retryCount: number = 3, retryDelay: number = 500, debug?: boolean): Promise<Response> {
+  let attempt = 0;
+  let lastError: any;
+  while (attempt <= retryCount) {
+    try {
+      const response = await fetch(url, options);
+      // Only retry on network error or 5xx
+      if (!response.ok && response.status >= 500) {
+        if (debug) {
+          console.log(LOG_GROUP, `fetchWithRetry: HTTP ${response.status} on attempt ${attempt + 1}`);
+        }
+        lastError = new Error(`HTTP ${response.status}`);
+        // fall through to retry
+      } else {
+        return response;
+      }
+    } catch (err) {
+      if (debug) {
+        console.log(LOG_GROUP, `fetchWithRetry: network error on attempt ${attempt + 1}`, err);
+      }
+      lastError = err;
+      // fall through to retry
+    }
+    attempt++;
+    if (attempt <= retryCount) {
+      await new Promise(res => setTimeout(res, retryDelay));
+    }
+  }
+  throw lastError;
+}
+
+/**
  * Create a Localess API Client
  * @param {LocalessClientOptions} options connection details
  */
@@ -191,7 +233,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetch(url, fetchOptions)
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getSpace status : ', response.status);
         }
@@ -237,7 +279,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetch(url, fetchOptions)
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getLinks status : ', response.status);
         }
@@ -284,7 +326,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetch(url, fetchOptions)
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getContentBySlug status : ', response.status);
         }
@@ -331,7 +373,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetch(url, fetchOptions)
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getContentById status : ', response.status);
         }
@@ -375,7 +417,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetch(url, fetchOptions)
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getTranslations status : ', response.status);
         }
@@ -406,14 +448,14 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         values,
       }
       try {
-        const response = await fetch(url, {
+        const response = await fetchWithRetry(url, {
           method: 'POST',
           headers: {
             'X-API-KEY': options.token,
             ...fetchOptions.headers
           },
           body: JSON.stringify(body),
-        });
+        }, options.retryCount,  options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'updateTranslations status : ', response.status);
         }
@@ -441,7 +483,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetch(url, fetchOptions)
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getOpenApi status : ', response.status);
         }
