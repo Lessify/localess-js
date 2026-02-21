@@ -16,6 +16,11 @@ export enum TranslationUpdateType {
   UPDATE_EXISTING = 'update-existing',
 }
 
+export enum TranslationFileFormat {
+  FLAT = 'flat',
+  NESTED = 'nested',
+}
+
 export type TranslationUpdateResponse = {
   message: string;
   ids?: string[];

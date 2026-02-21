@@ -1,19 +1,21 @@
 import {Command} from "commander";
 import {getSession} from "../../../session";
 import {localessClient} from "../../../client";
-import {Translations, TranslationUpdateType} from "../../../models";
+import {TranslationFileFormat, Translations, TranslationUpdateType} from "../../../models";
 import {readFile} from "../../../file";
 import {zLocaleTranslationsSchema, zTranslationUpdateTypeSchema} from "../../../models/translation.zod";
 
 export type TranslationsPushOptions = {
-  file: string;
+  path: string;
+  format: TranslationFileFormat;
   type: TranslationUpdateType
 }
 
 export const translationsPushCommand = new Command('push')
   .argument('<locale>', 'Locale to push')
   .description('Push locale translations to Localess')
-  .requiredOption('-f, --file <path>', 'Path to the translations file to push')
+  .requiredOption('-p, --path <path>', 'Path to the translations file to push')
+  .option('-f, --format <format>', `File format. Possible values are : ${Object.values(TranslationFileFormat)}`, TranslationFileFormat.FLAT)
   .option('-t, --type <type>', `Push type. Possible values are : ${Object.values(TranslationUpdateType)}`, TranslationUpdateType.ADD_MISSING)
   .action(async (locale: string, options: TranslationsPushOptions) => {
     console.log('Pushing translations with arguments:', locale);
@@ -34,9 +36,11 @@ export const translationsPushCommand = new Command('push')
       spaceId: session.space,
       token: session.token,
     });
-
-    console.log('Reading translations file from:', options.file);
-    const fileContent = await readFile(options.file);
+    if (options.format === TranslationFileFormat.NESTED) {
+      console.error('Nested format is not implemented yet. Please use flat format for now.');
+    }
+    console.log('Reading translations file from:', options.path);
+    const fileContent = await readFile(options.path);
     const translationValues: Translations = JSON.parse(fileContent);
     const pResult = zLocaleTranslationsSchema.safeParse(translationValues)
     if (!pResult.success) {
