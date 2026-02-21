@@ -9,12 +9,12 @@ import {DEFAULT_CONFIG_DIR, writeFile} from "../../../file";
 const TYPES_PATH = join(process.cwd(), DEFAULT_CONFIG_DIR, 'localess.d.ts');
 
 type TypesOptions = {
-  file: string;
+  path: string;
 };
 
 export const typesGenerateCommand = new Command('generate')
   .description('Generate types for your schemas')
-  .option('-f, --file <path>', 'Path to the file where to save the generated types. Default is .localess/localess.d.ts', TYPES_PATH)
+  .option('-p, --path <path>', 'Path to the file where to save the generated types. Default is .localess/localess.d.ts', TYPES_PATH)
   .action(async (options: TypesOptions) => {
     console.log('Types in with options:', options);
 
@@ -41,8 +41,8 @@ export const typesGenerateCommand = new Command('generate')
       };
       const ast =  await openapiTS(minimalSpec, {exportType: true, rootTypes: true, rootTypesNoSchemaPrefix: true})
       const contents = astToString(ast);
-      await writeFile(options.file, contents);
-      console.log(`Types generated successfully at ${options.file}`);
+      await writeFile(options.path, contents);
+      console.log(`Types generated successfully at ${options.path}`);
     } catch (e) {
       console.error(e);
     }

@@ -13,8 +13,8 @@ A powerful CLI tool to interact with your Localess spaces.
 ## Features
 
 - 🔐 **Authentication** - Secure login system and CI environments.
-- 🛡️ **Type Safety** - Generate TypeScript type definitions for your Localess content schemas, ensuring type safety in your frontend applications.
 - 🌐 **Translations** - Sync and manage translations for your Localess space.
+- 🛡️ **Type Safety** - Generate TypeScript type definitions for your Localess content schemas, ensuring type safety in your frontend applications.
 
 ## Setup
 
@@ -45,17 +45,43 @@ The CLI provides a `logout` command to clear your authentication token and log y
 localess logout
 ```
 
+## Translations Management
+
+The CLI provides a `translations` command with `push` and `pull` subcommands to sync and manage translations for your Localess space.
+
+### Push Translations
+Push local translation files to Localess.
+
+```bash
+localess translations push <locale> --path <file> [--format <flat|nested>] [--type <add-missing|replace>]
+```
+- `<locale>`: Locale code (e.g., `en`)
+- `--path`: Path to the translations file to push (required)
+- `--format`: File format (`flat` or `nested`, default: `flat`). **Note:** Only `flat` format is currently supported for push.
+- `--type`: Push type (`add-missing`, `replace`, etc., default: `add-missing`)
+
+### Pull Translations
+Pull translations from Localess and save locally.
+
+```bash
+localess translations pull <locale> --path <file> [--format <flat|nested>]
+```
+- `<locale>`: Locale code (e.g., `en`)
+- `--path`: Path where the translations file will be saved (required)
+- `--format`: File format (`flat` or `nested`, default: `flat`)
+
 ## Generate TypeScript Types
 
-The CLI provides a `types` command to generate TypeScript definitions for your Localess content schemas. This command fetches your space's OpenAPI schema and writes a `localess.d.ts` file to your project, allowing for strong typing in your codebase.
+The CLI provides a `types generate` command to generate TypeScript definitions for your Localess content schemas. This command fetches your space's OpenAPI schema and writes a `localess.d.ts` file to your project, allowing for strong typing in your codebase.
 
 ### Usage
 
 ```bash
-localess types
+localess types generate [--path <output_file>]
 ```
+- `--path`: Path to the file where to save the generated types. Default is `.localess/localess.d.ts` in your current working directory.
 
 - You must be logged in (`localess login`) before running this command.
-- The generated types file will be saved as `./.localess/localess.d.ts` in your current working directory.
+- The generated types file will be saved as `./.localess/localess.d.ts` by default.
 
 You can then import these types in your TypeScript project for improved type safety when working with Localess content.
