@@ -7,6 +7,7 @@ export interface Translations {
 }
 
 export type TranslationUpdate = {
+  dryRun?: boolean;
   type: TranslationUpdateType;
   values: Translations;
 }

@@ -141,9 +141,10 @@ export interface LocalessClient {
    * @param locale - Locale identifier (ISO 639-1)
    * @param type{TranslationUpdateType} - Type of update to perform (add-missing or update-existing)
    * @param values - Key-Value Object. Where Key is Translation ID and Value is Translated Content
+   * @param dryRun - If true, the API will return the changes that would be made without actually applying them
    * @returns {Promise<void>}
    */
-  updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<TranslationUpdateResponse | undefined>;
+  updateTranslations(locale: string, type: TranslationUpdateType, values: Translations, dryRun?: boolean): Promise<TranslationUpdateResponse | undefined>;
 
   /**
    * Get OpenAPI specification
@@ -433,7 +434,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
     },
 
-    async updateTranslations(locale: string, type: TranslationUpdateType, values: Translations): Promise<TranslationUpdateResponse | undefined> {
+    async updateTranslations(locale: string, type: TranslationUpdateType, values: Translations, dryRun?: boolean): Promise<TranslationUpdateResponse | undefined> {
       if (options.debug) {
         console.log(LOG_GROUP, 'updateTranslations() locale : ', locale);
         console.log(LOG_GROUP, 'updateTranslations() type : ', type);
@@ -446,6 +447,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const body: TranslationUpdate = {
         type,
         values,
+        dryRun,
       }
       try {
         const response = await fetchWithRetry(url, {

@@ -8,7 +8,8 @@ import {zLocaleTranslationsSchema, zTranslationUpdateTypeSchema} from "../../../
 export type TranslationsPushOptions = {
   path: string;
   format: TranslationFileFormat;
-  type: TranslationUpdateType
+  type: TranslationUpdateType;
+  dryRun?: boolean;
 }
 
 export const translationsPushCommand = new Command('push')
@@ -17,6 +18,7 @@ export const translationsPushCommand = new Command('push')
   .requiredOption('-p, --path <path>', 'Path to the translations file to push')
   .option('-f, --format <format>', `File format. Possible values are : ${Object.values(TranslationFileFormat)}`, TranslationFileFormat.FLAT)
   .option('-t, --type <type>', `Push type. Possible values are : ${Object.values(TranslationUpdateType)}`, TranslationUpdateType.ADD_MISSING)
+  .option('-dr, --dry-run', 'Preview changes without applying them to Localess')
   .action(async (locale: string, options: TranslationsPushOptions) => {
     console.log('Pushing translations with arguments:', locale);
     console.log('Pushing translations with options:', options);
@@ -36,6 +38,11 @@ export const translationsPushCommand = new Command('push')
       spaceId: session.space,
       token: session.token,
     });
+
+    if (options.dryRun) {
+      console.warn('Dry run mode enabled: No changes will be made.');
+    }
+
     if (options.format === TranslationFileFormat.NESTED) {
       console.error('Nested format is not implemented yet. Please use flat format for now.');
     }
@@ -48,7 +55,7 @@ export const translationsPushCommand = new Command('push')
       return;
     }
     console.log('Pushing translations to Localess with locale:', locale, 'and type:', options.type);
-    const message = await client.updateTranslations(locale, options.type, translationValues);
+    const message = await client.updateTranslations(locale, options.type, translationValues, options.dryRun);
     if (message) {
       console.log('Successfully pushed translations to Localess');
       console.log('Summary:', message.message);
