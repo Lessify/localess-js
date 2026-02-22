@@ -26,4 +26,5 @@ export enum TranslationFileFormat {
 export type TranslationUpdateResponse = {
   message: string;
   ids?: string[];
+  dryRun?: boolean;
 }

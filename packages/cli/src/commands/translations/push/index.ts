@@ -55,12 +55,15 @@ export const translationsPushCommand = new Command('push')
       return;
     }
     console.log('Pushing translations to Localess with locale:', locale, 'and type:', options.type);
-    const message = await client.updateTranslations(locale, options.type, translationValues, options.dryRun);
-    if (message) {
+    const response = await client.updateTranslations(locale, options.type, translationValues, options.dryRun);
+    if (response) {
+      if (response.dryRun) {
+        console.log('Dry run results:');
+      }
       console.log('Successfully pushed translations to Localess');
-      console.log('Summary:', message.message);
-      if (message.ids) {
-        console.log('Updated translation IDs:', message.ids);
+      console.log('Summary:', response.message);
+      if (response.ids) {
+        console.log('Updated translation IDs:', response.ids);
       }
     } else {
       console.log('Something went wrong while pushing translations to Localess');
