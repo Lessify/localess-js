@@ -58,7 +58,7 @@ localess translations push <locale> --path <file> [--format <flat|nested>] [--ty
 - `<locale>`: Locale code (e.g., `en`)
 - `--path`: Path to the translations file to push (required)
 - `--format`: File format (`flat` or `nested`, default: `flat`). **Note:** Only `flat` format is currently supported for push.
-- `--type`: Push type (`add-missing`, `replace`, etc., default: `add-missing`)
+- `--type`: Push type (`add-missing`, `update-existing`, `delete-missing`. Default: `add-missing`)
 
 ### Pull Translations
 Pull translations from Localess and save locally.

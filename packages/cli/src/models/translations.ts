@@ -14,6 +14,7 @@ export type TranslationUpdate = {
 export enum TranslationUpdateType {
   ADD_MISSING = 'add-missing',
   UPDATE_EXISTING = 'update-existing',
+  DELETE_MISSING = 'delete-missing',
 }
 
 export enum TranslationFileFormat {
