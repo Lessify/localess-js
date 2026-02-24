@@ -18,7 +18,7 @@ export const translationsPushCommand = new Command('push')
   .requiredOption('-p, --path <path>', 'Path to the translations file to push')
   .option('-f, --format <format>', `File format. Possible values are : ${Object.values(TranslationFileFormat)}`, TranslationFileFormat.FLAT)
   .option('-t, --type <type>', `Push type. Possible values are : ${Object.values(TranslationUpdateType)}`, TranslationUpdateType.ADD_MISSING)
-  .option('-dr, --dry-run', 'Preview changes without applying them to Localess')
+  .option('--dry-run', 'Preview changes without applying them to Localess')
   .action(async (locale: string, options: TranslationsPushOptions) => {
     console.log('Pushing translations with arguments:', locale);
     console.log('Pushing translations with options:', options);
