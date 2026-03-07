@@ -1,6 +1,6 @@
 {
   "name": "@localess/react",
-  "version": "0.9.2",
+  "version": "0.9.5",
   "description": "ReactJS JavaScript/TypeScript SDK for Localess's API.",
   "keywords": [
     "localess",

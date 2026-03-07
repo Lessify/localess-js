@@ -24,7 +24,6 @@
   },
   "homepage": "https://github.com/Lessify/localess-js#readme",
   "devDependencies": {
-    "@changesets/cli": "^2.30.0",
     "@types/node": "^20.12.12",
     "tsup": "^8.5.1",
     "typescript": "^5.8.3",
