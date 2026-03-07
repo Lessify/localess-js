@@ -24,7 +24,7 @@ jobs:
         id: changed
         run: |
           git fetch origin dev --depth=2
-          CHANGED=$(git diff --name-only origin/dev...HEAD -- packages/*/package.json | xargs -r -n1 dirname | sort -u | tr '\n' ' ')
+          CHANGED=$(git diff --name-only origin/dev...HEAD -- packages/*/** | awk -F/ '{print $2}' | sort -u | sed 's|^|packages/|' | tr '\n' ' ')
           echo "changed_packages=$CHANGED" >> $GITHUB_OUTPUT
         shell: bash
 
