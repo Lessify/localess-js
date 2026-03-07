@@ -23,8 +23,15 @@ jobs:
       - name: Find changed packages
         id: changed
         run: |
-          git fetch origin dev --depth=2
-          CHANGED=$(git diff --name-only origin/dev...HEAD -- packages/*/** | awk -F/ '{print $2}' | sort -u | sed 's|^|packages/|' | tr '\n' ' ')
+          BEFORE="${{ github.event.before }}"
+          SHA="${{ github.sha }}"
+          if [[ "$BEFORE" == "0000000000000000000000000000000000000000" || -z "$BEFORE" ]]; then
+            # Initial push to branch — treat all packages as changed
+            CHANGED=$(ls packages/ | sed 's|^|packages/|' | tr '\n' ' ')
+          else
+            git fetch --depth=2 origin dev
+            CHANGED=$(git diff --name-only "$BEFORE" "$SHA" -- 'packages/' | awk -F/ '{print $2}' | sort -u | sed 's|^|packages/|' | tr '\n' ' ')
+          fi
           echo "changed_packages=$CHANGED" >> $GITHUB_OUTPUT
         shell: bash
 
