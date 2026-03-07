@@ -27,15 +27,24 @@ npm run build --workspace=@localess/react
 npm run build --workspace=@localess/cli
 ```
 
-All packages use `tsup` for building with the command:
-```bash
-tsup src/index.ts --format cjs,esm --dts
-```
+All packages use `tsup` for building:
+- `@localess/client` and `@localess/react`: `tsup src/index.ts --format cjs,esm --dts` → `dist/index.js`, `dist/index.mjs`, `dist/index.d.ts`
+- `@localess/cli`: `tsup src/index.ts --format cjs,esm --dts --shims` → ESM only (`dist/index.mjs`), `--shims` adds Node.js polyfills for the CLI executable
 
-This generates:
-- `dist/index.js` (CommonJS)
-- `dist/index.mjs` (ESM)
-- `dist/index.d.ts` (TypeScript declarations)
+## Test Commands
+
+Tests only exist in `@localess/cli`. Run from the workspace root:
+
+```bash
+# Run all CLI tests
+npm test --workspace=@localess/cli
+
+# Run a single test file
+npx vitest run packages/cli/src/commands/login/login.test.ts
+
+# Run tests in watch mode
+npx vitest --workspace=@localess/cli
+```
 
 ### Requirements
 
@@ -140,8 +149,8 @@ The component:
 ```tsx
 const MyComponent = ({ data, links }) => {
   return (
-    <div {...llEditable(data)}>
-      <h1 {...llEditableField('title')}>{data.title}</h1>
+    <div {...localessEditable(data)}>
+      <h1 {...localessEditableField('title')}>{data.title}</h1>
       {data.children?.map(child => (
         <LocalessComponent key={child._id} data={child} links={links} />
       ))}
@@ -151,9 +160,10 @@ const MyComponent = ({ data, links }) => {
 ```
 
 **Visual Editor Integration**:
-- `llEditable(content)` - Adds `data-ll-id` and `data-ll-schema` attributes to root element
-- `llEditableField(fieldName)` - Adds `data-ll-field` attribute to specific fields
+- `localessEditable(content)` - Adds `data-ll-id` and `data-ll-schema` attributes to root element
+- `localessEditableField<T>(fieldName)` - Adds `data-ll-field` attribute to specific fields; generic type `T` restricts `fieldName` to valid content keys
 - Only applied when `enableSync: true`
+- `llEditable` / `llEditableField` are deprecated aliases — prefer `localessEditable` / `localessEditableField`
 - Listen to editor events: `window.localess.on(['input', 'change'], callback)`
 
 **Rich Text Rendering**:
@@ -180,9 +190,16 @@ resolveAsset(asset) // Returns: {origin}/api/v1/spaces/{spaceId}/assets/{uri}
 
 ### CLI Package (@localess/cli)
 
-**Status**: Early development - only `login` command implemented.
+**Status**: Early development (v0.0.6). Built with Commander.js. Entry point: `src/index.ts` with shebang `#!/usr/bin/env node`.
 
-Built with Commander.js. Entry point: `src/index.ts` with shebang `#!/usr/bin/env node`.
+**Implemented commands**:
+- `login --origin <url> --space <id> --token <token>` — persists credentials to `.localess/credentials.json`
+- `logout` — clears stored credentials
+- `translations push <locale> --path <file> [--format flat|nested] [--type add-missing|replace]`
+- `translations pull <locale> --path <file> [--format flat|nested]`
+- `types generate [--path <output_file>]` — generates TypeScript types from OpenAPI schema (default output: `.localess/localess.d.ts`)
+
+**CLI-specific client** (`src/client.ts`) extends the base client with retry logic (`fetchWithRetry`, 3 retries/500ms delay on 5xx), `getSpace()`, `updateTranslations()`, and `getOpenApi()`. Uses `zod` for input validation and `openapi-typescript` for type generation.
 
 ## Content Data Model
 
@@ -220,10 +237,10 @@ components: {
 
 ### Editable Attributes Pattern
 
-When `enableSync: true`, always spread editable attributes on the root element and field elements:
+When `enableSync: true`, always spread editable attributes on the root element and field elements. Use the preferred (non-deprecated) API:
 ```tsx
-<article {...llEditable(data)}>
-  <h1 {...llEditableField('title')}>{data.title}</h1>
+<article {...localessEditable(data)}>
+  <h1 {...localessEditableField('title')}>{data.title}</h1>
 </article>
 ```
 
@@ -251,8 +268,9 @@ All packages use dual exports (CJS + ESM):
 ### Version Management
 
 Packages follow semantic versioning:
-- `@localess/client` and `@localess/react`: v0.9.2
-- `@localess/cli`: v0.0.1 (early stage)
+- `@localess/client`: v0.9.3
+- `@localess/react`: v0.9.5
+- `@localess/cli`: v0.0.6 (early stage)
 
 ## Common Patterns
 
@@ -288,16 +306,17 @@ useEffect(() => {
       }
     }
     window.localess.on(['input', 'change'], handler)
-    return () => window.localess.off(['input', 'change'], handler)
   }
 }, [])
 ```
+
+Note: `window.localess` only provides `.on()` and `.onChange()` — there is no `.off()` method.
 
 ### Nested Components Pattern
 
 Content often has nested structures. Use recursive `LocalessComponent`:
 ```tsx
-<div {...llEditable(data)}>
+<div {...localessEditable(data)}>
   {data.sections?.map(section => (
     <LocalessComponent key={section._id} data={section} links={links} />
   ))}
