@@ -24,10 +24,11 @@
   },
   "homepage": "https://github.com/Lessify/localess-js#readme",
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "@types/node": "^20.12.12",
-    "vitest": "^4.0.18",
     "tsup": "^8.5.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": ">= 20.0.0"

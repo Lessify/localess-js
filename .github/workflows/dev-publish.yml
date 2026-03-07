@@ -20,24 +20,41 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build all packages
-        run: npm run build
+      - name: Find changed packages
+        id: changed
+        run: |
+          # Find changed package.json files in packages/ since last commit on dev
+          git fetch origin dev --depth=2
+          CHANGED=$(git diff --name-only origin/dev...HEAD -- packages/*/package.json | xargs -n1 dirname | sort -u)
+          echo "changed_packages<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Set snapshot version for all packages
+      - name: Set snapshot version for changed packages
+        if: steps.changed.outputs.changed_packages != ''
         run: |
           DATE=$(date +"%Y%m%d%H%M%S")
-          for pkg in packages/*/package.json; do
+          for pkgdir in ${{ steps.changed.outputs.changed_packages }}; do
+            pkg="$pkgdir/package.json"
             jq '.version |= sub("-dev\\.[0-9]+"; "") | .version += "-dev.'"$DATE"'"' $pkg > tmp.$$.json && mv tmp.$$.json $pkg
           done
         shell: bash
 
-      - name: Publish snapshot to npm with tag 'dev'
+      - name: Build changed packages
+        if: steps.changed.outputs.changed_packages != ''
+        run: |
+          for pkgdir in ${{ steps.changed.outputs.changed_packages }}; do
+            npm run build --workspace $pkgdir
+          done
+        shell: bash
+
+      - name: Publish changed packages to npm with tag 'dev'
+        if: steps.changed.outputs.changed_packages != ''
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          for pkg in packages/*/package.json; do
-            pkgdir=$(dirname $pkg)
-            if ! grep -q '"private"\s*:\s*true' $pkg; then
+          for pkgdir in ${{ steps.changed.outputs.changed_packages }}; do
+            if ! grep -q '"private"\s*:\s*true' $pkgdir/package.json; then
               npm publish --tag dev --access public --workspace $pkgdir
             fi
           done
