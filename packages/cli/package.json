@@ -1,6 +1,6 @@
 {
   "name": "@localess/cli",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Localess Command Line.",
   "keywords": [
     "localess",
