@@ -9,7 +9,7 @@ export const program = new Command();
 program
   .name('Localess CLI')
   .description('CLI tool for Localess platform management')
-  .version('0.0.2');
+  .version('0.0.4');
 
 
 program.addCommand(loginCommand)

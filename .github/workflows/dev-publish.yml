@@ -24,14 +24,12 @@ jobs:
         id: changed
         run: |
           git fetch origin dev --depth=2
-          CHANGED=$(git diff --name-only origin/dev...HEAD -- packages/*/package.json | xargs -r -n1 dirname | sort -u)
-          echo "changed_packages<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          CHANGED=$(git diff --name-only origin/dev...HEAD -- packages/*/package.json | xargs -r -n1 dirname | sort -u | tr '\n' ' ')
+          echo "changed_packages=$CHANGED" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Set snapshot version for changed packages
-        if: steps.changed.outputs.changed_packages != ''
+        if: steps.changed.outputs.changed_packages
         run: |
           DATE=$(date +"%Y%m%d%H%M%S")
           for pkgdir in ${{ steps.changed.outputs.changed_packages }}; do
@@ -41,7 +39,7 @@ jobs:
         shell: bash
 
       - name: Build changed packages
-        if: steps.changed.outputs.changed_packages != ''
+        if: steps.changed.outputs.changed_packages
         run: |
           for pkgdir in ${{ steps.changed.outputs.changed_packages }}; do
             npm run build --workspace $pkgdir
@@ -49,7 +47,7 @@ jobs:
         shell: bash
 
       - name: Publish changed packages to npm with tag 'dev'
-        if: steps.changed.outputs.changed_packages != ''
+        if: steps.changed.outputs.changed_packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
