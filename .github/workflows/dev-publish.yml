@@ -23,12 +23,12 @@ jobs:
       - name: Find changed packages
         id: changed
         run: |
-          # Find changed package.json files in packages/ since last commit on dev
           git fetch origin dev --depth=2
-          CHANGED=$(git diff --name-only origin/dev...HEAD -- packages/*/package.json | xargs -n1 dirname | sort -u)
+          CHANGED=$(git diff --name-only origin/dev...HEAD -- packages/*/package.json | xargs -r -n1 dirname | sort -u)
           echo "changed_packages<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGED" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+        shell: bash
 
       - name: Set snapshot version for changed packages
         if: steps.changed.outputs.changed_packages != ''
