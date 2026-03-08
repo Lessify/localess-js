@@ -1,47 +1,54 @@
 import {Command} from "commander";
+import {input, password} from "@inquirer/prompts";
 import {localessClient} from "../../client";
 import {getSession, persistSession} from "../../session";
 
 type LoginOptions = {
-  token?: string;
-  space?: string;
   origin?: string;
+  space?: string;
+  token?: string;
 };
 
 export const loginCommand = new Command('login')
   .description('Login to Localess CLI')
-  .option('-t, --token <token>', 'Token to login to Localess CLI')
-  .option('-s, --space <space>', 'Space ID to login to')
   .option('-o, --origin <origin>', 'Origin of the Localess instance')
+  .option('-s, --space <space>', 'Space ID to login to')
+  .option('-t, --token <token>', 'Token to login to Localess CLI')
   .action(async (options: LoginOptions) => {
     const session = await getSession()
 
     if (session.isLoggedIn && session.method === 'file') {
-      console.log('Already logged in. If you want to log in with different credentials, please log out first using "localess logout" command.');
+      console.log('Already logged in.');
+      console.log('If you want to log in with different credentials, please log out first using "localess logout" command.');
       return;
     }
-    if (options.origin && options.space && options.token) {
-      const client = localessClient({
-        origin: options.origin,
-        spaceId: options.space,
-        token: options.token,
-      });
-      try {
-        const space = await client.getSpace();
-        console.log(`Successfully logged in to space: ${space.name} (${space.id})`);
-        await persistSession({
-          origin: options.origin,
-          space: options.space,
-          token: options.token,
-        })
-      } catch (e) {
-        console.error('Login failed');
-      }
-    } else if(session.isLoggedIn && session.method === 'env') {
-      console.log('Already logged in with environment variables.');
-      console.log('If you want to log in with different credentials, Please provide all required options: --origin, --space, and --token');
-    } else {
-      console.log('Please provide all required options: --origin, --space, and --token');
-      console.log('Or set the following environment variables: LOCALESS_ORIGIN, LOCALESS_SPACE, and LOCALESS_TOKEN');
+
+    const origin = options.origin ?? await input({
+      message: 'Origin of the Localess instance:',
+      required: true,
+    });
+
+    const space = options.space ?? await input({
+      message: 'Space ID:',
+      required: true,
+    });
+
+    const token = options.token ?? await password({
+      message: 'Token:',
+      mask: true,
+    });
+
+    const client = localessClient({
+      origin,
+      spaceId: space,
+      token,
+    });
+
+    try {
+      const spaceData = await client.getSpace();
+      console.log(`Successfully logged in to space: ${spaceData.name} (${spaceData.id})`);
+      await persistSession({origin, space, token});
+    } catch (e) {
+      console.error('Login failed');
     }
   });
