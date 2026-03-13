@@ -1,8 +1,8 @@
-name: Publish to npm (master branch)
+name: Publish to npm
 
 on:
   push:
-    branches: [master]
+    branches: [main]
 
 jobs:
   publish:

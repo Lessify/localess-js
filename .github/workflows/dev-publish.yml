@@ -1,4 +1,4 @@
-name: Publish Snapshot to npm (dev branch)
+name: Publish Snapshot to npm
 
 on:
   push:
