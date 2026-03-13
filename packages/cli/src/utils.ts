@@ -1,13 +1,3 @@
-export function proxyURIFromEnv(): string | undefined {
-  return (
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy ||
-    process.env.HTTP_PROXY ||
-    process.env.http_proxy ||
-    undefined
-  );
-}
-
 export const RESET = "\x1b[0m"
 export const BRIGHT = "\x1b[1m"
 export const DIM = "\x1b[2m"

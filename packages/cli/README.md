@@ -6,82 +6,249 @@
 
 ----
 
-# Localess Command Line
+# Localess CLI
 
-A powerful CLI tool to interact with your Localess spaces.
+The `@localess/cli` package is the official command-line interface for the [Localess](https://github.com/Lessify/localess) headless CMS platform. It provides commands to authenticate with your Localess instance, synchronize translations, and generate TypeScript type definitions from your content schemas.
+
+## Requirements
+
+- Node.js >= 20.0.0
+
+## Installation
+
+```bash
+# Install as a project dev dependency (recommended)
+npm install @localess/cli -D
+
+# Or install globally
+npm install @localess/cli -g
+```
+
+---
 
 ## Features
 
-- 🔐 **Authentication** - Secure login system and CI environments.
-- 🌐 **Translations** - Sync and manage translations for your Localess space.
-- 🛡️ **Type Safety** - Generate TypeScript type definitions for your Localess content schemas, ensuring type safety in your frontend applications.
+- 🔐 **Authentication** — Secure credential storage for CLI and CI/CD environments
+- 🌐 **Translations** — Push and pull translation files to/from your Localess space
+- 🛡️ **Type Generation** — Generate TypeScript type definitions from your Localess content schemas for end-to-end type safety
 
-## Setup
+---
+
+## Authentication
+
+### `localess login`
+
+Authenticate with your Localess instance. Credentials are validated immediately and stored securely in `.localess/credentials.json` with restricted file permissions (`0600`).
 
 ```bash
-npm install @localess/cli -D
+localess login --origin <origin> --space <space_id> --token <api_token>
 ```
 
-## Login
-The CLI provides a `login` command to authenticate with your Localess account. This command prompts you for your email and password, and securely stores an authentication token for future API requests.
-### Usage
+If any option is omitted, the CLI will interactively prompt for the missing values.
 
-#### Login with your Localess from CLI:
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-o, --origin <origin>` | Localess instance URL (e.g., `https://my-localess.web.app`) |
+| `-s, --space <space>` | Space ID (found in Localess Space settings) |
+| `-t, --token <token>` | API token (input is masked for security) |
+
+**Examples:**
+
 ```bash
-localess login --origin <localess_api_origin> --space <space_id> --token <space_access_token>
-```
-#### Login with your Localess with environment variables:
-```bash
-export LOCALESS_ORIGIN=<localess_api_origin>
-export LOCALESS_SPACE=<space_id>
-export LOCALESS_TOKEN=<space_access_token>  
+# Interactive login (prompts for any missing values)
 localess login
+
+# Non-interactive login (CI/CD)
+localess login --origin https://my-localess.web.app --space MY_SPACE_ID --token MY_API_TOKEN
 ```
 
-## Logout
-The CLI provides a `logout` command to clear your authentication token and log you out of your Localess account.
-### Usage
+#### Authentication via Environment Variables
+
+For CI/CD pipelines, you can provide credentials through environment variables instead of running `localess login`. The CLI automatically reads these variables and skips the file-based credentials:
+
+```bash
+export LOCALESS_ORIGIN=https://my-localess.web.app
+export LOCALESS_SPACE=MY_SPACE_ID
+export LOCALESS_TOKEN=MY_API_TOKEN
+
+localess translations pull en --path ./public/locales/en.json
+```
+
+| Variable | Description |
+|----------|-------------|
+| `LOCALESS_ORIGIN` | Localess instance URL |
+| `LOCALESS_SPACE` | Space ID |
+| `LOCALESS_TOKEN` | API token |
+
+---
+
+### `localess logout`
+
+Clear stored credentials from `.localess/credentials.json`.
+
 ```bash
 localess logout
 ```
 
+> If you authenticated via environment variables, those must be unset manually — `logout` only affects file-based credentials.
+
+---
+
 ## Translations Management
 
-The CLI provides a `translations` command with `push` and `pull` subcommands to sync and manage translations for your Localess space.
+### `localess translations push <locale>`
 
-### Push Translations
-Push local translation files to Localess.
-
-```bash
-localess translations push <locale> --path <file> [--format <flat|nested>] [--type <add-missing|replace>]
-```
-- `<locale>`: Locale code (e.g., `en`)
-- `--path`: Path to the translations file to push (required)
-- `--format`: File format (`flat` or `nested`, default: `flat`). **Note:** Only `flat` format is currently supported for push.
-- `--type`: Push type (`add-missing`, `update-existing`, `delete-missing`. Default: `add-missing`)
-
-### Pull Translations
-Pull translations from Localess and save locally.
+Push a local JSON translation file to your Localess space. Only keys present in the file are affected, based on the selected update type.
 
 ```bash
-localess translations pull <locale> --path <file> [--format <flat|nested>]
+localess translations push <locale> --path <file> [options]
 ```
-- `<locale>`: Locale code (e.g., `en`)
-- `--path`: Path where the translations file will be saved (required)
-- `--format`: File format (`flat` or `nested`, default: `flat`)
 
-## Generate TypeScript Types
+**Arguments:**
 
-The CLI provides a `types generate` command to generate TypeScript definitions for your Localess content schemas. This command fetches your space's OpenAPI schema and writes a `localess.d.ts` file to your project, allowing for strong typing in your codebase.
+| Argument | Description |
+|----------|-------------|
+| `<locale>` | ISO 639-1 locale code (e.g., `en`, `de`, `fr`) |
 
-### Usage
+**Options:**
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-p, --path <path>` | *(required)* | Path to the JSON translations file |
+| `-f, --format <format>` | `flat` | File format: `flat` or `nested` |
+| `-t, --type <type>` | `add-missing` | Update strategy: `add-missing` or `update-existing` |
+| `--dry-run` | `false` | Preview changes without applying them |
+
+**Update Strategies:**
+
+| Type | Description |
+|------|-------------|
+| `add-missing` | Adds translations for keys that do not yet exist in Localess |
+| `update-existing` | Updates translations for keys that already exist in Localess |
+
+**File Formats:**
+
+- **`flat`** — A flat JSON object where keys may use dot notation:
+  ```json
+  {
+    "common.submit": "Submit",
+    "nav.home": "Home"
+  }
+  ```
+
+- **`nested`** — A nested JSON object that is automatically flattened before uploading:
+  ```json
+  {
+    "common": { "submit": "Submit" },
+    "nav": { "home": "Home" }
+  }
+  ```
+
+**Examples:**
 
 ```bash
-localess types generate [--path <output_file>]
+# Push English translations (add missing keys only)
+localess translations push en --path ./locales/en.json
+
+# Push with update-existing strategy
+localess translations push en --path ./locales/en.json --type update-existing
+
+# Preview changes without applying (dry run)
+localess translations push en --path ./locales/en.json --dry-run
+
+# Push nested-format translations
+localess translations push de --path ./locales/de.json --format nested
 ```
-- `--path`: Path to the file where to save the generated types. Default is `.localess/localess.d.ts` in your current working directory.
 
-- You must be logged in (`localess login`) before running this command.
-- The generated types file will be saved as `./.localess/localess.d.ts` by default.
+---
 
-You can then import these types in your TypeScript project for improved type safety when working with Localess content.
+### `localess translations pull <locale>`
+
+Pull translations from your Localess space and save them to a local file.
+
+```bash
+localess translations pull <locale> --path <file> [options]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|----------|-------------|
+| `<locale>` | ISO 639-1 locale code (e.g., `en`, `de`, `fr`) |
+
+**Options:**
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-p, --path <path>` | *(required)* | Output file path |
+| `-f, --format <format>` | `flat` | File format: `flat` or `nested` |
+
+**Examples:**
+
+```bash
+# Pull English translations as flat JSON
+localess translations pull en --path ./locales/en.json
+
+# Pull German translations as nested JSON
+localess translations pull de --path ./locales/de.json --format nested
+```
+
+---
+
+## TypeScript Type Generation
+
+### `localess types generate`
+
+Fetch your space's OpenAPI schema from Localess and generate TypeScript type definitions. The output file provides full type safety when working with Localess content in your TypeScript projects.
+
+```bash
+localess types generate [--path <output_path>]
+```
+
+**Options:**
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-p, --path <path>` | `.localess/localess.d.ts` | Path to write the generated TypeScript definitions file |
+
+> **Note:** Your API token must have **Development Tools** permission enabled in Localess Space settings.
+
+**Example:**
+
+```bash
+# Generate types to the default location
+localess types generate
+
+# Generate types to a custom path
+localess types generate --path src/types/localess.d.ts
+```
+
+**Using generated types:**
+
+```ts
+import type { Page, HeroBlock } from './.localess/localess';
+import { getLocalessClient } from "@localess/react";
+
+const client = getLocalessClient();
+const content = await client.getContentBySlug<Page>('home', { locale: 'en' });
+// content.data is now fully typed as Page
+```
+
+---
+
+## Stored Files
+
+| File | Description |
+|------|-------------|
+| `.localess/credentials.json` | Stored login credentials (created by `localess login`) |
+| `.localess/localess.d.ts` | Generated TypeScript definitions (created by `localess types generate`) |
+
+> It is recommended to add `.localess/credentials.json` to your `.gitignore` to avoid committing sensitive credentials.
+
+---
+
+## License
+
+[MIT](../../LICENSE)
