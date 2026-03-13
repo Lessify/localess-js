@@ -1,6 +1,6 @@
 {
   "name": "@localess/client",
-  "version": "0.9.3",
+  "version": "3.0.0",
   "description": "Universal JavaScript/TypeScript SDK for Localess's API.",
   "keywords": [
     "localess",
