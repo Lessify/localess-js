@@ -8,10 +8,10 @@ jobs:
   publish-snapshot:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           registry-url: 'https://registry.npmjs.org/'
@@ -20,47 +20,35 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Find changed packages
-        id: changed
-        run: |
-          BEFORE="${{ github.event.before }}"
-          SHA="${{ github.sha }}"
-          if [[ "$BEFORE" == "0000000000000000000000000000000000000000" || -z "$BEFORE" ]]; then
-            # Initial push to branch — treat all packages as changed
-            CHANGED=$(ls packages/ | sed 's|^|packages/|' | tr '\n' ' ')
-          else
-            git fetch --depth=2 origin dev
-            CHANGED=$(git diff --name-only "$BEFORE" "$SHA" -- 'packages/' | awk -F/ '{print $2}' | sort -u | sed 's|^|packages/|' | tr '\n' ' ')
-          fi
-          echo "changed_packages=$CHANGED" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Set snapshot version for changed packages
-        if: steps.changed.outputs.changed_packages
+      - name: Set snapshot version from root package.json
         run: |
           DATE=$(date +"%Y%m%d%H%M%S")
-          for pkgdir in ${{ steps.changed.outputs.changed_packages }}; do
-            pkg="$pkgdir/package.json"
-            jq '.version |= sub("-dev\\.[0-9]+"; "") | .version += "-dev.'"$DATE"'"' $pkg > tmp.$$.json && mv tmp.$$.json $pkg
+          VERSION="$(node -p "require('./package.json').version")-dev.${DATE}"
+          echo "Publishing snapshot version: $VERSION"
+          for pkgdir in packages/*/; do
+            pkg="${pkgdir}package.json"
+            jq --arg v "$VERSION" '
+              .version = $v |
+              if .dependencies then
+                .dependencies |= with_entries(if .key | startswith("@localess/") then .value = $v else . end)
+              else . end |
+              if .peerDependencies then
+                .peerDependencies |= with_entries(if .key | startswith("@localess/") then .value = $v else . end)
+              else . end
+            ' "$pkg" > tmp.json && mv tmp.json "$pkg"
           done
         shell: bash
 
-      - name: Build changed packages
-        if: steps.changed.outputs.changed_packages
-        run: |
-          for pkgdir in ${{ steps.changed.outputs.changed_packages }}; do
-            npm run build --workspace $pkgdir
-          done
-        shell: bash
+      - name: Build all packages
+        run: npm run build
 
-      - name: Publish changed packages to npm with tag 'dev'
-        if: steps.changed.outputs.changed_packages
+      - name: Publish all packages to npm with tag 'dev'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          for pkgdir in ${{ steps.changed.outputs.changed_packages }}; do
-            if ! grep -q '"private"\s*:\s*true' $pkgdir/package.json; then
-              npm publish --tag dev --access public --workspace $pkgdir
+          for pkgdir in packages/*/; do
+            if ! grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
+              npm publish --tag dev --access public --workspace "$pkgdir"
             fi
           done
         shell: bash
