@@ -167,7 +167,21 @@ Each package ships a `SKILL.md` file that directs AI coding agents (GitHub Copil
 | `@localess/react` | [`packages/react/SKILL.md`](packages/react/SKILL.md) |
 | `@localess/cli` | [`packages/cli/SKILL.md`](packages/cli/SKILL.md) |
 
-Most AI coding agents automatically read `AGENTS.md` or `SKILL.md` files found in the project when starting a session. See [Next.js – How to set up your project for AI coding agents](https://nextjs.org/docs/app/guides/ai-agents) for more background on this pattern.
+### Using SKILL files in your project
+
+`SKILL.md` is shipped inside each npm package, so it is available locally in `node_modules` after installation. Reference it from your project's `AGENTS.md` to ensure your agent reads accurate Localess documentation every session:
+
+```markdown
+## Localess
+
+Refer to the following SKILL files for accurate API usage, patterns, and best practices:
+
+- @node_modules/@localess/client/SKILL.md
+- @node_modules/@localess/react/SKILL.md
+- @node_modules/@localess/cli/SKILL.md
+```
+
+Include only the packages your project uses. The `@` prefix is the syntax used by most agent tools (GitHub Copilot, Claude Code, Cursor) to import file contents inline into the agent context.
 
 ### Keeping SKILL files up to date
 

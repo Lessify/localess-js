@@ -350,6 +350,18 @@ The following are re-exported for convenience so you only need to import from `@
 
 This package ships a [`SKILL.md`](./SKILL.md) file that provides AI coding agents (GitHub Copilot, Claude Code, Cursor, and others) with accurate, up-to-date APIs, patterns, and best practices. Most agents automatically read `SKILL.md` when starting a session.
 
+### Using SKILL.md in your project
+
+`SKILL.md` is included in the npm package, so it is available locally after installation. Reference it from your project's `AGENTS.md` to ensure your agent reads accurate Localess documentation every session:
+
+```markdown
+## Localess
+
+@node_modules/@localess/react/SKILL.md
+```
+
+The `@` prefix is the syntax used by most agent tools (GitHub Copilot, Claude Code, Cursor) to import file contents inline into the agent context.
+
 When you change the public API of this package, update `SKILL.md` alongside your code:
 
 - **New option or parameter** → add it to the relevant options table and usage example
