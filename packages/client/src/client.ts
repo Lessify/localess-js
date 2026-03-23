@@ -55,7 +55,7 @@ export type ContentFetchParams = {
    * Content version to fetch, leave empty for 'published' or 'draft' for the latest draft.
    * Overrides the version set in the client options.
    */
-  version?: 'draft' | string;
+  version?: 'draft';
   /**
    * Locale identifier (ISO 639-1) to fetch content in, leave empty for default locale.
    *

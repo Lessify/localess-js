@@ -15,7 +15,7 @@ export const LocalessComponent = forwardRef<HTMLElement, LocalessComponentProps>
     return <div>LocalessComponent property <b>data</b> is not provided.</div>
   }
   // Find Component from Mapping
-  const Comp = getComponent(data._schema || data.schema);
+  const Comp = getComponent(data._schema);
   if (Comp) {
     const attr = isSyncEnabled() ? localessEditable(data) : {};
     return <Comp ref={ref} data={data} links={links} references={references} {...attr} {...restProps} />;

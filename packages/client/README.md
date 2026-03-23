@@ -303,8 +303,7 @@ Base type for all content schema data objects.
 ```ts
 interface ContentDataSchema {
   _id: string;
-  _schema?: string;
-  schema: string;
+  _schema: string;
 }
 
 interface ContentData extends ContentDataSchema {

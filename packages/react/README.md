@@ -99,7 +99,7 @@ import { LocalessComponent } from "@localess/react";
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
-| `data` | `ContentData` | ✅ | Content data object from Localess. The component looks up `data._schema` or `data.schema` in the component registry |
+| `data` | `ContentData` | ✅ | Content data object from Localess. The component looks up `data._schema` in the component registry |
 | `links` | `Links` | ❌ | Resolved content links map, forwarded to the rendered component |
 | `references` | `References` | ❌ | Resolved references map, forwarded to the rendered component |
 | `ref` | `React.Ref<HTMLElement>` | ❌ | Ref forwarded to the rendered component's root element |

@@ -113,7 +113,7 @@ export function resolveAsset(asset: ContentAsset) {
 }
 
 // Client + Edit
-export {llEditable, llEditableField, localessEditable, localessEditableField, isBrowser, isServer, isIframe} from '@localess/client'
+export {localessEditable, localessEditableField, isBrowser, isServer, isIframe} from '@localess/client'
 export type {LocalessClient} from '@localess/client'
 // Sync
 export type {LocalessSync, EventToApp, EventCallback, EventToAppType} from '@localess/client'
