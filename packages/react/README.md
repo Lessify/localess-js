@@ -346,6 +346,19 @@ The following are re-exported for convenience so you only need to import from `@
 
 ---
 
+## AI Coding Agents
+
+This package ships a [`SKILL.md`](./SKILL.md) file that provides AI coding agents (GitHub Copilot, Claude Code, Cursor, and others) with accurate, up-to-date APIs, patterns, and best practices. Most agents automatically read `SKILL.md` when starting a session.
+
+When you change the public API of this package, update `SKILL.md` alongside your code:
+
+- **New option or parameter** → add it to the relevant options table and usage example
+- **Changed behaviour** → update the description and any affected code snippets
+- **Deprecated API** → mark it clearly and point to the replacement
+- **New component or hook** → add a full entry with props and usage example
+
+---
+
 ## License
 
 [MIT](../../LICENSE)

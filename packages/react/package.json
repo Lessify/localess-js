@@ -23,7 +23,8 @@
     "url": "https://github.com/Lessify/localess-js/issues"
   },
   "files": [
-    "dist"
+    "dist",
+    "SKILL.md"
   ],
   "main": "dist/index.js",
   "module": "dist/index.mjs",

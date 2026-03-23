@@ -14,7 +14,8 @@
   "sideEffects": false,
 
   "files": [
-    "dist"
+    "dist",
+    "SKILL.md"
   ],
   "exports": {
     ".": {

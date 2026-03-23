@@ -155,7 +155,32 @@ npm test --workspace=@localess/cli
 
 ---
 
-## Contributing
+## AI Coding Agents
+
+Each package ships a `SKILL.md` file that directs AI coding agents (GitHub Copilot, Claude Code, Cursor, and others) to accurate, up-to-date APIs, patterns, and best practices for that package — instead of relying on potentially outdated training data.
+
+### SKILL files
+
+| Package | SKILL file |
+|---------|-----------|
+| `@localess/client` | [`packages/client/SKILL.md`](packages/client/SKILL.md) |
+| `@localess/react` | [`packages/react/SKILL.md`](packages/react/SKILL.md) |
+| `@localess/cli` | [`packages/cli/SKILL.md`](packages/cli/SKILL.md) |
+
+Most AI coding agents automatically read `AGENTS.md` or `SKILL.md` files found in the project when starting a session. See [Next.js – How to set up your project for AI coding agents](https://nextjs.org/docs/app/guides/ai-agents) for more background on this pattern.
+
+### Keeping SKILL files up to date
+
+When you make changes to a package's public API, options, behaviour, or best practices, update the corresponding `SKILL.md` alongside your code change:
+
+- **New option or parameter** → add it to the relevant options table and usage example
+- **Changed behaviour** → update the description and any affected code snippets
+- **Deprecated API** → mark it clearly and point to the replacement
+- **New command or subcommand (CLI)** → add a full entry with all flags and examples
+
+---
+
+
 
 Contributions are welcome! Please open an issue or pull request on [GitHub](https://github.com/Lessify/localess-js/issues).
 

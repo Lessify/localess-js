@@ -14,7 +14,8 @@
   "homepage": "https://github.com/Lessify/localess-js",
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "SKILL.md"
   ],
   "main": "dist/index.js",
   "module": "dist/index.mjs",
