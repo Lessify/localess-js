@@ -117,6 +117,8 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
   if (options.debug) {
     console.log(LOG_GROUP, 'Client Options : ', options);
   }
+  // Normalize origin to remove trailing slash (if any)
+  const normalizedOrigin = options.origin.replace(/\/+$/, '');
   const fetchOptions: RequestInit = {
     redirect: 'follow',
     headers: {
@@ -148,7 +150,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (params?.excludeChildren) {
         excludeChildren = `&excludeChildren=${params.excludeChildren}`;
       }
-      let url = `${options.origin}/api/v1/spaces/${options.spaceId}/links?token=${options.token}${kind}${parentSlug}${excludeChildren}`;
+      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/links?token=${options.token}${kind}${parentSlug}${excludeChildren}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getLinks fetch url : ', url);
       }
@@ -195,7 +197,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const locale = params?.locale ? `&locale=${params.locale}` : '';
       const resolveReference = params?.resolveReference ? `&resolveReference=${params.resolveReference}` : '';
       const resolveLink = params?.resolveLink ? `&resolveLink=${params.resolveLink}` : '';
-      let url = `${options.origin}/api/v1/spaces/${options.spaceId}/contents/slugs/${slug}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
+      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/slugs/${slug}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getContentBySlug fetch url : ', url);
       }
@@ -242,7 +244,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const locale = params?.locale ? `&locale=${params.locale}` : '';
       const resolveReference = params?.resolveReference ? `&resolveReference=${params.resolveReference}` : '';
       const resolveLink = params?.resolveLink ? `&resolveLink=${params.resolveLink}` : '';
-      let url = `${options.origin}/api/v1/spaces/${options.spaceId}/contents/${id}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
+      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/${id}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getContentById fetch url : ', url);
       }
@@ -276,7 +278,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (options.debug) {
         console.log(LOG_GROUP, 'getTranslations() locale : ', locale);
       }
-      let url = `${options.origin}/api/v1/spaces/${options.spaceId}/translations/${locale}?token=${options.token}`;
+      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}?token=${options.token}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getTranslations fetch url : ', url);
       }
@@ -307,14 +309,14 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
     },
 
     syncScriptUrl(): string {
-      return `${options.origin}/scripts/sync-v1.js`
+      return `${normalizedOrigin}/scripts/sync-v1.js`
     },
 
     assetLink(asset: ContentAsset | string): string {
       if (typeof asset === 'string') {
-        return `${options.origin}/api/v1/spaces/${options.spaceId}/assets/${asset}`;
+        return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${asset}`;
       } else {
-        return `${options.origin}/api/v1/spaces/${options.spaceId}/assets/${asset.uri}`;
+        return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${asset.uri}`;
       }
     }
   }
