@@ -10,7 +10,7 @@ import {
   TranslationUpdateType
 } from "./models";
 import {ICache, NoCache, TTLCache} from "./cache";
-import type {OpenAPI3} from "openapi-typescript";
+import {OpenAPIObject} from "openapi3-ts/oas30";
 
 export type LocalessClientOptions = {
   /**
@@ -150,7 +150,7 @@ export interface LocalessClient {
    * Get OpenAPI specification
    * Requires Token with Development Tools permission
    */
-  getOpenApi(): Promise<OpenAPI3>
+  getOpenApi(): Promise<OpenAPIObject>
 
   syncScriptUrl(): string
 
@@ -469,7 +469,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
     },
 
-    async getOpenApi(): Promise<OpenAPI3> {
+    async getOpenApi(): Promise<OpenAPIObject> {
       if (options.debug) {
         console.log(LOG_GROUP, 'getOpenApi()');
       }
@@ -483,7 +483,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         if (options.debug) {
           console.log(LOG_GROUP, 'getTranslations cache hit');
         }
-        return cache.get(url) as OpenAPI3;
+        return cache.get(url) as OpenAPIObject;
       }
 
       try {
@@ -495,10 +495,10 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         // Store response in cache
         cache.set(url, data);
 
-        return data as OpenAPI3;
+        return data as OpenAPIObject;
       } catch (error) {
         console.error(LOG_GROUP, 'getOpenApi error : ', error);
-        return {} as OpenAPI3;
+        return {} as OpenAPIObject;
       }
     },
 

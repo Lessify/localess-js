@@ -1,12 +1,13 @@
 import {Command} from "commander";
 import {localessClient} from "../../../client";
 import {getSession} from "../../../session";
-import openapiTS, { astToString } from "openapi-typescript";
+import { generate } from 'orval';
 import {join} from "node:path";
 import process from "node:process";
-import {DEFAULT_CONFIG_DIR, writeFile} from "../../../file";
+import {DEFAULT_CONFIG_DIR} from "../../../file";
+import {OpenApiDocument} from "@orval/core";
 
-const TYPES_PATH = join(process.cwd(), DEFAULT_CONFIG_DIR, 'localess.d.ts');
+const TYPES_PATH = join(process.cwd(), DEFAULT_CONFIG_DIR, 'localess.ts');
 
 type TypesOptions = {
   path: string;
@@ -14,7 +15,7 @@ type TypesOptions = {
 
 export const typesGenerateCommand = new Command('generate')
   .description('Generate types for your schemas')
-  .option('-p, --path <path>', 'Path to the file where to save the generated types. Default is .localess/localess.d.ts', TYPES_PATH)
+  .option('-p, --path <path>', 'Path to the file where to save the generated types. Default is .localess/localess.ts', TYPES_PATH)
   .action(async (options: TypesOptions) => {
     console.log('Types in with options:', options);
 
@@ -34,14 +35,16 @@ export const typesGenerateCommand = new Command('generate')
     const specification = await client.getOpenApi();
     console.log('Generating types from OpenAPI specification...');
     try {
-      const minimalSpec = {
-        openapi: '3.0.0',
-        info: { title: 'Schemas Only', version: '1.0.0' },
-        components: { schemas: specification.components?.schemas || {} },
-      };
-      const ast =  await openapiTS(minimalSpec, {exportType: true, rootTypes: true, rootTypesNoSchemaPrefix: true})
-      const contents = astToString(ast);
-      await writeFile(options.path, contents);
+      await generate({
+        input: {
+          target: specification as OpenApiDocument,
+        },
+        output: {
+          target: options.path,
+          client: 'fetch',
+          mode: 'single',
+        },
+      });
       console.log(`Types generated successfully at ${options.path}`);
     } catch (e) {
       console.error(e);
