@@ -119,6 +119,8 @@ export type {LocalessClient} from '@localess/client'
 export type {LocalessSync, EventToApp, EventCallback, EventToAppType} from '@localess/client'
 // Models
 export type * from './models';
+// Utils
+export * from './utils';
 // Component
 export * from './localess-componenet';
 // Rich Text
