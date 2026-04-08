@@ -174,9 +174,9 @@ localessInit({
 
 > Never enable sync in production — the script is only meaningful inside the Localess Visual Editor iframe.
 
-### Receiving Real-time Editor Events
+### With `useLocaless` Hook
 
-Use the `useLocaless` hook in a Client Component — it **automatically subscribes** to `input` / `change` events when `enableSync` is active. No manual `window.localess.on()` wiring needed.
+The `useLocaless` hook handles the full cycle automatically — initial fetch and live sync updates — with no extra wiring needed.
 
 ```tsx
 'use client';
@@ -185,7 +185,6 @@ import { useLocaless, LocalessComponent, localessEditable } from "@localess/reac
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent, locale }: { initialContent: Content<Page>; locale?: string }) {
-  // Fetches content and auto-syncs with Visual Editor live updates
   const content = useLocaless<Page>('home', { locale }) ?? initialContent;
 
   return (
@@ -203,7 +202,82 @@ export function PageClient({ initialContent, locale }: { initialContent: Content
 }
 ```
 
-**Available events (handled internally by `useLocaless`):**
+### With `LocalessDocument` Component
+
+`LocalessDocument` is a component alternative to the hook. It accepts server-fetched `data` and manages live sync updates internally, delegating rendering to `LocalessComponent`. Useful when you prefer a component-based approach over hooks.
+
+```tsx
+// Server Component — pass fetched data directly to LocalessDocument
+import { getLocalessClient, LocalessDocument } from "@localess/react";
+import type { Page } from "./.localess/localess";
+
+export default async function HomePage({ params }: { params: Promise<{ locale?: string }> }) {
+  const { locale } = await params;
+  const client = getLocalessClient();
+  const content = await client.getContentBySlug<Page>('home', { locale });
+
+  return (
+    <LocalessDocument
+      data={content.data}
+      links={content.links}
+      references={content.references}
+    />
+  );
+}
+```
+
+**Props** (same shape as `LocalessComponent`):
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `data` | `ContentData` | ✅ | Initial content data |
+| `links` | `Links` | ❌ | Resolved links map |
+| `references` | `References` | ❌ | Resolved references map |
+| `ref` | `React.Ref<HTMLElement>` | ❌ | Forwarded to the rendered root element |
+
+> Subscribes to `input` / `change` events automatically when `enableSync` is active. Unlike `useLocaless`, it does not fetch content — it only handles live sync for data passed in as props.
+
+### Manual Integration
+
+If you manage content state yourself without `useLocaless` or `LocalessDocument`, subscribe to editor events directly via `window.localess`:
+
+```tsx
+'use client';
+
+import { useEffect, useState } from "react";
+import { LocalessComponent, localessEditable, isSyncEnabled, isBrowser } from "@localess/react";
+import type { Content, Page } from "./.localess/localess";
+
+export function PageClient({ initialContent }: { initialContent: Content<Page> }) {
+  const [pageData, setPageData] = useState(initialContent.data);
+
+  useEffect(() => {
+    if (isSyncEnabled() && isBrowser() && window.localess) {
+      window.localess.on(['input', 'change'], (event) => {
+        if (event.type === 'input' || event.type === 'change') {
+          setPageData(event.data);
+        }
+      });
+    }
+    // No cleanup needed: window.localess has no .off() method
+  }, []);
+
+  return (
+    <main {...localessEditable(pageData)}>
+      {pageData?.body?.map(item => (
+        <LocalessComponent
+          key={item._id}
+          data={item}
+          links={initialContent.links}
+          references={initialContent.references}
+        />
+      ))}
+    </main>
+  );
+}
+```
+
+**Available events via `window.localess.on()`:**
 
 | Event         | When                                          |
 |---------------|-----------------------------------------------|
@@ -219,13 +293,14 @@ export function PageClient({ initialContent, locale }: { initialContent: Content
 
 ### Pattern: Split Server/Client Components (Next.js App Router)
 
-Keep data fetching server-side and delegate rendering + sync to a Client Component using `useLocaless`:
+**Preload data server-side** and pass it to the Client Component. The page renders immediately with server data — no loading flash — and Visual Editor sync kicks in on top.
+
+**Server Component** (same for all three options below):
 
 ```tsx
-// app/[locale]/page.tsx — Server Component: fetches initial data
+// app/[locale]/page.tsx
 import { getLocalessClient } from "@localess/react";
-import { PageClient } from "./page-client";
-import type { Page } from "./.localess/localess";
+import type { Content, Page } from "./.localess/localess";
 
 export default async function HomePage({
   params,
@@ -233,32 +308,82 @@ export default async function HomePage({
   params: Promise<{ locale?: string }>;
 }) {
   const { locale } = await params;
-  const client = getLocalessClient();
-  const content = await client.getContentBySlug<Page>('home', { locale });
+  // Data fetched during SSR — preloaded into the client component as a prop
+  const content = await getLocalessClient().getContentBySlug<Page>('home', { locale });
 
   return <PageClient initialContent={content} locale={locale} />;
 }
 ```
 
+**Option A — `useLocaless` hook**: re-fetches on client, falls back to server data until resolved, auto-syncs with editor.
+
 ```tsx
-// app/[locale]/page-client.tsx — Client Component: renders + auto-syncs
+// app/[locale]/page-client.tsx
 'use client';
 
 import { useLocaless, LocalessComponent, localessEditable } from "@localess/react";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent, locale }: { initialContent: Content<Page>; locale?: string }) {
+  // ?? initialContent: renders server data immediately, switches to hook result once ready
   const content = useLocaless<Page>('home', { locale }) ?? initialContent;
 
   return (
     <main {...localessEditable(content.data)}>
       {content.data?.body?.map(item => (
-        <LocalessComponent
-          key={item._id}
-          data={item}
-          links={content.links}
-          references={content.references}
-        />
+        <LocalessComponent key={item._id} data={item} links={content.links} references={content.references} />
+      ))}
+    </main>
+  );
+}
+```
+
+**Option B — `LocalessDocument` component**: no client re-fetch, uses server data directly, auto-syncs with editor.
+
+```tsx
+// app/[locale]/page.tsx — no separate client file needed
+import { getLocalessClient, LocalessDocument } from "@localess/react";
+import type { Page } from "./.localess/localess";
+
+export default async function HomePage({ params }: { params: Promise<{ locale?: string }> }) {
+  const { locale } = await params;
+  const content = await getLocalessClient().getContentBySlug<Page>('home', { locale });
+
+  return (
+    <LocalessDocument data={content.data} links={content.links} references={content.references} />
+  );
+}
+```
+
+**Option C — Manual**: full control, initialise state with server-preloaded data, subscribe to sync yourself.
+
+```tsx
+// app/[locale]/page-client.tsx
+'use client';
+
+import { useEffect, useState } from "react";
+import { LocalessComponent, localessEditable, isSyncEnabled, isBrowser } from "@localess/react";
+import type { Content, Page } from "./.localess/localess";
+
+export function PageClient({ initialContent }: { initialContent: Content<Page> }) {
+  // Server-preloaded data used as initial state — no loading flash
+  const [pageData, setPageData] = useState(initialContent.data);
+
+  useEffect(() => {
+    if (isSyncEnabled() && isBrowser() && window.localess) {
+      window.localess.on(['input', 'change'], (event) => {
+        if (event.type === 'input' || event.type === 'change') {
+          setPageData(event.data);
+        }
+      });
+    }
+    // No cleanup needed: window.localess has no .off() method
+  }, []);
+
+  return (
+    <main {...localessEditable(pageData)}>
+      {pageData?.body?.map(item => (
+        <LocalessComponent key={item._id} data={item} links={initialContent.links} references={initialContent.references} />
       ))}
     </main>
   );
@@ -400,7 +525,7 @@ const [content, translations] = await Promise.all([
 
 ---
 
-## Full Next.js 15 App Router Setup
+## Full Next.js 16.2 App Router Setup
 
 ```typescript
 // app/layout.tsx (Server Component)
@@ -476,6 +601,7 @@ export { setFallbackComponent, getFallbackComponent, isSyncEnabled }
 
 // Rendering
 export { LocalessComponent }        // Dynamic schema-to-component renderer
+export { LocalessDocument }         // Schema renderer + built-in Visual Editor sync
 export { renderRichTextToReact }    // Rich text → React nodes
 export { resolveAsset }             // ContentAsset → full URL
 

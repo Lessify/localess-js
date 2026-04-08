@@ -110,7 +110,8 @@ localessClient({
 **Key Files**:
 - `index.ts` - Barrel re-export file
 - `state.ts` - Global state: client instance, component registry, sync flag, asset prefix
-- `components/localess-component.tsx` - Dynamic component renderer (`LocalessComponent`)
+- `components/localess-component.tsx` - `LocalessComponent` — dynamic schema-to-component renderer
+- `components/localess-document.tsx` - `LocalessDocument` — schema renderer with built-in Visual Editor sync
 - `hooks/use-localess.ts` - `useLocaless<T>` React hook for client-side content fetching with sync
 - `utils/link.util.ts` - `findLink()` utility for resolving `ContentLink` to a URL path
 - `richtext.ts` - TipTap-based rich text to React renderer
@@ -181,6 +182,10 @@ Uses TipTap with extensions: Document, Text, Paragraph, Heading (1-6), Bold, Ita
 ```typescript
 resolveAsset(asset) // Returns: {origin}/api/v1/spaces/{spaceId}/assets/{uri}
 ```
+
+**Components**:
+- `LocalessComponent` — maps `data._schema` to a registered component; pure renderer, no sync logic
+- `LocalessDocument` — wraps `LocalessComponent` and adds built-in Visual Editor sync via `useState` + `window.localess.on()`. Accepts server-fetched `data` and handles live updates automatically when `enableSync` is active. Does not fetch content itself.
 
 **Hooks**:
 - `useLocaless<T>(slug, options?)` - Fetches content by slug in a Client Component. Accepts a `string` or `string[]` slug (array is joined with `/`). Automatically subscribes to Visual Editor `input`/`change` events when `enableSync` is active. Returns `Content<T> | undefined`.
@@ -296,6 +301,8 @@ const content = await client.getContentBySlug<PageData>('home', {
 
 ### React Visual Editor Sync
 
+**Always preload data server-side** and pass it as a prop — the client renders immediately with no loading flash, then sync activates on top.
+
 ```typescript
 // Initialize once at app startup (root layout)
 localessInit({
@@ -308,11 +315,19 @@ localessInit({
 ```
 
 ```tsx
-// Client Component — useLocaless handles fetch + live sync automatically
+// Server Component — fetches and preloads data
+const content = await getLocalessClient().getContentBySlug<Page>('home', { locale });
+return <PageClient initialContent={content} locale={locale} />;
+```
+
+#### With `useLocaless` Hook
+
+```tsx
 'use client';
 import { useLocaless, LocalessComponent, localessEditable } from '@localess/react';
 
 export function PageClient({ initialContent, locale }) {
+  // ?? initialContent: renders server data immediately, switches to hook result once ready
   const content = useLocaless('home', { locale }) ?? initialContent;
 
   return (
@@ -325,7 +340,49 @@ export function PageClient({ initialContent, locale }) {
 }
 ```
 
-Note: `window.localess` only provides `.on()` and `.onChange()` — there is no `.off()` method. The `useLocaless` hook handles subscription automatically when `enableSync` is active.
+#### With `LocalessDocument` Component
+
+No client re-fetch — uses server-preloaded data directly and auto-syncs with editor.
+
+```tsx
+// Server Component — no separate client file needed
+const content = await getLocalessClient().getContentBySlug<Page>('home', { locale });
+return <LocalessDocument data={content.data} links={content.links} references={content.references} />;
+```
+
+#### Manual Integration
+
+```tsx
+'use client';
+import { useEffect, useState } from 'react';
+import { LocalessComponent, localessEditable, isSyncEnabled, isBrowser } from '@localess/react';
+
+export function PageClient({ initialContent }) {
+  // Server-preloaded data — no loading state needed
+  const [pageData, setPageData] = useState(initialContent.data);
+
+  useEffect(() => {
+    if (isSyncEnabled() && isBrowser() && window.localess) {
+      window.localess.on(['input', 'change'], (event) => {
+        if (event.type === 'input' || event.type === 'change') {
+          setPageData(event.data)
+        }
+      })
+    }
+    // No cleanup: window.localess has no .off() method
+  }, [])
+
+  return (
+    <main {...localessEditable(pageData)}>
+      {pageData?.body?.map(item => (
+        <LocalessComponent key={item._id} data={item} links={initialContent.links} references={initialContent.references} />
+      ))}
+    </main>
+  );
+}
+```
+
+Note: `window.localess` only provides `.on()` and `.onChange()` — there is no `.off()` method.
 
 ### Nested Components Pattern
 

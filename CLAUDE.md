@@ -120,9 +120,14 @@ const href = findLink(content.links, data.ctaLink);
 // 'content' type → '/' + fullSlug  |  'url' type → raw URI
 ```
 
-**`<LocalessComponent>`** — maps `data._schema` to registered component:
+**`<LocalessComponent>`** — maps `data._schema` to registered component, pure renderer:
 ```tsx
 <LocalessComponent data={item} links={content.links} references={content.references} />
+```
+
+**`<LocalessDocument>`** — component alternative to `useLocaless`. Accepts server-fetched `data` and handles live sync internally. Does not fetch content itself:
+```tsx
+<LocalessDocument data={content.data} links={content.links} references={content.references} />
 ```
 
 **`renderRichTextToReact(content)`** — TipTap JSON → React nodes.
