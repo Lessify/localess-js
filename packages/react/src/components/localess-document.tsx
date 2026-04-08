@@ -1,3 +1,5 @@
+'use client';
+
 import {forwardRef, useEffect, useState} from "react";
 import {ContentData, isBrowser, Links, References} from "@localess/client";
 import {LocalessComponent} from "./localess-component";
