@@ -108,8 +108,11 @@ localessClient({
 **Purpose**: React integration with component mapping and visual editor support.
 
 **Key Files**:
-- `index.ts` - Global state for client, components registry, and sync
-- `localess-componenet.tsx` - Dynamic component renderer
+- `index.ts` - Barrel re-export file
+- `state.ts` - Global state: client instance, component registry, sync flag, asset prefix
+- `components/localess-component.tsx` - Dynamic component renderer (`LocalessComponent`)
+- `hooks/use-localess.ts` - `useLocaless<T>` React hook for client-side content fetching with sync
+- `utils/link.util.ts` - `findLink()` utility for resolving `ContentLink` to a URL path
 - `richtext.ts` - TipTap-based rich text to React renderer
 
 **Initialization Pattern**:
@@ -178,6 +181,12 @@ Uses TipTap with extensions: Document, Text, Paragraph, Heading (1-6), Bold, Ita
 ```typescript
 resolveAsset(asset) // Returns: {origin}/api/v1/spaces/{spaceId}/assets/{uri}
 ```
+
+**Hooks**:
+- `useLocaless<T>(slug, options?)` - Fetches content by slug in a Client Component. Accepts a `string` or `string[]` slug (array is joined with `/`). Automatically subscribes to Visual Editor `input`/`change` events when `enableSync` is active. Returns `Content<T> | undefined`.
+
+**Utils**:
+- `findLink(links, link)` - Resolves a `ContentLink` to a URL string. Returns `'/' + fullSlug` for `type: 'content'`, the raw URI for `type: 'url'`, `/not-found` when the link cannot be resolved.
 
 **Global State Functions**:
 - `getLocalessClient()` - Access initialized client (throws if not initialized)
@@ -268,9 +277,9 @@ All packages use dual exports (CJS + ESM):
 ### Version Management
 
 Packages follow semantic versioning:
-- `@localess/client`: v0.9.3
-- `@localess/react`: v0.9.5
-- `@localess/cli`: v0.0.6 (early stage)
+- `@localess/client`: v3.0.1
+- `@localess/react`: v3.0.1
+- `@localess/cli`: v3.0.1
 
 ## Common Patterns
 
@@ -288,29 +297,35 @@ const content = await client.getContentBySlug<PageData>('home', {
 ### React Visual Editor Sync
 
 ```typescript
-// Initialize once at app startup
+// Initialize once at app startup (root layout)
 localessInit({
   origin: process.env.LOCALESS_ORIGIN,
   spaceId: process.env.LOCALESS_SPACE_ID,
   token: process.env.LOCALESS_TOKEN,
-  enableSync: true,
+  enableSync: process.env.NODE_ENV !== 'production',
   components: componentRegistry,
 })
-
-// In component, listen for changes
-useEffect(() => {
-  if (window.localess) {
-    const handler = (event) => {
-      if (event.type === 'input' || event.type === 'change') {
-        setPageData(event.data)
-      }
-    }
-    window.localess.on(['input', 'change'], handler)
-  }
-}, [])
 ```
 
-Note: `window.localess` only provides `.on()` and `.onChange()` — there is no `.off()` method.
+```tsx
+// Client Component — useLocaless handles fetch + live sync automatically
+'use client';
+import { useLocaless, LocalessComponent, localessEditable } from '@localess/react';
+
+export function PageClient({ initialContent, locale }) {
+  const content = useLocaless('home', { locale }) ?? initialContent;
+
+  return (
+    <main {...localessEditable(content.data)}>
+      {content.data?.body?.map(item => (
+        <LocalessComponent key={item._id} data={item} links={content.links} references={content.references} />
+      ))}
+    </main>
+  );
+}
+```
+
+Note: `window.localess` only provides `.on()` and `.onChange()` — there is no `.off()` method. The `useLocaless` hook handles subscription automatically when `enableSync` is active.
 
 ### Nested Components Pattern
 

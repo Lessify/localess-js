@@ -249,39 +249,91 @@ const Image = ({ data }) => (
 
 ---
 
-## Visual Editor Events
+## `useLocaless` Hook
 
-When your application is opened inside the Localess Visual Editor, subscribe to live-editing events via `window.localess`.
+`useLocaless<T>` fetches content by slug in a Client Component and automatically subscribes to Visual Editor live updates when `enableSync` is active.
 
 ```tsx
 'use client';
 
-import { useEffect, useState } from "react";
-import { getLocalessClient } from "@localess/react";
-import type { Content } from "@localess/react";
+import { useLocaless, LocalessComponent } from "@localess/react";
+import type { Page } from "./.localess/localess";
 
-export function PageClient({ initialData }: { initialData: Content<Page> }) {
-  const [pageData, setPageData] = useState(initialData.data);
+export function PageView({ slug }: { slug: string }) {
+  const content = useLocaless<Page>(slug, { locale: 'en' });
 
-  useEffect(() => {
-    if (window.localess) {
-      window.localess.on(['input', 'change'], (event) => {
-        if (event.type === 'input' || event.type === 'change') {
-          setPageData(event.data);
-        }
-      });
-    }
-  }, []);
+  if (!content) return <div>Loading…</div>;
 
   return (
-    <main {...localessEditable(pageData)}>
-      {pageData.body.map(item => (
-        <LocalessComponent key={item._id} data={item} />
+    <main>
+      {content.data.body.map(item => (
+        <LocalessComponent key={item._id} data={item} links={content.links} />
       ))}
     </main>
   );
 }
 ```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `slug` | `string \| string[]` | ✅ | Content slug. Arrays are joined with `/` — e.g. `['blog', 'post']` → `'blog/post'` |
+| `options` | `ContentFetchParams` | ❌ | Same fetch options as `getContentBySlug` (locale, version, resolveReference, resolveLink) |
+
+Returns `Content<T> | undefined` — `undefined` while the initial fetch is in progress.
+
+When `enableSync` is active and the page is rendered inside the Localess Visual Editor iframe, the hook automatically subscribes to `input` / `change` events and updates the returned content in place.
+
+---
+
+## Link Utilities
+
+### `findLink(links, link)`
+
+Resolves a `ContentLink` field to a URL string. Use it to build `href` values from Localess content links.
+
+```tsx
+import { findLink } from "@localess/react";
+
+// type: 'content' → '/' + fullSlug, or '/not-found' if not in map
+// type: 'url'     → raw URI unchanged
+const href = findLink(content.links, data.ctaLink);
+
+const NavLink = ({ data, links }) => (
+  <a href={findLink(links, data.link)}>{data.label}</a>
+);
+```
+
+---
+
+## Visual Editor Events
+
+When `enableSync: true` is set in `localessInit`, Visual Editor live-editing is handled **automatically** by the `useLocaless` hook — no manual event wiring needed.
+
+```tsx
+'use client';
+
+import { useLocaless, LocalessComponent, localessEditable } from "@localess/react";
+import type { Page } from "./.localess/localess";
+
+export function PageView({ slug, locale }: { slug: string; locale?: string }) {
+  // Automatically subscribes to Visual Editor input/change events when enableSync is active
+  const content = useLocaless<Page>(slug, { locale });
+
+  if (!content) return null;
+
+  return (
+    <main {...localessEditable(content.data)}>
+      {content.data?.body.map(item => (
+        <LocalessComponent key={item._id} data={item} links={content.links} references={content.references} />
+      ))}
+    </main>
+  );
+}
+```
+
+> `useLocaless` handles the full cycle: initial fetch + live sync updates when inside the editor iframe.
 
 ---
 
@@ -296,7 +348,7 @@ localessInit({
   origin: process.env.LOCALESS_ORIGIN!,
   spaceId: process.env.LOCALESS_SPACE_ID!,
   token: process.env.LOCALESS_TOKEN!,
-  enableSync: process.env.NODE_ENV === 'development',
+  enableSync: process.env.NODE_ENV !== 'production',
   components: { Page, Header, Teaser, Footer },
 });
 
@@ -306,18 +358,40 @@ export default function RootLayout({ children }) {
 ```
 
 ```tsx
-// app/page.tsx (Server Component)
-import { getLocalessClient, LocalessComponent, localessEditable } from "@localess/react";
+// app/[locale]/page.tsx (Server Component — fetches initial data)
+import { getLocalessClient } from "@localess/react";
+import { PageClient } from "./page-client";
 import type { Page } from "./.localess/localess";
 
 export default async function HomePage({
-  searchParams,
+  params,
 }: {
-  searchParams: Promise<{ locale?: string }>;
+  params: Promise<{ locale?: string }>;
 }) {
-  const { locale } = await searchParams;
+  const { locale } = await params;
   const client = getLocalessClient();
   const content = await client.getContentBySlug<Page>('home', { locale });
+
+  return <PageClient initialContent={content} locale={locale} />;
+}
+```
+
+```tsx
+// app/[locale]/page-client.tsx (Client Component — renders + auto-syncs with Visual Editor)
+'use client';
+
+import { useLocaless, LocalessComponent, localessEditable } from "@localess/react";
+import type { Content, Page } from "./.localess/localess";
+
+export function PageClient({
+  initialContent,
+  locale,
+}: {
+  initialContent: Content<Page>;
+  locale?: string;
+}) {
+  // Handles initial fetch and Visual Editor live updates automatically
+  const content = useLocaless<Page>('home', { locale }) ?? initialContent;
 
   return (
     <main {...localessEditable(content.data)}>
@@ -342,7 +416,7 @@ The following are re-exported for convenience so you only need to import from `@
 
 **Types:** `Content`, `ContentData`, `ContentMetadata`, `ContentDataSchema`, `ContentDataField`, `ContentAsset`, `ContentRichText`, `ContentLink`, `ContentReference`, `Links`, `References`, `Translations`, `LocalessClient`, `LocalessSync`, `EventToApp`, `EventCallback`, `EventToAppType`
 
-**Functions:** `localessEditable`, `localessEditableField`, `llEditable` *(deprecated)*, `llEditableField` *(deprecated)*, `isBrowser`, `isServer`, `isIframe`
+**Functions:** `localessEditable`, `localessEditableField`, `llEditable` *(deprecated)*, `llEditableField` *(deprecated)*, `isBrowser`, `isServer`, `isIframe`, `resolveAsset`, `findLink`, `useLocaless`, `renderRichTextToReact`, `localessInit`, `getLocalessClient`, `registerComponent`, `unregisterComponent`, `setComponents`, `getComponent`, `setFallbackComponent`, `getFallbackComponent`, `isSyncEnabled`
 
 ---
 

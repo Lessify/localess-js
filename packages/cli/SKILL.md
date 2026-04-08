@@ -8,7 +8,7 @@
 - Pushing and pulling translations (flat JSON; nested format supported for pull only)
 - Generating TypeScript type definitions from the OpenAPI schema
 
-**Status:** Early development (v3.0.0). Requires Node.js >= 20.0.0.
+**Status:** Early development (v3.0.1). Requires Node.js >= 20.0.0.
 
 ---
 
