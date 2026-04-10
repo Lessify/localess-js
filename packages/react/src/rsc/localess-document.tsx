@@ -1,10 +1,11 @@
 'use client';
 
 import {forwardRef, useEffect, useState} from "react";
-import {ContentData, Links, References} from "../core/models";
+import {Content, ContentData} from "../core/models";
 import {isBrowser, isIframe} from "../core/utils";
 import {LocalessComponent} from "../core/components";
 import {isSyncEnabled} from "../core/state";
+import {FONT_BOLD, FONT_NORMAL} from "../console";
 
 /**
  * Props for {@link LocalessDocument}.
@@ -13,21 +14,10 @@ import {isSyncEnabled} from "../core/state";
  */
 export type LocalessDocumentProps<T extends ContentData = ContentData> = {
   /**
-   * The content data object to render — typically `content.data` from `getContentBySlug`.
-   * Should be fetched server-side and passed as a prop so the page renders immediately
-   * without a loading flash.
+   * The full content response object as returned by `getContentBySlug` or `getContentById`.
+   * Must contain a `data` field with a valid `_schema` key.
    */
-  data: T;
-  /**
-   * Optional map of content links keyed by link ID.
-   * Passed through to child components for resolving {@link ContentLink} values with `findLink`.
-   */
-  links?: Links;
-  /**
-   * Optional map of resolved content references keyed by reference ID.
-   * Passed through to child components that consume referenced content.
-   */
-  references?: References;
+  document: Content<T>;
 }
 
 /**
@@ -69,13 +59,8 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
  * }
  * ```
  */
-export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({
-                                                                                  data,
-                                                                                  links,
-                                                                                  references,
-                                                                                  ...restProps
-                                                                                }, ref) => {
-  const [contentData, setContentData] = useState(data);
+export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({document}, ref) => {
+  const [contentData, setContentData] = useState(document.data);
   useEffect(() => {
     console.log('LocalessDocument isSyncEnabled:', isSyncEnabled())
     console.log('LocalessDocument isBrowser:', isBrowser())
@@ -90,7 +75,12 @@ export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>((
     }
   }, [])
 
+  if (!contentData) {
+    console.error('LocalessDocument property %cdocument.data%c is not provided.', FONT_BOLD, FONT_NORMAL)
+    return <div>LocalessDocument property <b>document.data</b> is not provided.</div>
+  }
+
   return (
-    <LocalessComponent ref={ref} data={contentData} links={links} references={references} {...restProps}/>
+    <LocalessComponent ref={ref} data={contentData} links={document.links} references={document.references}/>
   );
 });

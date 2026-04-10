@@ -45,7 +45,7 @@ export type LocalessServerDocumentProps<T extends ContentData = ContentData> = {
  * ```
  */
 export const LocalessServerDocument = forwardRef<HTMLElement, LocalessServerDocumentProps>(({document}, ref) => {
-  if (!document || !document.data) {
+  if (!document.data) {
     console.error('LocalessServerDocument property %cdocument.data%c is not provided.', FONT_BOLD, FONT_NORMAL)
     return <div>LocalessServerDocument property <b>document.data</b> is not provided.</div>
   }
