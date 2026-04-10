@@ -42,6 +42,7 @@ export * from '../ssr';
 //                    server-preloaded data, then updates live from the editor.
 //                    Requires a 'use client' boundary in Next.js App Router.
 export * from '../core/components';
+export * from './localess-document';
 
 // ─── Client Hooks ('use client') ─────────────────────────────────────────────
 // useLocaless<T>(slug, options?) — fetch content by slug inside a Client Component.
