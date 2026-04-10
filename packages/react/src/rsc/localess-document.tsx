@@ -1,9 +1,7 @@
-'use client';
-
 import {forwardRef, useEffect, useState} from "react";
 import {ContentData, isBrowser, Links, References} from "@localess/client";
-import {LocalessComponent} from "./localess-component";
-import {isSyncEnabled} from "../state";
+import {LocalessComponent} from "../core/components";
+import {isSyncEnabled} from "../core/state";
 
 export type LocalessDocumentProps<T extends ContentData = ContentData> = {
   data: T
@@ -25,6 +23,6 @@ export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>((
   })
 
   return (
-    <LocalessComponent data={contentData} links={links} references={references} {...restProps}/>
+    <LocalessComponent ref={ref} data={contentData} links={links} references={references} {...restProps}/>
   );
 });

@@ -1,6 +1,7 @@
 import type React from "react";
 import {LocalessClientOptions} from "@localess/client";
 
+export type {LocalessClient} from '@localess/client'
 export type LocalessOptions = LocalessClientOptions & {
   /**
    * Components mapping for Localess Component integration

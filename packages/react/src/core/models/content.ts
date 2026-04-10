@@ -10,7 +10,4 @@ export type {
   ContentReference,
   Links,
   References,
-  Translations
 } from '@localess/client';
-
-export * from './options';

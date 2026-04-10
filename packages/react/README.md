@@ -34,6 +34,51 @@ pnpm add @localess/react
 
 ---
 
+## Choosing the Right Export
+
+`@localess/react` provides three different exports to suit different rendering strategies:
+
+| Export | Use Case | Live Editing | Static Export |
+|---|---|---|---|
+| `@localess/react` | Single Page Applications (SPA), client-side rendering | ✅ | ✅ |
+| `@localess/react/ssr` | SSR without live editing, Next.js static exports | ❌ | ✅ |
+| `@localess/react/rsc` | React Server Components with live editing | ✅ | ❌ |
+
+### When to Use Each Export
+
+**Use `@localess/react`** (default) for:
+- Single Page Applications (SPA) or fully client-rendered React apps
+- Apps where `localessInit` and components run entirely in the browser
+
+**Use `@localess/react/ssr`** for:
+- Next.js projects with `output: 'export'` (static site generation)
+- Server-side rendering where live editing is not required
+- Scenarios where bundle size matters and you want to exclude all browser-only sync code
+
+**Use `@localess/react/rsc`** for:
+- Next.js App Router with React Server Components
+- Apps that need live Visual Editor editing alongside server rendering
+- Modern Next.js apps with a server/client component split
+
+### Quick Comparison
+
+```ts
+// SPA — everything runs client-side
+import { localessInit, LocalessComponent, useLocaless } from "@localess/react";
+
+// SSR — server-safe, no live editing, no hooks
+import { localessInit, LocalessComponent } from "@localess/react/ssr";
+
+// RSC — server components + client components for live editing
+import { localessInit, LocalessComponent } from "@localess/react/rsc";          // server
+import { LocalessDocument, useLocaless, localessEditable } from "@localess/react/rsc"; // client
+```
+
+> [!NOTE]
+> When using Next.js with `output: 'export'`, always use `@localess/react/ssr`. The RSC export is not compatible with static exports.
+
+---
+
 ## Getting Started
 
 ### 1. Initialize the SDK
@@ -421,9 +466,9 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
 
 ---
 
-## Full Example (Next.js 16.2 App Router)
+## Full Example — SPA / Default (`@localess/react`)
 
-The recommended Next.js pattern is to **preload data server-side** and pass it to the Client Component. This avoids a loading flash — the page renders immediately with server data, then Visual Editor sync kicks in if active.
+For SPAs or fully client-rendered React apps. All imports use the default `@localess/react` export.
 
 ### Setup — `app/layout.tsx`
 
@@ -570,15 +615,152 @@ export function PageClientManual({
 
 ---
 
-## Re-exported from `@localess/client`
+## Full Example — Next.js Static Export (`@localess/react/ssr`)
 
-The following are re-exported for convenience so you only need to import from `@localess/react`:
+Use `@localess/react/ssr` when your Next.js project uses `output: 'export'` for static site generation. Live editing is not available in this mode.
 
-**Types:** `Content`, `ContentData`, `ContentMetadata`, `ContentDataSchema`, `ContentDataField`, `ContentAsset`, `ContentRichText`, `ContentLink`, `ContentReference`, `Links`, `References`, `Translations`, `LocalessClient`, `LocalessSync`, `EventToApp`, `EventCallback`, `EventToAppType`
+### `next.config.js`
 
-**Functions:** `localessEditable`, `localessEditableField`, `llEditable` *(deprecated)*, `llEditableField` *(deprecated)*, `isBrowser`, `isServer`, `isIframe`, `resolveAsset`, `findLink`, `useLocaless`, `renderRichTextToReact`, `localessInit`, `getLocalessClient`, `registerComponent`, `unregisterComponent`, `setComponents`, `getComponent`, `setFallbackComponent`, `getFallbackComponent`, `isSyncEnabled`
+```js
+/** @type {import('next').NextConfig} */
+module.exports = { output: 'export' };
+```
 
-**Components:** `LocalessComponent`, `LocalessDocument`
+### Setup — `lib/localess.ts`
+
+```ts
+import { localessInit } from "@localess/react/ssr";
+import { Page, Header, Teaser } from "@/components";
+
+export const getClient = localessInit({
+  origin: process.env.LOCALESS_ORIGIN!,
+  spaceId: process.env.LOCALESS_SPACE_ID!,
+  token: process.env.LOCALESS_TOKEN!,
+  // enableSync is not applicable in static export — omit or set to false
+  components: { Page, Header, Teaser },
+});
+```
+
+### Page — `app/page.tsx`
+
+```tsx
+import { LocalessComponent } from "@localess/react/ssr";
+import { getLocalessClient } from "@localess/react/ssr";
+import "@/lib/localess"; // ensure init runs
+
+export default async function Home() {
+  const client = getLocalessClient();
+  const content = await client.getContentBySlug("home", { locale: "en" });
+  return (
+    <main>
+      <LocalessComponent data={content.data} links={content.links} references={content.references} />
+    </main>
+  );
+}
+```
+
+---
+
+## Full Example — Next.js App Router with RSC (`@localess/react/rsc`)
+
+Use `@localess/react/rsc` when you want React Server Components and Visual Editor live editing together.
+
+### Setup — `app/layout.tsx`
+
+```tsx
+// Server Component — safe to use API token here
+import { localessInit } from "@localess/react/rsc";
+import { Page, Header, Teaser, Footer } from "@/components";
+
+localessInit({
+  origin: process.env.LOCALESS_ORIGIN!,
+  spaceId: process.env.LOCALESS_SPACE_ID!,
+  token: process.env.LOCALESS_TOKEN!,
+  enableSync: process.env.NODE_ENV !== 'production',
+  components: { Page, Header, Teaser, Footer },
+});
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return <html><body>{children}</body></html>;
+}
+```
+
+### Server Component — `app/[locale]/page.tsx`
+
+```tsx
+import { getLocalessClient } from "@localess/react/rsc";
+import PageClient from "./page-client";
+
+export default async function Home({ params }: { params: { locale: string } }) {
+  const { locale } = await params;
+  const content = await getLocalessClient().getContentBySlug("home", { locale });
+  return <PageClient initialContent={content} locale={locale} />;
+}
+```
+
+### Client Component — `app/[locale]/page-client.tsx`
+
+Use `LocalessDocument` for a zero-boilerplate live-editing integration, or `useLocaless` for more control:
+
+**Option A — `LocalessDocument` (recommended):**
+
+```tsx
+'use client';
+import { LocalessDocument } from "@localess/react/rsc";
+
+export default function PageClient({ initialContent }) {
+  return (
+    <LocalessDocument
+      data={initialContent.data}
+      links={initialContent.links}
+      references={initialContent.references}
+    />
+  );
+}
+```
+
+**Option B — `useLocaless` hook:**
+
+```tsx
+'use client';
+import { useLocaless, LocalessComponent, localessEditable } from "@localess/react/rsc";
+
+export default function PageClient({ initialContent, locale }) {
+  const content = useLocaless("home", { locale }) ?? initialContent;
+  return (
+    <main {...localessEditable(content.data)}>
+      {content.data?.body?.map(item => (
+        <LocalessComponent key={item._id} data={item} links={content.links} references={content.references} />
+      ))}
+    </main>
+  );
+}
+```
+
+---
+
+## Export Reference
+
+The table below shows which symbols are available in each export.
+
+| Symbol | `@localess/react` | `@localess/react/ssr` | `@localess/react/rsc` |
+|---|:---:|:---:|:---:|
+| `localessInit` | ✅ | ✅ | ✅ |
+| `getLocalessClient` | ✅ | ✅ | ✅ |
+| `registerComponent` / `setComponents` / `getComponent` | ✅ | ✅ | ✅ |
+| `setFallbackComponent` / `getFallbackComponent` | ✅ | ✅ | ✅ |
+| `resolveAsset` | ✅ | ✅ | ✅ |
+| `LocalessComponent` | ✅ | ✅ | ✅ |
+| `renderRichTextToReact` | ✅ | ✅ | ✅ |
+| `findLink` | ✅ | ✅ | ✅ |
+| `isServer` | ✅ | ✅ | ✅ |
+| All content types | ✅ | ✅ | ✅ |
+| `LocalessDocument` | ✅ | ❌ | ✅ |
+| `useLocaless` | ✅ | ❌ | ✅ |
+| `localessEditable` / `localessEditableField` | ✅ | ❌ | ✅ |
+| `isBrowser` / `isIframe` | ✅ | ❌ | ✅ |
+| `isSyncEnabled` | ✅ | ❌ | ✅ |
+| Sync event types (`LocalessSync`, `EventToApp`, …) | ✅ | ❌ | ✅ |
 
 ---
 

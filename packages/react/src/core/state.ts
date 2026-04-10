@@ -1,6 +1,6 @@
 import type React from 'react';
 import {loadLocalessSync, type LocalessClient, localessClient} from "@localess/client";
-import {FONT_BOLD, FONT_NORMAL} from "./console";
+import {FONT_BOLD, FONT_NORMAL} from "../console";
 import {type LocalessOptions, type ContentAsset} from "./models";
 
 let _client: LocalessClient | undefined = undefined

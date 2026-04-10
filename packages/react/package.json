@@ -34,12 +34,22 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./ssr": {
+      "types": "./dist/ssr.d.ts",
+      "import": "./dist/ssr.mjs",
+      "require": "./dist/ssr.js"
+    },
+    "./rsc": {
+      "types": "./dist/rsc.d.ts",
+      "import": "./dist/rsc.mjs",
+      "require": "./dist/rsc.js"
     }
   },
   "private": false,
   "license": "MIT",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts"
+    "build": "tsup"
   },
   "peerDependencies": {
     "react": "^17 || ^18 || ^19",
