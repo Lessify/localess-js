@@ -26,12 +26,6 @@
  * - Sync event types   (LocalessSync, EventToApp, EventCallback, EventToAppType)
  */
 
-// ─── Initialization & State ───────────────────────────────────────────────────
-// localessInit       — initialize client and register components (no enableSync in SSR)
-// getLocalessClient  — access the initialized LocalessClient instance
-// registerComponent / unregisterComponent / setComponents / getComponent
-// setFallbackComponent / getFallbackComponent
-// resolveAsset       — convert ContentAsset → full URL string
 export {
   localessInit,
   getLocalessClient,
@@ -42,23 +36,12 @@ export {
   resolveAsset,
 } from '../core/state';
 
-// ─── Components ──────────────────────────────────────────────────────────────
-// LocalessServerComponent — server-safe variant of LocalessComponent; maps content._schema
-//                           to a registered React component. No 'use client' directive.
-//                           Use in SSR pages and Next.js static export pages.
 export * from './localess-component';
 export * from './localess-document';
 
-// ─── Rich Text ───────────────────────────────────────────────────────────────
-// renderRichTextToReact(content) — convert a ContentRichText (TipTap document) to React.ReactNode
 export { renderRichTextToReact } from '../core/richtext';
 
-// ─── Utils ───────────────────────────────────────────────────────────────────
-// isServer               — true when running in a Node.js / server environment
-// findLink(links, link)  — resolve a ContentLink to a URL string
 export * from '../core/utils';
 
-// ─── TypeScript Types ────────────────────────────────────────────────────────
-// (same set as @localess/react — all content and client types are server-safe)
 export type * from '../core/models';
 

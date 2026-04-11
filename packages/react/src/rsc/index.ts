@@ -25,33 +25,9 @@
  * NOT compatible with Next.js `output: 'export'` — use `@localess/react/ssr` for static exports.
  */
 
-// ─── SSR Base (server-safe) ───────────────────────────────────────────────────
-// Everything from @localess/react/ssr is re-exported:
-//   localessInit, getLocalessClient, registerComponent, unregisterComponent,
-//   setComponents (via core/state), getComponent, setFallbackComponent,
-//   getFallbackComponent, resolveAsset
-//   LocalessServerComponent + LocalessServerComponentProps
-//   renderRichTextToReact
-//   isServer, findLink
-//   All TypeScript content & client types
 export * from '../ssr';
 
-// ─── Client Components ('use client') ────────────────────────────────────────
-// LocalessDocument — wraps LocalessServerComponent and auto-subscribes to Visual
-//                    Editor sync events (input / change). Renders immediately with
-//                    server-preloaded data, then updates live from the editor.
-//                    Requires a 'use client' boundary in Next.js App Router.
-export * from '../core/components';
+export * from '../core/components/localess-component';
 export * from './localess-document';
 
-// ─── Client Hooks ('use client') ─────────────────────────────────────────────
-// useLocaless<T>(slug, options?) — fetch content by slug inside a Client Component.
-//                                  Accepts a string or string[] slug (joined with '/').
-//                                  Automatically subscribes to Visual Editor sync events
-//                                  when isSyncEnabled() is true.
-//                                  Returns Content<T> | undefined.
-export * from '../core/hooks';
-
-// ─── Sync State ──────────────────────────────────────────────────────────────
-// isSyncEnabled() — returns true when enableSync was set in localessInit
 export { isSyncEnabled } from '../core/state';

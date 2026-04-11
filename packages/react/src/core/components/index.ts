@@ -5,3 +5,4 @@
  *                      Server-safe (no 'use client'). Used in SPA and RSC flows.
  */
 export * from './localess-component';
+export * from './localess-document';

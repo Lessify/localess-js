@@ -1,13 +1,24 @@
 'use client';
 
-import {isIframe, isBrowser} from "../core/utils";
+import {isBrowser, isIframe} from "../core/utils";
 import {isSyncEnabled} from "../core/state";
+import {Content, ContentData} from "@localess/client";
+import {useEffect} from "react";
 
-export type LocalessSyncProps = {
+export type LocalessSyncProps<T extends ContentData = ContentData> = {
+  document: Content<T>;
 }
 
 export const LocalessSync = ((props: LocalessSyncProps) => {
-  if (!isSyncEnabled() || !isBrowser() || !isIframe()) return null;
+  useEffect(() => {
+    if (isSyncEnabled() && isBrowser() && isIframe()) {
+      window.localess?.on(['input', 'change'], (event) => {
+        if (event.type === 'change' || event.type === 'input') {
+          props.document.data = event.data;
+        }
+      })
+    }
+  }, [])
 
   return null;
 });

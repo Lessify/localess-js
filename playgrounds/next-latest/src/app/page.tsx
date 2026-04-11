@@ -1,10 +1,24 @@
-import {getLocalessClient, Content} from "@localess/react";
+import {getLocalessClient, Content, LocalessDocument} from "@localess/react/rsc";
 import {LOCALES} from "@/shared/utils/locales";
 import {Page} from "@/shared/generated/localess";
+import {localessInit} from "@localess/react/rsc";
+import {PageLocaless} from "@/shared/components/localess/page";
+
+localessInit({
+  origin: "https://demo.localess.org", // Replace it for your origin
+  spaceId: "MmaT4DL0kJ6nXIILUcQF", // Replace it for your spaceId
+  version: "draft",
+  token: "Y4rvboPnyzVeC7LddEK5", // Replace it for your token
+  debug: true,
+  enableSync: true,
+  components: {
+    'Page': PageLocaless
+  }
+})
 
 export default async function Home({searchParams}: PageProps<'/'>) {
   const {locale} = await searchParams
-  const {data} = await fetchData(locale?.toString());
+  const document = await fetchData(locale?.toString());
   return (
     <div className="flex flex-col w-full gap-8 mx-auto max-w-5xl">
       <header className="py-8">
@@ -24,10 +38,7 @@ export default async function Home({searchParams}: PageProps<'/'>) {
           </ul>
         </nav>
       </header>
-      <main className="flex flex-col gap-4">
-        <h1 className="text-center">{data?.title}</h1>
-        <p className="text-center whitespace-pre-line">{data?.description}</p>
-      </main>
+      <LocalessDocument document={document} />
     </div>
   );
 }

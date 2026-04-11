@@ -1,7 +1,9 @@
-import {forwardRef} from "react";
-import {Content, ContentData} from "../core/models";
-import {LocalessComponent} from "../core/components";
-import {FONT_BOLD, FONT_NORMAL} from "../console";
+import {forwardRef, useEffect, useState} from "react";
+import {Content, ContentData} from "../models";
+import {isBrowser, isIframe} from "../utils";
+import {LocalessComponent} from "../components";
+import {isSyncEnabled} from "../state";
+import {FONT_BOLD, FONT_NORMAL} from "../../console";
 
 /**
  * Props for {@link LocalessDocument}.
@@ -56,14 +58,23 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
  * ```
  */
 export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({document}, ref) => {
-  if (!document.data) {
+  const [contentData, setContentData] = useState(document.data);
+  useEffect(() => {
+    if (isSyncEnabled() && isBrowser() && isIframe()) {
+      window.localess?.on(['input', 'change'], (event) => {
+        if (event.type === 'change' || event.type === 'input') {
+          setContentData(event.data)
+        }
+      })
+    }
+  }, [])
+
+  if (!contentData) {
     console.error('LocalessDocument property %cdocument.data%c is not provided.', FONT_BOLD, FONT_NORMAL)
     return <div>LocalessDocument property <b>document.data</b> is not provided.</div>
   }
 
   return (
-    <>
-      <LocalessComponent ref={ref} data={document.data} links={document.links} references={document.references}/>
-    </>
+    <LocalessComponent ref={ref} data={contentData} links={document.links} references={document.references}/>
   );
 });
