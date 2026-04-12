@@ -2,6 +2,7 @@ import {forwardRef} from "react";
 import {Content, ContentData} from "../core/models";
 import {LocalessComponent} from "../core/components";
 import {FONT_BOLD, FONT_NORMAL} from "../console";
+import {LocalessSync} from "./localess-sync";
 
 /**
  * Props for {@link LocalessDocument}.
@@ -64,6 +65,7 @@ export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>((
   return (
     <>
       <LocalessComponent ref={ref} data={document.data} links={document.links} references={document.references}/>
+      <LocalessSync document={document}/>
     </>
   );
 });

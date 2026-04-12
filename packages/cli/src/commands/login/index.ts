@@ -17,7 +17,7 @@ export const loginCommand = new Command('login')
   .action(async (options: LoginOptions) => {
     const session = await getSession()
 
-    if (session.isLoggedIn && session.method === 'file') {
+    if (session.isLoggedIn) {
       console.log('Already logged in.');
       console.log('If you want to log in with different credentials, please log out first using "localess logout" command.');
       return;

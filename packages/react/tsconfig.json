@@ -15,7 +15,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "moduleResolution": "Bundler"
+    "moduleResolution": "bundler"
   },
   "include": ["src/*.ts", "src/**/*.ts"],
   "exclude": ["node_modules"]

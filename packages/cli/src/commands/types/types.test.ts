@@ -17,6 +17,6 @@ describe('types command', () => {
   });
 
   it('should run types with options', async () => {
-    await typesCommand.parseAsync([], {from: 'user'});
+    await typesCommand.parseAsync(['generate'], {from: 'user'});
   });
 });

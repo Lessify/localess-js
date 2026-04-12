@@ -3,6 +3,7 @@ import {loadLocalessSync, type LocalessClient, localessClient} from "@localess/c
 import {FONT_BOLD, FONT_NORMAL} from "../console";
 import {type LocalessOptions, type ContentAsset} from "./models";
 
+let _origin: string | undefined = undefined;
 let _client: LocalessClient | undefined = undefined
 let _components: Record<string, React.ElementType> = {};
 let _fallbackComponent: React.ElementType | undefined = undefined;
@@ -39,9 +40,9 @@ let _assetPathPrefix = '';
  * ```
  */
 export function localessInit(options: LocalessOptions): LocalessClient {
-  console.log("localessInit", options);
   const {components, fallbackComponent, enableSync, ...restOptions} = options;
   _client = localessClient(restOptions);
+  _origin = restOptions.origin;
 
   _assetPathPrefix = `${options.origin}/api/v1/spaces/${options.spaceId}/assets/`;
 
@@ -49,6 +50,7 @@ export function localessInit(options: LocalessOptions): LocalessClient {
   _fallbackComponent = fallbackComponent;
   if (enableSync) {
     _enableSync = true;
+    // Script will be loaded in client.
     loadLocalessSync(restOptions.origin)
   }
   return _client;
@@ -70,7 +72,7 @@ export function localessInit(options: LocalessOptions): LocalessClient {
  */
 export function getLocalessClient(): LocalessClient {
   if (!_client) {
-    console.error('[Localess] No client found. Please check if the Localess is initialized.');
+    console.error('[Localess] No client found. Please check if the Localess is initialized. Use localessInit function.');
     throw new Error('[Localess] No client found.');
   }
   return _client;
@@ -162,6 +164,14 @@ export function getFallbackComponent(): React.ElementType | undefined {
  */
 export function isSyncEnabled(): boolean {
   return _enableSync;
+}
+
+export function getOrigin() {
+  if (!_origin) {
+    console.error('[Localess] No origin found. Please check if the Localess is initialized. Use localessInit function.');
+    throw new Error('[Localess] No origin found.');
+  }
+  return _origin;
 }
 
 /**
