@@ -2,7 +2,7 @@ import {forwardRef} from "react";
 import {ContentData, Links, References} from "../models";
 import {localessEditable} from "../utils";
 import {FONT_BOLD, FONT_NORMAL} from "../../console";
-import {getComponent, getFallbackComponent, isSyncEnabled} from "../state";
+import {getComponent, getFallbackComponent} from "../state";
 
 /**
  * Props for {@link LocalessComponent}.
@@ -69,8 +69,7 @@ export const LocalessComponent = forwardRef<HTMLElement, LocalessComponentProps>
     // Find Component from Mapping
     const Comp = getComponent(data._schema);
     if (Comp) {
-      const attr = isSyncEnabled() ? localessEditable(data) : {};
-      return <Comp ref={ref} data={data} links={links} references={references} {...attr} {...restProps} />;
+      return <Comp ref={ref} data={data} links={links} references={references} {...localessEditable(data)} {...restProps} />;
     }
     // Try to use Fallback Component
     const FallbackComponent = getFallbackComponent()

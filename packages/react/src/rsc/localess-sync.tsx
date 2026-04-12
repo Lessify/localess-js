@@ -17,6 +17,7 @@ export const LocalessSync = ((props: LocalessSyncProps) => {
     if (props.enableSync && isBrowser() && isIframe()) {
       loadLocalessSync(props.origin);
       window.localess?.on(['input', 'change'], (event) => {
+        console.info(`LocalessSync:change:`, event);
         if (event.type === 'change' || event.type === 'input') {
           props.document.data = event.data;
         }
