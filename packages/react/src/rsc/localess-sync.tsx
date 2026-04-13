@@ -13,16 +13,18 @@ export type LocalessSyncProps<T extends ContentData = ContentData> = {
 export const LocalessSync = ((props: LocalessSyncProps) => {
   console.info(`LocalessSync:init`);
   useEffect(() => {
-    console.info(`LocalessSync:effect`, props.enableSync, isBrowser(), isIframe());
-    if (props.enableSync && isBrowser() && isIframe()) {
-      loadLocalessSync(props.origin);
-      window.localess?.on(['input', 'change'], (event) => {
-        console.info(`LocalessSync:change:`, event);
-        if (event.type === 'change' || event.type === 'input') {
-          props.document.data = event.data;
-        }
-      })
+    async function loadSync() {
+      if (props.enableSync && isBrowser() && isIframe()) {
+        await loadLocalessSync(props.origin);
+        window.localess?.on(['input', 'change'], (event) => {
+          console.info(`LocalessSync:change:`, event);
+          if (event.type === 'change' || event.type === 'input') {
+            props.document.data = event.data;
+          }
+        })
+      }
     }
+    loadSync();
   }, [])
 
   return null;
