@@ -98,11 +98,15 @@ export function generateTypes(schemas: Schemas): string {
         rootTypeNames.push(typeName);
       }
 
-      const fieldLines = (component.fields ?? []).map(field => {
-        const tsType = fieldToTsType(field);
-        const opt = field.required ? '' : '?';
-        return `  ${field.name}${opt}: ${tsType};`;
-      });
+      const fieldLines = [
+        `  _id: string;`,
+        `  _schema: '${key}';`,
+        ...(component.fields ?? []).map(field => {
+          const tsType = fieldToTsType(field);
+          const opt = field.required ? '' : '?';
+          return `  ${field.name}${opt}: ${tsType};`;
+        }),
+      ];
 
       parts.push(`export interface ${typeName} {\n${fieldLines.join('\n')}\n}\n`);
     }

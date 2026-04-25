@@ -529,9 +529,6 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
           console.log(LOG_GROUP, 'getSchemas status : ', response.status);
         }
         const data = await response.json();
-        if (options.debug) {
-          console.log(LOG_GROUP, 'getSchemas data : ', data);
-        }
         // Store response in cache
         cache.set(url, data);
 
