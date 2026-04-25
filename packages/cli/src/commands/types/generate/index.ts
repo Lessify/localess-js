@@ -1,11 +1,10 @@
 import {Command} from "commander";
 import {localessClient} from "../../../client";
 import {getSession} from "../../../session";
-import { generate } from 'orval';
 import {join} from "node:path";
 import process from "node:process";
-import {DEFAULT_CONFIG_DIR} from "../../../file";
-import {OpenApiDocument} from "@orval/core";
+import {DEFAULT_CONFIG_DIR, writeFile} from "../../../file";
+import {generateTypes} from "./generator";
 
 const TYPES_PATH = join(process.cwd(), DEFAULT_CONFIG_DIR, 'localess.ts');
 
@@ -31,22 +30,11 @@ export const typesGenerateCommand = new Command('generate')
       token: session.token,
     });
 
-    console.log('Fetching OpenAPI specification from Localess...');
-    const specification = await client.getOpenApi();
-    console.log('Generating types from OpenAPI specification...');
-    try {
-      await generate({
-        input: {
-          target: specification as OpenApiDocument,
-        },
-        output: {
-          target: options.path,
-          client: 'fetch',
-          mode: 'single',
-        },
-      });
-      console.log(`Types generated successfully at ${options.path}`);
-    } catch (e) {
-      console.error(e);
-    }
+    console.log('Fetching schemas from Localess...');
+    const specification = await client.getSchemas();
+    console.log('Generating types...');
+    const content = generateTypes(specification);
+    await writeFile(options.path, content);
+    console.log(`Types written to ${options.path}`);
+
   });

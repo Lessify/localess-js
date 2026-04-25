@@ -7,7 +7,8 @@ import {
   Space,
   Translations,
   TranslationUpdate, TranslationUpdateResponse,
-  TranslationUpdateType
+  TranslationUpdateType,
+  Schemas
 } from "./models";
 import {ICache, NoCache, TTLCache} from "./cache";
 import {OpenAPIObject} from "openapi3-ts/oas30";
@@ -152,7 +153,10 @@ export interface LocalessClient {
    */
   getOpenApi(): Promise<OpenAPIObject>
 
-  syncScriptUrl(): string
+  /**
+   * Get Schemas Definition
+   */
+  getSchemas(): Promise<Schemas>
 
   assetLink(asset: ContentAsset | string): string
 }
@@ -481,7 +485,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       // Check if response is in cache
       if (cache.has(url)) {
         if (options.debug) {
-          console.log(LOG_GROUP, 'getTranslations cache hit');
+          console.log(LOG_GROUP, 'getOpenApi cache hit');
         }
         return cache.get(url) as OpenAPIObject;
       }
@@ -502,8 +506,37 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
     },
 
-    syncScriptUrl(): string {
-      return `${normalizedOrigin}/scripts/sync-v1.js`
+    async getSchemas(): Promise<Schemas> {
+      if (options.debug) {
+        console.log(LOG_GROUP, 'getSchemas()');
+      }
+      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/schemas?token=${options.token}`;
+      if (options.debug) {
+        console.log(LOG_GROUP, 'getSchemas fetch url : ', url);
+      }
+
+      // Check if response is in cache
+      if (cache.has(url)) {
+        if (options.debug) {
+          console.log(LOG_GROUP, 'getSchemas cache hit');
+        }
+        return cache.get(url) as Schemas;
+      }
+
+      try {
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
+        if (options.debug) {
+          console.log(LOG_GROUP, 'getSchemas status : ', response.status);
+        }
+        const data = await response.json();
+        // Store response in cache
+        cache.set(url, data);
+
+        return data as Schemas;
+      } catch (error) {
+        console.error(LOG_GROUP, 'getSchemas error : ', error);
+        return {};
+      }
     },
 
     assetLink(asset: ContentAsset | string): string {
