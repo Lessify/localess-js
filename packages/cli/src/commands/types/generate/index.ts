@@ -28,7 +28,6 @@ export const typesGenerateCommand = new Command('generate')
       origin: session.origin,
       spaceId: session.space,
       token: session.token,
-      debug: true,
     });
 
     console.log('Fetching schemas from Localess...');
