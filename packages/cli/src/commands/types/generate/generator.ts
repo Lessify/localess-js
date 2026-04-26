@@ -103,21 +103,26 @@ function fieldToTsType(field: SchemaField): string {
   }
 }
 
+function toJsDoc(description: string, indent = ''): string {
+  return `${indent}/**\n${indent} * ${description}\n${indent} */`;
+}
+
 export function generateTypes(schemas: Schemas): string {
   const parts: string[] = [PREAMBLE];
   const rootTypeNames: string[] = [];
 
   for (const [key, schema] of Object.entries(schemas)) {
     const typeName = toPascalCase(key);
+    const typeDoc = schema.description ? `${toJsDoc(schema.description)}\n` : '';
 
     if (schema.type === SchemaType.ENUM) {
       const enumSchema = schema as SchemaEnum;
       const values = enumSchema.values ?? [];
       if (values.length === 0) {
-        parts.push(`export type ${typeName} = string;\n`);
+        parts.push(`${typeDoc}export type ${typeName} = string;\n`);
       } else {
         const union = values.map(v => `'${v.value}'`).join(' | ');
-        parts.push(`export type ${typeName} = ${union};\n`);
+        parts.push(`${typeDoc}export type ${typeName} = ${union};\n`);
       }
     } else {
       const component = schema as SchemaComponent;
@@ -130,17 +135,23 @@ export function generateTypes(schemas: Schemas): string {
         `  _id: string;`,
         `  /** Unique identifier for the Schema object. */`,
         `  _schema: '${key}';`,
-        ...(component.fields ?? []).map(field => {
+        ...(component.fields ?? []).flatMap(field => {
           const tsType = fieldToTsType(field);
           const opt = field.required ? '' : '?';
-          return `  ${field.name}${opt}: ${tsType};`;
+          const lines: string[] = [];
+          if (field.description) {
+            lines.push(`  /** ${field.description} */`);
+          }
+          lines.push(`  ${field.name}${opt}: ${tsType};`);
+          return lines;
         }),
       ];
 
-      parts.push(`export interface ${typeName} {\n${fieldLines.join('\n')}\n}\n`);
+      parts.push(`${typeDoc}export interface ${typeName} {\n${fieldLines.join('\n')}\n}\n`);
     }
   }
 
+  parts.push(`/**\n* ContentData defined Object to connect all possible root Schemas.\n*/`);
   if (rootTypeNames.length > 0) {
     parts.push(`export type ContentData = ${rootTypeNames.join(' | ')};\n`);
   } else {
