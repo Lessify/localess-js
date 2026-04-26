@@ -10,11 +10,13 @@ const TYPES_PATH = join(process.cwd(), DEFAULT_CONFIG_DIR, 'localess.ts');
 
 type TypesOptions = {
   path: string;
+  prefix: string;
 };
 
 export const typesGenerateCommand = new Command('generate')
   .description('Generate types for your schemas')
   .option('-p, --path <path>', 'Path to the file where to save the generated types. Default is .localess/localess.ts', TYPES_PATH)
+  .option('--prefix <prefix>', 'Prefix to prepend to all generated type names', '')
   .action(async (options: TypesOptions) => {
     console.log('Types in with options:', options);
 
@@ -33,7 +35,7 @@ export const typesGenerateCommand = new Command('generate')
     console.log('Fetching schemas from Localess...');
     const specification = await client.getSchemas();
     console.log('Generating types...');
-    const content = generateTypes(specification);
+    const content = generateTypes(specification, options.prefix);
     await writeFile(options.path, content);
     console.log(`Types written to ${options.path}`);
 
