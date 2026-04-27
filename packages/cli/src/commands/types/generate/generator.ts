@@ -12,7 +12,7 @@ function getPreamble(prefix: string): string {
 export interface ${prefix}ContentAsset {
   /** Define the type of Asset */
   kind: 'ASSET';
-   /** Unique identifier for the asset. */
+  /** Unique identifier for the asset. */
   uri: string;
 }
 
@@ -135,7 +135,7 @@ export function generateTypes(schemas: Schemas, prefix = ''): string {
         `  _id: string;`,
         `  /** Unique identifier for the Schema object. */`,
         `  _schema: '${key}';`,
-        ...(component.fields ?? []).flatMap(field => {
+        ...(component.fields ?? []).slice().sort((a, b) => a.name.localeCompare(b.name)).flatMap(field => {
           const tsType = fieldToTsType(field, prefix);
           const opt = field.required ? '' : '?';
           const lines: string[] = [];
