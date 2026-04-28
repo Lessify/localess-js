@@ -3,7 +3,7 @@ import {getSession} from "../../../session";
 import {localessClient} from "../../../client";
 import {TranslationFileFormat} from "../../../models";
 import {writeFile} from "../../../file";
-import {dotToNestedObject} from "../../../utils";
+import {dotToNestedObject, sortObjectKeys} from "../../../utils";
 
 export type TranslationsPullOptions = {
   path: string;
@@ -40,9 +40,9 @@ export const translationsPullCommand = new Command('pull')
 
     console.log('Saving translations in file:', options.path);
     if (options.format === TranslationFileFormat.FLAT) {
-      await writeFile(options.path, JSON.stringify(translations, null, 2));
+      await writeFile(options.path, JSON.stringify(sortObjectKeys(translations), null, 2));
     } else if (options.format === TranslationFileFormat.NESTED) {
-      const nestedTranslations = dotToNestedObject(translations);
+      const nestedTranslations = sortObjectKeys(dotToNestedObject(translations));
       await writeFile(options.path, JSON.stringify(nestedTranslations, null, 2));
     }
     console.log('Successfully saved translations from Localess');

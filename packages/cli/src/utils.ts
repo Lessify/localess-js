@@ -46,6 +46,31 @@ export const isServer = () => typeof window === 'undefined';
 
 export const isIframe = () => isBrowser() && window.self !== window.top;
 
+export function sortObjectKeys<T extends Record<string, unknown>>(input: T): T {
+  return Object.keys(input)
+    .sort()
+    .reduce((acc, key) => {
+      const value = input[key];
+      acc[key] = value !== null && typeof value === 'object' && !Array.isArray(value)
+        ? sortObjectKeys(value as Record<string, unknown>)
+        : value;
+      return acc;
+    }, {} as Record<string, unknown>) as T;
+}
+
+export function nestedObjectToFlat(input: Record<string, unknown>, prefix = ''): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(input)) {
+    const fullKey = prefix ? `${prefix}.${key}` : key;
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      Object.assign(result, nestedObjectToFlat(value as Record<string, unknown>, fullKey));
+    } else {
+      result[fullKey] = String(value);
+    }
+  }
+  return result;
+}
+
 export function dotToNestedObject(input: Record<string, string>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(input)) {

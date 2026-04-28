@@ -4,6 +4,7 @@ import {localessClient} from "../../../client";
 import {TranslationFileFormat, Translations, TranslationUpdateType} from "../../../models";
 import {readFile} from "../../../file";
 import {zLocaleTranslationsSchema, zTranslationUpdateTypeSchema} from "../../../models/translation.zod";
+import {nestedObjectToFlat} from "../../../utils";
 
 export type TranslationsPushOptions = {
   path: string;
@@ -43,12 +44,17 @@ export const translationsPushCommand = new Command('push')
       console.warn('Dry run mode enabled: No changes will be made.');
     }
 
-    if (options.format === TranslationFileFormat.NESTED) {
-      console.error('Nested format is not implemented yet. Please use flat format for now.');
-    }
     console.log('Reading translations file from:', options.path);
     const fileContent = await readFile(options.path);
-    const translationValues: Translations = JSON.parse(fileContent);
+    const parsed = JSON.parse(fileContent);
+
+    let translationValues: Translations;
+    if (options.format === TranslationFileFormat.NESTED) {
+      translationValues = nestedObjectToFlat(parsed);
+    } else {
+      translationValues = parsed;
+    }
+
     const pResult = zLocaleTranslationsSchema.safeParse(translationValues)
     if (!pResult.success) {
       console.error('Invalid translations file format:', pResult.error);
