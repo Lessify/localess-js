@@ -1,6 +1,7 @@
-import {Command} from "commander";
-import {translationsPushCommand} from "./push";
-import {translationsPullCommand} from "./pull";
+import { Command } from 'commander';
+
+import { translationsPullCommand } from './pull';
+import { translationsPushCommand } from './push';
 
 export const translationsCommand = new Command('translations')
   .description('Manage translations')

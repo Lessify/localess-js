@@ -1,10 +1,11 @@
+import { loadLocalessSync, type LocalessClient, localessClient } from '@localess/client';
 import type React from 'react';
-import {loadLocalessSync, type LocalessClient, localessClient} from "@localess/client";
-import {FONT_BOLD, FONT_NORMAL} from "../console";
-import {type LocalessOptions, type ContentAsset} from "./models";
+
+import { FONT_BOLD, FONT_NORMAL } from '../console';
+import { type ContentAsset, type LocalessOptions } from './models';
 
 let _origin: string | undefined = undefined;
-let _client: LocalessClient | undefined = undefined
+let _client: LocalessClient | undefined = undefined;
 let _components: Record<string, React.ElementType> = {};
 let _fallbackComponent: React.ElementType | undefined = undefined;
 let _enableSync: boolean = false;
@@ -40,7 +41,7 @@ let _assetPathPrefix = '';
  * ```
  */
 export function localessInit(options: LocalessOptions): LocalessClient {
-  const {components, fallbackComponent, enableSync, ...restOptions} = options;
+  const { components, fallbackComponent, enableSync, ...restOptions } = options;
   _client = localessClient(restOptions);
   _origin = restOptions.origin;
 
@@ -51,7 +52,7 @@ export function localessInit(options: LocalessOptions): LocalessClient {
   if (enableSync) {
     _enableSync = true;
     // Script will be loaded in client.
-    loadLocalessSync(restOptions.origin)
+    loadLocalessSync(restOptions.origin);
   }
   return _client;
 }
@@ -126,7 +127,7 @@ export function getComponent(key: string): React.ElementType | undefined {
   if (Object.hasOwn(_components, key)) {
     return _components[key];
   }
-  console.error(`[Localess] component %c${key}%c can't be found.`, FONT_BOLD, FONT_NORMAL)
+  console.error(`[Localess] component %c${key}%c can't be found.`, FONT_BOLD, FONT_NORMAL);
   return undefined;
 }
 

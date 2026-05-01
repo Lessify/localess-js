@@ -2,7 +2,6 @@
  * Content Asset defines reference to an Asset.
  */
 export interface ContentAsset {
-
   /**
    * Define the type of Asset
    */

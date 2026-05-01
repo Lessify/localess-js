@@ -1,7 +1,7 @@
-import type React from "react";
-import {LocalessClientOptions} from "@localess/client";
+import { LocalessClientOptions } from '@localess/client';
+import type React from 'react';
 
-export type {LocalessClient} from '@localess/client';
+export type { LocalessClient } from '@localess/client';
 
 /**
  * Initialization options for {@link localessInit}.

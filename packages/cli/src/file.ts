@@ -1,19 +1,18 @@
-import {access, constants, mkdir, writeFile as nodeWriteFile, readFile as nodeReadFile, appendFile} from "node:fs/promises";
-import {join, parse} from "node:path";
+import { access, appendFile, constants, mkdir, readFile as nodeReadFile, writeFile as nodeWriteFile } from 'node:fs/promises';
+import { join, parse } from 'node:path';
 
-export const DEFAULT_CONFIG_DIR = '.localess'
+export const DEFAULT_CONFIG_DIR = '.localess';
 
 export async function fileExists(path: string) {
   try {
     await access(path, constants.F_OK);
     return true;
-  }
-  catch {
+  } catch {
     return false;
   }
 }
 
-export async function writeFile(filePath: string, data: string, option? : {mode? : number}) {
+export async function writeFile(filePath: string, data: string, option?: { mode?: number }) {
   // Get the directory path
   const resolvedPath = parse(filePath).dir;
   // Ensure the directory exists
@@ -25,9 +24,7 @@ export async function writeFile(filePath: string, data: string, option? : {mode?
   // Write the file
   try {
     await nodeWriteFile(filePath, data, option);
-  }
-  catch (writeError) {
-  }
+  } catch (writeError) {}
 }
 
 export async function readFile(filePath: string): Promise<string> {

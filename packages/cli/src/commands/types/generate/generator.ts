@@ -1,4 +1,4 @@
-import {SchemaComponent, SchemaEnum, SchemaFieldKind, SchemaType, Schemas, SchemaField} from '../../../models';
+import { SchemaComponent, SchemaEnum, SchemaField, SchemaFieldKind, Schemas, SchemaType } from '../../../models';
 
 function getPreamble(prefix: string): string {
   return `/**
@@ -53,9 +53,7 @@ export interface ${prefix}ContentRichText {
 }
 
 export function toPascalCase(str: string): string {
-  return str
-    .replace(/[-_\s]+([a-zA-Z0-9])/g, (_, c: string) => c.toUpperCase())
-    .replace(/^[a-z]/, c => c.toUpperCase());
+  return str.replace(/[-_\s]+([a-zA-Z0-9])/g, (_, c: string) => c.toUpperCase()).replace(/^[a-z]/, c => c.toUpperCase());
 }
 
 function fieldToTsType(field: SchemaField, prefix: string): string {
@@ -135,16 +133,19 @@ export function generateTypes(schemas: Schemas, prefix = ''): string {
         `  _id: string;`,
         `  /** Unique identifier for the Schema object. */`,
         `  _schema: '${key}';`,
-        ...(component.fields ?? []).slice().sort((a, b) => a.name.localeCompare(b.name)).flatMap(field => {
-          const tsType = fieldToTsType(field, prefix);
-          const opt = field.required ? '' : '?';
-          const lines: string[] = [];
-          if (field.description) {
-            lines.push(`  /** ${field.description} */`);
-          }
-          lines.push(`  ${field.name}${opt}: ${tsType};`);
-          return lines;
-        }),
+        ...(component.fields ?? [])
+          .slice()
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .flatMap(field => {
+            const tsType = fieldToTsType(field, prefix);
+            const opt = field.required ? '' : '?';
+            const lines: string[] = [];
+            if (field.description) {
+              lines.push(`  /** ${field.description} */`);
+            }
+            lines.push(`  ${field.name}${opt}: ${tsType};`);
+            return lines;
+          }),
       ];
 
       parts.push(`${typeDoc}export interface ${typeName} {\n${fieldLines.join('\n')}\n}\n`);

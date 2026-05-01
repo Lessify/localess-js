@@ -2,7 +2,6 @@
  * Key-Value Object. Where Key is Translation ID and Value is Translated Content
  */
 export interface Translations {
-
   [key: string]: string;
 }
 
@@ -10,7 +9,7 @@ export type TranslationUpdate = {
   dryRun?: boolean;
   type: TranslationUpdateType;
   values: Translations;
-}
+};
 
 export enum TranslationUpdateType {
   ADD_MISSING = 'add-missing',
@@ -27,4 +26,4 @@ export type TranslationUpdateResponse = {
   message: string;
   ids?: string[];
   dryRun?: boolean;
-}
+};

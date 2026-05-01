@@ -15,7 +15,5 @@
  *                           Returns '/' + fullSlug for type:'content', raw uri for type:'url',
  *                           '/not-found' when the link cannot be resolved.
  */
-export { localessEditable, localessEditableField, isBrowser, isServer, isIframe } from '@localess/client';
-
 export * from './link.util';
-
+export { isBrowser, isIframe, isServer, localessEditable, localessEditableField } from '@localess/client';

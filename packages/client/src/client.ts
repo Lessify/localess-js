@@ -1,6 +1,6 @@
-import {FG_BLUE, RESET} from "./utils";
-import {Content, ContentAsset, ContentData, Links, Translations} from "./models";
-import {ICache, NoCache, TTLCache} from "./cache";
+import { ICache, NoCache, TTLCache } from './cache';
+import { Content, ContentAsset, ContentData, Links, Translations } from './models';
+import { FG_BLUE, RESET } from './utils';
 
 export type LocalessClientOptions = {
   /**
@@ -30,7 +30,7 @@ export type LocalessClientOptions = {
    * Set to false to disable caching.
    */
   cacheTTL?: number | false; // in milliseconds
-}
+};
 
 export type LinksFetchParams = {
   /**
@@ -48,7 +48,7 @@ export type LinksFetchParams = {
    * @example false
    */
   excludeChildren?: boolean;
-}
+};
 
 export type ContentFetchParams = {
   /**
@@ -70,7 +70,7 @@ export type ContentFetchParams = {
    * Resolve links in the content data. Default is false.
    */
   resolveLink?: boolean;
-}
+};
 
 export interface LocalessClient {
   /**
@@ -102,12 +102,12 @@ export interface LocalessClient {
    */
   getTranslations(locale: string): Promise<Translations>;
 
-  syncScriptUrl(): string
+  syncScriptUrl(): string;
 
-  assetLink(asset: ContentAsset | string): string
+  assetLink(asset: ContentAsset | string): string;
 }
 
-const LOG_GROUP = `${FG_BLUE}[Localess:Client]${RESET}`
+const LOG_GROUP = `${FG_BLUE}[Localess:Client]${RESET}`;
 
 /**
  * Create a Localess API Client
@@ -123,17 +123,16 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
     redirect: 'follow',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'X-Localess-Agent': 'Localess-JS-Client',
-      'X-Localess-Agent-Version': '0.9.0'
-    }
+      'X-Localess-Agent-Version': '0.9.0',
+    },
   };
 
   // Cache for storing API responses
   const cache: ICache<any> = options.cacheTTL === false ? new NoCache<any>() : new TTLCache<any>(options.cacheTTL);
 
   return {
-
     async getLinks(params?: LinksFetchParams): Promise<Links> {
       if (options.debug) {
         console.log(LOG_GROUP, 'getLinks() params : ', JSON.stringify(params));
@@ -150,7 +149,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (params?.excludeChildren) {
         excludeChildren = `&excludeChildren=${params.excludeChildren}`;
       }
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/links?token=${options.token}${kind}${parentSlug}${excludeChildren}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/links?token=${options.token}${kind}${parentSlug}${excludeChildren}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getLinks fetch url : ', url);
       }
@@ -164,7 +163,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetch(url, fetchOptions)
+        const response = await fetch(url, fetchOptions);
         if (options.debug) {
           console.log(LOG_GROUP, 'getLinks status : ', response.status);
         }
@@ -197,7 +196,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const locale = params?.locale ? `&locale=${params.locale}` : '';
       const resolveReference = params?.resolveReference ? `&resolveReference=${params.resolveReference}` : '';
       const resolveLink = params?.resolveLink ? `&resolveLink=${params.resolveLink}` : '';
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/slugs/${slug}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/slugs/${slug}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getContentBySlug fetch url : ', url);
       }
@@ -211,7 +210,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetch(url, fetchOptions)
+        const response = await fetch(url, fetchOptions);
         if (options.debug) {
           console.log(LOG_GROUP, 'getContentBySlug status : ', response.status);
         }
@@ -244,7 +243,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const locale = params?.locale ? `&locale=${params.locale}` : '';
       const resolveReference = params?.resolveReference ? `&resolveReference=${params.resolveReference}` : '';
       const resolveLink = params?.resolveLink ? `&resolveLink=${params.resolveLink}` : '';
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/${id}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/${id}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getContentById fetch url : ', url);
       }
@@ -258,7 +257,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetch(url, fetchOptions)
+        const response = await fetch(url, fetchOptions);
         if (options.debug) {
           console.log(LOG_GROUP, 'getContentById status : ', response.status);
         }
@@ -278,7 +277,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (options.debug) {
         console.log(LOG_GROUP, 'getTranslations() locale : ', locale);
       }
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}?token=${options.token}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}?token=${options.token}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getTranslations fetch url : ', url);
       }
@@ -292,7 +291,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetch(url, fetchOptions)
+        const response = await fetch(url, fetchOptions);
         if (options.debug) {
           console.log(LOG_GROUP, 'getTranslations status : ', response.status);
         }
@@ -309,7 +308,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
     },
 
     syncScriptUrl(): string {
-      return `${normalizedOrigin}/scripts/sync-v1.js`
+      return `${normalizedOrigin}/scripts/sync-v1.js`;
     },
 
     assetLink(asset: ContentAsset | string): string {
@@ -318,6 +317,6 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       } else {
         return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${asset.uri}`;
       }
-    }
-  }
+    },
+  };
 }

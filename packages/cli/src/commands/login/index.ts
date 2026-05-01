@@ -1,7 +1,8 @@
-import {Command} from "commander";
-import {input, password} from "@inquirer/prompts";
-import {localessClient} from "../../client";
-import {getSession, persistSession} from "../../session";
+import { input, password } from '@inquirer/prompts';
+import { Command } from 'commander';
+
+import { localessClient } from '../../client';
+import { getSession, persistSession } from '../../session';
 
 type LoginOptions = {
   origin?: string;
@@ -15,7 +16,7 @@ export const loginCommand = new Command('login')
   .option('-s, --space <space>', 'Space ID to login to')
   .option('-t, --token <token>', 'Token to login to Localess CLI')
   .action(async (options: LoginOptions) => {
-    const session = await getSession()
+    const session = await getSession();
 
     if (session.isLoggedIn) {
       console.log('Already logged in.');
@@ -23,20 +24,26 @@ export const loginCommand = new Command('login')
       return;
     }
 
-    const origin = options.origin ?? await input({
-      message: 'Origin of the Localess instance:',
-      required: true,
-    });
+    const origin =
+      options.origin ??
+      (await input({
+        message: 'Origin of the Localess instance:',
+        required: true,
+      }));
 
-    const space = options.space ?? await input({
-      message: 'Space ID:',
-      required: true,
-    });
+    const space =
+      options.space ??
+      (await input({
+        message: 'Space ID:',
+        required: true,
+      }));
 
-    const token = options.token ?? await password({
-      message: 'Token:',
-      mask: true,
-    });
+    const token =
+      options.token ??
+      (await password({
+        message: 'Token:',
+        mask: true,
+      }));
 
     const client = localessClient({
       origin,
@@ -47,7 +54,7 @@ export const loginCommand = new Command('login')
     try {
       const spaceData = await client.getSpace();
       console.log(`Successfully logged in to space: ${spaceData.name} (${spaceData.id})`);
-      await persistSession({origin, space, token});
+      await persistSession({ origin, space, token });
     } catch (e) {
       console.error('Login failed');
     }

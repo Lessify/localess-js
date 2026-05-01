@@ -26,22 +26,17 @@
  * - Sync event types   (LocalessSync, EventToApp, EventCallback, EventToAppType)
  */
 
+export type * from '../core/models';
+export { renderRichTextToReact } from '../core/richtext';
 export {
-  localessInit,
-  getLocalessClient,
-  registerComponent,
-  unregisterComponent,
   getComponent,
   getFallbackComponent,
+  getLocalessClient,
+  localessInit,
+  registerComponent,
   resolveAsset,
+  unregisterComponent,
 } from '../core/state';
-
+export * from '../core/utils';
 export * from './localess-component';
 export * from './localess-document';
-
-export { renderRichTextToReact } from '../core/richtext';
-
-export * from '../core/utils';
-
-export type * from '../core/models';
-

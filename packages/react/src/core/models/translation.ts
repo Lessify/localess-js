@@ -1,3 +1,1 @@
-export type {
-  Translations
-} from '@localess/client';
+export type { Translations } from '@localess/client';

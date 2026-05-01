@@ -1,15 +1,15 @@
-import {useEffect, useState} from "react";
-import {getLocalessClient, isSyncEnabled} from "../state";
-import {ContentFetchParams,} from "@localess/client";
-import {isBrowser, isIframe} from "../utils";
-import {Content, ContentData} from "../models";
+import { ContentFetchParams } from '@localess/client';
+import { useEffect, useState } from 'react';
+
+import { Content, ContentData } from '../models';
+import { getLocalessClient, isSyncEnabled } from '../state';
+import { isBrowser, isIframe } from '../utils';
 
 /**
  * Options for {@link useLocaless}.
  * Extends {@link ContentFetchParams} with any future hook-specific settings.
  */
-export type UseLocalessOptions = ContentFetchParams & {
-}
+export type UseLocalessOptions = ContentFetchParams & {};
 
 /**
  * React hook for fetching Localess content by slug inside a Client Component.
@@ -48,7 +48,10 @@ export type UseLocalessOptions = ContentFetchParams & {
  * const content = useLocaless(['blog', 'my-post'], { locale: 'en' });
  * ```
  */
-export const useLocaless = <T extends ContentData = ContentData>(slug: string | string[], options: UseLocalessOptions = {}): Content<T> | undefined => {
+export const useLocaless = <T extends ContentData = ContentData>(
+  slug: string | string[],
+  options: UseLocalessOptions = {}
+): Content<T> | undefined => {
   const [document, setDocument] = useState<Content<T>>();
   const client = getLocalessClient();
   let normalizedSlug: string;
@@ -60,18 +63,18 @@ export const useLocaless = <T extends ContentData = ContentData>(slug: string | 
 
   useEffect(() => {
     async function loadDocument() {
-      const document = await client.getContentBySlug<T>(normalizedSlug, options)
+      const document = await client.getContentBySlug<T>(normalizedSlug, options);
       setDocument(document);
-      if(isSyncEnabled() && isBrowser() && isIframe()) {
-        window.localess?.on(['input', 'change'], (event) => {
+      if (isSyncEnabled() && isBrowser() && isIframe()) {
+        window.localess?.on(['input', 'change'], event => {
           if (event.type === 'change' || event.type === 'input') {
-            setDocument({...document, data: event.data})
+            setDocument({ ...document, data: event.data });
           }
-        })
+        });
       }
     }
     loadDocument();
   }, [slug, options, client]);
 
   return document;
-}
+};

@@ -1,1 +1,1 @@
-export type {LocalessSync, EventToApp, EventCallback, EventToAppType} from '@localess/client'
+export type { EventCallback, EventToApp, EventToAppType, LocalessSync } from '@localess/client';

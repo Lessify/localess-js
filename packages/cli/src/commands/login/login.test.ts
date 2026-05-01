@@ -1,7 +1,7 @@
-import {beforeEach, describe, it} from 'vitest';
+import { beforeEach, describe, it } from 'vitest';
 
-import {loginCommand} from "./index";
-import {clearSession} from "../../session";
+import { clearSession } from '../../session';
+import { loginCommand } from './index';
 
 describe('login command', () => {
   beforeEach(() => {
@@ -19,14 +19,13 @@ describe('login command', () => {
     process.env.LOCALESS_SPACE = 'dummy-space-id';
     process.env.LOCALESS_TOKEN = 'dummy-token';
 
-    await loginCommand.parseAsync([], {from: 'user'});
+    await loginCommand.parseAsync([], { from: 'user' });
   });
 
   it('should run login with options', async () => {
-    await loginCommand.parseAsync([
-      '--origin', 'https://demo.localess.org',
-      '--space', 'MmaT4DL0kJ6nXIILUcQF',
-      '--token', 'flXVeAzOYCarsy3pYZt8',
-    ], {from: 'user'});
+    await loginCommand.parseAsync(
+      ['--origin', 'https://demo.localess.org', '--space', 'MmaT4DL0kJ6nXIILUcQF', '--token', 'flXVeAzOYCarsy3pYZt8'],
+      { from: 'user' }
+    );
   });
 });

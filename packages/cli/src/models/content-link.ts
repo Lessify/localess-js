@@ -2,7 +2,6 @@
  * Content Link define reference to a Link.
  */
 export interface ContentLink {
-
   /**
    * Define the type of Link
    */

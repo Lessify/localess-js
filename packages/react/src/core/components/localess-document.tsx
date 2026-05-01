@@ -1,9 +1,10 @@
-import {forwardRef, useEffect, useState} from "react";
-import {Content, ContentData} from "../models";
-import {isBrowser, isIframe} from "../utils";
-import {LocalessComponent} from "../components";
-import {isSyncEnabled} from "../state";
-import {FONT_BOLD, FONT_NORMAL} from "../../console";
+import { forwardRef, useEffect, useState } from 'react';
+
+import { FONT_BOLD, FONT_NORMAL } from '../../console';
+import { LocalessComponent } from '../components';
+import { Content, ContentData } from '../models';
+import { isSyncEnabled } from '../state';
+import { isBrowser, isIframe } from '../utils';
 
 /**
  * Props for {@link LocalessDocument}.
@@ -16,7 +17,7 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
    * Must contain a `data` field with a valid `_schema` key.
    */
   document: Content<T>;
-}
+};
 
 /**
  * Client Component that renders content and automatically subscribes to Visual Editor sync events.
@@ -57,24 +58,26 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
  * }
  * ```
  */
-export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({document}, ref) => {
+export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({ document }, ref) => {
   const [contentData, setContentData] = useState(document.data);
   useEffect(() => {
     if (isSyncEnabled() && isBrowser() && isIframe()) {
-      window.localess?.on(['input', 'change'], (event) => {
+      window.localess?.on(['input', 'change'], event => {
         if (event.type === 'change' || event.type === 'input') {
-          setContentData(event.data)
+          setContentData(event.data);
         }
-      })
+      });
     }
-  }, [])
+  }, []);
 
   if (!contentData) {
-    console.error('LocalessDocument property %cdocument.data%c is not provided.', FONT_BOLD, FONT_NORMAL)
-    return <div>LocalessDocument property <b>document.data</b> is not provided.</div>
+    console.error('LocalessDocument property %cdocument.data%c is not provided.', FONT_BOLD, FONT_NORMAL);
+    return (
+      <div>
+        LocalessDocument property <b>document.data</b> is not provided.
+      </div>
+    );
   }
 
-  return (
-    <LocalessComponent ref={ref} data={contentData} links={document.links} references={document.references}/>
-  );
+  return <LocalessComponent ref={ref} data={contentData} links={document.links} references={document.references} />;
 });

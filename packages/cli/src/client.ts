@@ -1,17 +1,19 @@
-import {FG_BLUE, RESET} from "./utils";
+import { OpenAPIObject } from 'openapi3-ts/oas30';
+
+import { ICache, NoCache, TTLCache } from './cache';
 import {
   Content,
   ContentAsset,
   ContentData,
   Links,
+  Schemas,
   Space,
   Translations,
-  TranslationUpdate, TranslationUpdateResponse,
+  TranslationUpdate,
+  TranslationUpdateResponse,
   TranslationUpdateType,
-  Schemas
-} from "./models";
-import {ICache, NoCache, TTLCache} from "./cache";
-import {OpenAPIObject} from "openapi3-ts/oas30";
+} from './models';
+import { FG_BLUE, RESET } from './utils';
 
 export type LocalessClientOptions = {
   /**
@@ -49,7 +51,7 @@ export type LocalessClientOptions = {
    * Delay in ms between retries. Default: 500ms
    */
   retryDelay?: number;
-}
+};
 
 export type LinksFetchParams = {
   /**
@@ -67,7 +69,7 @@ export type LinksFetchParams = {
    * @example false
    */
   excludeChildren?: boolean;
-}
+};
 
 export type ContentFetchParams = {
   /**
@@ -89,7 +91,7 @@ export type ContentFetchParams = {
    * Resolve links in the content data. Default is false.
    */
   resolveLink?: boolean;
-}
+};
 
 export type TranslationFetchParams = {
   /**
@@ -97,14 +99,14 @@ export type TranslationFetchParams = {
    * Overrides the version set in the client options.
    */
   version?: 'draft' | string;
-}
+};
 
 export interface LocalessClient {
   /**
    * Get space information
    * @returns {Promise<Space>}
    */
-  getSpace(): Promise<Space>
+  getSpace(): Promise<Space>;
 
   /**
    * Get all links
@@ -145,28 +147,39 @@ export interface LocalessClient {
    * @param dryRun - If true, the API will return the changes that would be made without actually applying them
    * @returns {Promise<void>}
    */
-  updateTranslations(locale: string, type: TranslationUpdateType, values: Translations, dryRun?: boolean): Promise<TranslationUpdateResponse | undefined>;
+  updateTranslations(
+    locale: string,
+    type: TranslationUpdateType,
+    values: Translations,
+    dryRun?: boolean
+  ): Promise<TranslationUpdateResponse | undefined>;
 
   /**
    * Get OpenAPI specification
    * Requires Token with Development Tools permission
    */
-  getOpenApi(): Promise<OpenAPIObject>
+  getOpenApi(): Promise<OpenAPIObject>;
 
   /**
    * Get Schemas Definition
    */
-  getSchemas(): Promise<Schemas>
+  getSchemas(): Promise<Schemas>;
 
-  assetLink(asset: ContentAsset | string): string
+  assetLink(asset: ContentAsset | string): string;
 }
 
-const LOG_GROUP = `${FG_BLUE}[Localess:Client]${RESET}`
+const LOG_GROUP = `${FG_BLUE}[Localess:Client]${RESET}`;
 
 /**
  * Helper: fetch with retry logic
  */
-async function fetchWithRetry(url: string, options: RequestInit, retryCount: number = 3, retryDelay: number = 500, debug?: boolean): Promise<Response> {
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  retryCount: number = 3,
+  retryDelay: number = 500,
+  debug?: boolean
+): Promise<Response> {
   let attempt = 0;
   let lastError: any;
   while (attempt <= retryCount) {
@@ -211,22 +224,21 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
     redirect: 'follow',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'X-Localess-Agent': 'Localess-CLI-Client',
-      'X-Localess-Agent-Version': '0.9.0'
-    }
+      'X-Localess-Agent-Version': '0.9.0',
+    },
   };
 
   // Cache for storing API responses
   const cache: ICache<any> = options.cacheTTL === false ? new NoCache<any>() : new TTLCache<any>(options.cacheTTL);
 
   return {
-
     async getSpace(): Promise<Space> {
       if (options.debug) {
         console.log(LOG_GROUP, 'getSpace()');
       }
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}?token=${options.token}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}?token=${options.token}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getSpace fetch url : ', url);
       }
@@ -240,7 +252,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getSpace status : ', response.status);
         }
@@ -272,7 +284,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (params?.excludeChildren) {
         excludeChildren = `&excludeChildren=${params.excludeChildren}`;
       }
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/links?token=${options.token}${kind}${parentSlug}${excludeChildren}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/links?token=${options.token}${kind}${parentSlug}${excludeChildren}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getLinks fetch url : ', url);
       }
@@ -286,7 +298,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getLinks status : ', response.status);
         }
@@ -319,7 +331,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const locale = params?.locale ? `&locale=${params.locale}` : '';
       const resolveReference = params?.resolveReference ? `&resolveReference=${params.resolveReference}` : '';
       const resolveLink = params?.resolveLink ? `&resolveLink=${params.resolveLink}` : '';
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/slugs/${slug}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/slugs/${slug}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getContentBySlug fetch url : ', url);
       }
@@ -333,7 +345,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getContentBySlug status : ', response.status);
         }
@@ -366,7 +378,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const locale = params?.locale ? `&locale=${params.locale}` : '';
       const resolveReference = params?.resolveReference ? `&resolveReference=${params.resolveReference}` : '';
       const resolveLink = params?.resolveLink ? `&resolveLink=${params.resolveLink}` : '';
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/${id}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/${id}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getContentById fetch url : ', url);
       }
@@ -380,7 +392,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getContentById status : ', response.status);
         }
@@ -410,7 +422,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (params?.version && params.version == 'draft') {
         version = `&version=${params.version}`;
       }
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}?token=${options.token}${version}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}?token=${options.token}${version}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getTranslations fetch url : ', url);
       }
@@ -424,7 +436,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getTranslations status : ', response.status);
         }
@@ -440,13 +452,18 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
     },
 
-    async updateTranslations(locale: string, type: TranslationUpdateType, values: Translations, dryRun?: boolean): Promise<TranslationUpdateResponse | undefined> {
+    async updateTranslations(
+      locale: string,
+      type: TranslationUpdateType,
+      values: Translations,
+      dryRun?: boolean
+    ): Promise<TranslationUpdateResponse | undefined> {
       if (options.debug) {
         console.log(LOG_GROUP, 'updateTranslations() locale : ', locale);
         console.log(LOG_GROUP, 'updateTranslations() type : ', type);
         console.log(LOG_GROUP, 'updateTranslations() values : ', JSON.stringify(values));
       }
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'updateTranslations fetch url : ', url);
       }
@@ -454,16 +471,22 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         type,
         values,
         dryRun,
-      }
+      };
       try {
-        const response = await fetchWithRetry(url, {
-          method: 'POST',
-          headers: {
-            'X-API-KEY': options.token,
-            ...fetchOptions.headers
+        const response = await fetchWithRetry(
+          url,
+          {
+            method: 'POST',
+            headers: {
+              'X-API-KEY': options.token,
+              ...fetchOptions.headers,
+            },
+            body: JSON.stringify(body),
           },
-          body: JSON.stringify(body),
-        }, options.retryCount,  options.retryDelay, options.debug);
+          options.retryCount,
+          options.retryDelay,
+          options.debug
+        );
         if (options.debug) {
           console.log(LOG_GROUP, 'updateTranslations status : ', response.status);
         }
@@ -477,7 +500,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (options.debug) {
         console.log(LOG_GROUP, 'getOpenApi()');
       }
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/open-api?token=${options.token}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/open-api?token=${options.token}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getOpenApi fetch url : ', url);
       }
@@ -491,7 +514,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getOpenApi status : ', response.status);
         }
@@ -510,7 +533,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (options.debug) {
         console.log(LOG_GROUP, 'getSchemas()');
       }
-      let url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/schemas?token=${options.token}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/schemas?token=${options.token}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getSchemas fetch url : ', url);
       }
@@ -524,7 +547,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       try {
-        const response = await fetchWithRetry(url, fetchOptions, options.retryCount,  options.retryDelay, options.debug);
+        const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
         if (options.debug) {
           console.log(LOG_GROUP, 'getSchemas status : ', response.status);
         }
@@ -545,6 +568,6 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       } else {
         return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${asset.uri}`;
       }
-    }
-  }
+    },
+  };
 }

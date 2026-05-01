@@ -1,14 +1,15 @@
-import {Command} from "commander";
-import {getSession} from "../../../session";
-import {localessClient} from "../../../client";
-import {TranslationFileFormat} from "../../../models";
-import {writeFile} from "../../../file";
-import {dotToNestedObject, sortObjectKeys} from "../../../utils";
+import { Command } from 'commander';
+
+import { localessClient } from '../../../client';
+import { writeFile } from '../../../file';
+import { TranslationFileFormat } from '../../../models';
+import { getSession } from '../../../session';
+import { dotToNestedObject, sortObjectKeys } from '../../../utils';
 
 export type TranslationsPullOptions = {
   path: string;
   format: TranslationFileFormat;
-}
+};
 
 export const translationsPullCommand = new Command('pull')
   .argument('<locale>', 'Locale to pull')
@@ -23,7 +24,7 @@ export const translationsPullCommand = new Command('pull')
       return;
     }
 
-    const session = await getSession()
+    const session = await getSession();
     if (!session.isLoggedIn) {
       console.error('Not logged in');
       console.error('Please log in first using "localess login" command');
@@ -36,7 +37,7 @@ export const translationsPullCommand = new Command('pull')
     });
 
     console.log('Pulling translations from Localess for locale:', locale);
-    const translations = await client.getTranslations(locale)
+    const translations = await client.getTranslations(locale);
 
     console.log('Saving translations in file:', options.path);
     if (options.format === TranslationFileFormat.FLAT) {

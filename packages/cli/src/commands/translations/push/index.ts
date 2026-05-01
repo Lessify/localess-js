@@ -1,24 +1,29 @@
-import {Command} from "commander";
-import {getSession} from "../../../session";
-import {localessClient} from "../../../client";
-import {TranslationFileFormat, Translations, TranslationUpdateType} from "../../../models";
-import {readFile} from "../../../file";
-import {zLocaleTranslationsSchema, zTranslationUpdateTypeSchema} from "../../../models/translation.zod";
-import {nestedObjectToFlat} from "../../../utils";
+import { Command } from 'commander';
+
+import { localessClient } from '../../../client';
+import { readFile } from '../../../file';
+import { TranslationFileFormat, Translations, TranslationUpdateType } from '../../../models';
+import { zLocaleTranslationsSchema, zTranslationUpdateTypeSchema } from '../../../models/translation.zod';
+import { getSession } from '../../../session';
+import { nestedObjectToFlat } from '../../../utils';
 
 export type TranslationsPushOptions = {
   path: string;
   format: TranslationFileFormat;
   type: TranslationUpdateType;
   dryRun?: boolean;
-}
+};
 
 export const translationsPushCommand = new Command('push')
   .argument('<locale>', 'Locale to push')
   .description('Push locale translations to Localess')
   .requiredOption('-p, --path <path>', 'Path to the translations file to push')
   .option('-f, --format <format>', `File format. Possible values are : ${Object.values(TranslationFileFormat)}`, TranslationFileFormat.FLAT)
-  .option('-t, --type <type>', `Push type. Possible values are : ${Object.values(TranslationUpdateType)}`, TranslationUpdateType.ADD_MISSING)
+  .option(
+    '-t, --type <type>',
+    `Push type. Possible values are : ${Object.values(TranslationUpdateType)}`,
+    TranslationUpdateType.ADD_MISSING
+  )
   .option('--dry-run', 'Preview changes without applying them to Localess')
   .action(async (locale: string, options: TranslationsPushOptions) => {
     console.log('Pushing translations with arguments:', locale);
@@ -28,7 +33,7 @@ export const translationsPushCommand = new Command('push')
       return;
     }
 
-    const session = await getSession()
+    const session = await getSession();
     if (!session.isLoggedIn) {
       console.error('Not logged in');
       console.error('Please log in first using "localess login" command');
@@ -55,7 +60,7 @@ export const translationsPushCommand = new Command('push')
       translationValues = parsed;
     }
 
-    const pResult = zLocaleTranslationsSchema.safeParse(translationValues)
+    const pResult = zLocaleTranslationsSchema.safeParse(translationValues);
     if (!pResult.success) {
       console.error('Invalid translations file format:', pResult.error);
       return;

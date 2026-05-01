@@ -1,9 +1,10 @@
-import {forwardRef} from "react";
-import {Content, ContentData} from "../core/models";
-import {LocalessComponent} from "../core/components";
-import {FONT_BOLD, FONT_NORMAL} from "../console";
-import {LocalessSync} from "./localess-sync";
-import {getOrigin, isSyncEnabled} from "../core/state";
+import { forwardRef } from 'react';
+
+import { FONT_BOLD, FONT_NORMAL } from '../console';
+import { LocalessComponent } from '../core/components';
+import { Content, ContentData } from '../core/models';
+import { getOrigin, isSyncEnabled } from '../core/state';
+import { LocalessSync } from './localess-sync';
 
 /**
  * Props for {@link LocalessDocument}.
@@ -16,7 +17,7 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
    * Must contain a `data` field with a valid `_schema` key.
    */
   document: Content<T>;
-}
+};
 
 /**
  * Client Component that renders content and automatically subscribes to Visual Editor sync events.
@@ -57,16 +58,20 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
  * }
  * ```
  */
-export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({document}, ref) => {
+export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({ document }, ref) => {
   if (!document.data) {
-    console.error('LocalessDocument property %cdocument.data%c is not provided.', FONT_BOLD, FONT_NORMAL)
-    return <div>LocalessDocument property <b>document.data</b> is not provided.</div>
+    console.error('LocalessDocument property %cdocument.data%c is not provided.', FONT_BOLD, FONT_NORMAL);
+    return (
+      <div>
+        LocalessDocument property <b>document.data</b> is not provided.
+      </div>
+    );
   }
 
   return (
     <>
-      <LocalessComponent ref={ref} data={document.data} links={document.links} references={document.references}/>
-      <LocalessSync document={document} origin={getOrigin()} enableSync={isSyncEnabled()}/>
+      <LocalessComponent ref={ref} data={document.data} links={document.links} references={document.references} />
+      <LocalessSync document={document} origin={getOrigin()} enableSync={isSyncEnabled()} />
     </>
   );
 });

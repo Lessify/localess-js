@@ -7,4 +7,3 @@
  *                                   Returns Content<T> | undefined.
  */
 export * from './use-localess';
-

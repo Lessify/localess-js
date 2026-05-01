@@ -31,7 +31,6 @@ export class NoCache<V> implements ICache<V> {
   has(key: string): boolean {
     return false;
   }
-
 }
 
 export class TTLCache<V> {

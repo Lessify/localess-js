@@ -5,11 +5,15 @@ root = true
 charset = utf-8
 indent_style = space
 indent_size = 2
+max_line_length = 140
 insert_final_newline = true
 trim_trailing_whitespace = true
 
 [*.ts]
 quote_type = single
+
+[*.html]
+ij_html_quote_style = double
 
 [*.md]
 max_line_length = off

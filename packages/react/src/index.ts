@@ -68,5 +68,3 @@ export * from './core/richtext';
 // EventCallback       — callback type for window.localess.on(…)
 // EventToAppType      — union of Visual Editor event type strings
 export type * from './core/models';
-
-

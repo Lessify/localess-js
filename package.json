@@ -11,7 +11,9 @@
     "build": "npm run build:client && npm run build:react && npm run build:cli",
     "build:cli": "npm run build --workspace=@localess/cli",
     "build:client": "npm run build --workspace=@localess/client",
-    "build:react": "npm run build --workspace=@localess/react"
+    "build:react": "npm run build --workspace=@localess/react",
+    "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"packages/*/src/**/*.{ts,tsx}\" --fix"
   },
   "repository": {
     "type": "git",
@@ -24,8 +26,15 @@
   },
   "homepage": "https://github.com/Lessify/localess-js#readme",
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@types/node": "^20.12.12",
+    "eslint": "^9",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-simple-import-sort": "^13.0.0",
+    "prettier": "^3.8.3",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.1",
     "vitest": "^4.1.5"
   },
   "engines": {

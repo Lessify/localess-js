@@ -1,13 +1,13 @@
 export type {
   Content,
-  ContentData,
-  ContentMetadata,
-  ContentDataSchema,
-  ContentDataField,
   ContentAsset,
-  ContentRichText,
+  ContentData,
+  ContentDataField,
+  ContentDataSchema,
   ContentLink,
+  ContentMetadata,
   ContentReference,
+  ContentRichText,
   Links,
   References,
 } from '@localess/client';

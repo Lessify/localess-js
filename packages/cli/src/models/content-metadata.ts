@@ -2,7 +2,6 @@
  * Content Metadata defines short information about a Content for navigation reason.
  */
 export interface ContentMetadata {
-
   /**
    * Date and Time at which the Content was created.
    */

@@ -1,5 +1,6 @@
-import {afterEach, beforeEach, describe, it} from 'vitest';
-import {typesCommand} from "./index";
+import { afterEach, beforeEach, describe, it } from 'vitest';
+
+import { typesCommand } from './index';
 
 describe('types command', () => {
   beforeEach(() => {
@@ -17,6 +18,6 @@ describe('types command', () => {
   });
 
   it('should run types with options', async () => {
-    await typesCommand.parseAsync(['generate'], {from: 'user'});
+    await typesCommand.parseAsync(['generate'], { from: 'user' });
   });
 });

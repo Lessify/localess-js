@@ -1,10 +1,12 @@
-import {Command} from "commander";
-import {localessClient} from "../../../client";
-import {getSession} from "../../../session";
-import {join} from "node:path";
-import process from "node:process";
-import {DEFAULT_CONFIG_DIR, writeFile} from "../../../file";
-import {generateTypes} from "./generator";
+import { join } from 'node:path';
+import process from 'node:process';
+
+import { Command } from 'commander';
+
+import { localessClient } from '../../../client';
+import { DEFAULT_CONFIG_DIR, writeFile } from '../../../file';
+import { getSession } from '../../../session';
+import { generateTypes } from './generator';
 
 const TYPES_PATH = join(process.cwd(), DEFAULT_CONFIG_DIR, 'localess.ts');
 
@@ -20,7 +22,7 @@ export const typesGenerateCommand = new Command('generate')
   .action(async (options: TypesOptions) => {
     console.log('Types in with options:', options);
 
-    const session = await getSession()
+    const session = await getSession();
     if (!session.isLoggedIn) {
       console.error('Not logged in');
       console.error('Please log in first using "localess login" command');
@@ -38,5 +40,4 @@ export const typesGenerateCommand = new Command('generate')
     const content = generateTypes(specification, options.prefix);
     await writeFile(options.path, content);
     console.log(`Types written to ${options.path}`);
-
   });

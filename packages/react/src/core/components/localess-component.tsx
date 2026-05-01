@@ -1,8 +1,9 @@
-import {forwardRef} from "react";
-import {ContentData, Links, References} from "../models";
-import {localessEditable} from "../utils";
-import {FONT_BOLD, FONT_NORMAL} from "../../console";
-import {getComponent, getFallbackComponent} from "../state";
+import { forwardRef } from 'react';
+
+import { FONT_BOLD, FONT_NORMAL } from '../../console';
+import { ContentData, Links, References } from '../models';
+import { getComponent, getFallbackComponent } from '../state';
+import { localessEditable } from '../utils';
 
 /**
  * Props for {@link LocalessComponent}.
@@ -25,7 +26,7 @@ export type LocalessComponentProps<T extends ContentData = ContentData> = {
    * Pass through to child components that consume referenced content.
    */
   references?: References;
-}
+};
 
 /**
  * Dynamic schema-to-component renderer for use in SPA and client-side contexts.
@@ -57,31 +58,30 @@ export type LocalessComponentProps<T extends ContentData = ContentData> = {
  * ))}
  * ```
  */
-export const LocalessComponent = forwardRef<HTMLElement, LocalessComponentProps>(
-  (
-    {data, links, references, ...restProps},
-    ref
-  ) => {
-    if (!data) {
-      console.error('LocalessComponent property %cdata%c is not provided.', FONT_BOLD, FONT_NORMAL)
-      return <div>LocalessComponent property <b>data</b> is not provided.</div>
-    }
-    // Find Component from Mapping
-    const Comp = getComponent(data._schema);
-    if (Comp) {
-      return <Comp ref={ref} data={data} links={links} references={references} {...localessEditable(data)} {...restProps} />;
-    }
-    // Try to use Fallback Component
-    const FallbackComponent = getFallbackComponent()
-    if (FallbackComponent) {
-      return <FallbackComponent ref={ref} data={data} links={links} references={references} {...restProps} />
-    }
-    // Missing Configuration case
+export const LocalessComponent = forwardRef<HTMLElement, LocalessComponentProps>(({ data, links, references, ...restProps }, ref) => {
+  if (!data) {
+    console.error('LocalessComponent property %cdata%c is not provided.', FONT_BOLD, FONT_NORMAL);
     return (
-      <p>
-        <b>LocalessComponent</b> could not found component with key <b>{data._schema}</b>. <br/>
-        Please check if your configuration is correct.
-      </p>
+      <div>
+        LocalessComponent property <b>data</b> is not provided.
+      </div>
     );
-  });
-
+  }
+  // Find Component from Mapping
+  const Comp = getComponent(data._schema);
+  if (Comp) {
+    return <Comp ref={ref} data={data} links={links} references={references} {...localessEditable(data)} {...restProps} />;
+  }
+  // Try to use Fallback Component
+  const FallbackComponent = getFallbackComponent();
+  if (FallbackComponent) {
+    return <FallbackComponent ref={ref} data={data} links={links} references={references} {...restProps} />;
+  }
+  // Missing Configuration case
+  return (
+    <p>
+      <b>LocalessComponent</b> could not found component with key <b>{data._schema}</b>. <br />
+      Please check if your configuration is correct.
+    </p>
+  );
+});

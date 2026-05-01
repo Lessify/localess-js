@@ -1,21 +1,21 @@
-import {renderToReactElement} from '@tiptap/static-renderer/pm/react'
-import React from "react";
-import {ContentRichText} from "@localess/client";
-import {Document} from "@tiptap/extension-document";
-import {Text} from "@tiptap/extension-text";
-import {Paragraph} from "@tiptap/extension-paragraph";
-import {Heading} from "@tiptap/extension-heading";
-import {Bold} from "@tiptap/extension-bold";
-import {Italic} from "@tiptap/extension-italic";
-import {Strike} from "@tiptap/extension-strike";
-import {Underline} from "@tiptap/extension-underline";
-import {History} from "@tiptap/extension-history";
-import {ListItem} from "@tiptap/extension-list-item";
-import {OrderedList} from "@tiptap/extension-ordered-list";
-import {BulletList} from "@tiptap/extension-bullet-list";
-import {Code} from "@tiptap/extension-code";
-import {CodeBlockLowlight} from "@tiptap/extension-code-block-lowlight";
-import {Link} from "@tiptap/extension-link";
+import { ContentRichText } from '@localess/client';
+import { Bold } from '@tiptap/extension-bold';
+import { BulletList } from '@tiptap/extension-bullet-list';
+import { Code } from '@tiptap/extension-code';
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
+import { Document } from '@tiptap/extension-document';
+import { Heading } from '@tiptap/extension-heading';
+import { History } from '@tiptap/extension-history';
+import { Italic } from '@tiptap/extension-italic';
+import { Link } from '@tiptap/extension-link';
+import { ListItem } from '@tiptap/extension-list-item';
+import { OrderedList } from '@tiptap/extension-ordered-list';
+import { Paragraph } from '@tiptap/extension-paragraph';
+import { Strike } from '@tiptap/extension-strike';
+import { Text } from '@tiptap/extension-text';
+import { Underline } from '@tiptap/extension-underline';
+import { renderToReactElement } from '@tiptap/static-renderer/pm/react';
+import React from 'react';
 
 /**
  * Renders a Localess rich text field to a React node tree.
@@ -61,6 +61,6 @@ export function renderRichTextToReact(content: ContentRichText): React.ReactNode
       Code,
       CodeBlockLowlight,
       Link,
-    ]
-  })
+    ],
+  });
 }

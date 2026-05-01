@@ -2,7 +2,6 @@
  * Content RichText define content as JSON Object.
  */
 export interface ContentRichText {
-
   /**
    * Define the type of Content Node
    */

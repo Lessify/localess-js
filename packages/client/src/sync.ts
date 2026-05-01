@@ -1,4 +1,4 @@
-import {isIframe, isServer} from "./utils";
+import { isIframe, isServer } from './utils';
 
 const JS_SYNC_ID = 'localess-js-sync';
 
@@ -16,7 +16,7 @@ export async function loadLocalessSync(origin: string, force: boolean = false): 
     }
     if (!isIframe()) {
       // Skip if the page is not loaded in Visual Editor
-      console.warn('Localess Sync is loaded only in Visual Editor.')
+      console.warn('Localess Sync is loaded only in Visual Editor.');
       reject(undefined);
       return;
     }
@@ -35,16 +35,15 @@ export async function loadLocalessSync(origin: string, force: boolean = false): 
     const script = document.createElement('script');
     script.id = JS_SYNC_ID;
     script.type = 'text/javascript';
-    script.src = `${origin}/scripts/sync-v1.js`
+    script.src = `${origin}/scripts/sync-v1.js`;
     script.async = true;
 
-    script.onerror = (error) => reject(error);
-    script.onload = (event) => {
-      console.info('Localess Sync Script loaded')
+    script.onerror = error => reject(error);
+    script.onload = event => {
+      console.info('Localess Sync Script loaded');
       resolve();
     };
 
     document.head.appendChild(script);
-  })
-
+  });
 }

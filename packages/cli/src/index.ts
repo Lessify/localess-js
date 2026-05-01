@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {program} from './program';
+import { program } from './program';
 
 try {
   program.parse(process.argv);

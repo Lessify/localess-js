@@ -1,19 +1,22 @@
-import {ContentAsset} from "./content-asset";
-import {ContentLink} from "./content-link";
-import {ContentRichText} from "./content-rich-text";
-import {ContentReference} from "./content-reference";
+import { ContentAsset } from './content-asset';
+import { ContentLink } from './content-link';
+import { ContentReference } from './content-reference';
+import { ContentRichText } from './content-rich-text';
 
 export type ContentDataField =
-  any |
-  string |
-  string[] |
-  number |
-  boolean |
-  ContentLink |
-  ContentRichText |
-  ContentData | ContentData[] |
-  ContentAsset | ContentAsset[] |
-  ContentReference | ContentReference[];
+  | any
+  | string
+  | string[]
+  | number
+  | boolean
+  | ContentLink
+  | ContentRichText
+  | ContentData
+  | ContentData[]
+  | ContentAsset
+  | ContentAsset[]
+  | ContentReference
+  | ContentReference[];
 
 /**
  * Content Data Schema related information.

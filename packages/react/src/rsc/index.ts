@@ -25,9 +25,7 @@
  * NOT compatible with Next.js `output: 'export'` — use `@localess/react/ssr` for static exports.
  */
 
-export * from '../ssr';
-
 export * from '../core/components/localess-component';
-export * from './localess-document';
-
 export { isSyncEnabled } from '../core/state';
+export * from '../ssr';
+export * from './localess-document';

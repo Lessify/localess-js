@@ -1,6 +1,7 @@
-import {describe, expect, it} from 'vitest';
-import {generateTypes, toPascalCase} from './generator';
-import {SchemaFieldKind, SchemaType, Schemas} from '../../../models';
+import { describe, expect, it } from 'vitest';
+
+import { SchemaFieldKind, Schemas, SchemaType } from '../../../models';
+import { generateTypes, toPascalCase } from './generator';
 
 // ---------------------------------------------------------------------------
 // toPascalCase
@@ -36,7 +37,7 @@ describe('toPascalCase', () => {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const BASE_TIMESTAMPS = {createdAt: 0, updatedAt: 0};
+const BASE_TIMESTAMPS = { createdAt: 0, updatedAt: 0 };
 
 // ---------------------------------------------------------------------------
 // generateTypes – preamble & ContentData
@@ -67,7 +68,7 @@ describe('generateTypes – preamble', () => {
 
   it('emits ContentData = unknown when all schemas are NODE type', () => {
     const schemas: Schemas = {
-      teaser: {type: SchemaType.NODE, fields: [], ...BASE_TIMESTAMPS},
+      teaser: { type: SchemaType.NODE, fields: [], ...BASE_TIMESTAMPS },
     };
     const result = generateTypes(schemas);
     expect(result).toContain('export type ContentData = unknown;');
@@ -83,7 +84,10 @@ describe('generateTypes – ENUM schema', () => {
     const schemas: Schemas = {
       color: {
         type: SchemaType.ENUM,
-        values: [{name: 'Red', value: 'red'}, {name: 'Blue', value: 'blue'}],
+        values: [
+          { name: 'Red', value: 'red' },
+          { name: 'Blue', value: 'blue' },
+        ],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -93,7 +97,7 @@ describe('generateTypes – ENUM schema', () => {
 
   it('generates string fallback for enum with no values', () => {
     const schemas: Schemas = {
-      color: {type: SchemaType.ENUM, values: [], ...BASE_TIMESTAMPS},
+      color: { type: SchemaType.ENUM, values: [], ...BASE_TIMESTAMPS },
     };
     const result = generateTypes(schemas);
     expect(result).toContain('export type Color = string;');
@@ -101,7 +105,7 @@ describe('generateTypes – ENUM schema', () => {
 
   it('generates string fallback for enum with undefined values', () => {
     const schemas: Schemas = {
-      color: {type: SchemaType.ENUM, ...BASE_TIMESTAMPS},
+      color: { type: SchemaType.ENUM, ...BASE_TIMESTAMPS },
     };
     const result = generateTypes(schemas);
     expect(result).toContain('export type Color = string;');
@@ -112,7 +116,7 @@ describe('generateTypes – ENUM schema', () => {
       color: {
         type: SchemaType.ENUM,
         description: 'Brand colours',
-        values: [{name: 'Red', value: 'red'}],
+        values: [{ name: 'Red', value: 'red' }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -123,7 +127,7 @@ describe('generateTypes – ENUM schema', () => {
 
   it('applies prefix to enum type name', () => {
     const schemas: Schemas = {
-      status: {type: SchemaType.ENUM, values: [{name: 'Active', value: 'active'}], ...BASE_TIMESTAMPS},
+      status: { type: SchemaType.ENUM, values: [{ name: 'Active', value: 'active' }], ...BASE_TIMESTAMPS },
     };
     const result = generateTypes(schemas, 'LL');
     expect(result).toContain("export type LLStatus = 'active';");
@@ -137,7 +141,7 @@ describe('generateTypes – ENUM schema', () => {
 describe('generateTypes – component schema', () => {
   it('generates an interface for a ROOT component', () => {
     const schemas: Schemas = {
-      page: {type: SchemaType.ROOT, fields: [], ...BASE_TIMESTAMPS},
+      page: { type: SchemaType.ROOT, fields: [], ...BASE_TIMESTAMPS },
     };
     const result = generateTypes(schemas);
     expect(result).toContain('export interface Page {');
@@ -147,7 +151,7 @@ describe('generateTypes – component schema', () => {
 
   it('adds ROOT type to ContentData union', () => {
     const schemas: Schemas = {
-      page: {type: SchemaType.ROOT, fields: [], ...BASE_TIMESTAMPS},
+      page: { type: SchemaType.ROOT, fields: [], ...BASE_TIMESTAMPS },
     };
     const result = generateTypes(schemas);
     expect(result).toContain('export type ContentData = Page;');
@@ -155,8 +159,8 @@ describe('generateTypes – component schema', () => {
 
   it('joins multiple ROOT types in ContentData union', () => {
     const schemas: Schemas = {
-      page: {type: SchemaType.ROOT, fields: [], ...BASE_TIMESTAMPS},
-      article: {type: SchemaType.ROOT, fields: [], ...BASE_TIMESTAMPS},
+      page: { type: SchemaType.ROOT, fields: [], ...BASE_TIMESTAMPS },
+      article: { type: SchemaType.ROOT, fields: [], ...BASE_TIMESTAMPS },
     };
     const result = generateTypes(schemas);
     expect(result).toMatch(/export type ContentData = Page \| Article;|export type ContentData = Article \| Page;/);
@@ -164,7 +168,7 @@ describe('generateTypes – component schema', () => {
 
   it('does not add NODE type to ContentData union', () => {
     const schemas: Schemas = {
-      teaser: {type: SchemaType.NODE, fields: [], ...BASE_TIMESTAMPS},
+      teaser: { type: SchemaType.NODE, fields: [], ...BASE_TIMESTAMPS },
     };
     const result = generateTypes(schemas);
     // Interface is still generated, but ContentData must not reference it
@@ -175,7 +179,7 @@ describe('generateTypes – component schema', () => {
 
   it('includes JSDoc when component has a description', () => {
     const schemas: Schemas = {
-      page: {type: SchemaType.ROOT, description: 'A full page', fields: [], ...BASE_TIMESTAMPS},
+      page: { type: SchemaType.ROOT, description: 'A full page', fields: [], ...BASE_TIMESTAMPS },
     };
     const result = generateTypes(schemas);
     expect(result).toContain('* A full page');
@@ -183,7 +187,7 @@ describe('generateTypes – component schema', () => {
 
   it('generates interface with no custom fields (only _id and _schema)', () => {
     const schemas: Schemas = {
-      empty: {type: SchemaType.NODE, ...BASE_TIMESTAMPS},
+      empty: { type: SchemaType.NODE, ...BASE_TIMESTAMPS },
     };
     const result = generateTypes(schemas);
     expect(result).toContain('export interface Empty {');
@@ -202,9 +206,9 @@ describe('generateTypes – field sorting', () => {
       card: {
         type: SchemaType.NODE,
         fields: [
-          {name: 'zebra', kind: SchemaFieldKind.TEXT},
-          {name: 'alpha', kind: SchemaFieldKind.TEXT},
-          {name: 'middle', kind: SchemaFieldKind.TEXT},
+          { name: 'zebra', kind: SchemaFieldKind.TEXT },
+          { name: 'alpha', kind: SchemaFieldKind.TEXT },
+          { name: 'middle', kind: SchemaFieldKind.TEXT },
         ],
         ...BASE_TIMESTAMPS,
       },
@@ -221,13 +225,13 @@ describe('generateTypes – field sorting', () => {
     const schemas: Schemas = {
       card: {
         type: SchemaType.NODE,
-        fields: [{name: 'aaa', kind: SchemaFieldKind.TEXT}],
+        fields: [{ name: 'aaa', kind: SchemaFieldKind.TEXT }],
         ...BASE_TIMESTAMPS,
       },
     };
     const result = generateTypes(schemas);
     const idPos = result.indexOf('  _id:');
-    const schemaPos = result.indexOf("  _schema:");
+    const schemaPos = result.indexOf('  _schema:');
     const fieldPos = result.indexOf('  aaa?:');
     expect(idPos).toBeLessThan(schemaPos);
     expect(schemaPos).toBeLessThan(fieldPos);
@@ -243,7 +247,7 @@ describe('generateTypes – field optionality', () => {
     const schemas: Schemas = {
       card: {
         type: SchemaType.NODE,
-        fields: [{name: 'title', kind: SchemaFieldKind.TEXT, required: true}],
+        fields: [{ name: 'title', kind: SchemaFieldKind.TEXT, required: true }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -256,7 +260,7 @@ describe('generateTypes – field optionality', () => {
     const schemas: Schemas = {
       card: {
         type: SchemaType.NODE,
-        fields: [{name: 'subtitle', kind: SchemaFieldKind.TEXT, required: false}],
+        fields: [{ name: 'subtitle', kind: SchemaFieldKind.TEXT, required: false }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -268,7 +272,7 @@ describe('generateTypes – field optionality', () => {
     const schemas: Schemas = {
       card: {
         type: SchemaType.NODE,
-        fields: [{name: 'title', kind: SchemaFieldKind.TEXT, description: 'Card heading'}],
+        fields: [{ name: 'title', kind: SchemaFieldKind.TEXT, description: 'Card heading' }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -301,7 +305,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'field', kind} as any],
+        fields: [{ name: 'field', kind } as any],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -312,7 +316,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'color', kind: SchemaFieldKind.OPTION, source: 'brand-color'}],
+        fields: [{ name: 'color', kind: SchemaFieldKind.OPTION, source: 'brand-color' }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -323,7 +327,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'color', kind: SchemaFieldKind.OPTION, source: ''}],
+        fields: [{ name: 'color', kind: SchemaFieldKind.OPTION, source: '' }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -334,7 +338,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'tags', kind: SchemaFieldKind.OPTIONS, source: 'tag-type'}],
+        fields: [{ name: 'tags', kind: SchemaFieldKind.OPTIONS, source: 'tag-type' }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -345,7 +349,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'tags', kind: SchemaFieldKind.OPTIONS, source: ''}],
+        fields: [{ name: 'tags', kind: SchemaFieldKind.OPTIONS, source: '' }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -356,7 +360,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'hero', kind: SchemaFieldKind.SCHEMA, schemas: ['hero-section']}],
+        fields: [{ name: 'hero', kind: SchemaFieldKind.SCHEMA, schemas: ['hero-section'] }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -367,7 +371,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'block', kind: SchemaFieldKind.SCHEMA, schemas: ['hero-section', 'teaser']}],
+        fields: [{ name: 'block', kind: SchemaFieldKind.SCHEMA, schemas: ['hero-section', 'teaser'] }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -378,7 +382,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'block', kind: SchemaFieldKind.SCHEMA, schemas: []}],
+        fields: [{ name: 'block', kind: SchemaFieldKind.SCHEMA, schemas: [] }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -389,7 +393,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'items', kind: SchemaFieldKind.SCHEMAS, schemas: ['card']}],
+        fields: [{ name: 'items', kind: SchemaFieldKind.SCHEMAS, schemas: ['card'] }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -400,7 +404,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'items', kind: SchemaFieldKind.SCHEMAS, schemas: ['card', 'teaser']}],
+        fields: [{ name: 'items', kind: SchemaFieldKind.SCHEMAS, schemas: ['card', 'teaser'] }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -411,7 +415,7 @@ describe('generateTypes – field kind mapping', () => {
     const schemas: Schemas = {
       comp: {
         type: SchemaType.NODE,
-        fields: [{name: 'items', kind: SchemaFieldKind.SCHEMAS, schemas: []}],
+        fields: [{ name: 'items', kind: SchemaFieldKind.SCHEMAS, schemas: [] }],
         ...BASE_TIMESTAMPS,
       },
     };
@@ -429,10 +433,10 @@ describe('generateTypes – prefix in field types', () => {
       comp: {
         type: SchemaType.NODE,
         fields: [
-          {name: 'body', kind: SchemaFieldKind.RICH_TEXT},
-          {name: 'image', kind: SchemaFieldKind.ASSET},
-          {name: 'link', kind: SchemaFieldKind.LINK},
-          {name: 'ref', kind: SchemaFieldKind.REFERENCE},
+          { name: 'body', kind: SchemaFieldKind.RICH_TEXT },
+          { name: 'image', kind: SchemaFieldKind.ASSET },
+          { name: 'link', kind: SchemaFieldKind.LINK },
+          { name: 'ref', kind: SchemaFieldKind.REFERENCE },
         ],
         ...BASE_TIMESTAMPS,
       },
@@ -449,8 +453,8 @@ describe('generateTypes – prefix in field types', () => {
       comp: {
         type: SchemaType.NODE,
         fields: [
-          {name: 'hero', kind: SchemaFieldKind.SCHEMA, schemas: ['hero-section']},
-          {name: 'items', kind: SchemaFieldKind.SCHEMAS, schemas: ['card', 'teaser']},
+          { name: 'hero', kind: SchemaFieldKind.SCHEMA, schemas: ['hero-section'] },
+          { name: 'items', kind: SchemaFieldKind.SCHEMAS, schemas: ['card', 'teaser'] },
         ],
         ...BASE_TIMESTAMPS,
       },
@@ -465,8 +469,8 @@ describe('generateTypes – prefix in field types', () => {
       comp: {
         type: SchemaType.NODE,
         fields: [
-          {name: 'color', kind: SchemaFieldKind.OPTION, source: 'brand-color'},
-          {name: 'tags', kind: SchemaFieldKind.OPTIONS, source: 'tag-type'},
+          { name: 'color', kind: SchemaFieldKind.OPTION, source: 'brand-color' },
+          { name: 'tags', kind: SchemaFieldKind.OPTIONS, source: 'tag-type' },
         ],
         ...BASE_TIMESTAMPS,
       },

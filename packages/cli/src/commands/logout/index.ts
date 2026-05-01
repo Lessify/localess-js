@@ -1,27 +1,26 @@
-import {Command} from "commander";
-import {clearSession, getSession} from "../../session";
+import { Command } from 'commander';
 
-export const logoutCommand = new Command('logout')
-  .description('Logout from Localess CLI')
-  .action(async () => {
-    console.log('Logging out...');
+import { clearSession, getSession } from '../../session';
 
-    const session = await getSession();
+export const logoutCommand = new Command('logout').description('Logout from Localess CLI').action(async () => {
+  console.log('Logging out...');
 
-    if (!session.isLoggedIn) {
-      console.log('Not currently logged in.');
-      return;
-    }
+  const session = await getSession();
 
-    if (session.method === 'env') {
-      console.log('You are logged in using environment variables. To log out, unset LOCALESS_TOKEN, LOCALESS_SPACE, and LOCALESS_ORIGIN.');
-      return;
-    }
+  if (!session.isLoggedIn) {
+    console.log('Not currently logged in.');
+    return;
+  }
 
-    try {
-      await clearSession();
-      console.log('Successfully logged out.');
-    } catch (e) {
-      console.error('Failed to log out:', e);
-    }
-  });
+  if (session.method === 'env') {
+    console.log('You are logged in using environment variables. To log out, unset LOCALESS_TOKEN, LOCALESS_SPACE, and LOCALESS_ORIGIN.');
+    return;
+  }
+
+  try {
+    await clearSession();
+    console.log('Successfully logged out.');
+  } catch (e) {
+    console.error('Failed to log out:', e);
+  }
+});
