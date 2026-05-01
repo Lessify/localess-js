@@ -1,7 +1,7 @@
 import {access, readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import * as process from "node:process";
-import {DEFAULT_CONFIG_DIR, writeFile} from "./file";
+import {DEFAULT_CONFIG_DIR, ensureGitignore, writeFile} from "./file";
 
 export type SessionData = {
   token: string;
@@ -77,8 +77,9 @@ export async function getSession(): Promise<Session> {
 export async function persistSession(data:SessionOptions) {
   if (data.origin && data.token && data.space) {
     await writeFile(CREDENTIALS_PATH, JSON.stringify(data, null, 2), { mode: 0o600 });
-    console.log('Add session credentials to file system.');
-    console.log('Add .localess to .gitignore to avoid committing them to your repository.');
+    console.log('Session credentials saved to file system.');
+    await ensureGitignore(process.cwd(), DEFAULT_CONFIG_DIR);
+    console.log(`Added '${DEFAULT_CONFIG_DIR}' to .gitignore to prevent credentials from being committed.`);
   } else {
     throw new Error('Cannot persist session: missing required fields.');
   }

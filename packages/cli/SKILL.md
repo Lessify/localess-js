@@ -48,6 +48,7 @@ localess login \
 2. Prompts interactively for any missing options
 3. Validates credentials by calling the API
 4. Saves credentials to `.localess/credentials.json` (mode `0o600`)
+5. Automatically adds `.localess` to `.gitignore` (creates the file if absent; skips if the entry already exists)
 
 ### Logout
 
@@ -88,7 +89,7 @@ Recommended for **CI/CD pipelines** — no `localess login` step needed.
 }
 ```
 
-> **Add `.localess/credentials.json` to your `.gitignore`** to avoid committing secrets.
+> `.localess` is automatically added to `.gitignore` by `localess login` to prevent credentials from being committed.
 
 ---
 
@@ -324,14 +325,18 @@ localess types generate
 
 ---
 
-## .gitignore Recommendations
+## .gitignore
+
+`localess login` automatically appends `.localess` to `.gitignore` in the current working directory (creating the file if it doesn't exist). No manual step is required.
+
+If you want to commit generated types while still ignoring credentials, you can refine the entry manually after login:
 
 ```gitignore
-# Localess credentials (contains API token)
+# Localess credentials (contains API token) — added automatically by `localess login`
 .localess/credentials.json
 
-# Generated types are typically committed to the repo
-# but can be excluded if auto-generated in CI:
+# Commit generated types so the whole team benefits from type safety;
+# only exclude if types are regenerated in CI:
 # .localess/localess.d.ts
 ```
 
@@ -358,6 +363,6 @@ localess types generate
 
 5. **Use `add-missing` strategy (default)** for initial import of translations; switch to `update-existing` when syncing copy changes.
 
-6. **Never commit `.localess/credentials.json`** — add it to `.gitignore` immediately after `localess login`.
+6. **Never commit `.localess/credentials.json`** — `localess login` automatically adds `.localess` to `.gitignore`, so credentials are protected out of the box.
 
 7. **Give the token minimum required permissions** — the `types generate` command needs "Development Tools" permission; other commands only need standard API access.
