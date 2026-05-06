@@ -112,7 +112,8 @@ localessInit({
 | `token` | `string` | ✅ | — | Localess API token (keep secret — server-side only) |
 | `version` | `'draft' \| string` | ❌ | `'published'` | Default content version |
 | `debug` | `boolean` | ❌ | `false` | Enable debug logging |
-| `cacheTTL` | `number \| false` | ❌ | `300000` | Cache TTL in milliseconds. Set `false` to disable |
+| `cacheTTL` | `number \| false` | ❌ | `300` | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely — takes precedence over `fileSystemCache` |
+| `fileSystemCache` | `boolean` | ❌ | `false` | Use a file-system cache instead of the default in-memory cache. Shared across all processes pointing to the same working directory (e.g. Next.js parallel build workers). Respects `cacheTTL` for TTL value |
 | `components` | `Record<string, React.ElementType>` | ❌ | `{}` | Map of schema keys to React components |
 | `fallbackComponent` | `React.ElementType` | ❌ | — | Component rendered when a schema key has no registered component |
 | `enableSync` | `boolean` | ❌ | `false` | Load the Visual Editor sync script for live-editing support |

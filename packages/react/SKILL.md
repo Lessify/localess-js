@@ -37,7 +37,8 @@ localessInit({
 
   // Optional client settings
   version: 'draft',      // undefined = published (default), 'draft' for preview
-  cacheTTL: 300000,       // 5 minutes default
+  cacheTTL: 300,         // Cache TTL in seconds; false to disable; default: 300 (5 min)
+  fileSystemCache: false, // true = share cache across processes (e.g. Next.js build workers)
   debug: false,
 
   // React-specific options

@@ -39,10 +39,15 @@ export type LocalessClientOptions = {
    */
   debug?: boolean;
   /**
-   * Cache TTL (time to live) for API responses. Default is 5 minutes (300000 ms).
-   * Set to false to disable caching.
+   * Cache TTL (time to live) in **seconds** for API responses.
+   *
+   * - `undefined` — use default in-memory TTL cache with 5 minutes TTL (default)
+   * - `number`    — use in-memory TTL cache with the given TTL in seconds
+   * - `false`     — disable caching entirely (always fetches fresh data)
+   *
+   * @default 300 (5 minutes)
    */
-  cacheTTL?: number | false; // in milliseconds
+  cacheTTL?: number | false;
   /**
    * Number of times to retry failed fetch requests (network errors or 5xx). Default: 3
    */
@@ -230,8 +235,8 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
     },
   };
 
-  // Cache for storing API responses
-  const cache: ICache<any> = options.cacheTTL === false ? new NoCache<any>() : new TTLCache<any>(options.cacheTTL);
+  const ttl = typeof options.cacheTTL === 'number' ? options.cacheTTL * 1000 : undefined;
+  const cache: ICache<any> = options.cacheTTL === false ? new NoCache<any>() : new TTLCache<any>(ttl);
 
   return {
     async getSpace(): Promise<Space> {

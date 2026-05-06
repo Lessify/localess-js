@@ -6,7 +6,7 @@ export type { LocalessClient } from '@localess/client';
 /**
  * Initialization options for {@link localessInit}.
  *
- * Extends {@link LocalessClientOptions} (origin, spaceId, token, version, debug, cacheTTL)
+ * Extends {@link LocalessClientOptions} (origin, spaceId, token, version, debug, cacheTTL, fileSystemCache)
  * with React-specific settings for component mapping and Visual Editor sync.
  */
 export type LocalessOptions = LocalessClientOptions & {

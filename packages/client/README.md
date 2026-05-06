@@ -57,7 +57,8 @@ const client = localessClient({
 | `token` | `string` | ✅ | — | Localess API token, found in Space settings |
 | `version` | `'draft' \| string` | ❌ | `'published'` | Default content version to fetch |
 | `debug` | `boolean` | ❌ | `false` | Enable debug logging |
-| `cacheTTL` | `number \| false` | ❌ | `300000` | Cache TTL in milliseconds (5 minutes). Set `false` to disable caching |
+| `cacheTTL` | `number \| false` | ❌ | `300` | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely — takes precedence over `fileSystemCache` |
+| `fileSystemCache` | `boolean` | ❌ | `false` | Use a file-system cache instead of the default in-memory cache. Shared across all processes pointing to the same working directory (e.g. Next.js parallel build workers). Respects `cacheTTL` for TTL value |
 
 ---
 
@@ -253,17 +254,40 @@ if (window.localess) {
 
 ## Caching
 
-All API responses are cached by default using a TTL (time-to-live) cache. You can configure caching when initializing the client.
+All API responses are cached by default using an in-memory TTL cache. You can configure caching when initializing the client.
 
 ```ts
-// Default: 5-minute TTL cache
+// Default: 5-minute in-memory TTL cache
 const client = localessClient({ origin, spaceId, token });
 
 // Custom TTL (e.g., 10 minutes)
-const client = localessClient({ origin, spaceId, token, cacheTTL: 600000 });
+const client = localessClient({ origin, spaceId, token, cacheTTL: 600 });
 
-// Disable caching entirely
+// Disable caching entirely (recommended for draft/preview mode)
 const client = localessClient({ origin, spaceId, token, cacheTTL: false });
+```
+
+### Sharing cache across Next.js build workers
+
+Next.js runs multiple worker processes in parallel during `next build`. Each worker has its own memory space, so the default in-memory cache is not shared — every worker re-fetches the same URLs independently.
+
+Set `fileSystemCache: true` to persist cache entries to disk. All workers sharing the same working directory will read and write the same cache files:
+
+```ts
+// File-system cache with default 5-minute TTL
+const client = localessClient({ origin, spaceId, token, fileSystemCache: true });
+
+// File-system cache with custom TTL
+const client = localessClient({ origin, spaceId, token, fileSystemCache: true, cacheTTL: 60 });
+
+// cacheTTL: false always wins — no cache even with fileSystemCache: true
+const client = localessClient({ origin, spaceId, token, fileSystemCache: true, cacheTTL: false });
+```
+
+Cache files are written to `.localess-cache/` in the current working directory. Add it to `.gitignore`:
+
+```
+.localess-cache/
 ```
 
 ---

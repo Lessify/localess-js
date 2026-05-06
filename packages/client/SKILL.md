@@ -25,9 +25,10 @@ const client = localessClient({
   origin: 'https://my-localess.web.app',  // Full URL with protocol (required)
   spaceId: 'YOUR_SPACE_ID',               // From Space settings (required)
   token: 'YOUR_API_TOKEN',                // API token — NEVER expose client-side (required)
-  version: 'draft',                   // undefined = published (default), 'draft' for preview
+  version: 'draft',                       // undefined = published (default), 'draft' for preview
   debug: false,                           // Logs requests; default: false
-  cacheTTL: 300000,                       // Cache TTL in ms; false to disable; default: 5 min
+  cacheTTL: 300,                          // Cache TTL in seconds; false to disable; default: 300 (5 min)
+  fileSystemCache: false,                 // true = share cache across processes via filesystem; default: false
 });
 ```
 
@@ -99,14 +100,34 @@ const url = client.assetLink(content.data.image);
 
 ## Caching
 
-- Default: TTL-based, **5 minutes** (300,000 ms)
+- Default: in-memory TTL cache, **5 minutes** (300,000 ms)
 - Cache key = full request URL (includes all parameters)
-- Adjust for content update frequency:
+- `cacheTTL: false` always disables caching, regardless of other options
+
+### cacheTTL
+
+Controls whether caching is enabled and the TTL duration (in **seconds**):
 
 ```typescript
-localessClient({ cacheTTL: 60000 })    // 1 minute — frequently updated
-localessClient({ cacheTTL: 3600000 })  // 1 hour   — rarely updated
-localessClient({ cacheTTL: false })    // Disabled  — always fresh (draft mode)
+localessClient({ cacheTTL: 60 })    // 1 minute TTL — frequently updated content
+localessClient({ cacheTTL: 3600 })  // 1 hour TTL   — rarely updated content
+localessClient({ cacheTTL: false }) // Disabled      — always fresh (use in draft/preview mode)
+```
+
+### fileSystemCache
+
+Next.js (and similar frameworks) spin up multiple worker processes during build. Each worker has its own memory, so the default in-memory cache is not shared — every worker re-fetches the same URLs. Set `fileSystemCache: true` to write cache entries to disk so all workers share the same cache:
+
+```typescript
+localessClient({ fileSystemCache: true })                  // filesystem cache, default 5 min TTL
+localessClient({ fileSystemCache: true, cacheTTL: 60 })   // filesystem cache, 1 min TTL
+localessClient({ fileSystemCache: true, cacheTTL: false }) // cacheTTL: false wins — no cache
+```
+
+Cache files are written to `.localess-cache/` in the current working directory. Add it to `.gitignore`:
+
+```
+.localess-cache/
 ```
 
 ---
