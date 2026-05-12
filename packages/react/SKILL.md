@@ -229,12 +229,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
 
 **Props** (same shape as `LocalessComponent`):
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `data` | `ContentData` | ✅ | Initial content data |
-| `links` | `Links` | ❌ | Resolved links map |
-| `references` | `References` | ❌ | Resolved references map |
-| `ref` | `React.Ref<HTMLElement>` | ❌ | Forwarded to the rendered root element |
+| Prop         | Type                     | Required | Description                            |
+|--------------|--------------------------|----------|----------------------------------------|
+| `data`       | `ContentData`            | ✅        | Initial content data                   |
+| `links`      | `Links`                  | ❌        | Resolved links map                     |
+| `references` | `References`             | ❌        | Resolved references map                |
+| `ref`        | `React.Ref<HTMLElement>` | ❌        | Forwarded to the rendered root element |
 
 > Subscribes to `input` / `change` events automatically when `enableSync` is active. Unlike `useLocaless`, it does not fetch content — it only handles live sync for data passed in as props.
 

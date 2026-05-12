@@ -38,11 +38,11 @@ pnpm add @localess/react
 
 `@localess/react` provides three different exports to suit different rendering strategies:
 
-| Export | Use Case | Live Editing | Static Export |
-|---|---|---|---|
-| `@localess/react` | Single Page Applications (SPA), client-side rendering | ✅ | ✅ |
-| `@localess/react/ssr` | SSR without live editing, Next.js static exports | ❌ | ✅ |
-| `@localess/react/rsc` | React Server Components with live editing | ✅ | ❌ |
+| Export                | Use Case                                              | Live Editing | Static Export |
+|-----------------------|-------------------------------------------------------|--------------|---------------|
+| `@localess/react`     | Single Page Applications (SPA), client-side rendering | ✅            | ✅             |
+| `@localess/react/ssr` | SSR without live editing, Next.js static exports      | ❌            | ✅             |
+| `@localess/react/rsc` | React Server Components with live editing             | ✅            | ❌             |
 
 ### When to Use Each Export
 
@@ -105,18 +105,18 @@ localessInit({
 
 ### Initialization Options
 
-| Option | Type | Required | Default | Description |
-|--------|------|----------|---------|-------------|
-| `origin` | `string` | ✅ | — | Fully qualified domain with protocol (e.g., `https://my-localess.web.app`) |
-| `spaceId` | `string` | ✅ | — | Localess Space ID, found in Space settings |
-| `token` | `string` | ✅ | — | Localess API token (keep secret — server-side only) |
-| `version` | `'draft' \| string` | ❌ | `'published'` | Default content version |
-| `debug` | `boolean` | ❌ | `false` | Enable debug logging |
-| `cacheTTL` | `number \| false` | ❌ | `300` | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely — takes precedence over `fileSystemCache` |
-| `fileSystemCache` | `boolean` | ❌ | `false` | Use a file-system cache instead of the default in-memory cache. Shared across all processes pointing to the same working directory (e.g. Next.js parallel build workers). Respects `cacheTTL` for TTL value |
-| `components` | `Record<string, React.ElementType>` | ❌ | `{}` | Map of schema keys to React components |
-| `fallbackComponent` | `React.ElementType` | ❌ | — | Component rendered when a schema key has no registered component |
-| `enableSync` | `boolean` | ❌ | `false` | Load the Visual Editor sync script for live-editing support |
+| Option              | Type                                | Required | Default       | Description                                                                                                                                                                                                 |
+|---------------------|-------------------------------------|----------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `origin`            | `string`                            | ✅        | —             | Fully qualified domain with protocol (e.g., `https://my-localess.web.app`)                                                                                                                                  |
+| `spaceId`           | `string`                            | ✅        | —             | Localess Space ID, found in Space settings                                                                                                                                                                  |
+| `token`             | `string`                            | ✅        | —             | Localess API token (keep secret — server-side only)                                                                                                                                                         |
+| `version`           | `'draft' \| string`                 | ❌        | `'published'` | Default content version                                                                                                                                                                                     |
+| `debug`             | `boolean`                           | ❌        | `false`       | Enable debug logging                                                                                                                                                                                        |
+| `cacheTTL`          | `number \| false`                   | ❌        | `300`         | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely — takes precedence over `fileSystemCache`                                                                            |
+| `fileSystemCache`   | `boolean`                           | ❌        | `false`       | Use a file-system cache instead of the default in-memory cache. Shared across all processes pointing to the same working directory (e.g. Next.js parallel build workers). Respects `cacheTTL` for TTL value |
+| `components`        | `Record<string, React.ElementType>` | ❌        | `{}`          | Map of schema keys to React components                                                                                                                                                                      |
+| `fallbackComponent` | `React.ElementType`                 | ❌        | —             | Component rendered when a schema key has no registered component                                                                                                                                            |
+| `enableSync`        | `boolean`                           | ❌        | `false`       | Load the Visual Editor sync script for live-editing support                                                                                                                                                 |
 
 ---
 
@@ -143,13 +143,13 @@ import { LocalessComponent } from "@localess/react";
 
 ### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `data` | `ContentData` | ✅ | Content data object from Localess. The component looks up `data._schema` in the component registry |
-| `links` | `Links` | ❌ | Resolved content links map, forwarded to the rendered component |
-| `references` | `References` | ❌ | Resolved references map, forwarded to the rendered component |
-| `ref` | `React.Ref<HTMLElement>` | ❌ | Ref forwarded to the rendered component's root element |
-| `...rest` | `any` | ❌ | Any additional props are forwarded to the rendered component |
+| Prop         | Type                     | Required | Description                                                                                        |
+|--------------|--------------------------|----------|----------------------------------------------------------------------------------------------------|
+| `data`       | `ContentData`            | ✅        | Content data object from Localess. The component looks up `data._schema` in the component registry |
+| `links`      | `Links`                  | ❌        | Resolved content links map, forwarded to the rendered component                                    |
+| `references` | `References`             | ❌        | Resolved references map, forwarded to the rendered component                                       |
+| `ref`        | `React.Ref<HTMLElement>` | ❌        | Ref forwarded to the rendered component's root element                                             |
+| `...rest`    | `any`                    | ❌        | Any additional props are forwarded to the rendered component                                       |
 
 > If a schema key is not registered and no `fallbackComponent` is configured, `LocalessComponent` renders an error message in the DOM.
 
@@ -322,10 +322,10 @@ export function PageView({ slug }: { slug: string }) {
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `slug` | `string \| string[]` | ✅ | Content slug. Arrays are joined with `/` — e.g. `['blog', 'post']` → `'blog/post'` |
-| `options` | `ContentFetchParams` | ❌ | Same fetch options as `getContentBySlug` (locale, version, resolveReference, resolveLink) |
+| Parameter | Type                 | Required | Description                                                                               |
+|-----------|----------------------|----------|-------------------------------------------------------------------------------------------|
+| `slug`    | `string \| string[]` | ✅        | Content slug. Arrays are joined with `/` — e.g. `['blog', 'post']` → `'blog/post'`        |
+| `options` | `ContentFetchParams` | ❌        | Same fetch options as `getContentBySlug` (locale, version, resolveReference, resolveLink) |
 
 Returns `Content<T> | undefined` — `undefined` while the initial fetch is in progress.
 
@@ -406,13 +406,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
 
 **Props:**
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `data` | `ContentData` | ✅ | Initial content data (typically server-fetched) |
-| `links` | `Links` | ❌ | Resolved links map, forwarded to the inner `LocalessComponent` |
-| `references` | `References` | ❌ | Resolved references map, forwarded to the inner `LocalessComponent` |
-| `ref` | `React.Ref<HTMLElement>` | ❌ | Forwarded to the rendered root element |
-| `...rest` | `any` | ❌ | Any additional props are forwarded |
+| Prop         | Type                     | Required | Description                                                         |
+|--------------|--------------------------|----------|---------------------------------------------------------------------|
+| `data`       | `ContentData`            | ✅        | Initial content data (typically server-fetched)                     |
+| `links`      | `Links`                  | ❌        | Resolved links map, forwarded to the inner `LocalessComponent`      |
+| `references` | `References`             | ❌        | Resolved references map, forwarded to the inner `LocalessComponent` |
+| `ref`        | `React.Ref<HTMLElement>` | ❌        | Forwarded to the rendered root element                              |
+| `...rest`    | `any`                    | ❌        | Any additional props are forwarded                                  |
 
 > `LocalessDocument` subscribes to `input` / `change` editor events automatically when `enableSync` is active. It is a Client Component internally — no `'use client'` directive needed at the call site in Server Components.
 
@@ -453,15 +453,15 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
 
 **Available events via `window.localess.on()`:**
 
-| Event | When |
-|-------|------|
-| `input` | User is typing in a field (real-time preview) |
-| `change` | Field value confirmed |
-| `save` | Content saved |
-| `publish` | Content published |
-| `pong` | Editor heartbeat response |
-| `enterSchema` | Editor cursor enters a schema block |
-| `hoverSchema` | Editor cursor hovers over a schema block |
+| Event         | When                                          |
+|---------------|-----------------------------------------------|
+| `input`       | User is typing in a field (real-time preview) |
+| `change`      | Field value confirmed                         |
+| `save`        | Content saved                                 |
+| `publish`     | Content published                             |
+| `pong`        | Editor heartbeat response                     |
+| `enterSchema` | Editor cursor enters a schema block           |
+| `hoverSchema` | Editor cursor hovers over a schema block      |
 
 > `window.localess` only exposes `.on()` and `.onChange()` — there is no `.off()` method.
 
@@ -744,24 +744,24 @@ export default function PageClient({ initialContent, locale }) {
 
 The table below shows which symbols are available in each export.
 
-| Symbol | `@localess/react` | `@localess/react/ssr` | `@localess/react/rsc` |
-|---|:---:|:---:|:---:|
-| `localessInit` | ✅ | ✅ | ✅ |
-| `getLocalessClient` | ✅ | ✅ | ✅ |
-| `registerComponent` / `setComponents` / `getComponent` | ✅ | ✅ | ✅ |
-| `setFallbackComponent` / `getFallbackComponent` | ✅ | ✅ | ✅ |
-| `resolveAsset` | ✅ | ✅ | ✅ |
-| `LocalessComponent` | ✅ | ✅ | ✅ |
-| `renderRichTextToReact` | ✅ | ✅ | ✅ |
-| `findLink` | ✅ | ✅ | ✅ |
-| `isServer` | ✅ | ✅ | ✅ |
-| All content types | ✅ | ✅ | ✅ |
-| `LocalessDocument` | ✅ | ❌ | ✅ |
-| `useLocaless` | ✅ | ❌ | ✅ |
-| `localessEditable` / `localessEditableField` | ✅ | ❌ | ✅ |
-| `isBrowser` / `isIframe` | ✅ | ❌ | ✅ |
-| `isSyncEnabled` | ✅ | ❌ | ✅ |
-| Sync event types (`LocalessSync`, `EventToApp`, …) | ✅ | ❌ | ✅ |
+| Symbol                                                 | `@localess/react` | `@localess/react/ssr` | `@localess/react/rsc` |
+|--------------------------------------------------------|:-----------------:|:---------------------:|:---------------------:|
+| `localessInit`                                         |         ✅         |           ✅           |           ✅           |
+| `getLocalessClient`                                    |         ✅         |           ✅           |           ✅           |
+| `registerComponent` / `setComponents` / `getComponent` |         ✅         |           ✅           |           ✅           |
+| `setFallbackComponent` / `getFallbackComponent`        |         ✅         |           ✅           |           ✅           |
+| `resolveAsset`                                         |         ✅         |           ✅           |           ✅           |
+| `LocalessComponent`                                    |         ✅         |           ✅           |           ✅           |
+| `renderRichTextToReact`                                |         ✅         |           ✅           |           ✅           |
+| `findLink`                                             |         ✅         |           ✅           |           ✅           |
+| `isServer`                                             |         ✅         |           ✅           |           ✅           |
+| All content types                                      |         ✅         |           ✅           |           ✅           |
+| `LocalessDocument`                                     |         ✅         |           ❌           |           ✅           |
+| `useLocaless`                                          |         ✅         |           ❌           |           ✅           |
+| `localessEditable` / `localessEditableField`           |         ✅         |           ❌           |           ✅           |
+| `isBrowser` / `isIframe`                               |         ✅         |           ❌           |           ✅           |
+| `isSyncEnabled`                                        |         ✅         |           ❌           |           ✅           |
+| Sync event types (`LocalessSync`, `EventToApp`, …)     |         ✅         |           ❌           |           ✅           |
 
 ---
 

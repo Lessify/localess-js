@@ -157,9 +157,11 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
 
   const ttl = typeof options.cacheTTL === 'number' ? options.cacheTTL * 1000 : undefined;
   const cache: ICache<any> =
-    options.cacheTTL === false ? new NoCache<any>() :
-    options.fileSystemCache ? new FileSystemCache<any>(undefined, ttl) :
-    new TTLCache<any>(ttl);
+    options.cacheTTL === false
+      ? new NoCache<any>()
+      : options.fileSystemCache
+        ? new FileSystemCache<any>(undefined, ttl)
+        : new TTLCache<any>(ttl);
 
   return {
     async getLinks(params?: LinksFetchParams): Promise<Links> {

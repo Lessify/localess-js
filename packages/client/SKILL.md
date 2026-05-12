@@ -89,12 +89,12 @@ const url = client.assetLink(content.data.image);
 
 ## Content Fetch Parameters
 
-| Parameter          | Type      | Default       | Description                            |
-|--------------------|-----------|---------------|----------------------------------------|
-| `version`          | `'draft' \| undefined` | `undefined`   | `'draft'` for preview, omit for published |
-| `locale`           | `string`  | —             | ISO 639-1 code: `'en'`, `'de'`, etc.  |
-| `resolveReference` | `boolean` | `false`       | Inline referenced content objects      |
-| `resolveLink`      | `boolean` | `false`       | Inline linked content metadata         |
+| Parameter          | Type                   | Default     | Description                               |
+|--------------------|------------------------|-------------|-------------------------------------------|
+| `version`          | `'draft' \| undefined` | `undefined` | `'draft'` for preview, omit for published |
+| `locale`           | `string`               | —           | ISO 639-1 code: `'en'`, `'de'`, etc.      |
+| `resolveReference` | `boolean`              | `false`     | Inline referenced content objects         |
+| `resolveLink`      | `boolean`              | `false`     | Inline linked content metadata            |
 
 ---
 

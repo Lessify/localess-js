@@ -48,11 +48,11 @@ If any option is omitted, the CLI will interactively prompt for the missing valu
 
 **Options:**
 
-| Flag | Description |
-|------|-------------|
+| Flag                    | Description                                                 |
+|-------------------------|-------------------------------------------------------------|
 | `-o, --origin <origin>` | Localess instance URL (e.g., `https://my-localess.web.app`) |
-| `-s, --space <space>` | Space ID (found in Localess Space settings) |
-| `-t, --token <token>` | API token (input is masked for security) |
+| `-s, --space <space>`   | Space ID (found in Localess Space settings)                 |
+| `-t, --token <token>`   | API token (input is masked for security)                    |
 
 **Examples:**
 
@@ -76,11 +76,11 @@ export LOCALESS_TOKEN=MY_API_TOKEN
 localess translations pull en --path ./public/locales/en.json
 ```
 
-| Variable | Description |
-|----------|-------------|
+| Variable          | Description           |
+|-------------------|-----------------------|
 | `LOCALESS_ORIGIN` | Localess instance URL |
-| `LOCALESS_SPACE` | Space ID |
-| `LOCALESS_TOKEN` | API token |
+| `LOCALESS_SPACE`  | Space ID              |
+| `LOCALESS_TOKEN`  | API token             |
 
 ---
 
@@ -108,24 +108,24 @@ localess translations push <locale> --path <file> [options]
 
 **Arguments:**
 
-| Argument | Description |
-|----------|-------------|
+| Argument   | Description                                    |
+|------------|------------------------------------------------|
 | `<locale>` | ISO 639-1 locale code (e.g., `en`, `de`, `fr`) |
 
 **Options:**
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-p, --path <path>` | *(required)* | Path to the JSON translations file |
-| `-f, --format <format>` | `flat` | File format: `flat` or `nested` |
-| `-t, --type <type>` | `add-missing` | Update strategy: `add-missing` or `update-existing` |
-| `--dry-run` | `false` | Preview changes without applying them |
+| Flag                    | Default       | Description                                         |
+|-------------------------|---------------|-----------------------------------------------------|
+| `-p, --path <path>`     | *(required)*  | Path to the JSON translations file                  |
+| `-f, --format <format>` | `flat`        | File format: `flat` or `nested`                     |
+| `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing` or `update-existing` |
+| `--dry-run`             | `false`       | Preview changes without applying them               |
 
 **Update Strategies:**
 
-| Type | Description |
-|------|-------------|
-| `add-missing` | Adds translations for keys that do not yet exist in Localess |
+| Type              | Description                                                  |
+|-------------------|--------------------------------------------------------------|
+| `add-missing`     | Adds translations for keys that do not yet exist in Localess |
 | `update-existing` | Updates translations for keys that already exist in Localess |
 
 **File Formats:**
@@ -174,16 +174,16 @@ localess translations pull <locale> --path <file> [options]
 
 **Arguments:**
 
-| Argument | Description |
-|----------|-------------|
+| Argument   | Description                                    |
+|------------|------------------------------------------------|
 | `<locale>` | ISO 639-1 locale code (e.g., `en`, `de`, `fr`) |
 
 **Options:**
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-p, --path <path>` | *(required)* | Output file path |
-| `-f, --format <format>` | `flat` | File format: `flat` or `nested` |
+| Flag                    | Default      | Description                     |
+|-------------------------|--------------|---------------------------------|
+| `-p, --path <path>`     | *(required)* | Output file path                |
+| `-f, --format <format>` | `flat`       | File format: `flat` or `nested` |
 
 **Examples:**
 
@@ -209,8 +209,8 @@ localess types generate [--path <output_path>]
 
 **Options:**
 
-| Flag | Default | Description |
-|------|---------|-------------|
+| Flag                | Default                   | Description                                             |
+|---------------------|---------------------------|---------------------------------------------------------|
 | `-p, --path <path>` | `.localess/localess.d.ts` | Path to write the generated TypeScript definitions file |
 
 > **Note:** Your API token must have **Development Tools** permission enabled in Localess Space settings.
@@ -240,10 +240,10 @@ const content = await client.getContentBySlug<Page>('home', { locale: 'en' });
 
 ## Stored Files
 
-| File | Description |
-|------|-------------|
-| `.localess/credentials.json` | Stored login credentials (created by `localess login`) |
-| `.localess/localess.d.ts` | Generated TypeScript definitions (created by `localess types generate`) |
+| File                         | Description                                                             |
+|------------------------------|-------------------------------------------------------------------------|
+| `.localess/credentials.json` | Stored login credentials (created by `localess login`)                  |
+| `.localess/localess.d.ts`    | Generated TypeScript definitions (created by `localess types generate`) |
 
 > It is recommended to add `.localess/credentials.json` to your `.gitignore` to avoid committing sensitive credentials.
 

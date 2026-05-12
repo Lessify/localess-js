@@ -77,7 +77,7 @@ export class FileSystemCache<V> implements ICache<V> {
    * @param dir  Directory to store cache files. Default: '.localess-cache'
    * @param ttlMs  Time-to-live in ms. Default: 5 minutes (300000 ms).
    */
-  constructor(dir: string = '.localess-cache', ttlMs: number = 300000) {
+  constructor(dir: string = '.localess/cache', ttlMs: number = 300000) {
     this.dir = dir;
     this.ttlMs = ttlMs;
     if (!existsSync(dir)) {
@@ -103,7 +103,11 @@ export class FileSystemCache<V> implements ICache<V> {
       const raw = readFileSync(this.keyToPath(key), 'utf-8');
       const entry = JSON.parse(raw) as { value: V; expiresAt: number };
       if (Date.now() > entry.expiresAt) {
-        try { unlinkSync(this.keyToPath(key)); } catch { /* ignore */ }
+        try {
+          unlinkSync(this.keyToPath(key));
+        } catch {
+          /* ignore */
+        }
         return undefined;
       }
       return entry.value;

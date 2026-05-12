@@ -25,11 +25,11 @@ Keeping all packages together in one repository ensures that shared types and in
 
 ## Packages
 
-| Package | Version | Description |
-|---------|---------|-------------|
-| [`@localess/client`](packages/client) | 3.0.0 | Core JavaScript/TypeScript SDK. Fetch content, translations, and assets from the Localess API. **Server-side only.** |
-| [`@localess/react`](packages/react) | 3.0.0 | React integration. Dynamic component mapping, rich text rendering, and Visual Editor sync. |
-| [`@localess/cli`](packages/cli) | 3.0.0 | Command-line interface. Manage translations and generate TypeScript types from your content schemas. |
+| Package                               | Version  | Description                                                                                                          |
+|---------------------------------------|----------|----------------------------------------------------------------------------------------------------------------------|
+| [`@localess/client`](packages/client) | 3.0.0    | Core JavaScript/TypeScript SDK. Fetch content, translations, and assets from the Localess API. **Server-side only.** |
+| [`@localess/react`](packages/react)   | 3.0.0    | React integration. Dynamic component mapping, rich text rendering, and Visual Editor sync.                           |
+| [`@localess/cli`](packages/cli)       | 3.0.0    | Command-line interface. Manage translations and generate TypeScript types from your content schemas.                 |
 
 ### Package Dependency Graph
 
@@ -161,11 +161,11 @@ Each package ships a `SKILL.md` file that directs AI coding agents (GitHub Copil
 
 ### SKILL files
 
-| Package | SKILL file |
-|---------|-----------|
+| Package            | SKILL file                                             |
+|--------------------|--------------------------------------------------------|
 | `@localess/client` | [`packages/client/SKILL.md`](packages/client/SKILL.md) |
-| `@localess/react` | [`packages/react/SKILL.md`](packages/react/SKILL.md) |
-| `@localess/cli` | [`packages/cli/SKILL.md`](packages/cli/SKILL.md) |
+| `@localess/react`  | [`packages/react/SKILL.md`](packages/react/SKILL.md)   |
+| `@localess/cli`    | [`packages/cli/SKILL.md`](packages/cli/SKILL.md)       |
 
 ### Using SKILL files in your project
 

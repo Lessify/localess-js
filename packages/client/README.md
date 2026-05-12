@@ -50,15 +50,15 @@ const client = localessClient({
 
 ### Client Options
 
-| Option | Type | Required | Default | Description |
-|--------|------|----------|---------|-------------|
-| `origin` | `string` | ✅ | — | Fully qualified domain with protocol (e.g., `https://my-localess.web.app`) |
-| `spaceId` | `string` | ✅ | — | Localess Space ID, found in Space settings |
-| `token` | `string` | ✅ | — | Localess API token, found in Space settings |
-| `version` | `'draft' \| string` | ❌ | `'published'` | Default content version to fetch |
-| `debug` | `boolean` | ❌ | `false` | Enable debug logging |
-| `cacheTTL` | `number \| false` | ❌ | `300` | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely — takes precedence over `fileSystemCache` |
-| `fileSystemCache` | `boolean` | ❌ | `false` | Use a file-system cache instead of the default in-memory cache. Shared across all processes pointing to the same working directory (e.g. Next.js parallel build workers). Respects `cacheTTL` for TTL value |
+| Option            | Type                | Required | Default       | Description                                                                                                                                                                                                 |
+|-------------------|---------------------|----------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `origin`          | `string`            | ✅        | —             | Fully qualified domain with protocol (e.g., `https://my-localess.web.app`)                                                                                                                                  |
+| `spaceId`         | `string`            | ✅        | —             | Localess Space ID, found in Space settings                                                                                                                                                                  |
+| `token`           | `string`            | ✅        | —             | Localess API token, found in Space settings                                                                                                                                                                 |
+| `version`         | `'draft' \| string` | ❌        | `'published'` | Default content version to fetch                                                                                                                                                                            |
+| `debug`           | `boolean`           | ❌        | `false`       | Enable debug logging                                                                                                                                                                                        |
+| `cacheTTL`        | `number \| false`   | ❌        | `300`         | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely — takes precedence over `fileSystemCache`                                                                            |
+| `fileSystemCache` | `boolean`           | ❌        | `false`       | Use a file-system cache instead of the default in-memory cache. Shared across all processes pointing to the same working directory (e.g. Next.js parallel build workers). Respects `cacheTTL` for TTL value |
 
 ---
 
@@ -95,12 +95,12 @@ const content = await client.getContentById<Page>('FRnIT7CUABoRCdSVVGGs', {
 
 ### Content Fetch Parameters
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `version` | `'draft' \| string` | Client default | Override the client's default content version |
-| `locale` | `string` | — | ISO 639-1 locale code (e.g., `'en'`, `'de'`) |
-| `resolveReference` | `boolean` | `false` | Resolve content references inline |
-| `resolveLink` | `boolean` | `false` | Resolve content links inline |
+| Parameter          | Type                | Default        | Description                                   |
+|--------------------|---------------------|----------------|-----------------------------------------------|
+| `version`          | `'draft' \| string` | Client default | Override the client's default content version |
+| `locale`           | `string`            | —              | ISO 639-1 locale code (e.g., `'en'`, `'de'`)  |
+| `resolveReference` | `boolean`           | `false`        | Resolve content references inline             |
+| `resolveLink`      | `boolean`           | `false`        | Resolve content links inline                  |
 
 ---
 
@@ -122,11 +122,11 @@ const legalLinks = await client.getLinks({
 });
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `kind` | `'DOCUMENT' \| 'FOLDER'` | Filter results by content kind |
-| `parentSlug` | `string` | Filter by parent slug (e.g., `'legal/policy'`) |
-| `excludeChildren` | `boolean` | When `true`, excludes nested sub-slugs from results |
+| Parameter         | Type                     | Description                                         |
+|-------------------|--------------------------|-----------------------------------------------------|
+| `kind`            | `'DOCUMENT' \| 'FOLDER'` | Filter results by content kind                      |
+| `parentSlug`      | `string`                 | Filter by parent slug (e.g., `'legal/policy'`)      |
+| `excludeChildren` | `boolean`                | When `true`, excludes nested sub-slugs from results |
 
 ---
 
@@ -240,15 +240,15 @@ if (window.localess) {
 
 ### Available Event Types
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `input` | `{ type: 'input', data: any }` | Fired while a field is being edited (real-time) |
-| `change` | `{ type: 'change', data: any }` | Fired after a field value is confirmed |
-| `save` | `{ type: 'save' }` | Fired when content is saved |
-| `publish` | `{ type: 'publish' }` | Fired when content is published |
-| `pong` | `{ type: 'pong' }` | Heartbeat response from the editor |
-| `enterSchema` | `{ type: 'enterSchema', id, schema, field? }` | Fired when hovering over a schema element |
-| `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }` | Fired when entering a schema element |
+| Event         | Payload                                       | Description                                     |
+|---------------|-----------------------------------------------|-------------------------------------------------|
+| `input`       | `{ type: 'input', data: any }`                | Fired while a field is being edited (real-time) |
+| `change`      | `{ type: 'change', data: any }`               | Fired after a field value is confirmed          |
+| `save`        | `{ type: 'save' }`                            | Fired when content is saved                     |
+| `publish`     | `{ type: 'publish' }`                         | Fired when content is published                 |
+| `pong`        | `{ type: 'pong' }`                            | Heartbeat response from the editor              |
+| `enterSchema` | `{ type: 'enterSchema', id, schema, field? }` | Fired when hovering over a schema element       |
+| `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }` | Fired when entering a schema element            |
 
 ---
 
@@ -389,11 +389,11 @@ A key-value map of translation keys to translated string values.
 
 ## Utility Functions
 
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `isBrowser()` | `boolean` | Returns `true` if code is running in a browser environment |
-| `isServer()` | `boolean` | Returns `true` if code is running in a server/Node.js environment |
-| `isIframe()` | `boolean` | Returns `true` if the page is rendered inside an iframe |
+| Function      | Returns   | Description                                                       |
+|---------------|-----------|-------------------------------------------------------------------|
+| `isBrowser()` | `boolean` | Returns `true` if code is running in a browser environment        |
+| `isServer()`  | `boolean` | Returns `true` if code is running in a server/Node.js environment |
+| `isIframe()`  | `boolean` | Returns `true` if the page is rendered inside an iframe           |
 
 ---
 

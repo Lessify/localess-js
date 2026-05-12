@@ -105,18 +105,18 @@ localess translations push <locale> --path <file> [options]
 
 **Arguments:**
 
-| Argument   | Description                         |
-|------------|-------------------------------------|
+| Argument   | Description                        |
+|------------|------------------------------------|
 | `<locale>` | ISO 639-1 locale code: `en`, `de`… |
 
 **Options:**
 
-| Flag                    | Default         | Description                                           |
-|-------------------------|-----------------|-------------------------------------------------------|
-| `-p, --path <path>`     | required        | Path to the translations JSON file                    |
+| Flag                    | Default         | Description                                               |
+|-------------------------|-----------------|-----------------------------------------------------------|
+| `-p, --path <path>`     | required        | Path to the translations JSON file                        |
 | `-f, --format <format>` | `flat`          | File format: `flat` only (**nested not yet implemented**) |
-| `-t, --type <type>`     | `add-missing`   | Update strategy: `add-missing` or `update-existing`   |
-| `--dry-run`             | `false`         | Preview changes without applying them                 |
+| `-t, --type <type>`     | `add-missing`   | Update strategy: `add-missing` or `update-existing`       |
+| `--dry-run`             | `false`         | Preview changes without applying them                     |
 
 **Update Strategies:**
 
@@ -163,8 +163,8 @@ localess translations pull <locale> --path <file> [options]
 
 **Arguments:**
 
-| Argument   | Description                         |
-|------------|-------------------------------------|
+| Argument   | Description                        |
+|------------|------------------------------------|
 | `<locale>` | ISO 639-1 locale code: `en`, `de`… |
 
 **Options:**
@@ -196,9 +196,9 @@ localess types generate [--path <output>]
 
 **Options:**
 
-| Flag                | Default                       | Description                   |
-|---------------------|-------------------------------|-------------------------------|
-| `-p, --path <path>` | `.localess/localess.d.ts`     | Output file path              |
+| Flag                | Default                   | Description      |
+|---------------------|---------------------------|------------------|
+| `-p, --path <path>` | `.localess/localess.d.ts` | Output file path |
 
 > **Prerequisite:** The API token must have the **Development Tools** permission in Localess Space settings.
 
@@ -344,10 +344,10 @@ If you want to commit generated types while still ignoring credentials, you can 
 
 ## Files Written by the CLI
 
-| File                          | Created by                  | Permissions    | Purpose                        |
-|-------------------------------|-----------------------------|----------------|--------------------------------|
-| `.localess/credentials.json`  | `localess login`            | `0o600` (owner only) | Persisted auth credentials |
-| `.localess/localess.d.ts`     | `localess types generate`   | Standard       | Generated TypeScript types     |
+| File                         | Created by                | Permissions          | Purpose                    |
+|------------------------------|---------------------------|----------------------|----------------------------|
+| `.localess/credentials.json` | `localess login`          | `0o600` (owner only) | Persisted auth credentials |
+| `.localess/localess.d.ts`    | `localess types generate` | Standard             | Generated TypeScript types |
 
 ---
 
