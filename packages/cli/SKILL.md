@@ -5,7 +5,7 @@
 `@localess/cli` is the **command-line interface** for the Localess headless CMS platform. It enables:
 
 - Authenticating with a Localess instance
-- Pushing and pulling translations (flat JSON; nested format supported for pull only)
+- Pushing and pulling translations (flat and nested JSON formats supported for both push and pull)
 - Generating TypeScript type definitions from the OpenAPI schema
 
 **Status:** Early development (v3.0.1). Requires Node.js >= 20.0.0.
@@ -111,23 +111,24 @@ localess translations push <locale> --path <file> [options]
 
 **Options:**
 
-| Flag                    | Default         | Description                                               |
-|-------------------------|-----------------|-----------------------------------------------------------|
-| `-p, --path <path>`     | required        | Path to the translations JSON file                        |
-| `-f, --format <format>` | `flat`          | File format: `flat` only (**nested not yet implemented**) |
-| `-t, --type <type>`     | `add-missing`   | Update strategy: `add-missing` or `update-existing`       |
-| `--dry-run`             | `false`         | Preview changes without applying them                     |
+| Flag                    | Default       | Description                                                         |
+|-------------------------|---------------|---------------------------------------------------------------------|
+| `-p, --path <path>`     | required      | Path to the translations JSON file                                  |
+| `-f, --format <format>` | `flat`        | File format: `flat` or `nested`                                     |
+| `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing`, `update-existing`, `delete-missing` |
+| `--dry-run`             | `false`       | Preview changes without applying them                               |
 
 **Update Strategies:**
 
-| Strategy           | Behaviour                                                  |
-|--------------------|------------------------------------------------------------|
-| `add-missing`      | Only adds keys that don't yet exist in Localess            |
-| `update-existing`  | Only updates keys that already exist in Localess           |
+| Strategy          | Behaviour                                                                      |
+|-------------------|--------------------------------------------------------------------------------|
+| `add-missing`     | Only adds keys that don't yet exist in Localess                                |
+| `update-existing` | Only updates keys that already exist in Localess                               |
+| `delete-missing`  | Deletes keys in Localess that are absent from the local file                   |
 
 **File Formats:**
 
-*Flat (default — only supported format for push):*
+*Flat (default):*
 ```json
 {
   "common.submit": "Submit",
@@ -136,7 +137,13 @@ localess translations push <locale> --path <file> [options]
 }
 ```
 
-> **⚠️ Nested format is not yet implemented for push.** Passing `--format nested` logs an error and exits without uploading. Use `flat` format only.
+*Nested (automatically flattened before uploading):*
+```json
+{
+  "common": { "submit": "Submit" },
+  "nav": { "home": "Home" }
+}
+```
 
 **Examples:**
 
@@ -147,8 +154,14 @@ localess translations push en --path ./locales/en.json
 # Update existing translations (don't add new)
 localess translations push de --path ./locales/de.json --type update-existing
 
+# Delete keys in Localess absent from the local file
+localess translations push de --path ./locales/de.json --type delete-missing
+
 # Preview changes without applying
 localess translations push fr --path ./locales/fr.json --dry-run
+
+# Push nested-format translations
+localess translations push de --path ./locales/de.json --format nested
 ```
 
 ---
@@ -169,10 +182,10 @@ localess translations pull <locale> --path <file> [options]
 
 **Options:**
 
-| Flag                    | Default   | Description                          |
-|-------------------------|-----------|--------------------------------------|
-| `-p, --path <path>`     | required  | Output file path                     |
-| `-f, --format <format>` | `flat`    | File format: `flat` or `nested`      |
+| Flag                    | Default   | Description                     |
+|-------------------------|-----------|---------------------------------|
+| `-p, --path <path>`     | required  | Output file path                |
+| `-f, --format <format>` | `flat`    | File format: `flat` or `nested` |
 
 **Examples:**
 

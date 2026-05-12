@@ -114,19 +114,20 @@ localess translations push <locale> --path <file> [options]
 
 **Options:**
 
-| Flag                    | Default       | Description                                         |
-|-------------------------|---------------|-----------------------------------------------------|
-| `-p, --path <path>`     | *(required)*  | Path to the JSON translations file                  |
-| `-f, --format <format>` | `flat`        | File format: `flat` or `nested`                     |
-| `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing` or `update-existing` |
-| `--dry-run`             | `false`       | Preview changes without applying them               |
+| Flag                    | Default       | Description                                                            |
+|-------------------------|---------------|------------------------------------------------------------------------|
+| `-p, --path <path>`     | *(required)*  | Path to the JSON translations file                                     |
+| `-f, --format <format>` | `flat`        | File format: `flat` or `nested`                                        |
+| `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing`, `update-existing`, or `delete-missing` |
+| `--dry-run`             | `false`       | Preview changes without applying them                                  |
 
 **Update Strategies:**
 
-| Type              | Description                                                  |
-|-------------------|--------------------------------------------------------------|
-| `add-missing`     | Adds translations for keys that do not yet exist in Localess |
-| `update-existing` | Updates translations for keys that already exist in Localess |
+| Type              | Description                                                                   |
+|-------------------|-------------------------------------------------------------------------------|
+| `add-missing`     | Adds translations for keys that do not yet exist in Localess                  |
+| `update-existing` | Updates translations for keys that already exist in Localess                  |
+| `delete-missing`  | Deletes translations in Localess for keys that are absent from the local file |
 
 **File Formats:**
 
@@ -154,6 +155,9 @@ localess translations push en --path ./locales/en.json
 
 # Push with update-existing strategy
 localess translations push en --path ./locales/en.json --type update-existing
+
+# Delete keys in Localess absent from the local file
+localess translations push en --path ./locales/en.json --type delete-missing
 
 # Preview changes without applying (dry run)
 localess translations push en --path ./locales/en.json --dry-run

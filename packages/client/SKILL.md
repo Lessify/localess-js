@@ -179,15 +179,15 @@ if (window.localess) {
 
 **Event types:**
 
-| Event         | When                                        |
-|---------------|---------------------------------------------|
-| `input`       | User is typing in a field (real-time)       |
-| `change`      | Field value confirmed                       |
-| `save`        | Content saved                               |
-| `publish`     | Content published                           |
-| `pong`        | Editor heartbeat response                   |
-| `enterSchema` | User enters a schema element                |
-| `hoverSchema` | User hovers over a schema element           |
+| Event         | When                                  |
+|---------------|---------------------------------------|
+| `input`       | User is typing in a field (real-time) |
+| `change`      | Field value confirmed                 |
+| `save`        | Content saved                         |
+| `publish`     | Content published                     |
+| `pong`        | Editor heartbeat response             |
+| `enterSchema` | User enters a schema element          |
+| `hoverSchema` | User hovers over a schema element     |
 
 ---
 
