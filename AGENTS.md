@@ -82,7 +82,7 @@ localessClient({
   origin: string,      // Fully qualified domain: https://my-localess.web.app
   spaceId: string,     // From Localess Space settings
   token: string,       // API token from Space settings (KEEP SECRET)
-  version?: 'draft' | string,  // Default: 'published'
+  version?: 'draft',  // Default: 'published'
   debug?: boolean,
   cacheTTL?: number | false    // Default: 300000ms (5 min), false to disable
 })
@@ -96,7 +96,7 @@ localessClient({
 - `getOpenAPI()` - Get OpenAPI schema
 
 **Content Fetch Parameters** (used in getContentBySlug/Id):
-- `version?: 'draft' | string` - Override client version
+- `version?: 'draft'` - Override client version
 - `locale?: string` - ISO 639-1 locale (e.g., 'en')
 - `resolveReference?: boolean` - Resolve content references
 - `resolveLink?: boolean` - Resolve content links

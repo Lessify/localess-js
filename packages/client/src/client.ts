@@ -20,7 +20,7 @@ export type LocalessClientOptions = {
   /**
    * Content version to fetch, leave empty for 'published' or 'draft' for the latest draft
    */
-  version?: 'draft' | string;
+  version?: 'draft';
   /**
    * Enable debug mode
    */

@@ -50,15 +50,15 @@ const client = localessClient({
 
 ### Client Options
 
-| Option            | Type                | Required | Default       | Description                                                                                                                                                                                                 |
-|-------------------|---------------------|----------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `origin`          | `string`            | ✅        | —             | Fully qualified domain with protocol (e.g., `https://my-localess.web.app`)                                                                                                                                  |
-| `spaceId`         | `string`            | ✅        | —             | Localess Space ID, found in Space settings                                                                                                                                                                  |
-| `token`           | `string`            | ✅        | —             | Localess API token, found in Space settings                                                                                                                                                                 |
-| `version`         | `'draft' \| string` | ❌        | `'published'` | Default content version to fetch                                                                                                                                                                            |
-| `debug`           | `boolean`           | ❌        | `false`       | Enable debug logging                                                                                                                                                                                        |
-| `cacheTTL`        | `number \| false`   | ❌        | `300`         | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely — takes precedence over `fileSystemCache`                                                                            |
-| `fileSystemCache` | `boolean`           | ❌        | `false`       | Use a file-system cache instead of the default in-memory cache. Shared across all processes pointing to the same working directory (e.g. Next.js parallel build workers). Respects `cacheTTL` for TTL value |
+| Option            | Type              | Required | Default       | Description                                                                                                                                                                                                 |
+|-------------------|-------------------|----------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `origin`          | `string`          | ✅        | —             | Fully qualified domain with protocol (e.g., `https://my-localess.web.app`)                                                                                                                                  |
+| `spaceId`         | `string`          | ✅        | —             | Localess Space ID, found in Space settings                                                                                                                                                                  |
+| `token`           | `string`          | ✅        | —             | Localess API token, found in Space settings                                                                                                                                                                 |
+| `version`         | `'draft'`         | ❌        | `'published'` | Default content version to fetch                                                                                                                                                                            |
+| `debug`           | `boolean`         | ❌        | `false`       | Enable debug logging                                                                                                                                                                                        |
+| `cacheTTL`        | `number \| false` | ❌        | `300`         | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely — takes precedence over `fileSystemCache`                                                                            |
+| `fileSystemCache` | `boolean`         | ❌        | `false`       | Use a file-system cache instead of the default in-memory cache. Shared across all processes pointing to the same working directory (e.g. Next.js parallel build workers). Respects `cacheTTL` for TTL value |
 
 ---
 
@@ -95,12 +95,12 @@ const content = await client.getContentById<Page>('FRnIT7CUABoRCdSVVGGs', {
 
 ### Content Fetch Parameters
 
-| Parameter          | Type                | Default        | Description                                   |
-|--------------------|---------------------|----------------|-----------------------------------------------|
-| `version`          | `'draft' \| string` | Client default | Override the client's default content version |
-| `locale`           | `string`            | —              | ISO 639-1 locale code (e.g., `'en'`, `'de'`)  |
-| `resolveReference` | `boolean`           | `false`        | Resolve content references inline             |
-| `resolveLink`      | `boolean`           | `false`        | Resolve content links inline                  |
+| Parameter          | Type       | Default        | Description                                   |
+|--------------------|------------|----------------|-----------------------------------------------|
+| `version`          | `'draft'`  | Client default | Override the client's default content version |
+| `locale`           | `string`   | —              | ISO 639-1 locale code (e.g., `'en'`, `'de'`)  |
+| `resolveReference` | `boolean`  | `false`        | Resolve content references inline             |
+| `resolveLink`      | `boolean`  | `false`        | Resolve content links inline                  |
 
 ---
 
