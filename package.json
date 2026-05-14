@@ -12,6 +12,9 @@
     "build:cli": "npm run build --workspace=@localess/cli",
     "build:client": "npm run build --workspace=@localess/client",
     "build:react": "npm run build --workspace=@localess/react",
+    "version:patch": "node scripts/bump-version.mjs patch",
+    "version:minor": "node scripts/bump-version.mjs minor",
+    "version:major": "node scripts/bump-version.mjs major",
     "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"packages/*/src/**/*.{ts,tsx}\" --fix"
   },
