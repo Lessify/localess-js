@@ -1,4 +1,4 @@
-import { FileSystemCache, ICache, NoCache, TTLCache } from './cache';
+import { ICache, NoCache, TTLCache } from './cache';
 import { Content, ContentAsset, ContentData, Links, Translations } from './models';
 import { FG_BLUE, RESET } from './utils';
 
@@ -40,22 +40,6 @@ export type LocalessClientOptions = {
    * cacheTTL: false   // disabled
    */
   cacheTTL?: number | false;
-  /**
-   * When `true`, uses a file-system cache instead of the default in-memory cache.
-   * All processes sharing the same working directory share the same cache, which makes it
-   * suitable for Next.js parallel build workers where each worker has its own memory space.
-   *
-   * Cache files are written to `.localess-cache/` in the current working directory.
-   * Add `.localess-cache/` to your `.gitignore`.
-   *
-   * `cacheTTL` still controls the TTL:
-   * - `cacheTTL: false`   — caching is disabled; `fileSystemCache` is ignored
-   * - `cacheTTL: number`  — file-system cache uses that TTL value (in seconds)
-   * - `cacheTTL` omitted  — file-system cache uses the default 5 minutes TTL
-   *
-   * @default false
-   */
-  fileSystemCache?: boolean;
 };
 
 export type LinksFetchParams = {
@@ -156,12 +140,8 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
   };
 
   const ttl = typeof options.cacheTTL === 'number' ? options.cacheTTL * 1000 : undefined;
-  const cache: ICache<any> =
-    options.cacheTTL === false
-      ? new NoCache<any>()
-      : options.fileSystemCache
-        ? new FileSystemCache<any>(undefined, ttl)
-        : new TTLCache<any>(ttl);
+  // Cache for storing API responses
+  const cache: ICache<any> = options.cacheTTL === false ? new NoCache<any>() : new TTLCache<any>(ttl);
 
   return {
     async getLinks(params?: LinksFetchParams): Promise<Links> {

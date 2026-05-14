@@ -74,7 +74,7 @@ describe('checkForUpdate', () => {
   });
 
   function mockFetch(responses: Record<string, string | null>) {
-    vi.mocked(fetch).mockImplementation((input) => {
+    vi.mocked(fetch).mockImplementation(input => {
       const url = input.toString();
       const tag = url.split('/').pop() as string;
       const version = responses[tag];

@@ -1,11 +1,11 @@
 import { Command } from 'commander';
 
+import { version } from '../package.json';
 import { loginCommand } from './commands/login';
 import { logoutCommand } from './commands/logout';
 import { translationsCommand } from './commands/translations';
 import { typesCommand } from './commands/types';
 import { checkForUpdate } from './version-check';
-import { version } from '../package.json';
 
 export const program = new Command();
 
