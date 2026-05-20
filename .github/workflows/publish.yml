@@ -6,11 +6,11 @@ on:
 
 jobs:
   publish:
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # required for OIDC / Trusted Publisher
+      id-token: write
       contents: read
-
     steps:
       - uses: actions/checkout@v6
 
@@ -21,31 +21,13 @@ jobs:
           registry-url: 'https://registry.npmjs.org/'
           cache: 'npm'
 
-      - name: Remove injected npm auth token
-        run: sed -i '/^\/\/registry.npmjs.org\/:_authToken/d' ~/.npmrc
-        shell: bash
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Resolve publish version
-        id: version
+      - name: Sync versions from root package.json
         run: |
-          BASE=$(node -p "require('./package.json').version")
-          if [ "${{ github.ref_name }}" = "dev" ]; then
-            DATE=$(date +"%Y%m%d%H%M%S")
-            VERSION="${BASE}-dev.${DATE}"
-            echo "tag=dev" >> "$GITHUB_OUTPUT"
-          else
-            VERSION="$BASE"
-            echo "tag=latest" >> "$GITHUB_OUTPUT"
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      - name: Sync versions across packages
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Publishing version: $VERSION"
           for pkgdir in packages/*/; do
             pkg="${pkgdir}package.json"
             jq --arg v "$VERSION" '
@@ -63,12 +45,63 @@ jobs:
       - name: Build all packages
         run: npm run build
 
-      - name: Publish all packages
+      - name: Publish all packages to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          TAG="${{ steps.version.outputs.tag }}"
           for pkgdir in packages/*/; do
             if ! grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
-              npm publish --tag "$TAG" --access public --provenance --workspace "$pkgdir"
+              npm publish --access public --provenance --workspace "$pkgdir"
+            fi
+          done
+        shell: bash
+
+  publish-snapshot:
+    if: github.ref_name == 'dev'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org/'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set snapshot version from root package.json
+        run: |
+          DATE=$(date +"%Y%m%d%H%M%S")
+          VERSION="$(node -p "require('./package.json').version")-dev.${DATE}"
+          echo "Publishing snapshot version: $VERSION"
+          for pkgdir in packages/*/; do
+            pkg="${pkgdir}package.json"
+            jq --arg v "$VERSION" '
+              .version = $v |
+              if .dependencies then
+                .dependencies |= with_entries(if .key | startswith("@localess/") then .value = $v else . end)
+              else . end |
+              if .peerDependencies then
+                .peerDependencies |= with_entries(if .key | startswith("@localess/") then .value = $v else . end)
+              else . end
+            ' "$pkg" > tmp.json && mv tmp.json "$pkg"
+          done
+        shell: bash
+
+      - name: Build all packages
+        run: npm run build
+
+      - name: Publish all packages to npm with tag 'dev'
+        run: |
+          for pkgdir in packages/*/; do
+            if ! grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
+              npm publish --tag dev --access public --provenance --workspace "$pkgdir"
             fi
           done
         shell: bash
