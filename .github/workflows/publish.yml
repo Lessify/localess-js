@@ -96,7 +96,16 @@ jobs:
         run: |
           for pkgdir in packages/*/; do
             if ! grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
-              npm publish --tag dev --access public --provenance --ignore-scripts --workspace "$pkgdir"
+              echo "Navigating to $pkgdir to publish..."
+
+              # Step into the package directory
+              cd "$pkgdir"
+
+              # Publish locally from inside the package directory
+              npm publish --tag dev --access public --provenance --ignore-scripts
+
+              # Step back out to the root for the next iteration
+              cd - > /dev/null
             fi
           done
         shell: bash
