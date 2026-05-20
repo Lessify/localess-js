@@ -95,9 +95,6 @@ jobs:
       - name: Build all packages
         run: npm run build
 
-      - name: NPM Update
-        run: npm install -g npm@11.15.0
-
       - name: Publish all packages to npm with tag 'dev'
         run: |
           for pkgdir in packages/*/; do
