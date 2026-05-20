@@ -162,3 +162,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+
+#Superpowers
+/docs/superpowers
