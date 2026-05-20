@@ -49,7 +49,7 @@ jobs:
         run: |
           for pkgdir in packages/*/; do
             if ! grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
-              npm publish --access public --provenance --workspace "$pkgdir"
+              npm publish --access public --provenance --ignore-scripts --workspace "$pkgdir"
             fi
           done
         shell: bash
@@ -96,7 +96,7 @@ jobs:
         run: |
           for pkgdir in packages/*/; do
             if ! grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
-              npm publish --tag dev --access public --provenance --workspace "$pkgdir"
+              npm publish --tag dev --access public --provenance --ignore-scripts --workspace "$pkgdir"
             fi
           done
         shell: bash
