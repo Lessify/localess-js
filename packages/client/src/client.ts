@@ -1,6 +1,6 @@
 import { ICache, NoCache, TTLCache } from './cache';
-import { Content, ContentAsset, ContentData, Links, Translations } from './models';
-import { FG_BLUE, RESET } from './utils';
+import { AssetTransformParams, Content, ContentAsset, ContentData, Links, Translations } from './models';
+import { buildAssetQueryString, FG_BLUE, RESET } from './utils';
 
 export type LocalessClientOptions = {
   /**
@@ -114,7 +114,7 @@ export interface LocalessClient {
 
   syncScriptUrl(): string;
 
-  assetLink(asset: ContentAsset | string): string;
+  assetLink(asset: ContentAsset | string, params?: AssetTransformParams): string;
 }
 
 const LOG_GROUP = `${FG_BLUE}[Localess:Client]${RESET}`;
@@ -322,12 +322,11 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       return `${normalizedOrigin}/scripts/sync-v1.js`;
     },
 
-    assetLink(asset: ContentAsset | string): string {
-      if (typeof asset === 'string') {
-        return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${asset}`;
-      } else {
-        return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${asset.uri}`;
-      }
+    assetLink(asset: ContentAsset | string, params?: AssetTransformParams): string {
+      const uri = typeof asset === 'string' ? asset : asset.uri;
+      const base = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${uri}`;
+      const qs = buildAssetQueryString(params);
+      return qs ? `${base}?${qs}` : base;
     },
   };
 }

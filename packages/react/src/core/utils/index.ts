@@ -16,4 +16,4 @@
  *                           '/not-found' when the link cannot be resolved.
  */
 export * from './link.util';
-export { isBrowser, isIframe, isServer, localessEditable, localessEditableField } from '@localess/client';
+export { AssetTransformParams, isBrowser, isIframe, isServer, localessEditable, localessEditableField } from '@localess/client';

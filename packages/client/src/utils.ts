@@ -1,3 +1,5 @@
+import type { AssetTransformParams } from './models';
+
 export function proxyURIFromEnv(): string | undefined {
   return process.env.HTTPS_PROXY || process.env.https_proxy || process.env.HTTP_PROXY || process.env.http_proxy || undefined;
 }
@@ -49,3 +51,15 @@ export const isBrowser = () => typeof window !== 'undefined';
 export const isServer = () => typeof window === 'undefined';
 
 export const isIframe = () => isBrowser() && window.self !== window.top;
+
+export function buildAssetQueryString(params?: AssetTransformParams): string {
+  if (!params) return '';
+  const parts: string[] = [];
+  if (params.w !== undefined) parts.push(`w=${params.w}`);
+  if (params.h !== undefined) parts.push(`h=${params.h}`);
+  if (params.q !== undefined) parts.push(`q=${params.q}`);
+  if (params.f !== undefined) parts.push(`f=${params.f}`);
+  if (params.download) parts.push('download');
+  if (params.thumbnail) parts.push('thumbnail');
+  return parts.join('&');
+}

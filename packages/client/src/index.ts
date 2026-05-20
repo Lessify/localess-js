@@ -3,7 +3,7 @@ export * from './client';
 export * from './editable';
 export * from './models';
 export * from './sync';
-export { isBrowser, isIframe, isServer } from './utils';
+export { buildAssetQueryString, isBrowser, isIframe, isServer } from './utils';
 
 export type EventToAppType = 'save' | 'publish' | 'pong' | 'input' | 'change' | 'enterSchema' | 'hoverSchema';
 export type EventCallback = (event: EventToApp) => void;

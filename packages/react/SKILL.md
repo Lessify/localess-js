@@ -477,13 +477,34 @@ const Article = ({ data }) => (
 
 ```typescript
 import { resolveAsset } from "@localess/react";
+import type { AssetTransformParams } from "@localess/react";
 
-// ContentAsset → full URL
+// ContentAsset → full URL (no transform)
 const imageUrl = resolveAsset(data.heroImage);
 // Returns: https://my-localess.web.app/api/v1/spaces/{spaceId}/assets/{uri}
+
+// With transform params
+const imageUrl = resolveAsset(data.heroImage, { w: 800, h: 600, f: 'webp', q: 90 });
+// Returns: .../assets/{uri}?w=800&h=600&q=90&f=webp
+
+// Thumbnail from video/animated image
+const thumb = resolveAsset(data.video, { w: 400, thumbnail: true });
 ```
 
 Set up automatically during `localessInit()` from `origin` + `spaceId`.
+
+#### AssetTransformParams
+
+| Param       | Type                                  | Description                                                                 |
+|-------------|---------------------------------------|-----------------------------------------------------------------------------|
+| `w`         | `number`                              | Target width in pixels. With `h` → cover crop. Without → scale proportionally. |
+| `h`         | `number`                              | Target height in pixels. With `w` → cover crop. Without → scale proportionally. |
+| `q`         | `number` (1–100)                      | Output quality. Applies to JPEG, WebP, AVIF. Ignored for PNG. Default: 85. |
+| `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Convert to this output format.                                              |
+| `download`  | `boolean`                             | `true` → force browser download (Content-Disposition: form-data).          |
+| `thumbnail` | `boolean`                             | `true` → extract first frame from animated WebP/GIF or video frame via FFmpeg. |
+
+SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
 
 ---
 
@@ -620,6 +641,7 @@ export { llEditable, llEditableField }  // Deprecated
 export { isBrowser, isServer, isIframe }
 
 // Types (re-exported from @localess/client + local)
+export type { AssetTransformParams }            // Image transform params for resolveAsset
 export type { LocalessClient, LocalessOptions }
 export type { LocalessSync, EventToApp, EventCallback, EventToAppType }
 export type {

@@ -36,7 +36,8 @@
     "url": "https://github.com/Lessify/localess-js/issues"
   },
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "test": "vitest"
   },
   "license": "MIT",
   "devDependencies": {

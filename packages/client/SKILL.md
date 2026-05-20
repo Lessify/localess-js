@@ -80,10 +80,36 @@ const t = await client.getTranslations('en');
 
 ```typescript
 import { localessClient } from "@localess/client";
+import type { AssetTransformParams } from "@localess/client";
 
+// Basic — no transform
 const url = client.assetLink(content.data.image);
 // Returns: https://my-localess.web.app/api/v1/spaces/{spaceId}/assets/{uri}
+
+// With transform params
+const url = client.assetLink(content.data.image, { w: 800, h: 600, f: 'webp', q: 90 });
+// Returns: .../assets/{uri}?w=800&h=600&q=90&f=webp
+
+// Download
+const url = client.assetLink(content.data.file, { download: true });
+// Returns: .../assets/{uri}?download
+
+// Accepts ContentAsset or raw URI string
+const url = client.assetLink('my-image.png', { w: 400 });
 ```
+
+#### AssetTransformParams
+
+| Param       | Type                                  | Description                                                                 |
+|-------------|---------------------------------------|-----------------------------------------------------------------------------|
+| `w`         | `number`                              | Target width in pixels. With `h` → cover crop. Without → scale proportionally. |
+| `h`         | `number`                              | Target height in pixels. With `w` → cover crop. Without → scale proportionally. |
+| `q`         | `number` (1–100)                      | Output quality. Applies to JPEG, WebP, AVIF. Ignored for PNG. Default: 85. |
+| `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Convert to this output format.                                              |
+| `download`  | `boolean`                             | `true` → force browser download (Content-Disposition: form-data).          |
+| `thumbnail` | `boolean`                             | `true` → extract first frame from animated WebP/GIF or video frame via FFmpeg. |
+
+SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
 
 ---
 
@@ -291,6 +317,7 @@ export { localessEditable, localessEditableField } // Visual editor helpers
 export { llEditable, llEditableField }             // Deprecated aliases
 export { loadLocalessSync }                        // Sync script injector
 export { isBrowser, isServer, isIframe }           // Environment utilities
+export { buildAssetQueryString }                   // Asset query string serialiser
 export type {
   LocalessClient, LocalessClientOptions,
   ContentFetchParams, LinksFetchParams,
@@ -299,5 +326,6 @@ export type {
   ContentRichText, ContentReference,
   Links, References, Translations,
   LocalessSync, EventToApp, EventCallback, EventToAppType,
+  AssetTransformParams,
 }
 ```

@@ -1,4 +1,4 @@
-import { loadLocalessSync, type LocalessClient, localessClient } from '@localess/client';
+import { buildAssetQueryString, loadLocalessSync, type AssetTransformParams, type LocalessClient, localessClient } from '@localess/client';
 import type React from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';
@@ -189,6 +189,8 @@ export function getOrigin() {
  * <img src={resolveAsset(data.heroImage)} alt={data.heroImage.alt} />
  * ```
  */
-export function resolveAsset(asset: ContentAsset) {
-  return `${_assetPathPrefix}${asset.uri}`;
+export function resolveAsset(asset: ContentAsset, params?: AssetTransformParams): string {
+  const base = `${_assetPathPrefix}${asset.uri}`;
+  const qs = buildAssetQueryString(params);
+  return qs ? `${base}?${qs}` : base;
 }

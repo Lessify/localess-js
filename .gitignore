@@ -165,3 +165,6 @@ dist
 
 #Superpowers
 /docs/superpowers
+
+#Claude
+.claude/worktrees

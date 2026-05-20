@@ -1,3 +1,4 @@
+export * from './asset-transform-params';
 export * from './content';
 export * from './content-asset';
 export * from './content-data';
