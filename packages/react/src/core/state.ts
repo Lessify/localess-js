@@ -1,4 +1,4 @@
-import { buildAssetQueryString, loadLocalessSync, type AssetTransformParams, type LocalessClient, localessClient } from '@localess/client';
+import { type AssetTransformParams, buildAssetQueryString, loadLocalessSync, type LocalessClient, localessClient } from '@localess/client';
 import type React from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';

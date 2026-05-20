@@ -44,9 +44,9 @@ describe('buildAssetQueryString', () => {
   });
 
   it('serialises all params combined in correct order', () => {
-    expect(
-      buildAssetQueryString({ w: 800, h: 600, q: 90, f: 'webp', download: true, thumbnail: true })
-    ).toBe('w=800&h=600&q=90&f=webp&download&thumbnail');
+    expect(buildAssetQueryString({ w: 800, h: 600, q: 90, f: 'webp', download: true, thumbnail: true })).toBe(
+      'w=800&h=600&q=90&f=webp&download&thumbnail'
+    );
   });
 
   it('omits undefined params', () => {
