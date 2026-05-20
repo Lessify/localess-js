@@ -46,8 +46,6 @@ jobs:
         run: npm run build
 
       - name: Publish all packages to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           for pkgdir in packages/*/; do
             if ! grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
