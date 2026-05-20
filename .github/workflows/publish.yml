@@ -3,14 +3,14 @@ name: Publish to npm
 on:
   push:
     branches: [main, dev]
-
+permissions:
+  id-token: write
+  contents: read
 jobs:
   publish:
     if: github.ref_name == 'main'
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
+
     steps:
       - uses: actions/checkout@v6
 
@@ -57,9 +57,6 @@ jobs:
   publish-snapshot:
     if: github.ref_name == 'dev'
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
     steps:
       - uses: actions/checkout@v6
 
