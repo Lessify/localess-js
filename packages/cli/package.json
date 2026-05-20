@@ -2,6 +2,9 @@
   "name": "@localess/cli",
   "version": "3.0.9",
   "description": "Localess Command Line.",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "localess",
     "cli",
