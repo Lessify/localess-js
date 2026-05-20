@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write  # required for OIDC / Trusted Publisher
+      contents: read
 
     steps:
       - uses: actions/checkout@v6
