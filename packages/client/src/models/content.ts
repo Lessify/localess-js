@@ -1,8 +1,8 @@
+import { Assets } from './assets';
 import { ContentData } from './content-data';
 import { ContentMetadata } from './content-metadata';
 import { Links } from './links';
 import { References } from './references';
-import {Assets} from "./assets";
 
 /**
  * Content defines a shared object for all possible Content Types.

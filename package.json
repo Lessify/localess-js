@@ -1,6 +1,6 @@
 {
   "name": "localess-js",
-  "version": "3.0.10",
+  "version": "3.1.0",
   "description": "",
   "main": "index.js",
   "workspaces": [
@@ -8,10 +8,12 @@
     "playgrounds/*"
   ],
   "scripts": {
-    "build": "npm run build:client && npm run build:react && npm run build:cli",
+    "build": "npm run build:client && npm run build:react && npm run build:cli && npm run build:angular",
+    "build:angular": "npm run build --workspace=@localess/angular",
     "build:cli": "npm run build --workspace=@localess/cli",
     "build:client": "npm run build --workspace=@localess/client",
     "build:react": "npm run build --workspace=@localess/react",
+    "start:angular-ssr": "npm run start --workspace=angular-ssr",
     "version:patch": "node scripts/bump-version.mjs patch",
     "version:minor": "node scripts/bump-version.mjs minor",
     "version:major": "node scripts/bump-version.mjs major",

@@ -1,0 +1,71 @@
+{
+  "name": "@localess/angular",
+  "version": "3.1.0",
+  "description": "Angular Library for Localess's API.",
+  "keywords": [
+    "localess",
+    "sdk",
+    "api",
+    "client",
+    "angular",
+    "typescript"
+  ],
+  "author": "Lessify",
+  "license": "MIT",
+  "homepage": "https://github.com/Lessify/localess-js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lessify/localess-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Lessify/localess-js/issues"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "ng build localess-angular",
+    "test": "ng test localess-angular"
+  },
+  "peerDependencies": {
+    "@angular/common": "^19.0.0 || ^20.0.0 || ^21.0.0",
+    "@angular/compiler": "^19.0.0 || ^20.0.0 || ^21.0.0",
+    "@angular/core": "^19.0.0 || ^20.0.0 || ^21.0.0"
+  },
+  "dependencies": {
+    "@localess/client": "*",
+    "@tiptap/extension-bold": "^2.27.2",
+    "@tiptap/extension-bullet-list": "^2.27.2",
+    "@tiptap/extension-code": "^2.27.2",
+    "@tiptap/extension-code-block-lowlight": "^2.27.2",
+    "@tiptap/extension-document": "^2.27.2",
+    "@tiptap/extension-heading": "^2.27.2",
+    "@tiptap/extension-history": "^2.27.2",
+    "@tiptap/extension-italic": "^2.27.2",
+    "@tiptap/extension-link": "^2.27.2",
+    "@tiptap/extension-list-item": "^2.27.2",
+    "@tiptap/extension-ordered-list": "^2.27.2",
+    "@tiptap/extension-paragraph": "^2.27.2",
+    "@tiptap/extension-strike": "^2.27.2",
+    "@tiptap/extension-text": "^2.27.2",
+    "@tiptap/extension-underline": "^2.27.2",
+    "@tiptap/html": "^2.27.2",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^20.0.4",
+    "@angular/cli": "^20.0.4",
+    "@angular/common": "^20.0.5",
+    "@angular/compiler": "^20.0.5",
+    "@angular/compiler-cli": "^20.0.5",
+    "@angular/core": "^20.0.5",
+    "@types/jasmine": "~5.1.0",
+    "@types/node": "^20.0.0",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "ng-packagr": "^20.0.1",
+    "typescript": "~5.8.3"
+  }
+}

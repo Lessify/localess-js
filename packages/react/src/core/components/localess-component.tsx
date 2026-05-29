@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../../console';
-import { ContentData, Links, References, Assets } from '../models';
+import { Assets, ContentData, Links, References } from '../models';
 import { getComponent, getFallbackComponent } from '../state';
 import { localessEditable } from '../utils';
 
@@ -63,30 +63,34 @@ export type LocalessComponentProps<T extends ContentData = ContentData> = {
  * ))}
  * ```
  */
-export const LocalessComponent = forwardRef<HTMLElement, LocalessComponentProps>(({ data, links, references, assets, ...restProps }, ref) => {
-  if (!data) {
-    console.error('LocalessComponent property %cdata%c is not provided.', FONT_BOLD, FONT_NORMAL);
+export const LocalessComponent = forwardRef<HTMLElement, LocalessComponentProps>(
+  ({ data, links, references, assets, ...restProps }, ref) => {
+    if (!data) {
+      console.error('LocalessComponent property %cdata%c is not provided.', FONT_BOLD, FONT_NORMAL);
+      return (
+        <div>
+          LocalessComponent property <b>data</b> is not provided.
+        </div>
+      );
+    }
+    // Find Component from Mapping
+    const Comp = getComponent(data._schema);
+    if (Comp) {
+      return (
+        <Comp ref={ref} data={data} assets={assets} links={links} references={references} {...localessEditable(data)} {...restProps} />
+      );
+    }
+    // Try to use Fallback Component
+    const FallbackComponent = getFallbackComponent();
+    if (FallbackComponent) {
+      return <FallbackComponent ref={ref} data={data} assets={assets} links={links} references={references} {...restProps} />;
+    }
+    // Missing Configuration case
     return (
-      <div>
-        LocalessComponent property <b>data</b> is not provided.
-      </div>
+      <p>
+        <b>LocalessComponent</b> could not found component with key <b>{data._schema}</b>. <br />
+        Please check if your configuration is correct.
+      </p>
     );
   }
-  // Find Component from Mapping
-  const Comp = getComponent(data._schema);
-  if (Comp) {
-    return <Comp ref={ref} data={data} assets={assets} links={links} references={references} {...localessEditable(data)} {...restProps} />;
-  }
-  // Try to use Fallback Component
-  const FallbackComponent = getFallbackComponent();
-  if (FallbackComponent) {
-    return <FallbackComponent ref={ref} data={data} assets={assets} links={links} references={references}  {...restProps} />;
-  }
-  // Missing Configuration case
-  return (
-    <p>
-      <b>LocalessComponent</b> could not found component with key <b>{data._schema}</b>. <br />
-      Please check if your configuration is correct.
-    </p>
-  );
-});
+);

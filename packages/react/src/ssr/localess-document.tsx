@@ -55,5 +55,13 @@ export const LocalessServerDocument = forwardRef<HTMLElement, LocalessServerDocu
     );
   }
 
-  return <LocalessServerComponent ref={ref} data={document.data} assets={document.assets} links={document.links} references={document.references} />;
+  return (
+    <LocalessServerComponent
+      ref={ref}
+      data={document.data}
+      assets={document.assets}
+      links={document.links}
+      references={document.references}
+    />
+  );
 });

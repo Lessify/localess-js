@@ -19,9 +19,9 @@
  * ```
  */
 
-export * from './core/state';
 export * from './core/components';
 export * from './core/hooks';
-export * from './core/utils';
-export * from './core/richtext';
 export type * from './core/models';
+export * from './core/richtext';
+export * from './core/state';
+export * from './core/utils';

@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';
-import {Assets, ContentData, Links, References} from '../core/models';
+import { Assets, ContentData, Links, References } from '../core/models';
 import { getComponent, getFallbackComponent } from '../core/state';
 
 /**
