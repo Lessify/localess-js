@@ -1,3 +1,5 @@
+export * from './asset-metadata';
+export * from './assets';
 export * from './content';
 export * from './content-asset';
 export * from './content-data';

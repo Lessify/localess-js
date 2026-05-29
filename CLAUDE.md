@@ -45,7 +45,7 @@ Requirements: Node.js >= 20.0.0, npm >= 10.
 ## Code Style
 
 - TypeScript strict mode with `noImplicitAny: false`. See `tsconfig.json` in each package.
-- All packages build with `tsup`. Entry point is always `src/index.ts` → `dist/`.
+- All packages build with **Vite in library mode** (`vite.config.ts` in each package). Entry point is always `src/index.ts` → `dist/`.
 - Dual CJS + ESM output: `dist/index.js` (CJS), `dist/index.mjs` (ESM), `dist/index.d.ts` (types).
 - No barrel re-exports except in `index.ts` files.
 - Kebab-case file names (e.g. `content-asset.ts`, `use-localess.ts`).

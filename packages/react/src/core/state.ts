@@ -182,6 +182,7 @@ export function getOrigin() {
  * `{origin}/api/v1/spaces/{spaceId}/assets/{asset.uri}`
  *
  * @param asset - The asset reference object containing a `uri` field.
+ * @param params
  * @returns The fully qualified asset URL string.
  *
  * @example

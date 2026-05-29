@@ -79,5 +79,5 @@ export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>((
     );
   }
 
-  return <LocalessComponent ref={ref} data={contentData} links={document.links} references={document.references} />;
+  return <LocalessComponent ref={ref} data={contentData} assets={document.assets} links={document.links} references={document.references} />;
 });

@@ -89,13 +89,20 @@ export type ContentFetchParams = {
    */
   locale?: string;
   /**
-   * Resolve references in the content data. Default is false.
+   * Resolve references in the content data.
+   * @default false
    */
   resolveReference?: boolean;
   /**
-   * Resolve links in the content data. Default is false.
+   * Resolve links in the content data.
+   * @default false
    */
   resolveLink?: boolean;
+  /**
+   * Resolve all assets.
+   * @default false
+   */
+  resolveAsset?: boolean;
 };
 
 export type TranslationFetchParams = {

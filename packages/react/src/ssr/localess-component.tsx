@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';
-import { ContentData, Links, References } from '../core/models';
+import {Assets, ContentData, Links, References} from '../core/models';
 import { getComponent, getFallbackComponent } from '../core/state';
 
 /**
@@ -25,6 +25,11 @@ export type LocalessServerComponentProps<T extends ContentData = ContentData> = 
    * Pass through to child components that consume referenced content.
    */
   references?: References;
+  /**
+   * Optional map of resolved content assets keyed by asset ID.
+   * Pass through to child components that consume asset content.
+   */
+  assets?: Assets;
 };
 
 /**
@@ -52,7 +57,7 @@ export type LocalessServerComponentProps<T extends ContentData = ContentData> = 
  * ```
  */
 export const LocalessServerComponent = forwardRef<HTMLElement, LocalessServerComponentProps>(
-  ({ data, links, references, ...restProps }, ref) => {
+  ({ data, assets, links, references, ...restProps }, ref) => {
     if (!data) {
       console.error('LocalessServerComponent property %cdata%c is not provided.', FONT_BOLD, FONT_NORMAL);
       return (
@@ -64,12 +69,12 @@ export const LocalessServerComponent = forwardRef<HTMLElement, LocalessServerCom
     // Find Component from Mapping
     const Comp = getComponent(data._schema);
     if (Comp) {
-      return <Comp ref={ref} data={data} links={links} references={references} {...restProps} />;
+      return <Comp ref={ref} data={data} assets={assets} links={links} references={references} {...restProps} />;
     }
     // Try to use Fallback Component
     const FallbackComponent = getFallbackComponent();
     if (FallbackComponent) {
-      return <FallbackComponent ref={ref} data={data} links={links} references={references} {...restProps} />;
+      return <FallbackComponent ref={ref} data={data} assets={assets} links={links} references={references} {...restProps} />;
     }
     // Missing Configuration case
     return (

@@ -70,7 +70,7 @@ export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>((
 
   return (
     <>
-      <LocalessComponent ref={ref} data={document.data} links={document.links} references={document.references} />
+      <LocalessComponent ref={ref} data={document.data} assets={document.assets} links={document.links} references={document.references} />
       <LocalessSync document={document} origin={getOrigin()} enableSync={isSyncEnabled()} />
     </>
   );

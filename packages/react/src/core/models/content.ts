@@ -10,4 +10,5 @@ export type {
   ContentRichText,
   Links,
   References,
+  Assets, AssetMetadata
 } from '@localess/client';

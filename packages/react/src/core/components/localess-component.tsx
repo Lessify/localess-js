@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../../console';
-import { ContentData, Links, References } from '../models';
+import { ContentData, Links, References, Assets } from '../models';
 import { getComponent, getFallbackComponent } from '../state';
 import { localessEditable } from '../utils';
 
@@ -26,6 +26,11 @@ export type LocalessComponentProps<T extends ContentData = ContentData> = {
    * Pass through to child components that consume referenced content.
    */
   references?: References;
+  /**
+   * Optional map of resolved content assets keyed by asset ID.
+   * Pass through to child components that consume asset content.
+   */
+  assets?: Assets;
 };
 
 /**
@@ -58,7 +63,7 @@ export type LocalessComponentProps<T extends ContentData = ContentData> = {
  * ))}
  * ```
  */
-export const LocalessComponent = forwardRef<HTMLElement, LocalessComponentProps>(({ data, links, references, ...restProps }, ref) => {
+export const LocalessComponent = forwardRef<HTMLElement, LocalessComponentProps>(({ data, links, references, assets, ...restProps }, ref) => {
   if (!data) {
     console.error('LocalessComponent property %cdata%c is not provided.', FONT_BOLD, FONT_NORMAL);
     return (
@@ -70,12 +75,12 @@ export const LocalessComponent = forwardRef<HTMLElement, LocalessComponentProps>
   // Find Component from Mapping
   const Comp = getComponent(data._schema);
   if (Comp) {
-    return <Comp ref={ref} data={data} links={links} references={references} {...localessEditable(data)} {...restProps} />;
+    return <Comp ref={ref} data={data} assets={assets} links={links} references={references} {...localessEditable(data)} {...restProps} />;
   }
   // Try to use Fallback Component
   const FallbackComponent = getFallbackComponent();
   if (FallbackComponent) {
-    return <FallbackComponent ref={ref} data={data} links={links} references={references} {...restProps} />;
+    return <FallbackComponent ref={ref} data={data} assets={assets} links={links} references={references}  {...restProps} />;
   }
   // Missing Configuration case
   return (
