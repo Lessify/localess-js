@@ -1,7 +1,8 @@
 import {isPlatformBrowser} from '@angular/common';
 import {Inject, inject, Injectable, PLATFORM_ID} from '@angular/core';
+import {buildAssetQueryString} from '@localess/client';
 import {LOCALESS_SERVER_CONFIG} from "../localess.config";
-import type {ContentAsset} from "../models";
+import type {AssetTransformParams, ContentAsset} from "../models";
 
 @Injectable()
 export class ServerAssetService {
@@ -19,14 +20,14 @@ export class ServerAssetService {
   }
 
   /**
-   * Convert Asset to URL.
+   * Convert Asset to URL with optional image transform parameters.
    * @param asset
+   * @param params
    */
-  link(asset: ContentAsset | string): string {
-    if (typeof asset === 'string') {
-      return `${this.config.origin}/api/v1/spaces/${this.config.spaceId}/assets/${asset}`;
-    } else {
-      return `${this.config.origin}/api/v1/spaces/${this.config.spaceId}/assets/${asset.uri}`;
-    }
+  link(asset: ContentAsset | string, params?: AssetTransformParams): string {
+    const uri = typeof asset === 'string' ? asset : asset.uri;
+    const qs = buildAssetQueryString(params);
+    const base = `${this.config.origin}/api/v1/spaces/${this.config.spaceId}/assets/${uri}`;
+    return qs ? `${base}?${qs}` : base;
   }
 }

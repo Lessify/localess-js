@@ -135,6 +135,9 @@ export class ServerContentService {
     if (params?.resolveLink) {
       clientParams['resolveLink'] = params.resolveLink;
     }
+    if (params?.resolveAsset) {
+      clientParams['resolveAsset'] = params.resolveAsset;
+    }
     if (this.config.debug) {
       console.log('[Localess] getContentBySlug', url, clientParams);
     }
@@ -175,6 +178,9 @@ export class ServerContentService {
     }
     if (params?.resolveLink) {
       parts.push(`resolveLink=${params.resolveLink}`);
+    }
+    if (params?.resolveAsset) {
+      parts.push(`resolveAsset=${params.resolveAsset}`);
     }
     return parts.join('&');
   }
@@ -218,6 +224,9 @@ export class ServerContentService {
     if (params?.resolveLink) {
       clientParams['resolveLink'] = params.resolveLink;
     }
+    if (params?.resolveAsset) {
+      clientParams['resolveAsset'] = params.resolveAsset;
+    }
     if (this.config.debug) {
       console.log('[Localess] getContentById', url, clientParams);
     }
@@ -258,6 +267,9 @@ export class ServerContentService {
     }
     if (params?.resolveLink) {
       parts.push(`resolveLink=${params.resolveLink}`);
+    }
+    if (params?.resolveAsset) {
+      parts.push(`resolveAsset=${params.resolveAsset}`);
     }
 
     return parts.join('&');

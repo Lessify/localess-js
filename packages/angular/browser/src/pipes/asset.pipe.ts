@@ -1,5 +1,6 @@
 import {Inject, Pipe, PipeTransform} from "@angular/core";
-import type {ContentAsset} from "../models";
+import {buildAssetQueryString} from '@localess/client';
+import type {AssetTransformParams, ContentAsset} from "../models";
 import {LOCALESS_BROWSER_CONFIG, LocalessBrowserConfig} from "../localess.config";
 
 @Pipe({
@@ -13,7 +14,14 @@ export class AssetPipe implements PipeTransform {
   ) {
   }
 
-  transform(asset: ContentAsset): string {
-    return `${this.config.assetPathPrefix}${asset.uri}`;
+  /**
+   * Convert Asset to URL with optional image transform parameters.
+   * @param asset
+   * @param params
+   */
+  transform(asset: ContentAsset, params?: AssetTransformParams): string {
+    const base = `${this.config.assetPathPrefix}${asset.uri}`;
+    const qs = buildAssetQueryString(params);
+    return qs ? `${base}?${qs}` : base;
   }
 }

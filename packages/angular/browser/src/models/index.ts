@@ -1,4 +1,5 @@
 export type {
+  AssetTransformParams,
   Content,
   ContentData,
   ContentMetadata,
