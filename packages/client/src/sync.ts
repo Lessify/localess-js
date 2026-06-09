@@ -10,26 +10,22 @@ const JS_SYNC_ID = 'localess-js-sync';
 export async function loadLocalessSync(origin: string, force: boolean = false): Promise<void> {
   return new Promise((resolve, reject) => {
     if (isServer()) {
-      // Skip Server Injection
-      reject(undefined);
+      resolve();
       return;
     }
     if (!isIframe()) {
-      // Skip if the page is not loaded in Visual Editor
       console.warn('Localess Sync is loaded only in Visual Editor.');
-      reject(undefined);
+      resolve();
       return;
     }
     const isSyncLoaded = typeof window.localess !== 'undefined';
     if (isSyncLoaded) {
-      // Skip if Sync is already loaded
-      reject(undefined);
+      resolve();
       return;
     }
     const scriptEl = document.getElementById(JS_SYNC_ID);
     if (scriptEl) {
-      // Skip if a script is already loaded
-      reject(undefined);
+      resolve();
       return;
     }
     const script = document.createElement('script');
