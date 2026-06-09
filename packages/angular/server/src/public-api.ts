@@ -12,4 +12,5 @@ export * from './localess.config';
 // Providers
 export * from './localess.providers';
 
-export {localessClient, LocalessClientOptions, LinksFetchParams, ContentFetchParams} from '@localess/client';
+export { localessClient } from '@localess/client';
+export type { LocalessClientOptions, LinksFetchParams, ContentFetchParams } from '@localess/client';
