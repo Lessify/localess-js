@@ -60,6 +60,14 @@ export type LinksFetchParams = {
   excludeChildren?: boolean;
 };
 
+export type TranslationFetchParams = {
+  /**
+   * Translation version to fetch, leave empty for 'published' or 'draft' for the latest draft.
+   * Overrides the version set in the client options.
+   */
+  version?: 'draft';
+};
+
 export type ContentFetchParams = {
   /**
    * Content version to fetch, leave empty for 'published' or 'draft' for the latest draft.
@@ -116,8 +124,9 @@ export interface LocalessClient {
   /**
    * Get translations for the given locale
    * @param locale{string} - Locale identifier (ISO 639-1)
+   * @param params{TranslationFetchParams} - Fetch parameters
    */
-  getTranslations(locale: string): Promise<Translations>;
+  getTranslations(locale: string, params?: TranslationFetchParams): Promise<Translations>;
 
   syncScriptUrl(): string;
 
@@ -291,11 +300,21 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
     },
 
-    async getTranslations(locale: string): Promise<Translations> {
+    async getTranslations(locale: string, params?: TranslationFetchParams): Promise<Translations> {
       if (options.debug) {
         console.log(LOG_GROUP, 'getTranslations() locale : ', locale);
+        console.log(LOG_GROUP, 'getTranslations() params : ', JSON.stringify(params));
       }
-      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}?token=${options.token}`;
+      let version = '';
+      // Options
+      if (options?.version && options.version == 'draft') {
+        version = `&version=${options.version}`;
+      }
+      // Params
+      if (params?.version && params.version == 'draft') {
+        version = `&version=${params.version}`;
+      }
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}?token=${options.token}${version}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getTranslations fetch url : ', url);
       }

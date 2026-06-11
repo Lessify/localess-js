@@ -74,6 +74,9 @@ const links = await client.getLinks({
 const t = await client.getTranslations('en');
 // t: { [key: string]: string }
 // Usage: t['common.submit'] => 'Submit'
+
+// Fetch draft translations
+const t = await client.getTranslations('en', { version: 'draft' });
 ```
 
 ### Asset URL
@@ -113,7 +116,7 @@ SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
 
 ---
 
-## Content Fetch Parameters
+## Content Fetch Parameters (`ContentFetchParams`)
 
 | Parameter          | Type                   | Default     | Description                               |
 |--------------------|------------------------|-------------|-------------------------------------------|
@@ -121,6 +124,12 @@ SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
 | `locale`           | `string`               | —           | ISO 639-1 code: `'en'`, `'de'`, etc.      |
 | `resolveReference` | `boolean`              | `false`     | Inline referenced content objects         |
 | `resolveLink`      | `boolean`              | `false`     | Inline linked content metadata            |
+
+## Translation Fetch Parameters (`TranslationFetchParams`)
+
+| Parameter | Type                   | Default     | Description                               |
+|-----------|------------------------|-------------|-------------------------------------------|
+| `version` | `'draft' \| undefined` | `undefined` | `'draft'` for preview, omit for published |
 
 ---
 
@@ -320,7 +329,7 @@ export { isBrowser, isServer, isIframe }           // Environment utilities
 export { buildAssetQueryString }                   // Asset query string serialiser
 export type {
   LocalessClient, LocalessClientOptions,
-  ContentFetchParams, LinksFetchParams,
+  ContentFetchParams, LinksFetchParams, TranslationFetchParams,
   Content, ContentData, ContentDataSchema, ContentDataField,
   ContentMetadata, ContentAsset, ContentLink,
   ContentRichText, ContentReference,

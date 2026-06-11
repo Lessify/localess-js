@@ -9,6 +9,7 @@ import { dotToNestedObject, sortObjectKeys } from '../../../utils';
 export type TranslationsPullOptions = {
   path: string;
   format: TranslationFileFormat;
+  version?: string;
 };
 
 export const translationsPullCommand = new Command('pull')
@@ -16,11 +17,16 @@ export const translationsPullCommand = new Command('pull')
   .description('Pull locale translations from Localess')
   .requiredOption('-p, --path <path>', 'Path where the translations file will be saved')
   .option('-f, --format <format>', `File format. Possible values are : ${Object.values(TranslationFileFormat)}`, TranslationFileFormat.FLAT)
+  .option('--version <version>', 'Translation version. Possible values: draft')
   .action(async (locale: string, options: TranslationsPullOptions) => {
     console.log('Pulling translations with arguments:', locale);
     console.log('Pulling translations with options:', options);
     if (!Object.values(TranslationFileFormat).includes(options.format)) {
       console.error('Invalid format provided. Possible values are :', Object.values(TranslationFileFormat));
+      return;
+    }
+    if (options.version !== undefined && options.version !== 'draft') {
+      console.error('Invalid version provided. Possible values are : draft');
       return;
     }
 
@@ -37,7 +43,7 @@ export const translationsPullCommand = new Command('pull')
     });
 
     console.log('Pulling translations from Localess for locale:', locale);
-    const translations = await client.getTranslations(locale);
+    const translations = await client.getTranslations(locale, { version: options.version as 'draft' | undefined });
 
     console.log('Saving translations in file:', options.path);
     if (options.format === TranslationFileFormat.FLAT) {
