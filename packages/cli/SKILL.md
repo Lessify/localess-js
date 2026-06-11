@@ -182,10 +182,11 @@ localess translations pull <locale> --path <file> [options]
 
 **Options:**
 
-| Flag                    | Default   | Description                     |
-|-------------------------|-----------|---------------------------------|
-| `-p, --path <path>`     | required  | Output file path                |
-| `-f, --format <format>` | `flat`    | File format: `flat` or `nested` |
+| Flag                    | Default   | Description                          |
+|-------------------------|-----------|--------------------------------------|
+| `-p, --path <path>`     | required  | Output file path                     |
+| `-f, --format <format>` | `flat`    | File format: `flat` or `nested`      |
+| `--draft`               | `false`   | Pull the draft version of translations |
 
 **Examples:**
 
@@ -195,6 +196,9 @@ localess translations pull en --path ./locales/en.json
 
 # Pull as nested JSON
 localess translations pull de --path ./locales/de.json --format nested
+
+# Pull draft (unpublished) translations
+localess translations pull en --path ./locales/en.json --draft
 ```
 
 ---
