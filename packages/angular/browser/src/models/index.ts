@@ -11,5 +11,6 @@ export type {
   ContentReference,
   Links,
   References,
-  Translations
+  Translations,
+  Assets
 } from '@localess/client';

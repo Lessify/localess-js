@@ -8,7 +8,7 @@
 - Pushing and pulling translations (flat and nested JSON formats supported for both push and pull)
 - Generating TypeScript type definitions from the OpenAPI schema
 
-**Status:** Early development (v3.0.1). Requires Node.js >= 20.0.0.
+**Status:** Early development (v3.2.4). Requires Node.js >= 24.0.0.
 
 ---
 
@@ -289,7 +289,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
       - run: npm install -g @localess/cli
       - run: localess translations push en --path ./locales/en.json
         env:

@@ -16,7 +16,7 @@ The `@localess/react` package is the official React integration for the [Locales
 
 ## Requirements
 
-- Node.js >= 20.0.0
+- Node.js >= 24.0.0
 - React 17, 18, or 19
 
 ## Installation

@@ -11,7 +11,7 @@
 Official JavaScript/TypeScript SDK monorepo for the [Localess](https://github.com/Lessify/localess) headless CMS platform.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Node.js >= 20](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
+[![Node.js >= 24](https://img.shields.io/badge/node-%3E%3D24-brightgreen)](https://nodejs.org)
 
 ---
 
@@ -124,7 +124,7 @@ localess-js/
 
 ### Requirements
 
-- Node.js >= 20.0.0
+- Node.js >= 24.0.0
 - npm >= 10 (for workspaces support)
 
 ### Install Dependencies

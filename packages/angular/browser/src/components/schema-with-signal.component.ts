@@ -1,6 +1,6 @@
 import {Component, inject, input} from "@angular/core";
 import {LOCALESS_BROWSER_CONFIG} from "../localess.config";
-import type {ContentAsset, ContentLink, Links, References, ContentData} from "../models";
+import type {ContentAsset, ContentLink, Links, References, ContentData, Assets} from "../models";
 import {findLink} from "../utils/link.utils";
 
 /**
@@ -13,7 +13,7 @@ import {findLink} from "../utils/link.utils";
   template: '',
   host: {
     '[attr.data-ll-id]': 'data()._id',
-    '[attr.data-ll-schema]': 'data()._schema || data().schema'
+    '[attr.data-ll-schema]': 'data()._schema'
   },
 })
 export abstract class SchemaWithSignalComponent<T extends ContentData = ContentData> {
@@ -23,6 +23,7 @@ export abstract class SchemaWithSignalComponent<T extends ContentData = ContentD
   data = input.required<T>();
   links = input<Links>();
   references = input<References>();
+  assets = input<Assets>();
 
   assetUrl(asset: ContentAsset): string {
     return this.config.assetPathPrefix + asset.uri;

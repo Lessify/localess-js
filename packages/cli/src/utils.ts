@@ -41,11 +41,6 @@ export const BG_BRIGHT_MAGENTA = '\x1b[105m';
 export const BG_BRIGHT_CYAN = '\x1b[106m';
 export const BG_BRIGHT_WHITE = '\x1b[107m';
 
-export const isBrowser = () => typeof window !== 'undefined';
-export const isServer = () => typeof window === 'undefined';
-
-export const isIframe = () => isBrowser() && window.self !== window.top;
-
 export function sortObjectKeys<T extends Record<string, unknown>>(input: T): T {
   return Object.keys(input)
     .sort()

@@ -17,7 +17,7 @@ The `@localess/client` package is the core JavaScript/TypeScript SDK for the [Lo
 
 ## Requirements
 
-- Node.js >= 20.0.0
+- Node.js >= 24.0.0
 
 ## Installation
 

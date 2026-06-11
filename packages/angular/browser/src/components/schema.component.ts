@@ -13,7 +13,7 @@ import {findLink} from "../utils/link.utils";
   template: '',
   host: {
     '[attr.data-ll-id]': 'content()._id',
-    '[attr.data-ll-schema]': 'content()._schema || content().schema'
+    '[attr.data-ll-schema]': 'content()._schema'
   },
 })
 export abstract class SchemaComponent<T extends ContentDataSchema = ContentDataSchema> {

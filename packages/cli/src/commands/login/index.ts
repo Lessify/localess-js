@@ -1,7 +1,7 @@
 import { input, password } from '@inquirer/prompts';
 import { Command } from 'commander';
 
-import { localessClient } from '../../client';
+import { localessCliClient } from '../../client';
 import { getSession, persistSession } from '../../session';
 
 type LoginOptions = {
@@ -45,7 +45,7 @@ export const loginCommand = new Command('login')
         mask: true,
       }));
 
-    const client = localessClient({
+    const client = localessCliClient({
       origin,
       spaceId: space,
       token,
