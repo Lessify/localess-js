@@ -51,7 +51,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^24",
     "openapi3-ts": "^4.6.0",
     "typescript": "^5.0.0",
     "vite": "^8.0.16",
