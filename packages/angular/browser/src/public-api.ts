@@ -17,6 +17,7 @@ export * from './pipes/safe-html.pipe';
 
 // Service
 export * from  './services/asset.service';
+export * from  './services/sync.service';
 
 // Utils
 export * from './utils/link.utils';

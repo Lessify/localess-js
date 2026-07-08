@@ -1,8 +1,9 @@
 import {IMAGE_LOADER, ImageLoaderConfig} from "@angular/common";
 import {EnvironmentProviders, makeEnvironmentProviders} from "@angular/core";
 import {loadLocalessSync} from '@localess/client';
-import {LOCALESS_BROWSER_CONFIG} from "./localess.config";
+import {LOCALESS_BROWSER_CONFIG, LOCALESS_SYNC_READY} from "./localess.config";
 import {BrowserAssetService} from './services/asset.service';
+import {LocalessSyncService} from './services/sync.service';
 
 export type LocalessBrowserOptions = {
   /**
@@ -33,11 +34,14 @@ export function provideLocalessBrowser(options: LocalessBrowserOptions): Environ
   if (spaceId === undefined || spaceId === '') {
     throw new Error('Localess Space ID can\'t be empty');
   }
+  let syncReady: Promise<void> = Promise.resolve();
   if (enableSync) {
     if (debug) {
       console.log('[Localess] enableSync', enableSync)
     }
-    loadLocalessSync(origin);
+    syncReady = loadLocalessSync(origin).catch(error => {
+      console.error('[Localess] Failed to load sync script.', error);
+    });
   }
   return [
     makeEnvironmentProviders([
@@ -47,8 +51,13 @@ export function provideLocalessBrowser(options: LocalessBrowserOptions): Environ
           origin,
           spaceId,
           debug,
+          enableSync,
           assetPathPrefix: `${options.origin}/api/v1/spaces/${options.spaceId}/assets/`,
         },
+      },
+      {
+        provide: LOCALESS_SYNC_READY,
+        useValue: syncReady,
       },
       {
         provide: IMAGE_LOADER,
@@ -65,6 +74,7 @@ export function provideLocalessBrowser(options: LocalessBrowserOptions): Environ
         },
       },
       BrowserAssetService,
+      LocalessSyncService,
     ])
   ];
 }

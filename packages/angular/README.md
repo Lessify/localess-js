@@ -404,12 +404,12 @@ export class MyComponent {
 
 The Localess Visual Editor enables live in-browser content editing. Set `enableSync: true` in `provideLocalessBrowser()` to automatically inject the sync script.
 
-To receive real-time content updates from the Visual Editor, subscribe to its events in any component. Guard the subscription with `isPlatformBrowser` to avoid errors during SSR:
+To receive real-time content updates from the Visual Editor, subscribe to its events in any component. Inject `LocalessSyncService` — `enabled` already covers the browser + Visual Editor iframe check, and `ready()` resolves once `window.localess` is actually available, avoiding a race where the listener is attached before the sync script has loaded:
 
 ```ts
-import { Component, inject, OnInit, signal, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { LocalessSync } from '@localess/angular/browser';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { LocalessSyncService } from '@localess/angular/browser';
+import type { LocalessSync } from '@localess/client';
 
 @Component({
   selector: 'app-slug',
@@ -417,17 +417,16 @@ import { LocalessSync } from '@localess/angular/browser';
   templateUrl: './slug.component.html',
 })
 export class SlugComponent implements OnInit {
-  private platformId = inject(PLATFORM_ID);
+  private sync = inject(LocalessSyncService);
   liveContent = signal<ContentData | undefined>(undefined);
 
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      // Only subscribe when running inside the Visual Editor
-      if (window.localess) {
-        window.localess.on(['input', 'change'], (event) => {
+    if (this.sync.enabled) {
+      this.sync.ready().then(() => {
+        window.localess?.on(['input', 'change'], (event) => {
           this.liveContent.set(event.data);
         });
-      }
+      });
     }
   }
 }
