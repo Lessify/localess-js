@@ -26,6 +26,6 @@
  */
 
 export * from '../core/components/localess-component';
-export { isSyncEnabled } from '../core/state';
+export { isSyncEnabled, localessSyncReady } from '../core/state';
 export * from '../ssr';
 export * from './localess-document';

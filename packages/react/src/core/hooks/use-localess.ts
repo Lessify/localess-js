@@ -2,8 +2,7 @@ import { ContentFetchParams } from '@localess/client';
 import { useEffect, useState } from 'react';
 
 import { Content, ContentData } from '../models';
-import { getLocalessClient, isSyncEnabled } from '../state';
-import { isBrowser, isIframe } from '../utils';
+import { getLocalessClient, isSyncEnabled, localessSyncReady } from '../state';
 
 /**
  * Options for {@link useLocaless}.
@@ -65,7 +64,8 @@ export const useLocaless = <T extends ContentData = ContentData>(
     async function loadDocument() {
       const document = await client.getContentBySlug<T>(normalizedSlug, options);
       setDocument(document);
-      if (isSyncEnabled() && isBrowser() && isIframe()) {
+      if (isSyncEnabled()) {
+        await localessSyncReady();
         window.localess?.on(['input', 'change'], event => {
           if (event.type === 'change' || event.type === 'input') {
             setDocument({ ...document, data: event.data });

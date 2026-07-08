@@ -50,8 +50,7 @@ export * from './my-component';
 import { useEffect, useState } from 'react';
 
 import { ContentData } from '../models';
-import { getLocalessClient, isSyncEnabled } from '../state';
-import { isBrowser, isIframe } from '../utils';
+import { getLocalessClient, isSyncEnabled, localessSyncReady } from '../state';
 
 export const useMyHook = <T extends ContentData = ContentData>(
   param: string
@@ -62,7 +61,8 @@ export const useMyHook = <T extends ContentData = ContentData>(
   useEffect(() => {
     async function load() {
       // fetch using client, setData with result
-      if (isSyncEnabled() && isBrowser() && isIframe()) {
+      if (isSyncEnabled()) {
+        await localessSyncReady();
         window.localess?.on(['input', 'change'], event => {
           if (event.type === 'change' || event.type === 'input') {
             setData(event.data as T);
@@ -79,7 +79,7 @@ export const useMyHook = <T extends ContentData = ContentData>(
 
 Rules:
 - Must be used in a Client Component (`'use client'` in the consumer's file — hooks do not declare it themselves).
-- Subscribe to `window.localess?.on()` only when `isSyncEnabled() && isBrowser() && isIframe()`.
+- Await `localessSyncReady()` before subscribing, then subscribe via `window.localess?.on()`, only when `isSyncEnabled()` (already checks browser + iframe context). `localessSyncReady()` resolves once the sync script has loaded, avoiding a race where `window.localess` isn't set yet.
 - `window.localess` has no `.off()` method — do not attempt cleanup.
 
 **2. Export from `src/core/hooks/index.ts`:**

@@ -1,4 +1,12 @@
-import { type AssetTransformParams, buildAssetQueryString, loadLocalessSync, type LocalessClient, localessClient } from '@localess/client';
+import {
+  type AssetTransformParams,
+  buildAssetQueryString,
+  isBrowser,
+  isIframe,
+  loadLocalessSync,
+  type LocalessClient,
+  localessClient,
+} from '@localess/client';
 import type React from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';
@@ -9,6 +17,7 @@ let _client: LocalessClient | undefined = undefined;
 let _components: Record<string, React.ElementType> = {};
 let _fallbackComponent: React.ElementType | undefined = undefined;
 let _enableSync: boolean = false;
+let _syncPromise: Promise<void> | undefined = undefined;
 let _assetPathPrefix = '';
 
 /**
@@ -52,7 +61,9 @@ export function localessInit(options: LocalessOptions): LocalessClient {
   if (enableSync) {
     _enableSync = true;
     // Script will be loaded in client.
-    loadLocalessSync(restOptions.origin);
+    _syncPromise = loadLocalessSync(restOptions.origin).catch(error => {
+      console.error('[Localess] Failed to load sync script.', error);
+    });
   }
   return _client;
 }
@@ -156,15 +167,46 @@ export function getFallbackComponent(): React.ElementType | undefined {
 }
 
 /**
- * Returns `true` when Visual Editor sync was enabled via `enableSync: true` in `localessInit`.
+ * Returns `true` when Visual Editor sync is enabled and actually usable in the current context:
+ * `enableSync: true` was passed to `localessInit`, code is running in the browser, and the page
+ * is loaded inside the Visual Editor iframe.
+ *
+ * Self-sufficient: callers don't need to separately check {@link isBrowser} or {@link isIframe}.
  *
  * Used internally by {@link LocalessComponent}, {@link LocalessDocument}, and {@link useLocaless}
  * to decide whether to inject editable attributes and subscribe to sync events.
  *
- * @returns `true` if sync is enabled, `false` otherwise.
+ * @returns `true` if sync is enabled and usable, `false` otherwise.
  */
 export function isSyncEnabled(): boolean {
-  return _enableSync;
+  return _enableSync && isBrowser() && isIframe();
+}
+
+/**
+ * Resolves once the Visual Editor sync script has loaded and `window.localess` is available.
+ *
+ * Resolves immediately if sync was not enabled via `localessInit`, or if the script has already
+ * loaded. Never rejects — a failed script load is logged via {@link loadLocalessSync} and resolves
+ * anyway, since the rest of the app functions without live editing.
+ *
+ * Use this before subscribing to `window.localess.on(...)` to avoid a race where the listener is
+ * attached before the sync script has run.
+ *
+ * @returns A promise that resolves when sync is ready (or immediately, if not applicable).
+ *
+ * @example
+ * ```tsx
+ * useEffect(() => {
+ *   if (isSyncEnabled()) {
+ *     localessSyncReady().then(() => {
+ *       window.localess?.on(['input', 'change'], event => { ... });
+ *     });
+ *   }
+ * }, []);
+ * ```
+ */
+export function localessSyncReady(): Promise<void> {
+  return _syncPromise ?? Promise.resolve();
 }
 
 export function getOrigin() {

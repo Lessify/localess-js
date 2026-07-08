@@ -1,8 +1,8 @@
-import { OpenAPIObject } from 'openapi3-ts/oas30';
 import { localessClient, LocalessClientOptions, Translations } from '@localess/client';
+import { OpenAPIObject } from 'openapi3-ts/oas30';
 
-import type { Space } from './models/space';
 import type { Schemas } from './models/schema';
+import type { Space } from './models/space';
 import type { TranslationUpdate, TranslationUpdateResponse, TranslationUpdateType } from './models/translations';
 import { FG_BLUE, RESET } from './utils';
 

@@ -246,18 +246,20 @@ If you manage content state yourself without `useLocaless` or `LocalessDocument`
 'use client';
 
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, isSyncEnabled, isBrowser } from "@localess/react";
+import { LocalessComponent, localessEditable, isSyncEnabled, localessSyncReady } from "@localess/react";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent }: { initialContent: Content<Page> }) {
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
-    if (isSyncEnabled() && isBrowser() && window.localess) {
-      window.localess.on(['input', 'change'], (event) => {
-        if (event.type === 'input' || event.type === 'change') {
-          setPageData(event.data);
-        }
+    if (isSyncEnabled()) {
+      localessSyncReady().then(() => {
+        window.localess?.on(['input', 'change'], (event) => {
+          if (event.type === 'input' || event.type === 'change') {
+            setPageData(event.data);
+          }
+        });
       });
     }
     // No cleanup needed: window.localess has no .off() method
@@ -363,7 +365,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
 'use client';
 
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, isSyncEnabled, isBrowser } from "@localess/react";
+import { LocalessComponent, localessEditable, isSyncEnabled, localessSyncReady } from "@localess/react";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent }: { initialContent: Content<Page> }) {
@@ -371,11 +373,13 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
-    if (isSyncEnabled() && isBrowser() && window.localess) {
-      window.localess.on(['input', 'change'], (event) => {
-        if (event.type === 'input' || event.type === 'change') {
-          setPageData(event.data);
-        }
+    if (isSyncEnabled()) {
+      localessSyncReady().then(() => {
+        window.localess?.on(['input', 'change'], (event) => {
+          if (event.type === 'input' || event.type === 'change') {
+            setPageData(event.data);
+          }
+        });
       });
     }
     // No cleanup needed: window.localess has no .off() method
