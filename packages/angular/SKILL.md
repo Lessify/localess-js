@@ -396,12 +396,11 @@ export class MyComponent {
 
 The Localess Visual Editor enables live in-browser content editing. Set `enableSync: true` in `provideLocalessBrowser()` to automatically inject the sync script.
 
-To receive real-time content updates from the Visual Editor, subscribe to its events in any component. Inject `LocalessSyncService` — `enabled` already covers the browser + Visual Editor iframe check, and `ready()` resolves once `window.localess` is actually available, avoiding a race where the listener is attached before the sync script has loaded:
+To receive real-time content updates from the Visual Editor, subscribe to its events in any component. Inject `LocalessSyncService` and use `onChange()` — it already covers the `enabled()` check (browser + Visual Editor iframe) and the `ready()` wait (avoiding a race where the listener is attached before the sync script has loaded):
 
 ```ts
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { LocalessSyncService } from '@localess/angular/browser';
-import type { LocalessSync } from '@localess/client';
 
 @Component({
   selector: 'app-slug',
@@ -413,18 +412,20 @@ export class SlugComponent implements OnInit {
   liveContent = signal<ContentData | undefined>(undefined);
 
   ngOnInit(): void {
-    if (this.sync.enabled) {
-      this.sync.ready().then(() => {
-        window.localess?.on(['input', 'change'], (event) => {
-          this.liveContent.set(event.data);
-        });
-      });
-    }
+    this.sync.onChange(event => this.liveContent.set(event.data));
   }
 }
 ```
 
-The `input` event fires on every keystroke; the `change` event fires when the editor saves. Render `liveContent()` instead of the server-fetched data when it is set to give authors a live preview.
+`onChange(callback)` is shorthand for `on(['input', 'change'], callback)`: the `input` event fires on every keystroke, `change` fires when the editor saves, and `callback` is narrowed to that variant. Render `liveContent()` instead of the server-fetched data when it is set to give authors a live preview.
+
+For other event types (`save`, `publish`, `pong`, `enterSchema`, `hoverSchema`), use `on(event, callback)`:
+
+```ts
+this.sync.on(['save', 'publish'], event => console.info(`Content ${event.type}d`));
+```
+
+Both methods are no-ops if sync isn't enabled or usable in the current context — no need to check `enabled()` yourself.
 
 ---
 
@@ -748,6 +749,7 @@ This works automatically — no additional configuration required.
 | `LocalessBrowserOptions` | Type | Options for `provideLocalessBrowser()` |
 | `findLink(links, link)` | Function | Standalone link resolution utility |
 | `LocalessSync` | Type | Visual Editor sync event types |
+| `EventToApp` / `EventToAppOf` / `EventCallback` / `EventToAppType` | Type | Visual Editor sync event payload types |
 
 ### `@localess/angular/server`
 

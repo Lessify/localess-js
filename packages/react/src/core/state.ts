@@ -1,6 +1,8 @@
 import {
   type AssetTransformParams,
   buildAssetQueryString,
+  type EventToAppOf,
+  type EventToAppType,
   isBrowser,
   isIframe,
   loadLocalessSync,
@@ -173,8 +175,8 @@ export function getFallbackComponent(): React.ElementType | undefined {
  *
  * Self-sufficient: callers don't need to separately check {@link isBrowser} or {@link isIframe}.
  *
- * Used internally by {@link LocalessComponent}, {@link LocalessDocument}, and {@link useLocaless}
- * to decide whether to inject editable attributes and subscribe to sync events.
+ * Used internally by {@link localessSyncOn} and {@link localessSyncOnChange} to decide whether to
+ * subscribe to sync events — and therefore indirectly by {@link LocalessDocument} and {@link useLocaless}.
  *
  * @returns `true` if sync is enabled and usable, `false` otherwise.
  */
@@ -189,8 +191,9 @@ export function isSyncEnabled(): boolean {
  * loaded. Never rejects — a failed script load is logged via {@link loadLocalessSync} and resolves
  * anyway, since the rest of the app functions without live editing.
  *
- * Use this before subscribing to `window.localess.on(...)` to avoid a race where the listener is
- * attached before the sync script has run.
+ * Use this before subscribing directly to `window.localess.on(...)` to avoid a race where the
+ * listener is attached before the sync script has run. Prefer {@link localessSyncOn} instead —
+ * it wraps this exact pattern.
  *
  * @returns A promise that resolves when sync is ready (or immediately, if not applicable).
  *
@@ -207,6 +210,55 @@ export function isSyncEnabled(): boolean {
  */
 export function localessSyncReady(): Promise<void> {
   return _syncPromise ?? Promise.resolve();
+}
+
+/**
+ * Subscribes to Visual Editor sync event(s), handling the `isSyncEnabled()` check and the
+ * {@link localessSyncReady} wait internally so call sites don't have to.
+ *
+ * No-op if sync isn't enabled or usable in the current context (see {@link isSyncEnabled}).
+ *
+ * @param event - A single event type or array of event types to subscribe to.
+ * @param callback - Called with the event, narrowed to the variant(s) matching `event`.
+ *
+ * @example
+ * ```ts
+ * useEffect(() => {
+ *   localessSyncOn(['input', 'change'], event => setContentData(event.data));
+ * }, []);
+ * ```
+ */
+export function localessSyncOn<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): void {
+  if (!isSyncEnabled()) return;
+  localessSyncReady().then(() => {
+    window.localess?.on(event, callback);
+  });
+}
+
+/**
+ * Subscribes to content-change Visual Editor sync events (`input` and `change`), handling the
+ * `isSyncEnabled()` check and the {@link localessSyncReady} wait internally so call sites don't
+ * have to.
+ *
+ * Equivalent to `localessSyncOn(['input', 'change'], callback)` (mirrors `window.localess.onChange`).
+ * For other event types (`save`, `publish`, `pong`, `enterSchema`, `hoverSchema`), use {@link localessSyncOn}.
+ *
+ * No-op if sync isn't enabled or usable in the current context (see {@link isSyncEnabled}).
+ *
+ * @param callback - Called with the `input`/`change` event.
+ *
+ * @example
+ * ```ts
+ * useEffect(() => {
+ *   localessSyncOnChange(event => setContentData(event.data));
+ * }, []);
+ * ```
+ */
+export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): void {
+  if (!isSyncEnabled()) return;
+  localessSyncReady().then(() => {
+    window.localess?.onChange(callback);
+  });
 }
 
 export function getOrigin() {

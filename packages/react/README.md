@@ -122,7 +122,7 @@ localessInit({
 
 ## `LocalessComponent`
 
-`LocalessComponent` is a dynamic renderer that maps Localess content data to your registered React components by schema key. It automatically applies Visual Editor attributes when sync is enabled.
+`LocalessComponent` is a dynamic renderer that maps Localess content data to your registered React components by schema key. It always applies Visual Editor attributes (`data-ll-id` / `data-ll-schema`) — they're inert outside the Visual Editor iframe.
 
 ```tsx
 import { LocalessComponent } from "@localess/react";
@@ -424,20 +424,17 @@ If you manage content state yourself without `useLocaless` or `LocalessDocument`
 'use client';
 
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, isSyncEnabled, isBrowser } from "@localess/react";
+import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent }: { initialContent: Content<Page> }) {
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
-    if (isSyncEnabled() && isBrowser() && window.localess) {
-      window.localess.on(['input', 'change'], (event) => {
-        if (event.type === 'input' || event.type === 'change') {
-          setPageData(event.data);
-        }
-      });
-    }
+    // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant
+    localessSyncOn(['input', 'change'], (event) => {
+      setPageData(event.data);
+    });
     // No cleanup needed: window.localess has no .off() method
   }, []);
 
@@ -464,6 +461,8 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
 | `hoverSchema` | Editor cursor hovers over a schema block      |
 
 > `window.localess` only exposes `.on()` and `.onChange()` — there is no `.off()` method.
+
+`localessSyncOn(event, callback)` wraps `.on()`; `localessSyncOnChange(callback)` wraps `.onChange()` — equivalent to `localessSyncOn(['input', 'change'], callback)`, firing only for content-change events (`callback` receives the `input`/`change` variant, not the full `EventToApp` union). Both handle the `isSyncEnabled()` check and the `localessSyncReady()` wait internally.
 
 ---
 
@@ -582,7 +581,7 @@ Full control over state and sync subscription. Use when you need custom logic ar
 'use client';
 
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, isSyncEnabled, isBrowser } from "@localess/react";
+import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClientManual({
@@ -594,13 +593,10 @@ export function PageClientManual({
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
-    if (isSyncEnabled() && isBrowser() && window.localess) {
-      window.localess.on(['input', 'change'], (event) => {
-        if (event.type === 'input' || event.type === 'change') {
-          setPageData(event.data);
-        }
-      });
-    }
+    // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant
+    localessSyncOn(['input', 'change'], (event) => {
+      setPageData(event.data);
+    });
     // No cleanup needed: window.localess has no .off() method
   }, []);
 
@@ -760,7 +756,7 @@ The table below shows which symbols are available in each export.
 | `useLocaless`                                          |         ✅         |           ❌           |           ✅           |
 | `localessEditable` / `localessEditableField`           |         ✅         |           ❌           |           ✅           |
 | `isBrowser` / `isIframe`                               |         ✅         |           ❌           |           ✅           |
-| `isSyncEnabled`                                        |         ✅         |           ❌           |           ✅           |
+| `isSyncEnabled` / `localessSyncOn` / `localessSyncOnChange` / `localessSyncReady` |         ✅         |           ❌           |           ✅           |
 | Sync event types (`LocalessSync`, `EventToApp`, …)     |         ✅         |           ❌           |           ✅           |
 
 ---

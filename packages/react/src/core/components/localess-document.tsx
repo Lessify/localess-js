@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import { FONT_BOLD, FONT_NORMAL } from '../../console';
 import { LocalessComponent } from '../components';
 import { Content, ContentData } from '../models';
-import { isSyncEnabled, localessSyncReady } from '../state';
+import { localessSyncOn } from '../state';
 
 /**
  * Props for {@link LocalessDocument}.
@@ -61,15 +61,9 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
 export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({ document }, ref) => {
   const [contentData, setContentData] = useState(document.data);
   useEffect(() => {
-    if (isSyncEnabled()) {
-      localessSyncReady().then(() => {
-        window.localess?.on(['input', 'change'], event => {
-          if (event.type === 'change' || event.type === 'input') {
-            setContentData(event.data);
-          }
-        });
-      });
-    }
+    localessSyncOn(['input', 'change'], event => {
+      setContentData(event.data);
+    });
   }, []);
 
   if (!contentData) {

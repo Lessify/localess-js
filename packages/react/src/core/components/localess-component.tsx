@@ -37,8 +37,8 @@ export type LocalessComponentProps<T extends ContentData = ContentData> = {
  * Dynamic schema-to-component renderer for use in SPA and client-side contexts.
  *
  * Looks up `data._schema` in the component registry (set via `localessInit` or `setComponents`),
- * renders the matched component, and — when Visual Editor sync is active — automatically
- * spreads `localessEditable` attributes on the root element for live targeting.
+ * renders the matched component, and always spreads `localessEditable` attributes on the root
+ * element (`data-ll-id` / `data-ll-schema`) so the Visual Editor can target it for live editing.
  *
  * Falls back to the `fallbackComponent` (if registered) when the schema key is not found,
  * or renders an inline error message as a last resort.

@@ -204,13 +204,15 @@ import { localessEditable, localessEditableField } from "@localess/client";
 // Only available when app is loaded inside the Localess Visual Editor iframe
 if (window.localess) {
   window.localess.on(['input', 'change'], (event) => {
-    if (event.type === 'input' || event.type === 'change') {
-      setPageData(event.data); // Real-time preview update
-    }
+    setPageData(event.data); // Real-time preview update — event is narrowed to the 'input' | 'change' variant, no type check needed
   });
   // No .off() method — subscribe once on mount
 }
 ```
+
+> `on`'s callback type is inferred from the event(s) passed in — subscribing to `['input', 'change']` narrows `event` to the variant carrying `data`, so no manual `event.type === ...` check is needed inside the callback.
+
+`window.localess.onChange(callback)` is shorthand for `on(['input', 'change'], callback)` — it fires only for content-change events, with `callback` narrowed to that variant.
 
 **Event types:**
 
@@ -334,7 +336,7 @@ export type {
   ContentMetadata, ContentAsset, ContentLink,
   ContentRichText, ContentReference,
   Links, References, Translations,
-  LocalessSync, EventToApp, EventCallback, EventToAppType,
+  LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType,
   AssetTransformParams,
 }
 ```

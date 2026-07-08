@@ -12,9 +12,16 @@ export type EventToApp =
   | { type: 'input' | 'change'; data: any }
   | { type: 'enterSchema' | 'hoverSchema'; id: string; schema: string; field?: string };
 
+/**
+ * Narrows {@link EventToApp} down to the variant(s) matching event type `T`.
+ * Used to type {@link LocalessSync.on}'s callback based on the subscribed event(s),
+ * e.g. subscribing to `'input' | 'change'` narrows the callback's `event` to the variant with `data`.
+ */
+export type EventToAppOf<T extends EventToAppType> = Extract<EventToApp, { type: T }>;
+
 export interface LocalessSync {
-  onChange: (callback: EventCallback) => void;
-  on: (event: EventToAppType | EventToAppType[], callback: EventCallback) => void;
+  onChange: (callback: (event: EventToAppOf<'change' | 'input'>) => void) => void;
+  on: <T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void) => void;
 }
 
 declare global {
