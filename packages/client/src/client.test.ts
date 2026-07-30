@@ -60,13 +60,17 @@ describe('localessClient', () => {
     });
 
     it('does not cache when cacheTTL is false', async () => {
-      (fetch as any).mockResolvedValue(jsonResponse({ items: [] }));
+      // Return a fresh Response per call - a real Response body can only be read once,
+      // so reusing the same instance across calls would make the 2nd .json() throw.
+      (fetch as any).mockImplementation(() => Promise.resolve(jsonResponse({ items: [] })));
       const client = localessClient({ ...baseOptions, cacheTTL: false });
 
-      await client.getLinks();
-      await client.getLinks();
+      const first = await client.getLinks();
+      const second = await client.getLinks();
 
       expect(fetch).toHaveBeenCalledTimes(2);
+      expect(first).toEqual({ items: [] });
+      expect(second).toEqual({ items: [] });
     });
 
     it('returns an empty object and logs on fetch error', async () => {
