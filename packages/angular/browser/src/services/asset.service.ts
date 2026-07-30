@@ -26,7 +26,7 @@ export class BrowserAssetService {
   link(asset: ContentAsset | string, params?: AssetTransformParams): string {
     const uri = typeof asset === 'string' ? asset : asset.uri;
     const qs = buildAssetQueryString(params);
-    const base = `${this.config.origin}/api/v1/spaces/${this.config.spaceId}/assets/${uri}`;
+    const base = `${this.config.assetPathPrefix}${uri}`;
     return qs ? `${base}?${qs}` : base;
   }
 }

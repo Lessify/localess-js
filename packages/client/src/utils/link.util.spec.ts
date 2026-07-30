@@ -1,7 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
-import type { ContentLink, Links } from '../models';
 import { findLink } from './link.util';
+import type { ContentLink, Links } from '../models';
 
 describe('findLink', () => {
   const links: Links = {

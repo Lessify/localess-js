@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import {buildAssetQueryString} from "./asset.util";
 
-import { buildAssetQueryString } from './utils';
 
 describe('buildAssetQueryString', () => {
   it('returns empty string when params is undefined', () => {
