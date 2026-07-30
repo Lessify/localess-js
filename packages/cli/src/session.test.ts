@@ -58,9 +58,7 @@ describe('getSession', () => {
 
   it('reads credentials from the file system when env vars are absent', async () => {
     vi.mocked(access).mockResolvedValue(undefined);
-    vi.mocked(readFile).mockResolvedValue(
-      JSON.stringify({ origin: 'https://cms.example.com', space: 'space-1', token: 'token-123' })
-    );
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ origin: 'https://cms.example.com', space: 'space-1', token: 'token-123' }));
 
     const session = await getSession();
 
