@@ -1,7 +1,8 @@
 import {Component, inject} from "@angular/core";
 import {LOCALESS_BROWSER_CONFIG} from "../localess.config";
-import type {ContentDataSchema, ContentAsset, ContentLink, Links} from "../models";
+import type {ContentDataSchema, ContentAsset, ContentLink, Links, AssetTransformParams} from "../models";
 import {findLink} from "../utils/link.utils";
+import {buildAssetQueryString} from "@localess/client";
 
 /**
  * Schema base component
@@ -22,8 +23,10 @@ export abstract class SchemaComponent<T extends ContentDataSchema = ContentDataS
 
   abstract content(): T;
 
-  assetUrl(asset: ContentAsset): string {
-    return this.config.assetPathPrefix + asset.uri;
+  assetUrl(asset: ContentAsset, params?: AssetTransformParams): string {
+    const base = `${this.config.assetPathPrefix}${asset.uri}`;
+    const qs = buildAssetQueryString(params);
+    return qs ? `${base}?${qs}` : base;
   }
 
   findLink(links: Links, link: ContentLink): string {
