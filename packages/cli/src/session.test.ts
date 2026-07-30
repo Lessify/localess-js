@@ -59,7 +59,7 @@ describe('getSession', () => {
   it('reads credentials from the file system when env vars are absent', async () => {
     vi.mocked(access).mockResolvedValue(undefined);
     vi.mocked(readFile).mockResolvedValue(
-      JSON.stringify({ origin: 'https://cms.example.com', space: 'space-1', token: 'token-123' }) as unknown as Buffer
+      JSON.stringify({ origin: 'https://cms.example.com', space: 'space-1', token: 'token-123' })
     );
 
     const session = await getSession();
@@ -75,7 +75,7 @@ describe('getSession', () => {
 
   it('returns isLoggedIn false when the credentials file is an empty object', async () => {
     vi.mocked(access).mockResolvedValue(undefined);
-    vi.mocked(readFile).mockResolvedValue('{}' as unknown as Buffer);
+    vi.mocked(readFile).mockResolvedValue('{}');
 
     const session = await getSession();
 
@@ -84,7 +84,7 @@ describe('getSession', () => {
 
   it('returns isLoggedIn false when the credentials file is missing required fields', async () => {
     vi.mocked(access).mockResolvedValue(undefined);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ origin: 'https://cms.example.com' }) as unknown as Buffer);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ origin: 'https://cms.example.com' }));
 
     const session = await getSession();
 
