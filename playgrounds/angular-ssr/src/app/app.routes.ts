@@ -1,6 +1,6 @@
 import {inject} from '@angular/core';
 import {ResolveFn, Routes} from '@angular/router';
-import {Content} from '@localess/js-client';
+import {Content} from '@localess/angular';
 import {LocalessService} from './shared/services/localess.service';
 import {SlugComponent} from './slug/slug.component';
 

@@ -27,9 +27,9 @@
     "test:coverage": "ng test localess-angular --watch=false --browsers=ChromeHeadless --configuration=coverage"
   },
   "peerDependencies": {
-    "@angular/common": "^19.0.0 || ^20.0.0 || ^21.0.0",
-    "@angular/compiler": "^19.0.0 || ^20.0.0 || ^21.0.0",
-    "@angular/core": "^19.0.0 || ^20.0.0 || ^21.0.0"
+    "@angular/common": ">=21.0.0 <23.0.0",
+    "@angular/compiler": ">=21.0.0 <23.0.0",
+    "@angular/core": ">=21.0.0 <23.0.0"
   },
   "dependencies": {
     "@localess/client": "*",
@@ -53,12 +53,12 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular/build": "^20.0.4",
-    "@angular/cli": "^20.0.4",
-    "@angular/common": "^20.0.5",
-    "@angular/compiler": "^20.0.5",
-    "@angular/compiler-cli": "^20.0.5",
-    "@angular/core": "^20.0.5",
+    "@angular/build": "^21.2.19",
+    "@angular/cli": "^21.2.19",
+    "@angular/common": "^21.2.19",
+    "@angular/compiler": "^21.2.19",
+    "@angular/compiler-cli": "^21.2.19",
+    "@angular/core": "^21.2.19",
     "@types/jasmine": "~5.1.0",
     "@types/node": "^24.0.0",
     "jasmine-core": "~5.1.0",
@@ -67,7 +67,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "ng-packagr": "^20.0.1",
+    "ng-packagr": "^21.2.5",
     "typescript": "^5.9.3"
   }
 }

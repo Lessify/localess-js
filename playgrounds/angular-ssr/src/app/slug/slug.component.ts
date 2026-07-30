@@ -1,5 +1,5 @@
 import {Component, input} from '@angular/core';
-import {Content} from '@localess/js-client';
+import {Content} from '@localess/angular';
 
 @Component({
   selector: 'app-slug',
