@@ -1,14 +1,7 @@
-/**
- * Key-Value Object. Where Key is Translation ID and Value is Translated Content
- */
-export interface Translations {
-  [key: string]: string;
-}
-
 export type TranslationUpdate = {
   dryRun?: boolean;
   type: TranslationUpdateType;
-  values: Translations;
+  values: Record<string, string>;
 };
 
 export enum TranslationUpdateType {

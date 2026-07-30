@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 
-import { localessClient } from '../../../client';
+import { localessCliClient } from '../../../client';
 import { readFile } from '../../../file';
 import { TranslationFileFormat, Translations, TranslationUpdateType } from '../../../models';
 import { zLocaleTranslationsSchema, zTranslationUpdateTypeSchema } from '../../../models/translation.zod';
@@ -39,7 +39,7 @@ export const translationsPushCommand = new Command('push')
       console.error('Please log in first using "localess login" command');
       return;
     }
-    const client = localessClient({
+    const client = localessCliClient({
       origin: session.origin,
       spaceId: session.space,
       token: session.token,

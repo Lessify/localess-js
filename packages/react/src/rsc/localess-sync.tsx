@@ -3,6 +3,7 @@
 import { Content, ContentData, loadLocalessSync } from '@localess/client';
 import { useEffect } from 'react';
 
+import { localessSyncOnChange } from '../core/state';
 import { isBrowser, isIframe } from '../core/utils';
 
 export type LocalessSyncProps<T extends ContentData = ContentData> = {
@@ -17,11 +18,9 @@ export const LocalessSync = (props: LocalessSyncProps) => {
     async function loadSync() {
       if (props.enableSync && isBrowser() && isIframe()) {
         await loadLocalessSync(props.origin);
-        window.localess?.on(['input', 'change'], event => {
+        localessSyncOnChange(event => {
           console.info(`LocalessSync:change:`, event);
-          if (event.type === 'change' || event.type === 'input') {
-            props.document.data = event.data;
-          }
+          props.document.data = event.data;
         });
       }
     }

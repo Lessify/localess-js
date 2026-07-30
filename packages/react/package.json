@@ -1,6 +1,6 @@
 {
   "name": "@localess/react",
-  "version": "3.2.3",
+  "version": "3.3.0",
   "description": "ReactJS JavaScript/TypeScript SDK for Localess's API.",
   "keywords": [
     "localess",
@@ -54,7 +54,10 @@
   "private": false,
   "license": "MIT",
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "peerDependencies": {
     "react": "^17 || ^18 || ^19",
@@ -81,9 +84,11 @@
     "@tiptap/static-renderer": "^3.22.5"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.1.0",
     "@types/node": "^24",
     "@types/react": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.1",
+    "happy-dom": "^20.9.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "rollup-preserve-directives": "^1.1.3",

@@ -1,4 +1,4 @@
-import { Locale } from './locale';
+import { Locale } from '@localess/client';
 
 export interface Space {
   /**

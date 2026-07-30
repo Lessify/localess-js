@@ -3,8 +3,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import { FONT_BOLD, FONT_NORMAL } from '../../console';
 import { LocalessComponent } from '../components';
 import { Content, ContentData } from '../models';
-import { isSyncEnabled } from '../state';
-import { isBrowser, isIframe } from '../utils';
+import { localessSyncOn } from '../state';
 
 /**
  * Props for {@link LocalessDocument}.
@@ -29,8 +28,9 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
  * as props. The page renders immediately with server data; once the client hydrates, live editing
  * activates on top — no loading state needed.
  *
- * Sync only activates when `enableSync: true` was passed to `localessInit` **and** the page
- * is running inside the Visual Editor iframe (`isIframe()` is true).
+ * Sync only activates when {@link isSyncEnabled} returns `true` — `enableSync: true` was passed
+ * to `localessInit`, the code is running in the browser, and the page is inside the Visual Editor
+ * iframe.
  *
  * **Requires `'use client'`** — must be used inside a Client Component boundary in Next.js
  * App Router. Available from `@localess/react` (SPA) and `@localess/react/rsc` (RSC).
@@ -61,13 +61,9 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
 export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({ document }, ref) => {
   const [contentData, setContentData] = useState(document.data);
   useEffect(() => {
-    if (isSyncEnabled() && isBrowser() && isIframe()) {
-      window.localess?.on(['input', 'change'], event => {
-        if (event.type === 'change' || event.type === 'input') {
-          setContentData(event.data);
-        }
-      });
-    }
+    localessSyncOn(['input', 'change'], event => {
+      setContentData(event.data);
+    });
   }, []);
 
   if (!contentData) {

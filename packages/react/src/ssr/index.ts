@@ -22,8 +22,8 @@
  * - LocalessDocument   (requires 'use client')
  * - useLocaless        (requires 'use client')
  * - localessEditable / localessEditableField / isBrowser / isIframe (browser-only)
- * - isSyncEnabled      (not meaningful without live editing)
- * - Sync event types   (LocalessSync, EventToApp, EventCallback, EventToAppType)
+ * - isSyncEnabled / localessSyncOn / localessSyncOnChange (not meaningful without live editing)
+ * - Sync event types   (LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType)
  */
 
 export type * from '../core/models';

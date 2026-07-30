@@ -53,6 +53,7 @@ async function fetchTag(tag: string, signal: AbortSignal): Promise<string | null
 }
 
 function visibleLength(s: string): number {
+  // eslint-disable-next-line no-control-regex -- intentionally strips ANSI escape codes
   return s.replace(/\u001B\[[0-9;]*m/g, '').length;
 }
 

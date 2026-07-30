@@ -2,8 +2,7 @@ import { ContentFetchParams } from '@localess/client';
 import { useEffect, useState } from 'react';
 
 import { Content, ContentData } from '../models';
-import { getLocalessClient, isSyncEnabled } from '../state';
-import { isBrowser, isIframe } from '../utils';
+import { getLocalessClient, localessSyncOn } from '../state';
 
 /**
  * Options for {@link useLocaless}.
@@ -65,16 +64,15 @@ export const useLocaless = <T extends ContentData = ContentData>(
     async function loadDocument() {
       const document = await client.getContentBySlug<T>(normalizedSlug, options);
       setDocument(document);
-      if (isSyncEnabled() && isBrowser() && isIframe()) {
-        window.localess?.on(['input', 'change'], event => {
-          if (event.type === 'change' || event.type === 'input') {
-            setDocument({ ...document, data: event.data });
-          }
-        });
-      }
+      localessSyncOn(['input', 'change'], event => {
+        setDocument({ ...document, data: event.data });
+      });
     }
     loadDocument();
-  }, [slug, options, client]);
+    // `options` is compared by value (JSON) instead of by reference: callers that pass an
+    // inline object literal (the common case) would otherwise get a new reference on every
+    // render, re-triggering this effect and causing an infinite fetch/render loop.
+  }, [normalizedSlug, JSON.stringify(options), client]);
 
   return document;
 };

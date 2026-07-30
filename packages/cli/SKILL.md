@@ -8,7 +8,7 @@
 - Pushing and pulling translations (flat and nested JSON formats supported for both push and pull)
 - Generating TypeScript type definitions from the OpenAPI schema
 
-**Status:** Early development (v3.0.1). Requires Node.js >= 20.0.0.
+**Status:** Early development (v3.2.4). Requires Node.js >= 24.0.0.
 
 ---
 
@@ -182,10 +182,11 @@ localess translations pull <locale> --path <file> [options]
 
 **Options:**
 
-| Flag                    | Default   | Description                     |
-|-------------------------|-----------|---------------------------------|
-| `-p, --path <path>`     | required  | Output file path                |
-| `-f, --format <format>` | `flat`    | File format: `flat` or `nested` |
+| Flag                    | Default   | Description                          |
+|-------------------------|-----------|--------------------------------------|
+| `-p, --path <path>`     | required  | Output file path                     |
+| `-f, --format <format>` | `flat`    | File format: `flat` or `nested`      |
+| `--draft`               | `false`   | Pull the draft version of translations |
 
 **Examples:**
 
@@ -195,6 +196,9 @@ localess translations pull en --path ./locales/en.json
 
 # Pull as nested JSON
 localess translations pull de --path ./locales/de.json --format nested
+
+# Pull draft (unpublished) translations
+localess translations pull en --path ./locales/en.json --draft
 ```
 
 ---
@@ -285,7 +289,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
       - run: npm install -g @localess/cli
       - run: localess translations push en --path ./locales/en.json
         env:

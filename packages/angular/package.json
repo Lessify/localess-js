@@ -1,6 +1,6 @@
 {
   "name": "@localess/angular",
-  "version": "3.2.3",
+  "version": "3.3.0",
   "description": "Angular Library for Localess's API.",
   "keywords": [
     "localess",
@@ -23,7 +23,8 @@
   "sideEffects": false,
   "scripts": {
     "build": "ng build localess-angular",
-    "test": "ng test localess-angular"
+    "test": "ng test localess-angular --watch=false --browsers=ChromeHeadless",
+    "test:coverage": "ng test localess-angular --watch=false --browsers=ChromeHeadless --configuration=coverage"
   },
   "peerDependencies": {
     "@angular/common": "^19.0.0 || ^20.0.0 || ^21.0.0",
@@ -67,6 +68,6 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "ng-packagr": "^20.0.1",
-    "typescript": "~5.8.3"
+    "typescript": "^5.9.3"
   }
 }

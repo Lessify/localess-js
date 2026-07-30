@@ -17,7 +17,7 @@ The `@localess/client` package is the core JavaScript/TypeScript SDK for the [Lo
 
 ## Requirements
 
-- Node.js >= 20.0.0
+- Node.js >= 24.0.0
 
 ## Installation
 
@@ -222,18 +222,14 @@ When your application is loaded inside the Localess Visual Editor, you can subsc
 
 ```ts
 if (window.localess) {
-  // Subscribe to a single event
+  // Subscribe to a single event — `event` is typed to that event's variant, no narrowing needed
   window.localess.on('change', (event) => {
-    if (event.type === 'change') {
-      setPageData(event.data);
-    }
+    setPageData(event.data);
   });
 
-  // Subscribe to multiple events
+  // Subscribe to multiple events — `event` is narrowed to the union of those variants
   window.localess.on(['input', 'change'], (event) => {
-    if (event.type === 'input' || event.type === 'change') {
-      setPageData(event.data);
-    }
+    setPageData(event.data);
   });
 }
 ```

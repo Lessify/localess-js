@@ -3,7 +3,7 @@ import process from 'node:process';
 
 import { Command } from 'commander';
 
-import { localessClient } from '../../../client';
+import { localessCliClient } from '../../../client';
 import { DEFAULT_CONFIG_DIR, writeFile } from '../../../file';
 import { getSession } from '../../../session';
 import { generateTypes } from './generator';
@@ -28,7 +28,7 @@ export const typesGenerateCommand = new Command('generate')
       console.error('Please log in first using "localess login" command');
       return;
     }
-    const client = localessClient({
+    const client = localessCliClient({
       origin: session.origin,
       spaceId: session.space,
       token: session.token,

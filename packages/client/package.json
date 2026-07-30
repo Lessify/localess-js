@@ -1,6 +1,6 @@
 {
   "name": "@localess/client",
-  "version": "3.2.3",
+  "version": "3.3.0",
   "description": "Universal JavaScript/TypeScript SDK for Localess's API.",
   "keywords": [
     "localess",
@@ -37,7 +37,9 @@
   },
   "scripts": {
     "build": "vite build",
-    "test": "vitest"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "license": "MIT",
   "devDependencies": {

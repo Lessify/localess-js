@@ -14,7 +14,7 @@ The zero-production-dependency constraint (ADR 002) rules out Redis and any cach
 
 ## Decision
 
-Use an in-memory TTL cache (`src/cache.ts`) keyed by the full request URL (including query params and token). The cache is held in a `Map` and entries expire after the configured TTL.
+Use an in-memory TTL cache (`packages/client/src/cache.ts`) keyed by the full request URL (including query params and token). The cache is held in a `Map` and entries expire after the configured TTL.
 
 Default TTL: 300 seconds (5 minutes). Configurable via `cacheTTL` option:
 - `number` — TTL in seconds

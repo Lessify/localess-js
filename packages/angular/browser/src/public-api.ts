@@ -17,6 +17,7 @@ export * from './pipes/safe-html.pipe';
 
 // Service
 export * from  './services/asset.service';
+export * from  './services/sync.service';
 
 // Utils
 export * from './utils/link.utils';
@@ -28,4 +29,4 @@ export * from  './localess.config';
 export * from  './localess.providers';
 
 // Sync
-export type {LocalessSync, EventToApp, EventCallback, EventToAppType} from '@localess/client'
+export type {LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType} from '@localess/client'

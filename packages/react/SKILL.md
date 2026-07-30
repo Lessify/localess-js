@@ -76,7 +76,7 @@ import { LocalessComponent } from "@localess/react";
 
 1. Read `data._schema` as the component registry key
 2. Look up registered component by that key
-3. If found → render component with `data`, `links`, `references`; when sync is enabled, also injects `data-ll-id` and `data-ll-schema` as props (user components should spread `{...localessEditable(data)}` on their root element)
+3. If found → render component with `data`, `links`, `references`; always injects `data-ll-id` and `data-ll-schema` as props (harmless outside the Visual Editor iframe; user components should spread `{...localessEditable(data)}` on their root element)
 4. If not found → try `fallbackComponent`
 5. If no fallback → render error message
 
@@ -155,13 +155,14 @@ import { localessEditable, localessEditableField } from "@localess/react";
 
 ## Visual Editor Sync
 
-`localessInit()` is the **single entry point** for Visual Editor integration. Setting `enableSync: true` handles everything: injecting the sync script, registering components, and enabling editable attribute injection on `LocalessComponent`.
+`localessInit()` is the **single entry point** for Visual Editor integration. Setting `enableSync: true` injects the sync script and enables live event subscription; component registration is independent of it.
 
 ### What `enableSync: true` activates
 
 1. Injects the Localess sync script (`loadLocalessSync`) into `<head>`
-2. Makes `LocalessComponent` inject `data-ll-id` and `data-ll-schema` on rendered elements
-3. Makes `localessEditable()` / `localessEditableField()` emit their `data-ll-*` attributes (no-op when sync is off)
+2. Makes `isSyncEnabled()` — and therefore `useLocaless`, `LocalessDocument`, `localessSyncOn`, `localessSyncOnChange` — actually subscribe to live editor events
+
+`LocalessComponent`'s `data-ll-id` / `data-ll-schema` injection and `localessEditable()` / `localessEditableField()` are unconditional — they always emit their `data-ll-*` attributes regardless of `enableSync`. They're inert outside the Visual Editor iframe, so leaving them on in production is harmless (though sync itself should stay off — see below).
 
 ```typescript
 localessInit({
@@ -246,20 +247,17 @@ If you manage content state yourself without `useLocaless` or `LocalessDocument`
 'use client';
 
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, isSyncEnabled, isBrowser } from "@localess/react";
+import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent }: { initialContent: Content<Page> }) {
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
-    if (isSyncEnabled() && isBrowser() && window.localess) {
-      window.localess.on(['input', 'change'], (event) => {
-        if (event.type === 'input' || event.type === 'change') {
-          setPageData(event.data);
-        }
-      });
-    }
+    // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant
+    localessSyncOn(['input', 'change'], (event) => {
+      setPageData(event.data);
+    });
     // No cleanup needed: window.localess has no .off() method
   }, []);
 
@@ -291,6 +289,8 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
 | `hoverSchema` | Editor cursor hovers over a schema block      |
 
 > `window.localess` only exposes `.on()` and `.onChange()` — there is no `.off()`.
+
+`localessSyncOn(event, callback)` wraps `.on()`; `localessSyncOnChange(callback)` wraps `.onChange()` — equivalent to `localessSyncOn(['input', 'change'], callback)`, firing only for content-change events (`callback` receives the `input`/`change` variant, not the full `EventToApp` union). Both handle the `isSyncEnabled()` check and the `localessSyncReady()` wait internally.
 
 ### Pattern: Split Server/Client Components (Next.js App Router)
 
@@ -363,7 +363,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
 'use client';
 
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, isSyncEnabled, isBrowser } from "@localess/react";
+import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent }: { initialContent: Content<Page> }) {
@@ -371,13 +371,10 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
-    if (isSyncEnabled() && isBrowser() && window.localess) {
-      window.localess.on(['input', 'change'], (event) => {
-        if (event.type === 'input' || event.type === 'change') {
-          setPageData(event.data);
-        }
-      });
-    }
+    // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant
+    localessSyncOn(['input', 'change'], (event) => {
+      setPageData(event.data);
+    });
     // No cleanup needed: window.localess has no .off() method
   }, []);
 
@@ -619,7 +616,7 @@ export { localessInit, getLocalessClient }
 
 // Component registry
 export { registerComponent, unregisterComponent, setComponents, getComponent }
-export { setFallbackComponent, getFallbackComponent, isSyncEnabled }
+export { setFallbackComponent, getFallbackComponent, isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncReady }
 
 // Rendering
 export { LocalessComponent }        // Dynamic schema-to-component renderer
@@ -643,7 +640,7 @@ export { isBrowser, isServer, isIframe }
 // Types (re-exported from @localess/client + local)
 export type { AssetTransformParams }            // Image transform params for resolveAsset
 export type { LocalessClient, LocalessOptions }
-export type { LocalessSync, EventToApp, EventCallback, EventToAppType }
+export type { LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType }
 export type {
   Content, ContentData, ContentMetadata, ContentDataSchema, ContentDataField,
   ContentAsset, ContentRichText, ContentLink, ContentReference,

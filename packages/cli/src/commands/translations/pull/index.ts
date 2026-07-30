@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 
-import { localessClient } from '../../../client';
+import { localessCliClient } from '../../../client';
 import { writeFile } from '../../../file';
 import { TranslationFileFormat } from '../../../models';
 import { getSession } from '../../../session';
@@ -32,7 +32,7 @@ export const translationsPullCommand = new Command('pull')
       console.error('Please log in first using "localess login" command');
       return;
     }
-    const client = localessClient({
+    const client = localessCliClient({
       origin: session.origin,
       spaceId: session.space,
       token: session.token,
