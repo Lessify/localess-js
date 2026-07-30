@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 
 import { LOCALESS_BROWSER_CONFIG, LOCALESS_SYNC_READY, LocalessBrowserConfig } from '../localess.config';
 import { LocalessSyncService } from './sync.service';
@@ -27,10 +28,16 @@ describe('LocalessSyncService', () => {
   });
 
   it('reflects enableSync combined with the iframe/browser context', () => {
-    const service = createService({ ...baseConfig, enableSync: true });
-    // Karma runs specs inside an iframe, so isIframe() is true in this test environment;
-    // enabled() should therefore mirror the enableSync flag here.
-    expect(service.enabled()).toBe(true);
+    // Simulate the Visual Editor iframe context (window.self !== window.top),
+    // independent of whether the test runner itself embeds an iframe.
+    const originalTop = window.top;
+    Object.defineProperty(window, 'top', { value: {}, configurable: true });
+    try {
+      const service = createService({ ...baseConfig, enableSync: true });
+      expect(service.enabled()).toBe(true);
+    } finally {
+      Object.defineProperty(window, 'top', { value: originalTop, configurable: true });
+    }
   });
 
   it('resolves ready() with the injected promise', async () => {
@@ -46,7 +53,7 @@ describe('LocalessSyncService', () => {
 
   it('does not subscribe via on() when sync is disabled', () => {
     const service = createService(baseConfig);
-    const callback = jasmine.createSpy('callback');
+    const callback = vi.fn();
 
     service.on('change', callback);
 
@@ -55,7 +62,7 @@ describe('LocalessSyncService', () => {
 
   it('does not subscribe via onChange() when sync is disabled', () => {
     const service = createService(baseConfig);
-    const callback = jasmine.createSpy('callback');
+    const callback = vi.fn();
 
     service.onChange(callback);
 

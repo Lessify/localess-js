@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import { findLink } from './link.util';
 import type { ContentLink, Links } from '../models';
 

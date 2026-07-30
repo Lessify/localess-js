@@ -39,7 +39,7 @@ yarn add @localess/angular@latest
 pnpm add @localess/angular@latest
 ```
 
-**Peer dependencies:** `@angular/core`, `@angular/common`, `@angular/compiler` — versions `^19.0.0 || ^20.0.0 || ^21.0.0`.
+**Peer dependencies:** `@angular/core`, `@angular/common`, `@angular/compiler` — versions `>=21.0.0 <23.0.0`.
 
 ---
 

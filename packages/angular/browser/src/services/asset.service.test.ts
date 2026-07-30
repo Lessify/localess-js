@@ -1,5 +1,6 @@
 import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 
 import { LOCALESS_BROWSER_CONFIG, LocalessBrowserConfig } from '../localess.config';
 import { BrowserAssetService } from './asset.service';
@@ -42,7 +43,7 @@ describe('BrowserAssetService', () => {
   });
 
   it('logs an error when used on the server platform', () => {
-    const errorSpy = spyOn(console, 'error');
+    const errorSpy = vi.spyOn(console, 'error');
     createService('server');
     expect(errorSpy).toHaveBeenCalled();
   });

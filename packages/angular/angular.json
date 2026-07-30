@@ -25,15 +25,15 @@
           "defaultConfiguration": "production"
         },
         "test": {
-          "builder": "@angular/build:karma",
+          "builder": "@angular/build:unit-test",
           "options": {
             "tsConfig": "tsconfig.spec.json",
-            "polyfills": ["zone.js", "zone.js/testing"],
-            "include": ["**/*.spec.ts", "../browser/src/**/*.spec.ts", "../server/src/**/*.spec.ts"]
+            "runner": "vitest",
+            "include": ["**/*.test.ts", "../browser/src/**/*.test.ts", "../server/src/**/*.test.ts"]
           },
           "configurations": {
             "coverage": {
-              "codeCoverage": true
+              "coverage": true
             }
           }
         }

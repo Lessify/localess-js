@@ -24,14 +24,17 @@ npm run build:angular
 # Run angular-ssr playground (requires build:angular first)
 npm run start:angular-ssr
 
-# Run tests (CLI package only — client and react have no tests)
-npm test --workspace=@localess/cli
+# Run all package tests (vitest everywhere, including @localess/angular via Angular CLI's unit-test builder)
+npm test
+
+# Run a single package's tests
+npm test --workspace=@localess/angular
 
 # Run a single test file
 npx vitest run packages/cli/src/commands/login/login.test.ts
 ```
 
-Requirements: Node.js >= 20.0.0, npm >= 10.
+Requirements: Node.js >= 24.0.0, npm >= 10.
 
 ## Contributor Rules — Never Violate
 

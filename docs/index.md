@@ -42,8 +42,11 @@ npm run build:angular
 # Run angular-ssr playground
 npm run start:angular-ssr
 
-# Tests — CLI package only (client, react, and angular have no tests)
-npm test --workspace=@localess/cli
+# Run all package tests
+npm test
+
+# Run a single package's tests
+npm test --workspace=@localess/angular
 npx vitest run packages/cli/src/commands/login/login.test.ts  # single file
 ```
 
@@ -51,7 +54,7 @@ Build tools per package:
 - `@localess/client`, `@localess/react`, `@localess/cli`: **Vite library mode** (`vite.config.ts`) → CJS + ESM + types
 - `@localess/angular`: **ng-packagr via Angular CLI** (`ng-package.json`) → `dist/` with main, `browser/`, `server/` sub-entries
 
-Tests use **vitest**. Only `@localess/cli` has tests.
+Tests use **vitest** everywhere, including `@localess/angular` (via the Angular CLI's `@angular/build:unit-test` builder with `runner: "vitest"`).
 
 ## Code Style
 
