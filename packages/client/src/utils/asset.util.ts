@@ -1,4 +1,4 @@
-import {AssetTransformParams} from "../models";
+import { AssetTransformParams } from '../models';
 
 export function buildAssetQueryString(params?: AssetTransformParams): string {
   if (!params) return '';

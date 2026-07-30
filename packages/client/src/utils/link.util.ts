@@ -1,10 +1,10 @@
-import type {ContentLink, Links} from "../models";
+import type { ContentLink, Links } from '../models';
 
 export function findLink(links: Links | undefined, link: ContentLink): string {
   switch (link.type) {
-    case "content": {
+    case 'content': {
       if (links) {
-        const path = links[link.uri]
+        const path = links[link.uri];
         if (path) {
           return '/' + path.fullSlug;
         } else {
@@ -13,9 +13,9 @@ export function findLink(links: Links | undefined, link: ContentLink): string {
       }
       return '/not-found';
     }
-    case "url":
-      return link.uri
+    case 'url':
+      return link.uri;
     default:
-      return 'no-type'
+      return 'no-type';
   }
 }

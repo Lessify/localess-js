@@ -1,6 +1,6 @@
-import {ICache, NoCache, TTLCache} from './cache';
-import {AssetTransformParams, Content, ContentAsset, ContentData, Links, Translations} from './models';
-import {buildAssetQueryString} from "./utils";
+import { ICache, NoCache, TTLCache } from './cache';
+import { AssetTransformParams, Content, ContentAsset, ContentData, Links, Translations } from './models';
+import { buildAssetQueryString } from './utils';
 
 const RESET = '\x1b[0m';
 const FG_BLUE = '\x1b[34m';
