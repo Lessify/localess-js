@@ -28,7 +28,13 @@
           "builder": "@angular/build:karma",
           "options": {
             "tsConfig": "tsconfig.spec.json",
-            "polyfills": ["zone.js", "zone.js/testing"]
+            "polyfills": ["zone.js", "zone.js/testing"],
+            "include": ["**/*.spec.ts", "../browser/src/**/*.spec.ts", "../server/src/**/*.spec.ts"]
+          },
+          "configurations": {
+            "coverage": {
+              "codeCoverage": true
+            }
           }
         }
       }

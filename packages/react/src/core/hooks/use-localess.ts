@@ -69,7 +69,10 @@ export const useLocaless = <T extends ContentData = ContentData>(
       });
     }
     loadDocument();
-  }, [slug, options, client]);
+    // `options` is compared by value (JSON) instead of by reference: callers that pass an
+    // inline object literal (the common case) would otherwise get a new reference on every
+    // render, re-triggering this effect and causing an infinite fetch/render loop.
+  }, [normalizedSlug, JSON.stringify(options), client]);
 
   return document;
 };

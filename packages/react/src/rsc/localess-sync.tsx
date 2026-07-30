@@ -3,8 +3,8 @@
 import { Content, ContentData, loadLocalessSync } from '@localess/client';
 import { useEffect } from 'react';
 
+import { localessSyncOnChange } from '../core/state';
 import { isBrowser, isIframe } from '../core/utils';
-import {localessSyncOnChange} from "../core/state";
 
 export type LocalessSyncProps<T extends ContentData = ContentData> = {
   document: Content<T>;
