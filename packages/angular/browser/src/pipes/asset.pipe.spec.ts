@@ -1,3 +1,5 @@
+import { TestBed } from '@angular/core/testing';
+
 import { AssetPipe } from './asset.pipe';
 import { LOCALESS_BROWSER_CONFIG, LocalessBrowserConfig } from '../localess.config';
 import type { ContentAsset } from '../models';
@@ -11,7 +13,10 @@ describe('AssetPipe', () => {
   const asset: ContentAsset = { kind: 'ASSET', uri: 'images/logo.png' } as ContentAsset;
 
   function createPipe(): AssetPipe {
-    return new AssetPipe(config);
+    TestBed.configureTestingModule({
+      providers: [AssetPipe, { provide: LOCALESS_BROWSER_CONFIG, useValue: config }],
+    });
+    return TestBed.inject(AssetPipe);
   }
 
   it('builds a URL from the asset path prefix and asset uri', () => {
