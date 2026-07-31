@@ -191,15 +191,16 @@ Use the component in a parent template by passing the schema object from the CMS
 Extend this class when you prefer Angular signal inputs. The base class declares `data = input.required<T>()`, `links = input<Links>()`, and `references = input<References>()` as signals.
 
 ```ts
-import { Component } from '@angular/core';
-import { SchemaWithSignalComponent } from '@localess/angular/browser';
+import {Component} from '@angular/core';
+import {SchemaComponent} from '@localess/angular/browser';
 
 @Component({
   selector: 'app-schema-hero-section',
   standalone: true,
   templateUrl: './hero-section.component.html',
 })
-export class HeroSectionComponent extends SchemaWithSignalComponent<HeroSection> {}
+export class HeroSectionComponent extends SchemaWithSignalComponent<HeroSection> {
+}
 ```
 
 In the template, read inputs with function-call syntax:
