@@ -1,5 +1,5 @@
 import {inject, Pipe, PipeTransform} from "@angular/core";
-import {buildAssetQueryString} from '@localess/client';
+import {buildAssetQueryString} from "../utils";
 import type {AssetTransformParams, ContentAsset} from "../models";
 import {LOCALESS_BROWSER_CONFIG} from "../localess.config";
 

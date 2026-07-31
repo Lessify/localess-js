@@ -1,6 +1,6 @@
 import {isPlatformServer} from '@angular/common';
 import {Inject, inject, Injectable, PLATFORM_ID} from '@angular/core';
-import {buildAssetQueryString} from '@localess/client';
+import {buildAssetQueryString} from "../utils";
 import {LOCALESS_BROWSER_CONFIG} from "../localess.config";
 import type {AssetTransformParams, ContentAsset} from "../models";
 

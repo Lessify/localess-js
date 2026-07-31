@@ -1,7 +1,7 @@
 import {Component, inject} from "@angular/core";
 import {LOCALESS_BROWSER_CONFIG} from "../localess.config";
 import type {ContentDataSchema, ContentAsset, ContentLink, Links, AssetTransformParams} from "../models";
-import {buildAssetQueryString, findLink} from "@localess/client";
+import {buildAssetQueryString, findLink} from "../utils";
 
 /**
  * Schema base component

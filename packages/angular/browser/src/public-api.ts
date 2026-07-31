@@ -19,6 +19,9 @@ export * from './pipes/safe-html.pipe';
 export * from  './services/asset.service';
 export * from  './services/sync.service';
 
+// Utils
+export * from './utils'
+
 // Config
 export * from  './localess.config';
 
