@@ -95,19 +95,17 @@ import { TranslationService } from '@localess/angular/server';
 
 ### Schema Components
 
-Three variants for rendering Localess content blocks by `_schema`:
+`SchemaComponent<T>` renders Localess content blocks by `_schema` using signal inputs:
 
 ```typescript
-import {
-  SchemaComponent,            // Basic renderer
-  SchemaWithInputComponent,   // With input binding
-  SchemaWithSignalComponent   // Signal-based reactivity
-} from '@localess/angular/browser';
+import { SchemaComponent } from '@localess/angular/browser';
 ```
 
 ```html
-<ll-schema [data]="contentData" [links]="links" [references]="references" />
+<ll-schema [data]="contentData" [links]="links" [references]="references" [assets]="assets" />
 ```
+
+`data`, `links`, `references`, and `assets` are all signal inputs (`data` is required). Use `assetUrl(asset, params?)` and `findLink(link)` from the base class in your template.
 
 ### `ContentDirective`
 
@@ -147,13 +145,13 @@ See `AssetTransformParams` in [docs/client.md](client.md#asset-transform-paramet
 Set `enableSync: !environment.production` in `provideLocalessBrowser`. The `SyncService` manages the bridge automatically.
 
 ```typescript
-import { SyncService } from '@localess/angular/browser';
+import { LocalessSyncService } from '@localess/angular/browser';
 
 @Component({ ... })
 export class PageComponent implements OnInit {
   pageData = input.required<ContentData>();
 
-  constructor(private sync: SyncService) {}
+  private readonly sync = inject(LocalessSyncService);
 
   ngOnInit() {
     this.sync.onChange(data => {

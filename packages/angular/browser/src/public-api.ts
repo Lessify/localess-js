@@ -1,7 +1,5 @@
 // Components
 export * from './components/schema.component';
-export * from './components/schema-with-input.component';
-export * from './components/schema.component';
 
 // Directive
 export * from './directives/content.directive';

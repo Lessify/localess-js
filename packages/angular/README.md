@@ -134,19 +134,21 @@ provideLocalessBrowser({
 
 ### Schema Components
 
-Schema components are abstract base classes you extend to render CMS content. They automatically set the `data-ll-id` and `data-ll-schema` attributes on the host element so the Localess Visual Editor can highlight and select components on the page.
+`SchemaComponent<T>` is the abstract base class you extend to render a Localess content schema. It automatically sets the `data-ll-id` and `data-ll-schema` attributes on the host element so the Localess Visual Editor can highlight and select components on the page.
 
-Three variants are available depending on whether you prefer `@Input()` decorators, signal inputs, or a custom data binding approach.
+The base class declares four signal inputs:
 
----
-
-#### `SchemaWithInputComponent<T>` — Decorator Input *(recommended for most cases)*
-
-Extend this class when you want to receive the schema data via a traditional `@Input()`. The base class declares the required `data` input and optional `links` / `references` inputs.
+| Input | Type | Description |
+|---|---|---|
+| `data` | `input.required<T>()` | The schema data object (required) |
+| `links` | `input<Links>()` | Map of content ID → slug, used by `findLink()` |
+| `references` | `input<References>()` | Map of resolved `ContentReference` objects |
+| `assets` | `input<Assets>()` | Map of asset metadata |
 
 ```ts
 import { Component } from '@angular/core';
-import { SchemaWithInputComponent } from '@localess/angular/browser';
+import { SchemaComponent } from '@localess/angular/browser';
+import type { ContentAsset, ContentLink } from '@localess/angular/browser';
 
 // Define a TypeScript interface matching your Localess schema
 interface HeroSection {
@@ -163,92 +165,80 @@ interface HeroSection {
   standalone: true,
   templateUrl: './hero-section.component.html',
 })
-export class HeroSectionComponent extends SchemaWithInputComponent<HeroSection> {}
+export class HeroSectionComponent extends SchemaComponent<HeroSection> {}
 ```
 
-In the template, `data`, `links`, and `references` are available directly. Use the `assetUrl()` and `findLink()` helpers provided by the base class:
+In the template, read inputs with function-call syntax and use the `assetUrl()` and `findLink()` helpers provided by the base class:
 
 ```html
 <!-- hero-section.component.html -->
 <section>
-  <h1>{{ data.title }}</h1>
-  <p>{{ data.subtitle }}</p>
-  <img [src]="assetUrl(data.backgroundImage)" [alt]="data.title" />
-  <a [href]="findLink(data.ctaLink)">Learn more</a>
-</section>
-```
-
-Use the component in a parent template by passing the schema object from the CMS:
-
-```html
-<app-schema-hero-section [data]="content.data" [links]="links" />
-```
-
----
-
-#### `SchemaWithSignalComponent<T>` — Signal Input *(Angular 17+)*
-
-Extend this class when you prefer Angular signal inputs. The base class declares `data = input.required<T>()`, `links = input<Links>()`, and `references = input<References>()` as signals.
-
-```ts
-import {Component} from '@angular/core';
-import {SchemaComponent} from '@localess/angular/browser';
-
-@Component({
-  selector: 'app-schema-hero-section',
-  standalone: true,
-  templateUrl: './hero-section.component.html',
-})
-export class HeroSectionComponent extends SchemaWithSignalComponent<HeroSection> {
-}
-```
-
-In the template, read inputs with function-call syntax:
-
-```html
-<section>
   <h1>{{ data().title }}</h1>
-  <img [src]="assetUrl(data().backgroundImage)" />
+  <p>{{ data().subtitle }}</p>
+  <img [src]="assetUrl(data().backgroundImage)" [alt]="data().title" />
   <a [href]="findLink(data().ctaLink)">Learn more</a>
 </section>
 ```
 
+Use the component in a parent template by passing the schema object and maps from the CMS:
+
+```html
+<app-schema-hero-section [data]="content.data" [links]="links" [references]="references" [assets]="assets" />
+```
+
 ---
 
-#### `SchemaComponent<T>` — Custom Binding
+#### Resolving a link with `findLink()`
 
-Extend this class when you want to define your own inputs but still benefit from Visual Editor host bindings. Implement the required `content()` method to return the active schema object — the base class uses it to set `data-ll-id` and `data-ll-schema` on the host element.
+`findLink(link)` resolves a `ContentLink` field to a path or URL string. Internal `content` links are looked up in the `links` input (a map of content ID → slug); `url` links are returned as-is:
 
-```ts
-import { Component, input } from '@angular/core';
-import { SchemaComponent } from '@localess/angular/browser';
-import type { ContentDataSchema, Links } from '@localess/angular/browser';
-
-@Component({
-  selector: 'app-schema-hero-section',
-  standalone: true,
-  templateUrl: './hero-section.component.html',
-})
-export class HeroSectionComponent extends SchemaComponent {
-  data = input.required<HeroSection>();
-  links = input<Links>();
-
-  override content(): ContentDataSchema {
-    return this.data();
-  }
-}
+```html
+<a [href]="findLink(data().ctaLink)">{{ data().ctaLabel }}</a>
 ```
+
+If `data().ctaLink` is `{ type: 'content', uri: '<contentId>' }` and that ID exists in `links`, it resolves to `/<fullSlug>`. If the ID isn't found, it falls back to `/not-found`. If it's `{ type: 'url', uri: 'https://example.com' }`, it resolves to `https://example.com` unchanged.
+
+#### Resolving an asset with `assetUrl()`
+
+`assetUrl(asset, params?)` builds the fully qualified CDN URL for a `ContentAsset`:
+
+```html
+<img [src]="assetUrl(data().backgroundImage)" [alt]="data().title" />
+```
+
+#### Requesting a transformed asset (resize / format conversion)
+
+Pass an `AssetTransformParams` object as the second argument to request a resized image or a different output format. This appends query parameters (`w`, `h`, `q`, `f`, ...) that the Localess asset endpoint uses to transform the image on the fly:
+
+```html
+<!-- Smaller, WebP thumbnail for a card -->
+<img [src]="assetUrl(data().backgroundImage, { w: 400, f: 'webp' })" [alt]="data().title" />
+
+<!-- Fixed box crop + quality control -->
+<img [src]="assetUrl(data().backgroundImage, { w: 800, h: 600, q: 70, f: 'avif' })" [alt]="data().title" />
+```
+
+| Param | Type | Description |
+|---|---|---|
+| `w` | `number` | Target width in pixels |
+| `h` | `number` | Target height in pixels (combined with `w`, crops to cover the box) |
+| `q` | `number` | Output quality 1–100 (default 85; ignored for PNG) |
+| `f` | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Converts the output format |
+| `download` | `boolean` | Forces a browser download via `Content-Disposition` |
+| `thumbnail` | `boolean` | Extracts the first frame of an animated/video asset before resizing |
+
+The same `params` argument works identically on the `llAsset` pipe (see below) and the standalone `BrowserAssetService.getAssetUrl()`.
 
 ---
 
 #### Base class helpers
 
-All three schema base classes expose:
+`SchemaComponent<T>` exposes:
 
 | Member | Signature | Description |
 |---|---|---|
-| `assetUrl(asset)` | `(asset: ContentAsset) => string` | Builds the full CDN URL for a Localess asset |
-| `findLink(link)` | `(link: ContentLink) => string` | Resolves a CMS link to a path or URL |
+| `assetUrl(asset, params?)` | `(asset: ContentAsset, params?: AssetTransformParams) => string` | Builds the full CDN URL for a Localess asset, with optional transform params |
+| `findLink(link)` | `(link: ContentLink) => string` | Resolves a CMS link to a path or URL, using the `links` input |
 | `config` | `LocalessBrowserConfig` | Injected browser configuration |
 
 ---
@@ -315,6 +305,18 @@ import { AssetPipe } from '@localess/angular/browser';
 ```html
 <img [src]="data.image | llAsset" alt="..." />
 ```
+
+Pass `AssetTransformParams` as a pipe argument to resize or convert the format:
+
+```html
+<!-- Smaller WebP thumbnail -->
+<img [src]="data.image | llAsset:{ w: 400, f: 'webp' }" alt="..." />
+
+<!-- Fixed box crop + quality control -->
+<img [src]="data.image | llAsset:{ w: 800, h: 600, q: 70, f: 'avif' }" alt="..." />
+```
+
+See [Requesting a transformed asset](#requesting-a-transformed-asset-resize--format-conversion) above for the full `AssetTransformParams` field reference.
 
 ---
 
@@ -741,9 +743,7 @@ This works automatically — no additional configuration required.
 | Export | Kind | Description |
 |---|---|---|
 | `provideLocalessBrowser(options)` | Function | Registers all browser-side providers |
-| `SchemaWithInputComponent<T>` | Abstract Class | Base component with `@Input() data: T` |
-| `SchemaWithSignalComponent<T>` | Abstract Class | Base component with `data = input.required<T>()` |
-| `SchemaComponent<T>` | Abstract Class | Base component requiring `content()` override |
+| `SchemaComponent<T>` | Abstract Class | Base component with `data`, `links`, `references`, `assets` signal inputs |
 | `ContentIdDirective` | Directive | `[data-ll-id]` marker |
 | `ContentSchemaDirective` | Directive | `[data-ll-schema]` marker |
 | `ContentFieldDirective` | Directive | `[data-ll-field]` marker |
@@ -757,6 +757,8 @@ This works automatically — no additional configuration required.
 | `LocalessBrowserConfig` | Type | Browser config shape |
 | `LocalessBrowserOptions` | Type | Options for `provideLocalessBrowser()` |
 | `findLink(links, link)` | Function | Standalone link resolution utility |
+| `buildAssetQueryString(params?)` | Function | Standalone asset transform query-string builder |
+| `AssetTransformParams` | Type | Asset transform parameters (`w`, `h`, `f`, ...) |
 | `LocalessSync` | Type | Visual Editor sync event types |
 | `EventToApp` / `EventToAppOf` / `EventCallback` / `EventToAppType` | Type | Visual Editor sync event payload types |
 
@@ -787,6 +789,7 @@ Re-exports all types from `@localess/client`:
 | `ContentReference` | Reference to another content document |
 | `Links` | Map of content ID → `{ fullSlug: string }` |
 | `References` | Map of referenced content objects |
+| `Assets` | Map of asset ID → asset metadata |
 | `Translations` | Flat key–value map of translation strings |
 | `ContentFetchParams` | Parameters for content fetch requests |
 | `LinksFetchParams` | Parameters for links fetch requests |
