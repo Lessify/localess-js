@@ -5,9 +5,8 @@ const JS_SYNC_ID = 'localess-js-sync';
 /**
  * Inject Localess Sync Script in Header
  * @param {string} origin A fully qualified domain name with protocol (http/https) and port.
- * @param {boolean} force Force Script Injection even if the application is not in Visual Editor.
  */
-export async function loadLocalessSync(origin: string, force: boolean = false): Promise<void> {
+export async function loadLocalessSync(origin: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (isServer()) {
       resolve();
