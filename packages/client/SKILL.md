@@ -42,9 +42,11 @@ const content = await client.getContentBySlug<Page>('home', {
   locale: 'en',
   resolveReference: true,  // Inline referenced content
   resolveLink: true,        // Inline linked content
+  resolveAsset: true,       // Inline referenced assets
   version: 'draft',         // Override client default per-request
 });
 // content.data is typed as Page
+// content.assets is populated when resolveAsset: true
 ```
 
 ### Fetch Content by ID
@@ -123,6 +125,7 @@ SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
 | `locale`           | `string`               | —           | ISO 639-1 code: `'en'`, `'de'`, etc.      |
 | `resolveReference` | `boolean`              | `false`     | Inline referenced content objects         |
 | `resolveLink`      | `boolean`              | `false`     | Inline linked content metadata            |
+| `resolveAsset`     | `boolean`              | `false`     | Inline referenced asset metadata          |
 
 ## Translation Fetch Parameters (`TranslationFetchParams`)
 
@@ -248,6 +251,20 @@ interface Content<T extends ContentData> extends ContentMetadata {
   data?: T;
   links?: Links;
   references?: References;
+  assets?: Assets; // Populated when resolveAsset: true
+}
+
+// Resolved asset metadata, keyed by asset id
+interface Assets {
+  [id: string]: AssetMetadata;
+}
+
+interface AssetMetadata {
+  id: string;
+  name: string;
+  extension: string;
+  type: string;
+  alt?: string;
 }
 
 // Base schema fields every content data object has

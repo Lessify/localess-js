@@ -78,6 +78,7 @@ const content = await client.getContentBySlug<Page>('home', {
   locale: 'en',
   resolveReference: true,
   resolveLink: true,
+  resolveAsset: true,
 });
 ```
 
@@ -100,6 +101,7 @@ const content = await client.getContentById<Page>('FRnIT7CUABoRCdSVVGGs', {
 | `locale`           | `string`   | —              | ISO 639-1 locale code (e.g., `'en'`, `'de'`)  |
 | `resolveReference` | `boolean`  | `false`        | Resolve content references inline             |
 | `resolveLink`      | `boolean`  | `false`        | Resolve content links inline                  |
+| `resolveAsset`     | `boolean`  | `false`        | Resolve content assets inline                 |
 
 ---
 
@@ -290,8 +292,9 @@ const client = localessClient({ origin, spaceId, token, cacheTTL: false });
 ```ts
 interface Content<T extends ContentData> extends ContentMetadata {
   data?: T;
-  links?: Links;        // Populated when resolveLink: true
+  links?: Links;            // Populated when resolveLink: true
   references?: References; // Populated when resolveReference: true
+  assets?: Assets;          // Populated when resolveAsset: true
 }
 ```
 

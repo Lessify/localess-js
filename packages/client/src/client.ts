@@ -1,3 +1,4 @@
+import { version } from '../package.json';
 import { ICache, NoCache, TTLCache } from './cache';
 import { AssetTransformParams, Content, ContentAsset, ContentData, Links, Translations } from './models';
 import { buildAssetQueryString } from './utils';
@@ -178,7 +179,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       'X-Localess-Agent': 'Localess-JS-Client',
-      'X-Localess-Agent-Version': '3.4.1',
+      'X-Localess-Agent-Version': version,
     },
   };
 

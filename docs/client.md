@@ -44,6 +44,7 @@ const content = await client.getContentBySlug<Page>('home', {
   locale: 'en',
   resolveReference: true,  // Inline referenced content objects
   resolveLink: true,        // Inline linked content metadata
+  resolveAsset: true,       // Inline referenced asset metadata
   version: 'draft',         // Override client default per-request
 });
 // content.data is typed as Page
@@ -106,6 +107,7 @@ const url = client.assetLink('my-image.png', { w: 400 });
 | `locale`           | `string`               | —           | ISO 639-1 code: `'en'`, `'de'`, etc.      |
 | `resolveReference` | `boolean`              | `false`     | Inline referenced content objects         |
 | `resolveLink`      | `boolean`              | `false`     | Inline linked content metadata            |
+| `resolveAsset`     | `boolean`              | `false`     | Inline referenced asset metadata          |
 
 ## Error Handling
 
@@ -229,7 +231,11 @@ interface Content<T extends ContentData> extends ContentMetadata {
   data?: T;
   links?: Links;
   references?: References;
+  assets?: Assets; // Populated when resolveAsset: true
 }
+
+interface Assets { [id: string]: AssetMetadata }
+interface AssetMetadata { id: string; name: string; extension: string; type: string; alt?: string }
 
 // Base fields every content object has
 interface ContentDataSchema {
