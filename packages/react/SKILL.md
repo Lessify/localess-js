@@ -12,6 +12,16 @@
 
 **Peer dependencies:** React 17, 18, or 19 + react-dom.
 
+**Export variants:**
+
+| Import path | Use for | Includes `'use client'` code |
+|---|---|---|
+| `@localess/react` | Plain SPA (CRA, Vite, etc.) | Yes |
+| `@localess/react/ssr` | SSR / Next.js `output: 'export'` (static, no live editing) | No |
+| `@localess/react/rsc` | Next.js App Router (React Server Components) | Yes (via client components) |
+
+Using `@localess/react` in a Next.js App Router project causes `'use client'` directive conflicts — use `@localess/react/rsc` there instead.
+
 ---
 
 ## Installation
@@ -182,7 +192,7 @@ The `useLocaless` hook handles the full cycle automatically — initial fetch an
 ```tsx
 'use client';
 
-import { useLocaless, LocalessComponent, localessEditable } from "@localess/react";
+import { useLocaless, LocalessComponent, localessEditable } from "@localess/react/rsc";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent, locale }: { initialContent: Content<Page>; locale?: string }) {
@@ -209,7 +219,7 @@ export function PageClient({ initialContent, locale }: { initialContent: Content
 
 ```tsx
 // Server Component — pass the fetched content directly to LocalessDocument
-import { getLocalessClient, LocalessDocument } from "@localess/react";
+import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";
 import type { Page } from "./.localess/localess";
 
 export default async function HomePage({ params }: { params: Promise<{ locale?: string }> }) {
@@ -238,7 +248,7 @@ If you manage content state yourself without `useLocaless` or `LocalessDocument`
 'use client';
 
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react";
+import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react/rsc";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent }: { initialContent: Content<Page> }) {
@@ -291,7 +301,7 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
 
 ```tsx
 // app/[locale]/page.tsx
-import { getLocalessClient } from "@localess/react";
+import { getLocalessClient } from "@localess/react/rsc";
 import type { Content, Page } from "./.localess/localess";
 
 export default async function HomePage({
@@ -313,7 +323,7 @@ export default async function HomePage({
 // app/[locale]/page-client.tsx
 'use client';
 
-import { useLocaless, LocalessComponent, localessEditable } from "@localess/react";
+import { useLocaless, LocalessComponent, localessEditable } from "@localess/react/rsc";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent, locale }: { initialContent: Content<Page>; locale?: string }) {
@@ -334,7 +344,7 @@ export function PageClient({ initialContent, locale }: { initialContent: Content
 
 ```tsx
 // app/[locale]/page.tsx — no separate client file needed
-import { getLocalessClient, LocalessDocument } from "@localess/react";
+import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";
 import type { Page } from "./.localess/localess";
 
 export default async function HomePage({ params }: { params: Promise<{ locale?: string }> }) {
@@ -352,7 +362,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
 'use client';
 
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react";
+import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react/rsc";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent }: { initialContent: Content<Page> }) {
@@ -522,7 +532,7 @@ setFallbackComponent(UnknownBlock);
 In Server Components, access the initialized client directly:
 
 ```typescript
-import { getLocalessClient } from "@localess/react";
+import { getLocalessClient } from "@localess/react/rsc";
 
 const client = getLocalessClient(); // throws if localessInit() not called
 const [content, translations] = await Promise.all([
@@ -537,7 +547,7 @@ const [content, translations] = await Promise.all([
 
 ```typescript
 // app/layout.tsx (Server Component)
-import { localessInit } from "@localess/react";
+import { localessInit } from "@localess/react/rsc";
 import { Page, HeroSection, NavMenu, Footer } from "@/components/localess";
 
 localessInit({

@@ -44,11 +44,6 @@
       "types": "./dist/rsc/index.d.ts",
       "import": "./dist/rsc/index.mjs",
       "require": "./dist/rsc/index.js"
-    },
-    "./rsc/client": {
-      "types": "./dist/rsc/client.d.ts",
-      "import": "./dist/rsc/client.mjs",
-      "require": "./dist/rsc/client.js"
     }
   },
   "private": false,
