@@ -1,10 +1,19 @@
-import { mkdtemp, readFile as nodeReadFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile as nodeReadFile, rm, writeFile as nodeWriteFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ensureGitignore, fileExists, readFile, writeFile } from './file';
+
+vi.mock('node:fs/promises', async () => {
+  const actual = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
+  return {
+    ...actual,
+    mkdir: vi.fn(actual.mkdir),
+    writeFile: vi.fn(actual.writeFile),
+  };
+});
 
 describe('fileExists', () => {
   let dir: string;
@@ -61,6 +70,20 @@ describe('writeFile / readFile', () => {
     await writeFile(filePath, '{}', { mode: 0o600 });
 
     expect(await readFile(filePath)).toBe('{}');
+  });
+
+  it('propagates the error when creating the parent directory fails', async () => {
+    vi.mocked(mkdir).mockRejectedValueOnce(new Error('EACCES: permission denied'));
+    const filePath = join(dir, 'nested', 'file.json');
+
+    await expect(writeFile(filePath, '{}')).rejects.toThrow('EACCES: permission denied');
+  });
+
+  it('propagates the error when writing the file fails', async () => {
+    vi.mocked(nodeWriteFile).mockRejectedValueOnce(new Error('ENOSPC: no space left on device'));
+    const filePath = join(dir, 'file.json');
+
+    await expect(writeFile(filePath, '{}')).rejects.toThrow('ENOSPC: no space left on device');
   });
 });
 

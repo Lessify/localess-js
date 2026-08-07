@@ -12,6 +12,7 @@ export type TranslationsPushOptions = {
   format: TranslationFileFormat;
   type: TranslationUpdateType;
   dryRun?: boolean;
+  verbose?: boolean;
 };
 
 export const translationsPushCommand = new Command('push')
@@ -25,24 +26,26 @@ export const translationsPushCommand = new Command('push')
     TranslationUpdateType.ADD_MISSING
   )
   .option('--dry-run', 'Preview changes without applying them to Localess')
+  .option('-v, --verbose', 'Print verbose debug output')
   .action(async (locale: string, options: TranslationsPushOptions) => {
     console.log('Pushing translations with arguments:', locale);
     console.log('Pushing translations with options:', options);
     if (!zTranslationUpdateTypeSchema.safeParse(options.type).success) {
       console.error('Invalid type provided. Possible values are :', Object.values(TranslationUpdateType));
-      return;
+      process.exit(1);
     }
 
     const session = await getSession();
     if (!session.isLoggedIn) {
       console.error('Not logged in');
       console.error('Please log in first using "localess login" command');
-      return;
+      process.exit(1);
     }
     const client = localessCliClient({
       origin: session.origin,
       spaceId: session.space,
       token: session.token,
+      ...(options.verbose ? { debug: true } : {}),
     });
 
     if (options.dryRun) {
@@ -63,11 +66,11 @@ export const translationsPushCommand = new Command('push')
     const pResult = zLocaleTranslationsSchema.safeParse(translationValues);
     if (!pResult.success) {
       console.error('Invalid translations file format:', pResult.error);
-      return;
+      process.exit(1);
     }
     console.log('Pushing translations to Localess with locale:', locale, 'and type:', options.type);
-    const response = await client.updateTranslations(locale, options.type, translationValues, options.dryRun);
-    if (response) {
+    try {
+      const response = await client.updateTranslations(locale, options.type, translationValues, options.dryRun);
       if (response.dryRun) {
         console.log('Dry run results:');
       }
@@ -76,7 +79,8 @@ export const translationsPushCommand = new Command('push')
       if (response.ids) {
         console.log('Updated translation IDs:', response.ids);
       }
-    } else {
-      console.log('Something went wrong while pushing translations to Localess');
+    } catch (error) {
+      console.error('Failed to push translations to Localess:', error);
+      process.exit(1);
     }
   });

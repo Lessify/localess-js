@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../client', () => ({
@@ -24,14 +26,59 @@ describe('types command', () => {
     vi.clearAllMocks();
   });
 
-  it('logs an error and does not contact the network when not logged in', async () => {
+  it('logs an error and exits with code 1 when not logged in', async () => {
     vi.mocked(getSession).mockResolvedValue({ isLoggedIn: false });
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('exit');
+    });
 
-    await typesCommand.parseAsync(['generate'], { from: 'user' });
+    await expect(typesCommand.parseAsync(['generate'], { from: 'user' })).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Not logged in');
+    expect(exitSpy).toHaveBeenCalledWith(1);
     expect(localessCliClient).not.toHaveBeenCalled();
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it('passes debug: true to the client when --verbose is provided', async () => {
+    vi.mocked(getSession).mockResolvedValue({
+      isLoggedIn: true,
+      origin: 'https://cms.example.com',
+      space: 'space-1',
+      token: 'token-123',
+    });
+    const getSchemas = vi.fn().mockResolvedValue({ schemas: [] });
+    vi.mocked(localessCliClient).mockReturnValue({ getSchemas } as unknown as ReturnType<typeof localessCliClient>);
+
+    await typesCommand.parseAsync(['generate', '--verbose'], { from: 'user' });
+
+    expect(localessCliClient).toHaveBeenCalledWith({
+      origin: 'https://cms.example.com',
+      spaceId: 'space-1',
+      token: 'token-123',
+      debug: true,
+    });
+  });
+
+  it('exits with code 1 when the client fails to fetch schemas', async () => {
+    vi.mocked(getSession).mockResolvedValue({
+      isLoggedIn: true,
+      origin: 'https://cms.example.com',
+      space: 'space-1',
+      token: 'token-123',
+    });
+    const getSchemas = vi.fn().mockRejectedValue(new Error('network down'));
+    vi.mocked(localessCliClient).mockReturnValue({ getSchemas } as unknown as ReturnType<typeof localessCliClient>);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('exit');
+    });
+
+    await expect(typesCommand.parseAsync(['generate'], { from: 'user' })).rejects.toThrow('exit');
+
+    expect(errorSpy).toHaveBeenCalledWith('Failed to generate types:', expect.any(Error));
+    expect(exitSpy).toHaveBeenCalledWith(1);
     expect(writeFile).not.toHaveBeenCalled();
   });
 
@@ -52,7 +99,7 @@ describe('types command', () => {
     expect(writeFile).toHaveBeenCalledWith('generated/localess.ts', expect.any(String));
   });
 
-  it('writes to the default .localess/localess.ts path when no --path option is given', async () => {
+  it('writes to the default .localess/localess.d.ts path when no --path option is given', async () => {
     vi.mocked(getSession).mockResolvedValue({
       isLoggedIn: true,
       origin: 'https://cms.example.com',
@@ -64,6 +111,6 @@ describe('types command', () => {
 
     await typesCommand.parseAsync(['generate'], { from: 'user' });
 
-    expect(writeFile).toHaveBeenCalledWith(expect.stringContaining('.localess'), expect.any(String));
+    expect(writeFile).toHaveBeenCalledWith(expect.stringContaining(join('.localess', 'localess.d.ts')), expect.any(String));
   });
 });

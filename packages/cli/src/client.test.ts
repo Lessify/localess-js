@@ -39,16 +39,12 @@ describe('localessCliClient', () => {
     expect(space).toEqual({ id: 'space-1', name: 'Demo Space' });
   });
 
-  it('getSpace returns an empty object when all retries are exhausted', async () => {
+  it('getSpace throws when all retries are exhausted', async () => {
     vi.mocked(fetch).mockImplementation(() => Promise.reject(new Error('network down')));
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const client = localessCliClient({ ...baseOptions, retryCount: 1 });
 
-    const space = await client.getSpace();
-
-    expect(space).toEqual({});
+    await expect(client.getSpace()).rejects.toThrow('network down');
     expect(fetch).toHaveBeenCalledTimes(2); // initial attempt + 1 retry
-    expect(errorSpy).toHaveBeenCalled();
   });
 
   it('getSchemas retries on a 5xx response and succeeds once the server recovers', async () => {
@@ -63,14 +59,11 @@ describe('localessCliClient', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it('getSchemas returns an empty object when the server keeps returning 5xx', async () => {
+  it('getSchemas throws when the server keeps returning 5xx', async () => {
     vi.mocked(fetch).mockImplementation(() => Promise.resolve(jsonResponse({}, { ok: false, status: 500 })));
-    vi.spyOn(console, 'error').mockImplementation(() => {});
     const client = localessCliClient({ ...baseOptions, retryCount: 1 });
 
-    const schemas = await client.getSchemas();
-
-    expect(schemas).toEqual({});
+    await expect(client.getSchemas()).rejects.toThrow('HTTP 500');
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
@@ -111,15 +104,11 @@ describe('localessCliClient', () => {
     );
   });
 
-  it('updateTranslations returns undefined and logs an error when the request ultimately fails', async () => {
+  it('updateTranslations throws when the request ultimately fails', async () => {
     vi.mocked(fetch).mockImplementation(() => Promise.reject(new Error('network down')));
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const client = localessCliClient({ ...baseOptions, retryCount: 0 });
 
-    const response = await client.updateTranslations('en', 'add-missing' as never, {});
-
-    expect(response).toBeUndefined();
-    expect(errorSpy).toHaveBeenCalled();
+    await expect(client.updateTranslations('en', 'add-missing' as never, {})).rejects.toThrow('network down');
   });
 
   it('logs debug information for requests and responses when debug is enabled', async () => {

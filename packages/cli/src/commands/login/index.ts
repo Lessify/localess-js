@@ -8,6 +8,7 @@ type LoginOptions = {
   origin?: string;
   space?: string;
   token?: string;
+  verbose?: boolean;
 };
 
 export const loginCommand = new Command('login')
@@ -15,6 +16,7 @@ export const loginCommand = new Command('login')
   .option('-o, --origin <origin>', 'Origin of the Localess instance')
   .option('-s, --space <space>', 'Space ID to login to')
   .option('-t, --token <token>', 'Token to login to Localess CLI')
+  .option('-v, --verbose', 'Print verbose debug output')
   .action(async (options: LoginOptions) => {
     const session = await getSession();
 
@@ -49,6 +51,7 @@ export const loginCommand = new Command('login')
       origin,
       spaceId: space,
       token,
+      ...(options.verbose ? { debug: true } : {}),
     });
 
     try {
@@ -57,5 +60,6 @@ export const loginCommand = new Command('login')
       await persistSession({ origin, space, token });
     } catch (e) {
       console.error('Login failed');
+      process.exit(1);
     }
   });

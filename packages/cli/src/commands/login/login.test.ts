@@ -77,16 +77,39 @@ describe('login command', () => {
     expect(ensureGitignore).toHaveBeenCalledWith(process.cwd(), '.localess');
   });
 
-  it('does not persist credentials when the mocked client call fails', async () => {
+  it('passes debug: true to the client when --verbose is provided', async () => {
+    const getSpace = vi.fn().mockResolvedValue({ id: 'space-1', name: 'Demo Space' });
+    vi.mocked(localessCliClient).mockReturnValue({ getSpace } as unknown as ReturnType<typeof localessCliClient>);
+
+    await loginCommand.parseAsync(
+      ['--origin', 'https://demo.localess.org', '--space', 'space-1', '--token', 'token-123', '--verbose'],
+      { from: 'user' }
+    );
+
+    expect(localessCliClient).toHaveBeenCalledWith({
+      origin: 'https://demo.localess.org',
+      spaceId: 'space-1',
+      token: 'token-123',
+      debug: true,
+    });
+  });
+
+  it('exits with code 1 and does not persist credentials when the mocked client call fails', async () => {
     const getSpace = vi.fn().mockRejectedValue(new Error('network error'));
     vi.mocked(localessCliClient).mockReturnValue({ getSpace } as unknown as ReturnType<typeof localessCliClient>);
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    await loginCommand.parseAsync(['--origin', 'https://demo.localess.org', '--space', 'space-1', '--token', 'token-123'], {
-      from: 'user',
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('exit');
     });
 
+    await expect(
+      loginCommand.parseAsync(['--origin', 'https://demo.localess.org', '--space', 'space-1', '--token', 'token-123'], {
+        from: 'user',
+      })
+    ).rejects.toThrow('exit');
+
     expect(errorSpy).toHaveBeenCalledWith('Login failed');
+    expect(exitSpy).toHaveBeenCalledWith(1);
     expect(writeFile).not.toHaveBeenCalled();
     expect(ensureGitignore).not.toHaveBeenCalled();
   });

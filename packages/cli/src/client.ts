@@ -77,16 +77,11 @@ export function localessCliClient(options: LocalessCliClientOptions) {
     if (options.debug) {
       console.log(LOG_GROUP, 'getSpace fetch url : ', url);
     }
-    try {
-      const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
-      if (options.debug) {
-        console.log(LOG_GROUP, 'getSpace status : ', response.status);
-      }
-      return response.json();
-    } catch (error) {
-      console.error(LOG_GROUP, 'getSpace error : ', error);
-      return {} as Space;
+    const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
+    if (options.debug) {
+      console.log(LOG_GROUP, 'getSpace status : ', response.status);
     }
+    return response.json();
   }
 
   async function getSchemas(): Promise<Schemas> {
@@ -97,16 +92,11 @@ export function localessCliClient(options: LocalessCliClientOptions) {
     if (options.debug) {
       console.log(LOG_GROUP, 'getSchemas fetch url : ', url);
     }
-    try {
-      const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
-      if (options.debug) {
-        console.log(LOG_GROUP, 'getSchemas status : ', response.status);
-      }
-      return response.json();
-    } catch (error) {
-      console.error(LOG_GROUP, 'getSchemas error : ', error);
-      return {} as Schemas;
+    const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
+    if (options.debug) {
+      console.log(LOG_GROUP, 'getSchemas status : ', response.status);
     }
+    return response.json();
   }
 
   async function getOpenApi(): Promise<OpenAPIObject> {
@@ -117,16 +107,11 @@ export function localessCliClient(options: LocalessCliClientOptions) {
     if (options.debug) {
       console.log(LOG_GROUP, 'getOpenApi fetch url : ', url);
     }
-    try {
-      const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
-      if (options.debug) {
-        console.log(LOG_GROUP, 'getOpenApi status : ', response.status);
-      }
-      return response.json();
-    } catch (error) {
-      console.error(LOG_GROUP, 'getOpenApi error : ', error);
-      return {} as OpenAPIObject;
+    const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
+    if (options.debug) {
+      console.log(LOG_GROUP, 'getOpenApi status : ', response.status);
     }
+    return response.json();
   }
 
   async function updateTranslations(
@@ -134,7 +119,7 @@ export function localessCliClient(options: LocalessCliClientOptions) {
     type: TranslationUpdateType,
     values: Translations,
     dryRun?: boolean
-  ): Promise<TranslationUpdateResponse | undefined> {
+  ): Promise<TranslationUpdateResponse> {
     if (options.debug) {
       console.log(LOG_GROUP, 'updateTranslations() locale : ', locale);
       console.log(LOG_GROUP, 'updateTranslations() type : ', type);
@@ -145,28 +130,24 @@ export function localessCliClient(options: LocalessCliClientOptions) {
       console.log(LOG_GROUP, 'updateTranslations fetch url : ', url);
     }
     const body: TranslationUpdate = { type, values, dryRun };
-    try {
-      const response = await fetchWithRetry(
-        url,
-        {
-          method: 'POST',
-          headers: {
-            'X-API-KEY': options.token,
-            ...fetchOptions.headers,
-          },
-          body: JSON.stringify(body),
+    const response = await fetchWithRetry(
+      url,
+      {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': options.token,
+          ...fetchOptions.headers,
         },
-        options.retryCount,
-        options.retryDelay,
-        options.debug
-      );
-      if (options.debug) {
-        console.log(LOG_GROUP, 'updateTranslations status : ', response.status);
-      }
-      return response.json();
-    } catch (error: any) {
-      console.error(LOG_GROUP, 'updateTranslations error : ', error);
+        body: JSON.stringify(body),
+      },
+      options.retryCount,
+      options.retryDelay,
+      options.debug
+    );
+    if (options.debug) {
+      console.log(LOG_GROUP, 'updateTranslations status : ', response.status);
     }
+    return response.json();
   }
 
   return { ...cdn, getSpace, getSchemas, getOpenApi, updateTranslations };

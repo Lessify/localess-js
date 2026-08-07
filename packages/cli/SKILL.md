@@ -42,6 +42,7 @@ localess login \
 | `-o, --origin <url>`   | Localess instance URL           |
 | `-s, --space <id>`     | Space ID (from Space settings)  |
 | `-t, --token <token>`  | API token (masked input prompt) |
+| `-v, --verbose`        | Print verbose debug output      |
 
 **Behavior:**
 1. Checks for existing credentials (env vars or file)
@@ -117,6 +118,7 @@ localess translations push <locale> --path <file> [options]
 | `-f, --format <format>` | `flat`        | File format: `flat` or `nested`                                     |
 | `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing`, `update-existing`, `delete-missing` |
 | `--dry-run`             | `false`       | Preview changes without applying them                               |
+| `-v, --verbose`         | `false`       | Print verbose debug output                                          |
 
 **Update Strategies:**
 
@@ -187,6 +189,7 @@ localess translations pull <locale> --path <file> [options]
 | `-p, --path <path>`     | required  | Output file path                     |
 | `-f, --format <format>` | `flat`    | File format: `flat` or `nested`      |
 | `--draft`               | `false`   | Pull the draft version of translations |
+| `-v, --verbose`         | `false`   | Print verbose debug output           |
 
 **Examples:**
 
@@ -208,14 +211,16 @@ localess translations pull en --path ./locales/en.json --draft
 Generate TypeScript type definitions from your Localess space's OpenAPI schema.
 
 ```bash
-localess types generate [--path <output>]
+localess types generate [--path <output>] [--prefix <prefix>]
 ```
 
 **Options:**
 
-| Flag                | Default                   | Description      |
-|---------------------|---------------------------|------------------|
-| `-p, --path <path>` | `.localess/localess.d.ts` | Output file path |
+| Flag                | Default                   | Description                                    |
+|----------------------|---------------------------|-------------------------------------------------|
+| `-p, --path <path>`  | `.localess/localess.d.ts` | Output file path                                |
+| `--prefix <prefix>`  | `''`                      | Prefix to prepend to all generated type names   |
+| `-v, --verbose`      | `false`                   | Print verbose debug output                      |
 
 > **Prerequisite:** The API token must have the **Development Tools** permission in Localess Space settings.
 
@@ -232,6 +237,9 @@ localess types generate
 
 # Custom output path
 localess types generate --path src/types/localess.d.ts
+
+# Prefix all generated type names to avoid collisions with other type names
+localess types generate --prefix Localess
 ```
 
 **Generated output:**

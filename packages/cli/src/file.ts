@@ -13,18 +13,9 @@ export async function fileExists(path: string) {
 }
 
 export async function writeFile(filePath: string, data: string, option?: { mode?: number }) {
-  // Get the directory path
   const resolvedPath = parse(filePath).dir;
-  // Ensure the directory exists
-  try {
-    await mkdir(resolvedPath, { recursive: true });
-  } catch (mkdirError) {
-    return;
-  }
-  // Write the file
-  try {
-    await nodeWriteFile(filePath, data, option);
-  } catch (writeError) {}
+  await mkdir(resolvedPath, { recursive: true });
+  await nodeWriteFile(filePath, data, option);
 }
 
 export async function readFile(filePath: string): Promise<string> {

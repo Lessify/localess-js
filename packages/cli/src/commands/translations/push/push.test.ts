@@ -22,20 +22,30 @@ describe('translationsPushCommand', () => {
 
   it('rejects an invalid --type value without checking the session', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('exit');
+    });
 
-    await translationsPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'not-a-real-type'], { from: 'user' });
+    await expect(
+      translationsPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'not-a-real-type'], { from: 'user' })
+    ).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Invalid type provided. Possible values are :', expect.any(Array));
+    expect(exitSpy).toHaveBeenCalledWith(1);
     expect(getSession).not.toHaveBeenCalled();
   });
 
-  it('logs an error and exits early when not logged in', async () => {
+  it('logs an error and exits with code 1 when not logged in', async () => {
     vi.mocked(getSession).mockResolvedValue({ isLoggedIn: false });
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('exit');
+    });
 
-    await translationsPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' });
+    await expect(translationsPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Not logged in');
+    expect(exitSpy).toHaveBeenCalledWith(1);
     expect(localessCliClient).not.toHaveBeenCalled();
   });
 
@@ -88,6 +98,27 @@ describe('translationsPushCommand', () => {
     expect(updateTranslations).toHaveBeenCalledWith('en', 'add-missing', { 'nav.home': 'Home' }, true);
   });
 
+  it('passes debug: true to the client when --verbose is provided', async () => {
+    vi.mocked(getSession).mockResolvedValue({
+      isLoggedIn: true,
+      origin: 'https://cms.example.com',
+      space: 'space-1',
+      token: 'token-123',
+    });
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
+    const updateTranslations = vi.fn().mockResolvedValue({ message: 'Updated 1 translation' });
+    vi.mocked(localessCliClient).mockReturnValue({ updateTranslations } as unknown as ReturnType<typeof localessCliClient>);
+
+    await translationsPushCommand.parseAsync(['en', '-p', 'translations.json', '--verbose'], { from: 'user' });
+
+    expect(localessCliClient).toHaveBeenCalledWith({
+      origin: 'https://cms.example.com',
+      spaceId: 'space-1',
+      token: 'token-123',
+      debug: true,
+    });
+  });
+
   it('rejects a translations file that fails schema validation without pushing', async () => {
     vi.mocked(getSession).mockResolvedValue({
       isLoggedIn: true,
@@ -97,9 +128,34 @@ describe('translationsPushCommand', () => {
     });
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 123 }));
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('exit');
+    });
 
-    await translationsPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' });
+    await expect(translationsPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Invalid translations file format:', expect.anything());
+    expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('exits with code 1 when the client fails to push translations', async () => {
+    vi.mocked(getSession).mockResolvedValue({
+      isLoggedIn: true,
+      origin: 'https://cms.example.com',
+      space: 'space-1',
+      token: 'token-123',
+    });
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
+    const updateTranslations = vi.fn().mockRejectedValue(new Error('network down'));
+    vi.mocked(localessCliClient).mockReturnValue({ updateTranslations } as unknown as ReturnType<typeof localessCliClient>);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('exit');
+    });
+
+    await expect(translationsPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
+
+    expect(errorSpy).toHaveBeenCalledWith('Failed to push translations to Localess:', expect.any(Error));
+    expect(exitSpy).toHaveBeenCalledWith(1);
   });
 });
