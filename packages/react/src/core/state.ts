@@ -185,6 +185,22 @@ export function isSyncEnabled(): boolean {
 }
 
 /**
+ * Returns the raw `enableSync` flag passed to {@link localessInit}, without the
+ * {@link isBrowser} / {@link isIframe} gating that {@link isSyncEnabled} applies.
+ *
+ * Module-scope state set by `localessInit()` in a Server Component is not visible to code
+ * bundled into a separate Client Component module graph (Next.js App Router bundles Server
+ * and Client Components separately). Use this to read the configured flag server-side and
+ * pass it down as a prop — e.g. to {@link LocalessSync} — instead of calling `isSyncEnabled()`
+ * (or this function) from within a Client Component, where the module-scope value was never set.
+ *
+ * @returns The `enableSync` value passed to `localessInit`, defaulting to `false`.
+ */
+export function isSyncConfigured(): boolean {
+  return _enableSync;
+}
+
+/**
  * Resolves once the Visual Editor sync script has loaded and `window.localess` is available.
  *
  * Resolves immediately if sync was not enabled via `localessInit`, or if the script has already

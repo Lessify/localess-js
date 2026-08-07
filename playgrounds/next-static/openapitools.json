@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "7.8.0",
+    "generators": {
+      "v3.0": {
+        "generatorName": "typescript-axios",
+        "output": "./src/shared/generated/localess",
+        "glob": "./open-api/localess.json",
+        "skipValidateSpec": true,
+        "apiPackage": "api",
+        "modelPackage": "model",
+        "additionalProperties": {
+          "useSingleRequestParameter": true,
+          "withSeparateModelsAndApi": true
+        }
+      }
+    }
+  }
+}

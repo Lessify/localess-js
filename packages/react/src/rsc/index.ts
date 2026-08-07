@@ -15,18 +15,18 @@
  * Typical pattern — import path is the same for both server and client files:
  * @example
  * ```ts
- * // Server Component (Next.js App Router)
- * import { localessInit, getLocalessClient, LocalessServerComponent } from '@localess/react/rsc';
+ * // Server Component (Next.js App Router) — LocalessDocument itself is server-safe
+ * import { localessInit, getLocalessClient, LocalessDocument } from '@localess/react/rsc';
  *
- * // Client Component ('use client')
- * import { LocalessDocument, useLocaless, localessEditable } from '@localess/react/rsc';
+ * // Client Component ('use client') — only needed for the fetch-on-client hook
+ * import { useLocaless, localessEditable } from '@localess/react/rsc';
  * ```
  *
  * NOT compatible with Next.js `output: 'export'` — use `@localess/react/ssr` for static exports.
  */
 
 export * from '../core/components/localess-component';
-export * from '../core/components/localess-document';
 export * from '../core/hooks';
 export { isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncReady } from '../core/state';
 export * from '../ssr';
+export * from './localess-document';
