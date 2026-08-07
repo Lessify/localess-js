@@ -4,7 +4,7 @@
 
 `@localess/client` authenticates every API request with a secret API token (`token` option). This token grants read/write access to a Localess space. Applications need to keep it out of browser bundles.
 
-Additionally, the SDK was designed for Node.js >= 20. It uses the native `fetch` API available in Node 18+ and does not polyfill browser environment differences.
+Additionally, the SDK requires Node.js >= 24. It uses the native `fetch` API and does not polyfill browser environment differences.
 
 ## Decision
 

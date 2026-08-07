@@ -69,17 +69,13 @@ const links = await client.getLinks({
 // links: { [id: string]: ContentMetadata }
 ```
 
-### `getTranslations(locale)`
+### `getTranslations(locale, params?)`
 
 ```typescript
-const t = await client.getTranslations('en');
+const t = await client.getTranslations('en', { version: 'draft' }); // params optional, overrides client default
 // t: { [key: string]: string }
 // Usage: t['common.submit'] => 'Submit'
 ```
-
-### `getOpenAPI()`
-
-Returns the OpenAPI 3.0 schema for the space. Used internally by `@localess/cli types generate`.
 
 ### `assetLink(asset, params?)`
 
@@ -247,7 +243,7 @@ export { isBrowser, isServer, isIframe }
 export { buildAssetQueryString }
 export type {
   LocalessClient, LocalessClientOptions,
-  ContentFetchParams, LinksFetchParams,
+  ContentFetchParams, LinksFetchParams, TranslationFetchParams,
   Content, ContentData, ContentDataSchema, ContentDataField,
   ContentMetadata, ContentAsset, ContentLink,
   ContentRichText, ContentReference,

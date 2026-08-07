@@ -2,7 +2,7 @@
 
 Angular integration layer for Localess. Builds on `@localess/client` and adds Angular components, directives, pipes, and Visual Editor sync.
 
-**Peer dependencies:** Angular 19, 20, or 21 + `@angular/common` + `@angular/compiler`.
+**Peer dependencies:** Angular >=21.0.0 <23.0.0 + `@angular/common` + `@angular/compiler`.
 
 ## Entry Points
 
@@ -36,7 +36,6 @@ export const appConfig: ApplicationConfig = {
     provideLocalessBrowser({
       origin: 'https://my-localess.web.app',
       spaceId: 'YOUR_SPACE_ID',
-      token: 'YOUR_API_TOKEN',
       enableSync: !environment.production,
     }),
   ],
@@ -65,30 +64,30 @@ const serverConfig: ApplicationConfig = {
 
 ## Server Services
 
-### `ContentService`
+### `ServerContentService`
 
 ```typescript
-import { ContentService } from '@localess/angular/server';
+import { ServerContentService } from '@localess/angular/server';
 import { inject } from '@angular/core';
 
 export const pageResolver = resolveFn(() => {
-  const content = inject(ContentService);
-  return content.getContentBySlug<Page>('home', { locale: 'en', resolveReference: true });
+  const content = inject(ServerContentService);
+  return content.getContentBySlug<Page>('home', { locale: 'en', resolveReference: true }); // Observable<Content<Page>>
 });
 ```
 
-### `AssetService` (server)
+### `ServerAssetService`
 
 ```typescript
-import { AssetService } from '@localess/angular/server';
-// assetService.getAssetUrl(asset, params?)
+import { ServerAssetService } from '@localess/angular/server';
+// assetService.link(asset, params?) → string
 ```
 
-### `TranslationService`
+### `ServerTranslationService`
 
 ```typescript
-import { TranslationService } from '@localess/angular/server';
-// translationService.getTranslations('en') → Record<string, string>
+import { ServerTranslationService } from '@localess/angular/server';
+// translationService.fetch('en') → Observable<Translations>
 ```
 
 ## Browser Components
@@ -102,7 +101,7 @@ import { SchemaComponent } from '@localess/angular/browser';
 ```
 
 ```html
-<ll-schema [data]="contentData" [links]="links" [references]="references" [assets]="assets" />
+<ll-schema-component [data]="contentData" [links]="links" [references]="references" [assets]="assets" />
 ```
 
 `data`, `links`, `references`, and `assets` are all signal inputs (`data` is required). Use `assetUrl(asset, params?)` and `findLink(link)` from the base class in your template.
@@ -119,23 +118,23 @@ Marks an element as a Localess content block for Visual Editor targeting.
 
 | Pipe | Input | Output | Description |
 |---|---|---|---|
-| `asset` | `ContentAsset` | `string` | Resolves asset to full URL |
-| `link` | `ContentLink` | `string` | Resolves link to URL string |
-| `richTextToHtml` | `ContentRichText` | `string` | Converts Tiptap JSON to HTML string |
-| `safeHtml` | `string` | `SafeHtml` | Marks HTML as safe for Angular |
+| `llAsset` | `ContentAsset` | `string` | Resolves asset to full URL |
+| `llLink` | `ContentLink` | `string` | Resolves link to URL string |
+| `llRtToHtml` | `ContentRichText` | `string` | Converts Tiptap JSON to HTML string |
+| `llSafeHtml` | `string` | `SafeHtml` | Marks HTML as safe for Angular |
 
 ```html
-<img [src]="data.image | asset" />
-<a [href]="data.link | link">{{ data.label }}</a>
-<div [innerHTML]="data.body | richTextToHtml | safeHtml"></div>
+<img [src]="data.image | llAsset" />
+<a [href]="data.link | llLink">{{ data.label }}</a>
+<div [innerHTML]="data.body | llRtToHtml | llSafeHtml"></div>
 ```
 
 ## Asset Transform Parameters
 
-Pipe the `asset` pipe with transform params for image resizing:
+Pipe the `llAsset` pipe with transform params for image resizing:
 
 ```html
-<img [src]="data.image | asset:{ w: 800, h: 600, f: 'webp' }" />
+<img [src]="data.image | llAsset:{ w: 800, h: 600, f: 'webp' }" />
 ```
 
 See `AssetTransformParams` in [docs/client.md](client.md#asset-transform-parameters).

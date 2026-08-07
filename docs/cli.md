@@ -137,7 +137,7 @@ localess translations pull de --path ./locales/de.json --format nested
 
 ## `localess types generate`
 
-Generate TypeScript type definitions from your Localess space's OpenAPI schema.
+Generate TypeScript type definitions from your Localess space's schemas.
 
 ```bash
 localess types generate [--path <output>]
@@ -150,9 +150,8 @@ localess types generate [--path <output>]
 > **Prerequisite:** The API token must have the **Development Tools** permission in Localess Space settings.
 
 What it does:
-1. Fetches the OpenAPI 3.0 spec from your space
-2. Extracts schema components
-3. Generates TypeScript `.d.ts` definitions with `openapi-typescript`
+1. Fetches the schema definitions from your space
+2. Generates TypeScript `.d.ts` definitions for each schema
 
 ```bash
 localess types generate

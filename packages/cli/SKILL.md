@@ -6,7 +6,7 @@
 
 - Authenticating with a Localess instance
 - Pushing and pulling translations (flat and nested JSON formats supported for both push and pull)
-- Generating TypeScript type definitions from the OpenAPI schema
+- Generating TypeScript type definitions from your space's schemas
 
 **Status:** Early development (v3.2.4). Requires Node.js >= 24.0.0.
 
@@ -208,7 +208,7 @@ localess translations pull en --path ./locales/en.json --draft
 
 ## Type Generation
 
-Generate TypeScript type definitions from your Localess space's OpenAPI schema.
+Generate TypeScript type definitions from your Localess space's schemas.
 
 ```bash
 localess types generate [--path <output>] [--prefix <prefix>]
@@ -225,9 +225,8 @@ localess types generate [--path <output>] [--prefix <prefix>]
 > **Prerequisite:** The API token must have the **Development Tools** permission in Localess Space settings.
 
 **What it does:**
-1. Fetches the OpenAPI 3.0 spec from your space
-2. Extracts schema components
-3. Generates TypeScript `.d.ts` definitions with `openapi-typescript`
+1. Fetches the schema definitions from your space
+2. Generates TypeScript `.d.ts` definitions for each schema
 
 **Examples:**
 

@@ -12,10 +12,17 @@ Publishing only ESM breaks legacy tooling. Publishing only CJS breaks Next.js Ap
 
 ## Decision
 
-All packages (`@localess/client`, `@localess/react`) publish both formats from the same source via `tsup`:
+`@localess/client` and `@localess/react` publish both formats from the same source via Vite library mode (`vite.config.ts`) with `vite-plugin-dts`:
 
-```
-tsup src/index.ts --format cjs,esm --dts
+```ts
+// vite.config.ts
+build: {
+  lib: {
+    entry: resolve(__dirname, 'src/index.ts'),
+    formats: ['es', 'cjs'],
+    fileName: (format) => `index.${format === 'es' ? 'mjs' : 'js'}`,
+  },
+},
 ```
 
 Output:
@@ -35,12 +42,13 @@ Output:
 }
 ```
 
-`@localess/cli` is ESM-only (`--format esm --shims`) because it is a CLI executable, not a library.
+`@localess/cli` is ESM-only (`formats: ['es']`, single `index.mjs` output) because it is a CLI executable, not a library — its `package.json` `exports`/`main`/`bin` all point to `dist/index.mjs` with no CJS fallback.
+
+`@localess/angular` is out of scope for this ADR — it builds with ng-packagr (Angular CLI) following the Angular Package Format, not Vite, and is ESM-only per Angular's own conventions.
 
 ## Consequences
 
 **For contributors:**
 - Never add a new package entry point without adding a corresponding `exports` entry in `package.json`.
 - Do not use CJS-only patterns (`__dirname`, `require.resolve`) in `@localess/client` or `@localess/react` source — use `import.meta.url` or ESM equivalents instead.
-- `@localess/cli` uses `--shims` in its tsup build to polyfill `__dirname` and `__filename` for Node.js CLI compatibility.
-- The `main` field in `package.json` points to the CJS output as a fallback for very old tooling.
+- The `main` field in `package.json` points to the CJS output (or, for `@localess/cli`, the ESM output) as a fallback for tooling that doesn't read `exports`.

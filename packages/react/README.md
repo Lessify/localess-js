@@ -67,10 +67,10 @@ pnpm add @localess/react
 import { localessInit, LocalessComponent, useLocaless } from "@localess/react";
 
 // SSR — server-safe, no live editing, no hooks
-import { localessInit, LocalessComponent } from "@localess/react/ssr";
+import { localessInit, LocalessServerComponent } from "@localess/react/ssr";
 
 // RSC — server components + client components for live editing
-import { localessInit, LocalessComponent } from "@localess/react/rsc";          // server
+import { localessInit, LocalessServerComponent } from "@localess/react/rsc";    // server
 import { LocalessDocument, useLocaless, localessEditable } from "@localess/react/rsc"; // client
 ```
 
@@ -147,6 +147,7 @@ import { LocalessComponent } from "@localess/react";
 | `data`       | `ContentData`            | ✅        | Content data object from Localess. The component looks up `data._schema` in the component registry |
 | `links`      | `Links`                  | ❌        | Resolved content links map, forwarded to the rendered component                                    |
 | `references` | `References`             | ❌        | Resolved references map, forwarded to the rendered component                                       |
+| `assets`     | `Assets`                 | ❌        | Resolved content assets map, forwarded to the rendered component                                   |
 | `ref`        | `React.Ref<HTMLElement>` | ❌        | Ref forwarded to the rendered component's root element                                             |
 | `...rest`    | `any`                    | ❌        | Any additional props are forwarded to the rendered component                                       |
 
@@ -186,8 +187,6 @@ const Hero = ({ data }: { data: HeroBlock }) => (
   </section>
 );
 ```
-
-> **Deprecated:** `llEditable()` and `llEditableField()` are deprecated aliases. Use `localessEditable()` and `localessEditableField()` instead.
 
 ---
 
@@ -625,7 +624,7 @@ export const getClient = localessInit({
 ### Page — `app/page.tsx`
 
 ```tsx
-import { LocalessComponent } from "@localess/react/ssr";
+import { LocalessServerComponent } from "@localess/react/ssr";
 import { getLocalessClient } from "@localess/react/ssr";
 import "@/lib/localess"; // ensure init runs
 
@@ -634,7 +633,7 @@ export default async function Home() {
   const content = await client.getContentBySlug("home", { locale: "en" });
   return (
     <main>
-      <LocalessComponent data={content.data} links={content.links} references={content.references} />
+      <LocalessServerComponent data={content.data} links={content.links} references={content.references} />
     </main>
   );
 }
@@ -725,17 +724,18 @@ The table below shows which symbols are available in each export.
 | `registerComponent` / `setComponents` / `getComponent` |         ✅         |           ✅           |           ✅           |
 | `setFallbackComponent` / `getFallbackComponent`        |         ✅         |           ✅           |           ✅           |
 | `resolveAsset`                                         |         ✅         |           ✅           |           ✅           |
-| `LocalessComponent`                                    |         ✅         |           ✅           |           ✅           |
+| `LocalessComponent`                                    |         ✅         |           ❌           |           ✅           |
+| `LocalessServerComponent` / `LocalessServerDocument`   |         ❌         |           ✅           |           ✅           |
 | `renderRichTextToReact`                                |         ✅         |           ✅           |           ✅           |
 | `findLink`                                             |         ✅         |           ✅           |           ✅           |
 | `isServer`                                             |         ✅         |           ✅           |           ✅           |
 | All content types                                      |         ✅         |           ✅           |           ✅           |
 | `LocalessDocument`                                     |         ✅         |           ❌           |           ✅           |
 | `useLocaless`                                          |         ✅         |           ❌           |           ✅           |
-| `localessEditable` / `localessEditableField`           |         ✅         |           ❌           |           ✅           |
-| `isBrowser` / `isIframe`                               |         ✅         |           ❌           |           ✅           |
+| `localessEditable` / `localessEditableField`           |         ✅         |           ✅           |           ✅           |
+| `isBrowser` / `isIframe`                               |         ✅         |           ✅           |           ✅           |
 | `isSyncEnabled` / `localessSyncOn` / `localessSyncOnChange` / `localessSyncReady` |         ✅         |           ❌           |           ✅           |
-| Sync event types (`LocalessSync`, `EventToApp`, …)     |         ✅         |           ❌           |           ✅           |
+| Sync event types (`LocalessSync`, `EventToApp`, …)     |         ✅         |           ✅           |           ✅           |
 
 ---
 

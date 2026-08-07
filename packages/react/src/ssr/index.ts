@@ -21,9 +21,7 @@
  * NOT available in this export:
  * - LocalessDocument   (requires 'use client')
  * - useLocaless        (requires 'use client')
- * - localessEditable / localessEditableField / isBrowser / isIframe (browser-only)
- * - isSyncEnabled / localessSyncOn / localessSyncOnChange (not meaningful without live editing)
- * - Sync event types   (LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType)
+ * - isSyncEnabled / localessSyncOn / localessSyncOnChange / localessSyncReady (not meaningful without live editing)
  */
 
 export type * from '../core/models';

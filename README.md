@@ -25,21 +25,22 @@ Keeping all packages together in one repository ensures that shared types and in
 
 ## Packages
 
-| Package                               | Version  | Description                                                                                                          |
-|---------------------------------------|----------|----------------------------------------------------------------------------------------------------------------------|
-| [`@localess/client`](packages/client) | 3.0.0    | Core JavaScript/TypeScript SDK. Fetch content, translations, and assets from the Localess API. **Server-side only.** |
-| [`@localess/react`](packages/react)   | 3.0.0    | React integration. Dynamic component mapping, rich text rendering, and Visual Editor sync.                           |
-| [`@localess/cli`](packages/cli)       | 3.0.0    | Command-line interface. Manage translations and generate TypeScript types from your content schemas.                 |
+| Package                                 | Version | Description                                                                                                          |
+|------------------------------------------|---------|------------------------------------------------------------------------------------------------------------------------|
+| [`@localess/client`](packages/client)   | 3.4.1   | Core JavaScript/TypeScript SDK. Fetch content, translations, and assets from the Localess API. **Server-side only.** |
+| [`@localess/react`](packages/react)     | 3.4.1   | React integration. Dynamic component mapping, rich text rendering, and Visual Editor sync.                           |
+| [`@localess/angular`](packages/angular) | 3.4.1   | Angular integration. Components, directives, pipes, and Visual Editor sync.                                          |
+| [`@localess/cli`](packages/cli)         | 3.4.1   | Command-line interface. Manage translations and generate TypeScript types from your content schemas.                 |
 
 ### Package Dependency Graph
 
 ```
-@localess/react ──┐
-                  ├──▶ @localess/client (core SDK)
-@localess/cli   ──┘
+@localess/react   ──┐
+@localess/angular ──┼──▶ @localess/client (core SDK)
+@localess/cli     ──┘
 ```
 
-`@localess/client` is the foundational layer. Both `@localess/react` and `@localess/cli` depend on it for API communication, caching, and shared type definitions.
+`@localess/client` is the foundational layer. `@localess/react`, `@localess/angular`, and `@localess/cli` depend on it for API communication, caching, and shared type definitions. The three dependents never depend on each other.
 
 ---
 
@@ -92,6 +93,30 @@ localessInit({
 
 ---
 
+### Angular
+
+```bash
+npm install @localess/angular
+```
+
+```ts
+import { provideLocalessBrowser } from "@localess/angular/browser";
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideLocalessBrowser({
+      origin: 'https://my-localess.web.app',
+      spaceId: 'YOUR_SPACE_ID',
+      enableSync: true,
+    }),
+  ],
+};
+```
+
+→ See the full [`@localess/angular` documentation](packages/angular/README.md)
+
+---
+
 ### CLI (Translations & Type Generation)
 
 ```bash
@@ -113,6 +138,7 @@ localess-js/
 ├── packages/
 │   ├── client/          # @localess/client
 │   ├── react/           # @localess/react
+│   ├── angular/         # @localess/angular
 │   └── cli/             # @localess/cli
 ├── package.json         # Workspace root (npm workspaces)
 └── LICENSE
@@ -143,14 +169,18 @@ npm run build
 npm run build:client
 npm run build:react
 npm run build:cli
+npm run build:angular
 ```
 
 ### Run Tests
 
-Tests are currently provided for `@localess/cli`:
+All four packages have test suites (vitest everywhere, including `@localess/angular` via Angular CLI's unit-test builder):
 
 ```bash
-npm test --workspace=@localess/cli
+npm test
+
+# Run a single package's tests
+npm test --workspace=@localess/angular
 ```
 
 ---
@@ -161,11 +191,12 @@ Each package ships a `SKILL.md` file that directs AI coding agents (GitHub Copil
 
 ### SKILL files
 
-| Package            | SKILL file                                             |
-|--------------------|--------------------------------------------------------|
-| `@localess/client` | [`packages/client/SKILL.md`](packages/client/SKILL.md) |
-| `@localess/react`  | [`packages/react/SKILL.md`](packages/react/SKILL.md)   |
-| `@localess/cli`    | [`packages/cli/SKILL.md`](packages/cli/SKILL.md)       |
+| Package              | SKILL file                                                 |
+|----------------------|-------------------------------------------------------------|
+| `@localess/client`   | [`packages/client/SKILL.md`](packages/client/SKILL.md)     |
+| `@localess/react`    | [`packages/react/SKILL.md`](packages/react/SKILL.md)       |
+| `@localess/angular`  | [`packages/angular/SKILL.md`](packages/angular/SKILL.md)   |
+| `@localess/cli`      | [`packages/cli/SKILL.md`](packages/cli/SKILL.md)           |
 
 ### Using SKILL files in your project
 
@@ -178,6 +209,7 @@ Refer to the following SKILL files for accurate API usage, patterns, and best pr
 
 - @node_modules/@localess/client/SKILL.md
 - @node_modules/@localess/react/SKILL.md
+- @node_modules/@localess/angular/SKILL.md
 - @node_modules/@localess/cli/SKILL.md
 ```
 

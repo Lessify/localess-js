@@ -75,7 +75,7 @@ import { LocalessComponent } from "@localess/react";
 
 1. Read `data._schema` as the component registry key
 2. Look up registered component by that key
-3. If found → render component with `data`, `links`, `references`; always injects `data-ll-id` and `data-ll-schema` as props (harmless outside the Visual Editor iframe; user components should spread `{...localessEditable(data)}` on their root element)
+3. If found → render component with `data`, `links`, `references`, `assets`; always injects `data-ll-id` and `data-ll-schema` as props (harmless outside the Visual Editor iframe; user components should spread `{...localessEditable(data)}` on their root element)
 4. If not found → try `fallbackComponent`
 5. If no fallback → render error message
 
@@ -621,7 +621,6 @@ export { findLink }                 // ContentLink → URL string
 
 // Visual editor (re-exported from @localess/client)
 export { localessEditable, localessEditableField }
-export { llEditable, llEditableField }  // Deprecated
 
 // Environment utilities (re-exported from @localess/client)
 export { isBrowser, isServer, isIframe }

@@ -212,7 +212,7 @@ localess translations pull en --path ./locales/en.json --draft
 
 ### `localess types generate`
 
-Fetch your space's OpenAPI schema from Localess and generate TypeScript type definitions. The output file provides full type safety when working with Localess content in your TypeScript projects.
+Fetch your space's schema definitions from Localess and generate TypeScript type definitions. The output file provides full type safety when working with Localess content in your TypeScript projects.
 
 ```bash
 localess types generate [--path <output_path>]

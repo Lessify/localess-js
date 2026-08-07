@@ -544,6 +544,7 @@ const blogLinks = await firstValueFrom(
 | `locale` | `string` | Locale code, e.g. `'en'`, `'fr'` |
 | `resolveReference` | `boolean` | Inline referenced content objects |
 | `resolveLink` | `boolean` | Inline link objects |
+| `resolveAsset` | `boolean` | Inline referenced asset metadata |
 
 #### `LinksFetchParams`
 

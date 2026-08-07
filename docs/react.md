@@ -16,20 +16,19 @@ React integration layer for Localess. Builds on `@localess/client` and adds a co
 
 ### What `@localess/react/ssr` excludes
 
-The smallest bundle. Does NOT include:
-- `LocalessDocument` client variant (requires `'use client'`)
+The smallest bundle. It exports `LocalessServerComponent` / `LocalessServerDocument` (server-safe, no sync attributes) in place of the default `LocalessComponent` / `LocalessDocument`, and does NOT include:
+- `LocalessComponent` / `LocalessDocument` client variants (require `'use client'`)
 - `useLocaless` hook (requires `'use client'`)
-- `localessEditable`, `localessEditableField`, `isBrowser`, `isIframe` (browser-only)
-- `isSyncEnabled` (not meaningful without sync)
-- Sync event types: `LocalessSync`, `EventToApp`, `EventCallback`, `EventToAppType`
+- `isSyncEnabled`, `localessSyncOn`, `localessSyncOnChange`, `localessSyncReady` (not meaningful without live editing)
+
+`localessEditable`, `localessEditableField`, `isBrowser`, `isIframe`, and the sync event types (`LocalessSync`, `EventToApp`, `EventCallback`, `EventToAppType`) ARE included — they're cheap to bundle and harmless outside a client context.
 
 ### What `@localess/react/rsc` adds back
 
-Extends `/ssr` with:
-- `LocalessComponent` client variant
-- `isSyncEnabled`
-- `LocalessDocument` RSC client variant (handles live sync)
-- Re-exports everything from `/ssr`
+Re-exports everything from `/ssr`, plus:
+- `LocalessComponent` / `LocalessDocument` client variants
+- `useLocaless` hook
+- `isSyncEnabled`, `localessSyncOn`, `localessSyncOnChange`, `localessSyncReady`
 
 ## Installation
 

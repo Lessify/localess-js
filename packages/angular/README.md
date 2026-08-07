@@ -227,7 +227,7 @@ Pass an `AssetTransformParams` object as the second argument to request a resize
 | `download` | `boolean` | Forces a browser download via `Content-Disposition` |
 | `thumbnail` | `boolean` | Extracts the first frame of an animated/video asset before resizing |
 
-The same `params` argument works identically on the `llAsset` pipe (see below) and the standalone `BrowserAssetService.getAssetUrl()`.
+The same `params` argument works identically on the `llAsset` pipe (see below) and the standalone `BrowserAssetService.link()`.
 
 ---
 
@@ -552,6 +552,7 @@ const blogLinks = await firstValueFrom(
 | `locale` | `string` | Locale code, e.g. `'en'`, `'fr'` |
 | `resolveReference` | `boolean` | Inline referenced content objects |
 | `resolveLink` | `boolean` | Inline link objects |
+| `resolveAsset` | `boolean` | Inline referenced asset metadata |
 
 #### `LinksFetchParams`
 
