@@ -24,7 +24,6 @@ const client = localessClient({
   version: 'draft',                       // undefined = published (default), 'draft' for preview
   debug: false,                           // Logs requests; default: false
   cacheTTL: 300,                          // Cache TTL in seconds; false to disable; default: 300 (5 min)
-  fileSystemCache: false,                 // true = share cache across processes via filesystem; default: false
 });
 ```
 
@@ -133,21 +132,6 @@ Default: in-memory TTL cache, **5 minutes** (300 seconds). Cache key = full requ
 localessClient({ cacheTTL: 60 })    // 1 min — frequently updated content
 localessClient({ cacheTTL: 3600 })  // 1 hour — rarely updated content
 localessClient({ cacheTTL: false }) // Disabled — always fresh (use in draft/preview mode)
-```
-
-### `fileSystemCache` — Multi-process sharing
-
-Next.js and similar frameworks spin up multiple worker processes during build. Each worker has its own in-memory cache, so the same URLs get fetched multiple times. Set `fileSystemCache: true` to write cache entries to disk so all workers share the same cache:
-
-```typescript
-localessClient({ fileSystemCache: true })                  // filesystem cache, default 5 min TTL
-localessClient({ fileSystemCache: true, cacheTTL: 60 })   // filesystem cache, 1 min TTL
-localessClient({ fileSystemCache: true, cacheTTL: false }) // cacheTTL: false wins — no cache
-```
-
-Cache files are written to `.localess-cache/` in the working directory. Add to `.gitignore`:
-```
-.localess-cache/
 ```
 
 ## Visual Editor Helpers

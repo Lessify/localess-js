@@ -1,16 +1,16 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { registerComponent, unregisterComponent } from '../state';
 import { LocalessDocument } from './localess-document';
 
 vi.mock('../state', async importOriginal => {
   const actual = await importOriginal<typeof import('../state')>();
-  return { ...actual, localessSyncOn: vi.fn() };
+  return { ...actual, localessSyncOnChange: vi.fn() };
 });
 
-import { localessSyncOn } from '../state';
+import { localessSyncOnChange } from '../state';
 
 function Page({ data }: any) {
   return <p>{data.title}</p>;
@@ -20,7 +20,7 @@ describe('LocalessDocument', () => {
   afterEach(() => {
     cleanup();
     unregisterComponent('page');
-    (localessSyncOn as Mock).mockClear();
+    (localessSyncOnChange as Mock).mockClear();
   });
 
   it('renders the registered component using document.data', () => {
@@ -37,7 +37,7 @@ describe('LocalessDocument', () => {
     render(<LocalessDocument document={{ _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
     expect(screen.getByText('Hello')).toBeDefined();
 
-    const [, syncCallback] = (localessSyncOn as Mock).mock.calls[0];
+    const [syncCallback] = (localessSyncOnChange as Mock).mock.calls[0];
     act(() => {
       syncCallback({ data: { _schema: 'page', title: 'Updated' } });
     });

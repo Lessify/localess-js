@@ -34,7 +34,7 @@ export type LocalessClientOptions = {
    *
    * - `undefined` — use default in-memory TTL cache with 5 minutes TTL (default)
    * - `number`    — use in-memory TTL cache with the given TTL in seconds
-   * - `false`     — disable caching entirely (always fetches fresh data); takes precedence over `fileSystemCache`
+   * - `false`     — disable caching entirely (always fetches fresh data)
    *
    * @default 300 (5 minutes)
    * @example

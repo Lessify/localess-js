@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { DomSanitizer } from '@angular/platform-browser';
 
 import { SafeHtmlPipe } from './safe-html.pipe';
 
@@ -8,8 +7,7 @@ describe('SafeHtmlPipe', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    const sanitizer = TestBed.inject(DomSanitizer);
-    pipe = new SafeHtmlPipe(sanitizer);
+    pipe = TestBed.runInInjectionContext(() => new SafeHtmlPipe());
   });
 
   it('marks the given HTML as safe via the sanitizer', () => {
