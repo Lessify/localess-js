@@ -164,7 +164,7 @@ const url = client.assetLink('/spaces/abc/assets/photo.jpg');
 
 ## Visual Editor Integration
 
-### `loadLocalessSync(origin, force?)`
+### `loadLocalessSync(origin)`
 
 Injects the Localess Visual Editor sync script into the document `<head>`. This enables live-editing capabilities when your site is opened inside the Localess Visual Editor.
 
@@ -172,9 +172,6 @@ Injects the Localess Visual Editor sync script into the document `<head>`. This 
 import { loadLocalessSync } from "@localess/client";
 
 loadLocalessSync('https://my-localess.web.app');
-
-// Force injection even when not running inside an iframe
-loadLocalessSync('https://my-localess.web.app', true);
 ```
 
 ### `syncScriptUrl()`
