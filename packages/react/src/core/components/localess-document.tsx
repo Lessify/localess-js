@@ -1,9 +1,11 @@
+'use client';
+
 import { forwardRef, useEffect, useState } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../../console';
 import { LocalessComponent } from '../components';
 import { Content, ContentData } from '../models';
-import { localessSyncOn } from '../state';
+import { localessSyncOnChange } from '../state';
 
 /**
  * Props for {@link LocalessDocument}.
@@ -46,22 +48,22 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
  *
  * export default async function Page({ params }) {
  *   const content = await getLocalessClient().getContentBySlug('home', { locale: params.locale });
- *   return <PageClient data={content.data} links={content.links} references={content.references} />;
+ *   return <PageClient content={content} />;
  * }
  *
  * // app/[locale]/page-client.tsx  (Client Component)
  * 'use client';
  * import { LocalessDocument } from '@localess/react/rsc';
  *
- * export default function PageClient({ data, links, references }) {
- *   return <LocalessDocument data={data} links={links} references={references} />;
+ * export default function PageClient({ content }) {
+ *   return <LocalessDocument document={content} />;
  * }
  * ```
  */
 export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({ document }, ref) => {
   const [contentData, setContentData] = useState(document.data);
   useEffect(() => {
-    localessSyncOn(['input', 'change'], event => {
+    localessSyncOnChange(event => {
       setContentData(event.data);
     });
   }, []);

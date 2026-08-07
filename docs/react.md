@@ -126,13 +126,7 @@ import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";
 
 // Server Component
 const content = await getLocalessClient().getContentBySlug<Page>('home', { locale });
-return (
-  <LocalessDocument
-    data={content.data}
-    links={content.links}
-    references={content.references}
-  />
-);
+return <LocalessDocument document={content} />;
 ```
 
 ### `useLocaless<T>` hook — client fetch + live sync
@@ -221,9 +215,7 @@ import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";
 export default async function HomePage({ params }) {
   const { locale } = await params;
   const content = await getLocalessClient().getContentBySlug<Page>('home', { locale });
-  return (
-    <LocalessDocument data={content.data} links={content.links} references={content.references} />
-  );
+  return <LocalessDocument document={content} />;
 }
 ```
 

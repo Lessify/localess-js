@@ -394,25 +394,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
   const client = getLocalessClient();
   const content = await client.getContentBySlug<Page>('home', { locale });
 
-  return (
-    <LocalessDocument
-      data={content.data}
-      links={content.links}
-      references={content.references}
-    />
-  );
+  return <LocalessDocument document={content} />;
 }
 ```
 
 **Props:**
 
-| Prop         | Type                     | Required | Description                                                         |
-|--------------|--------------------------|----------|---------------------------------------------------------------------|
-| `data`       | `ContentData`            | ✅        | Initial content data (typically server-fetched)                     |
-| `links`      | `Links`                  | ❌        | Resolved links map, forwarded to the inner `LocalessComponent`      |
-| `references` | `References`             | ❌        | Resolved references map, forwarded to the inner `LocalessComponent` |
-| `ref`        | `React.Ref<HTMLElement>` | ❌        | Forwarded to the rendered root element                              |
-| `...rest`    | `any`                    | ❌        | Any additional props are forwarded                                  |
+| Prop       | Type                     | Required | Description                                                            |
+|------------|--------------------------|----------|--------------------------------------------------------------------------|
+| `document` | `Content<T>`             | ✅        | Full content response object (from `getContentBySlug`/`getContentById`)  |
+| `ref`      | `React.Ref<HTMLElement>` | ❌        | Forwarded to the rendered root element                                   |
 
 > `LocalessDocument` subscribes to `input` / `change` editor events automatically when `enableSync` is active. It is a Client Component internally — no `'use client'` directive needed at the call site in Server Components.
 
@@ -562,13 +553,7 @@ export default async function HomePage({
   const content = await getLocalessClient().getContentBySlug<Page>('home', { locale });
 
   // LocalessDocument handles sync internally — no 'use client' wrapper needed here
-  return (
-    <LocalessDocument
-      data={content.data}
-      links={content.links}
-      references={content.references}
-    />
-  );
+  return <LocalessDocument document={content} />;
 }
 ```
 
@@ -706,13 +691,7 @@ Use `LocalessDocument` for a zero-boilerplate live-editing integration, or `useL
 import { LocalessDocument } from "@localess/react/rsc";
 
 export default function PageClient({ initialContent }) {
-  return (
-    <LocalessDocument
-      data={initialContent.data}
-      links={initialContent.links}
-      references={initialContent.references}
-    />
-  );
+  return <LocalessDocument document={initialContent} />;
 }
 ```
 

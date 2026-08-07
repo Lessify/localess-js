@@ -28,4 +28,4 @@
 export * from '../core/components/localess-component';
 export { isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncReady } from '../core/state';
 export * from '../ssr';
-export * from './localess-document';
+export * from '../core/components/localess-document';

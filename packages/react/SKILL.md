@@ -209,7 +209,7 @@ export function PageClient({ initialContent, locale }: { initialContent: Content
 `LocalessDocument` is a component alternative to the hook. It accepts server-fetched `data` and manages live sync updates internally, delegating rendering to `LocalessComponent`. Useful when you prefer a component-based approach over hooks.
 
 ```tsx
-// Server Component — pass fetched data directly to LocalessDocument
+// Server Component — pass the fetched content directly to LocalessDocument
 import { getLocalessClient, LocalessDocument } from "@localess/react";
 import type { Page } from "./.localess/localess";
 
@@ -218,24 +218,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
   const client = getLocalessClient();
   const content = await client.getContentBySlug<Page>('home', { locale });
 
-  return (
-    <LocalessDocument
-      data={content.data}
-      links={content.links}
-      references={content.references}
-    />
-  );
+  return <LocalessDocument document={content} />;
 }
 ```
 
-**Props** (same shape as `LocalessComponent`):
+**Props:**
 
-| Prop         | Type                     | Required | Description                            |
-|--------------|--------------------------|----------|----------------------------------------|
-| `data`       | `ContentData`            | ✅        | Initial content data                   |
-| `links`      | `Links`                  | ❌        | Resolved links map                     |
-| `references` | `References`             | ❌        | Resolved references map                |
-| `ref`        | `React.Ref<HTMLElement>` | ❌        | Forwarded to the rendered root element |
+| Prop       | Type                     | Required | Description                                                            |
+|------------|--------------------------|----------|--------------------------------------------------------------------------|
+| `document` | `Content<T>`             | ✅        | Full content response object (from `getContentBySlug`/`getContentById`) |
+| `ref`      | `React.Ref<HTMLElement>` | ❌        | Forwarded to the rendered root element                                  |
 
 > Subscribes to `input` / `change` events automatically when `enableSync` is active. Unlike `useLocaless`, it does not fetch content — it only handles live sync for data passed in as props.
 
@@ -350,9 +342,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
   const { locale } = await params;
   const content = await getLocalessClient().getContentBySlug<Page>('home', { locale });
 
-  return (
-    <LocalessDocument data={content.data} links={content.links} references={content.references} />
-  );
+  return <LocalessDocument document={content} />;
 }
 ```
 
