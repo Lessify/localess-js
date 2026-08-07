@@ -17,7 +17,7 @@ React integration layer for Localess. Builds on `@localess/client` and adds a co
 ### What `@localess/react/ssr` excludes
 
 The smallest bundle. It exports `LocalessServerComponent` / `LocalessServerDocument` (server-safe, no sync attributes) in place of the default `LocalessComponent` / `LocalessDocument`, and does NOT include:
-- `LocalessComponent` / `LocalessDocument` client variants (require `'use client'`)
+- `LocalessComponent` / `LocalessDocument` (available from the default export and `/rsc`)
 - `useLocaless` hook (requires `'use client'`)
 - `isSyncEnabled`, `localessSyncOn`, `localessSyncOnChange`, `localessSyncReady` (not meaningful without live editing)
 
@@ -26,8 +26,8 @@ The smallest bundle. It exports `LocalessServerComponent` / `LocalessServerDocum
 ### What `@localess/react/rsc` adds back
 
 Re-exports everything from `/ssr`, plus:
-- `LocalessComponent` / `LocalessDocument` client variants
-- `useLocaless` hook
+- `LocalessComponent` / `LocalessDocument` — both server-safe here (no `'use client'`); `LocalessDocument`'s live-sync subscription is delegated to a small internal Client Component, so the registry lookup itself stays in the Server Component module graph, where `localessInit()`'s registration is actually visible
+- `useLocaless` hook (requires `'use client'`)
 - `isSyncEnabled`, `localessSyncOn`, `localessSyncOnChange`, `localessSyncReady`
 
 ## Installation
@@ -146,7 +146,7 @@ Returns `undefined` while the initial fetch is in flight.
 |---|---|---|---|
 | Fetches content | No | No | Yes |
 | Live sync | No | Yes | Yes |
-| Works in RSC | Yes | No (`'use client'`) | No (`'use client'`) |
+| Works in RSC | Yes | Yes (via `/rsc`; the default export's version requires `'use client'`) | No (`'use client'`) |
 | Best for | Static SSR | Server-preloaded + sync | SPA / client-rendered |
 
 ## Writing Components
@@ -315,7 +315,7 @@ export type { Links, References, Translations }
 export type { LocalessSync, EventToApp, EventCallback, EventToAppType }
 
 // @localess/react/ssr — excludes sync/hooks (see Export Variants section)
-// @localess/react/rsc — extends /ssr with client components and isSyncEnabled
+// @localess/react/rsc — extends /ssr with a server-safe LocalessDocument, useLocaless, and isSyncEnabled
 ```
 
 ## Common Mistakes

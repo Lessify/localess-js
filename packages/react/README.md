@@ -70,8 +70,8 @@ import { localessInit, LocalessComponent, useLocaless } from "@localess/react";
 import { localessInit, LocalessServerComponent } from "@localess/react/ssr";
 
 // RSC — server components + client components for live editing
-import { localessInit, LocalessServerComponent } from "@localess/react/rsc";    // server
-import { LocalessDocument, useLocaless, localessEditable } from "@localess/react/rsc"; // client
+import { localessInit, LocalessServerComponent, LocalessDocument } from "@localess/react/rsc"; // server-safe
+import { useLocaless, localessEditable } from "@localess/react/rsc";                           // client only
 ```
 
 > [!NOTE]
@@ -384,7 +384,7 @@ export function PageView({ slug, locale }: { slug: string; locale?: string }) {
 
 ```tsx
 // app/[locale]/page.tsx (Server Component — fetches data)
-import { getLocalessClient, LocalessDocument } from "@localess/react";
+import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";
 import type { Page } from "./.localess/localess";
 
 export default async function HomePage({ params }: { params: Promise<{ locale?: string }> }) {
@@ -403,7 +403,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
 | `document` | `Content<T>`             | ✅        | Full content response object (from `getContentBySlug`/`getContentById`)  |
 | `ref`      | `React.Ref<HTMLElement>` | ❌        | Forwarded to the rendered root element                                   |
 
-> `LocalessDocument` subscribes to `input` / `change` editor events automatically when `enableSync` is active. It is a Client Component internally — no `'use client'` directive needed at the call site in Server Components.
+> `LocalessDocument` subscribes to `input` / `change` editor events automatically when `enableSync` is active.
+>
+> Import it from `@localess/react/rsc` (as above) when calling it directly from a Server Component, as this example does — that variant renders the component registry lookup itself in the Server Component module graph, where `localessInit()`'s registration is visible. The plain `@localess/react` export's `LocalessDocument` is a Client Component internally; calling it directly from a Server Component moves that lookup into a separate client module graph where the registration set by a Server Component's `localessInit()` call was never applied, and it fails to find any registered component. Use the plain `@localess/react` export's `LocalessDocument` only from inside an actual `'use client'` file (see the SPA example below).
 
 ### Manual Integration
 
@@ -537,9 +539,11 @@ export function PageClientHook({
 
 Skips client re-fetch entirely — uses server-preloaded data and only subscribes to live sync events. Simpler when you don't need client-side refetching.
 
+> This specific pattern — calling `LocalessDocument` directly from a Server Component with no separate `'use client'` file — needs the `@localess/react/rsc` import, not the plain `@localess/react` export used elsewhere in this SPA example. See [Full Example — Next.js App Router with RSC](#full-example--nextjs-app-router-with-rsc-localessreactrsc) below for why.
+
 ```tsx
 // app/[locale]/page.tsx (Server Component — no separate client file needed)
-import { getLocalessClient, LocalessDocument } from "@localess/react";
+import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";
 import type { Page } from "./.localess/localess";
 
 export default async function HomePage({
@@ -665,9 +669,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-### Server Component — `app/[locale]/page.tsx`
+### Rendering — `app/[locale]/page.tsx`
+
+Use `LocalessDocument` for a zero-boilerplate live-editing integration, or `useLocaless` for client-side re-fetching with more control.
+
+**Option A — `LocalessDocument` (recommended):** it's a Server Component internally (only its sync subscription runs client-side), so it renders directly in the Server Component — no separate Client Component file needed.
 
 ```tsx
+import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";
+
+export default async function Home({ params }: { params: { locale: string } }) {
+  const { locale } = await params;
+  const content = await getLocalessClient().getContentBySlug("home", { locale });
+  return <LocalessDocument document={content} />;
+}
+```
+
+**Option B — `useLocaless` hook:** re-fetches on the client, so it needs an actual `'use client'` file.
+
+```tsx
+// app/[locale]/page.tsx (Server Component)
 import { getLocalessClient } from "@localess/react/rsc";
 import PageClient from "./page-client";
 
@@ -678,24 +699,8 @@ export default async function Home({ params }: { params: { locale: string } }) {
 }
 ```
 
-### Client Component — `app/[locale]/page-client.tsx`
-
-Use `LocalessDocument` for a zero-boilerplate live-editing integration, or `useLocaless` for more control:
-
-**Option A — `LocalessDocument` (recommended):**
-
 ```tsx
-'use client';
-import { LocalessDocument } from "@localess/react/rsc";
-
-export default function PageClient({ initialContent }) {
-  return <LocalessDocument document={initialContent} />;
-}
-```
-
-**Option B — `useLocaless` hook:**
-
-```tsx
+// app/[locale]/page-client.tsx (Client Component)
 'use client';
 import { useLocaless, LocalessComponent, localessEditable } from "@localess/react/rsc";
 
