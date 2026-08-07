@@ -3,7 +3,7 @@ import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import {provideRouter, withComponentInputBinding} from '@angular/router';
 
 import { routes } from './app.routes';
-import {provideClientHydration, withEventReplay, withHttpTransferCacheOptions} from '@angular/platform-browser';
+import {provideClientHydration, withHttpTransferCacheOptions} from '@angular/platform-browser';
 import {provideLocalessBrowser} from '@localess/angular/browser';
 import {LocalessService} from './shared/services/localess.service';
 import { LocalessBrowserService } from './shared/services/localess-browser.service';
