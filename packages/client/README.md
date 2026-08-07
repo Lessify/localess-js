@@ -57,8 +57,7 @@ const client = localessClient({
 | `token`           | `string`          | ✅        | —             | Localess API token, found in Space settings                                                                                                                                                                 |
 | `version`         | `'draft'`         | ❌        | `'published'` | Default content version to fetch                                                                                                                                                                            |
 | `debug`           | `boolean`         | ❌        | `false`       | Enable debug logging                                                                                                                                                                                        |
-| `cacheTTL`        | `number \| false` | ❌        | `300`         | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely — takes precedence over `fileSystemCache`                                                                            |
-| `fileSystemCache` | `boolean`         | ❌        | `false`       | Use a file-system cache instead of the default in-memory cache. Shared across all processes pointing to the same working directory (e.g. Next.js parallel build workers). Respects `cacheTTL` for TTL value |
+| `cacheTTL`        | `number \| false` | ❌        | `300`         | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely                                                                                                                      |
 
 ---
 
@@ -212,8 +211,6 @@ import { localessEditableField } from "@localess/client";
 <h1 {...localessEditableField<MyPage>('title')}>...</h1>
 ```
 
-> **Deprecated:** `llEditable()` and `llEditableField()` are deprecated aliases. Use `localessEditable()` and `localessEditableField()` instead.
-
 ---
 
 ## Listening to Visual Editor Events
@@ -242,9 +239,11 @@ if (window.localess) {
 | `change`      | `{ type: 'change', data: any }`               | Fired after a field value is confirmed          |
 | `save`        | `{ type: 'save' }`                            | Fired when content is saved                     |
 | `publish`     | `{ type: 'publish' }`                         | Fired when content is published                 |
+| `unpublish`   | `{ type: 'unpublish' }`                       | Fired when content is unpublished               |
 | `pong`        | `{ type: 'pong' }`                            | Heartbeat response from the editor              |
-| `enterSchema` | `{ type: 'enterSchema', id, schema, field? }` | Fired when hovering over a schema element       |
-| `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }` | Fired when entering a schema element            |
+| `enterSchema` | `{ type: 'enterSchema', id, schema, field? }` | Fired when entering a schema element            |
+| `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }` | Fired when hovering over a schema element       |
+| `leaveSchema` | `{ type: 'leaveSchema' }`                     | Fired when leaving a schema element             |
 
 ---
 
@@ -263,28 +262,7 @@ const client = localessClient({ origin, spaceId, token, cacheTTL: 600 });
 const client = localessClient({ origin, spaceId, token, cacheTTL: false });
 ```
 
-### Sharing cache across Next.js build workers
-
-Next.js runs multiple worker processes in parallel during `next build`. Each worker has its own memory space, so the default in-memory cache is not shared — every worker re-fetches the same URLs independently.
-
-Set `fileSystemCache: true` to persist cache entries to disk. All workers sharing the same working directory will read and write the same cache files:
-
-```ts
-// File-system cache with default 5-minute TTL
-const client = localessClient({ origin, spaceId, token, fileSystemCache: true });
-
-// File-system cache with custom TTL
-const client = localessClient({ origin, spaceId, token, fileSystemCache: true, cacheTTL: 60 });
-
-// cacheTTL: false always wins — no cache even with fileSystemCache: true
-const client = localessClient({ origin, spaceId, token, fileSystemCache: true, cacheTTL: false });
-```
-
-Cache files are written to `.localess-cache/` in the current working directory. Add it to `.gitignore`:
-
-```
-.localess-cache/
-```
+> **Note:** The cache is in-memory and instance-bound. In multi-process deployments (e.g. Next.js parallel build workers), each process has its own independent cache. → [ADR 003](../../docs/decisions/003-ttl-cache-design.md)
 
 ---
 

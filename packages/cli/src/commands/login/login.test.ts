@@ -81,10 +81,9 @@ describe('login command', () => {
     const getSpace = vi.fn().mockResolvedValue({ id: 'space-1', name: 'Demo Space' });
     vi.mocked(localessCliClient).mockReturnValue({ getSpace } as unknown as ReturnType<typeof localessCliClient>);
 
-    await loginCommand.parseAsync(
-      ['--origin', 'https://demo.localess.org', '--space', 'space-1', '--token', 'token-123', '--verbose'],
-      { from: 'user' }
-    );
+    await loginCommand.parseAsync(['--origin', 'https://demo.localess.org', '--space', 'space-1', '--token', 'token-123', '--verbose'], {
+      from: 'user',
+    });
 
     expect(localessCliClient).toHaveBeenCalledWith({
       origin: 'https://demo.localess.org',

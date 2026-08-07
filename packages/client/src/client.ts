@@ -154,7 +154,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       'X-Localess-Agent': 'Localess-JS-Client',
-      'X-Localess-Agent-Version': '0.9.0',
+      'X-Localess-Agent-Version': '3.4.1',
     },
   };
 

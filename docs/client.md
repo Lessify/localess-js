@@ -4,7 +4,7 @@ Core JavaScript/TypeScript SDK for the Localess headless CMS.
 
 **Server-side only** — requires an API token that must never reach the browser. Use in Next.js Server Components, API routes, `getServerSideProps`, Remix loaders, etc. → [ADR 001](decisions/001-server-side-only.md)
 
-**Zero production dependencies** — no runtime deps beyond Node.js >= 20. → [ADR 002](decisions/002-zero-production-deps.md)
+**Zero production dependencies** — no runtime deps beyond Node.js >= 24.0.0. → [ADR 002](decisions/002-zero-production-deps.md)
 
 ## Installation
 

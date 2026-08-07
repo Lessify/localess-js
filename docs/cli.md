@@ -2,7 +2,7 @@
 
 Command-line interface for the Localess headless CMS. Handles authentication, translation sync, and TypeScript type generation.
 
-**Requires:** Node.js >= 20.0.0.
+**Requires:** Node.js >= 24.0.0.
 
 ## Installation
 

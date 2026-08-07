@@ -1,6 +1,6 @@
 # Contributing to @localess/client
 
-Core SDK. Server-side only. Zero production dependencies. Node.js >= 20.
+Core SDK. Server-side only. Zero production dependencies. Node.js >= 24.0.0.
 
 ## Adding a New API Method
 

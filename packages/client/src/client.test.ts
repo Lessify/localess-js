@@ -25,6 +25,16 @@ describe('localessClient', () => {
     vi.restoreAllMocks();
   });
 
+  it('sends the current package version in the X-Localess-Agent-Version header', async () => {
+    (fetch as any).mockResolvedValue(jsonResponse({}));
+    const client = localessClient(baseOptions);
+
+    await client.getLinks();
+
+    const requestInit = (fetch as any).mock.calls[0][1] as RequestInit;
+    expect((requestInit.headers as Record<string, string>)['X-Localess-Agent-Version']).toBe('3.4.1');
+  });
+
   it('normalizes a trailing slash in the origin', async () => {
     (fetch as any).mockResolvedValue(jsonResponse({}));
     const client = localessClient(baseOptions);

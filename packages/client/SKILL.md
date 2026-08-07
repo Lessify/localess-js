@@ -4,7 +4,7 @@
 
 `@localess/client` is the **core JavaScript/TypeScript SDK** for the Localess headless CMS. It is a **server-side-only** library — never use it in browser/client-side code because it requires an API token that must remain secret.
 
-**Zero production dependencies.** Requires Node.js >= 20.0.0.
+**Zero production dependencies.** Requires Node.js >= 24.0.0.
 
 ---
 
@@ -28,7 +28,6 @@ const client = localessClient({
   version: 'draft',                       // undefined = published (default), 'draft' for preview
   debug: false,                           // Logs requests; default: false
   cacheTTL: 300,                          // Cache TTL in seconds; false to disable; default: 300 (5 min)
-  fileSystemCache: false,                 // true = share cache across processes via filesystem; default: false
 });
 ```
 
@@ -149,21 +148,7 @@ localessClient({ cacheTTL: 3600 })  // 1 hour TTL   — rarely updated content
 localessClient({ cacheTTL: false }) // Disabled      — always fresh (use in draft/preview mode)
 ```
 
-### fileSystemCache
-
-Next.js (and similar frameworks) spin up multiple worker processes during build. Each worker has its own memory, so the default in-memory cache is not shared — every worker re-fetches the same URLs. Set `fileSystemCache: true` to write cache entries to disk so all workers share the same cache:
-
-```typescript
-localessClient({ fileSystemCache: true })                  // filesystem cache, default 5 min TTL
-localessClient({ fileSystemCache: true, cacheTTL: 60 })   // filesystem cache, 1 min TTL
-localessClient({ fileSystemCache: true, cacheTTL: false }) // cacheTTL: false wins — no cache
-```
-
-Cache files are written to `.localess-cache/` in the current working directory. Add it to `.gitignore`:
-
-```
-.localess-cache/
-```
+The cache is in-memory and instance-bound — each `localessClient()` instance has its own cache, and multi-process deployments (e.g. Next.js parallel build workers) do not share cache entries across processes.
 
 ---
 
@@ -222,9 +207,11 @@ if (window.localess) {
 | `change`      | Field value confirmed                 |
 | `save`        | Content saved                         |
 | `publish`     | Content published                     |
+| `unpublish`   | Content unpublished                   |
 | `pong`        | Editor heartbeat response             |
 | `enterSchema` | User enters a schema element          |
 | `hoverSchema` | User hovers over a schema element     |
+| `leaveSchema` | User leaves a schema element          |
 
 ---
 
@@ -325,7 +312,6 @@ isIframe()   // true if running inside an iframe (browser only)
 ```typescript
 export { localessClient }                          // Client factory
 export { localessEditable, localessEditableField } // Visual editor helpers
-export { llEditable, llEditableField }             // Deprecated aliases
 export { loadLocalessSync }                        // Sync script injector
 export { isBrowser, isServer, isIframe }           // Environment utilities
 export { buildAssetQueryString }                   // Asset query string serialiser

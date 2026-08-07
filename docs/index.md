@@ -13,7 +13,7 @@ This monorepo contains the official JavaScript/TypeScript SDKs for the Localess 
 
 `@localess/react`, `@localess/angular`, and `@localess/cli` never depend on each other.
 
-**Requirements:** Node.js >= 20.0.0, npm >= 10.
+**Requirements:** Node.js >= 24.0.0, npm >= 10.
 
 ## Hard Rules — Never Violate
 

@@ -1,9 +1,8 @@
-import { localessClient, LocalessClientOptions, Translations } from '@localess/client';
+import { localessClient, LocalessClientOptions } from '@localess/client';
 import { OpenAPIObject } from 'openapi3-ts/oas30';
 
-import type { Schemas } from './models/schema';
-import type { Space } from './models/space';
-import type { TranslationUpdate, TranslationUpdateResponse, TranslationUpdateType } from './models/translations';
+import { version } from '../package.json';
+import type { Schemas, Space, Translations, TranslationUpdate, TranslationUpdateResponse, TranslationUpdateType } from './models';
 import { FG_BLUE, RESET } from './utils';
 
 export type LocalessCliClientOptions = LocalessClientOptions & {
@@ -65,7 +64,7 @@ export function localessCliClient(options: LocalessCliClientOptions) {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       'X-Localess-Agent': 'Localess-CLI-Client',
-      'X-Localess-Agent-Version': '0.9.0',
+      'X-Localess-Agent-Version': version,
     },
   };
 
