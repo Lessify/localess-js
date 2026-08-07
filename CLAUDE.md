@@ -1,5 +1,7 @@
 # Localess JS SDK — Contributor Guide
 
+@AGENTS.md
+
 This is a monorepo containing the official JavaScript/TypeScript SDKs for the Localess headless CMS. Four packages:
 
 - `@localess/client` — Core server-side-only SDK. Zero production dependencies.
