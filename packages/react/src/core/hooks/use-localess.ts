@@ -29,7 +29,7 @@ export type UseLocalessOptions = ContentFetchParams & {};
  *
  * @param slug - Content slug string, or an array of path segments that will be joined with `/`.
  * @param options - Optional fetch parameters (locale, version, resolveReference, resolveLink).
- * @returns The fetched {@link Content}<T> object, or `undefined` while the initial fetch is in flight.
+ * @returns The fetched {@link Content}<T> object, or `undefined` while the initial fetch is in flight or if it failed (the error is logged to the console).
  *
  * @example Basic usage
  * ```tsx
@@ -62,11 +62,15 @@ export const useLocaless = <T extends ContentData = ContentData>(
 
   useEffect(() => {
     async function loadDocument() {
-      const document = await client.getContentBySlug<T>(normalizedSlug, options);
-      setDocument(document);
-      localessSyncOn(['input', 'change'], event => {
-        setDocument({ ...document, data: event.data });
-      });
+      try {
+        const document = await client.getContentBySlug<T>(normalizedSlug, options);
+        setDocument(document);
+        localessSyncOn(['input', 'change'], event => {
+          setDocument({ ...document, data: event.data });
+        });
+      } catch (error) {
+        console.error('[Localess] useLocaless failed to fetch content : ', error);
+      }
     }
     loadDocument();
     // `options` is compared by value (JSON) instead of by reference: callers that pass an

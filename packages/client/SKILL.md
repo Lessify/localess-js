@@ -132,6 +132,31 @@ SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
 
 ---
 
+## Error Handling
+
+`getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` throw instead of returning empty/default data on failure:
+
+- Network failures (e.g. DNS, timeout) reject with the underlying error.
+- Non-2xx HTTP responses (401, 404, 500, ...) reject with a `LocalessApiError` exposing `status`, `statusText`, and `url`.
+
+```typescript
+import { LocalessApiError, localessClient } from "@localess/client";
+
+try {
+  const content = await client.getContentBySlug('home');
+} catch (error) {
+  if (error instanceof LocalessApiError) {
+    console.error(`Localess request failed: ${error.status} ${error.statusText}`);
+  } else {
+    throw error;
+  }
+}
+```
+
+Always wrap calls in `try`/`catch` (or handle rejection) — the promise never silently resolves to `{}` on failure.
+
+---
+
 ## Caching
 
 - Default: in-memory TTL cache, **5 minutes** (300,000 ms)
@@ -305,12 +330,15 @@ isIframe()   // true if running inside an iframe (browser only)
 
 6. **Use `resolveReference: true`** only when you need inline reference data — it increases payload size.
 
+7. **Always wrap fetch calls in `try`/`catch`** — they throw on network failure or non-2xx responses instead of returning empty data.
+
 ---
 
 ## Exports Reference
 
 ```typescript
 export { localessClient }                          // Client factory
+export { LocalessApiError }                        // Thrown for non-2xx API responses
 export { localessEditable, localessEditableField } // Visual editor helpers
 export { loadLocalessSync }                        // Sync script injector
 export { isBrowser, isServer, isIframe }           // Environment utilities

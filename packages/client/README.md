@@ -142,6 +142,26 @@ const translations = await client.getTranslations('en');
 
 ---
 
+## Error Handling
+
+`getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` reject instead of returning empty data when the request fails — either because of a network error or because the Localess API responded with a non-2xx status code. A non-2xx response rejects with a `LocalessApiError`, which exposes `status`, `statusText`, and `url`:
+
+```ts
+import { LocalessApiError, localessClient } from "@localess/client";
+
+try {
+  const content = await client.getContentBySlug('home');
+} catch (error) {
+  if (error instanceof LocalessApiError) {
+    console.error(`Localess request failed: ${error.status} ${error.statusText}`);
+  } else {
+    throw error;
+  }
+}
+```
+
+---
+
 ## Assets
 
 ### `assetLink(asset)`

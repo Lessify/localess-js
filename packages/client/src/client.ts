@@ -105,6 +105,7 @@ export interface LocalessClient {
    * Get all links
    * @param params{LinksFetchParams} - Fetch parameters
    * @returns {Promise<Links>}
+   * @throws {LocalessApiError} When the API responds with a non-2xx status code.
    */
   getLinks(params?: LinksFetchParams): Promise<Links>;
 
@@ -113,6 +114,7 @@ export interface LocalessClient {
    * @param slug{string} - Content SLUG
    * @param params{ContentFetchParams} - Fetch parameters
    * @returns {Promise<Content>}
+   * @throws {LocalessApiError} When the API responds with a non-2xx status code.
    */
   getContentBySlug<T extends ContentData = ContentData>(slug: string, params?: ContentFetchParams): Promise<Content<T>>;
 
@@ -121,6 +123,7 @@ export interface LocalessClient {
    * @param id{string} - Content ID
    * @param params{ContentFetchParams} - Fetch parameters
    * @returns {Promise<Content>}
+   * @throws {LocalessApiError} When the API responds with a non-2xx status code.
    */
   getContentById<T extends ContentData = ContentData>(id: string, params?: ContentFetchParams): Promise<Content<T>>;
 
@@ -128,6 +131,7 @@ export interface LocalessClient {
    * Get translations for the given locale
    * @param locale{string} - Locale identifier (ISO 639-1)
    * @param params{TranslationFetchParams} - Fetch parameters
+   * @throws {LocalessApiError} When the API responds with a non-2xx status code.
    */
   getTranslations(locale: string, params?: TranslationFetchParams): Promise<Translations>;
 
@@ -137,6 +141,26 @@ export interface LocalessClient {
 }
 
 const LOG_GROUP = `${FG_BLUE}[Localess:Client]${RESET}`;
+
+/**
+ * Error thrown when the Localess API responds with a non-2xx status code.
+ */
+export class LocalessApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly statusText: string,
+    public readonly url: string
+  ) {
+    super(`Localess API request to ${url} failed with ${status} ${statusText}`);
+    this.name = 'LocalessApiError';
+  }
+}
+
+async function assertOk(response: Response, url: string): Promise<void> {
+  if (!response.ok) {
+    throw new LocalessApiError(response.status, response.statusText, url);
+  }
+}
 
 /**
  * Create a Localess API Client
@@ -197,6 +221,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         if (options.debug) {
           console.log(LOG_GROUP, 'getLinks status : ', response.status);
         }
+        await assertOk(response, url);
         const data = await response.json();
 
         // Store response in cache
@@ -205,7 +230,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         return data as Links;
       } catch (error) {
         console.error(LOG_GROUP, 'getLinks error : ', error);
-        return {} as Links;
+        throw error;
       }
     },
 
@@ -245,6 +270,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         if (options.debug) {
           console.log(LOG_GROUP, 'getContentBySlug status : ', response.status);
         }
+        await assertOk(response, url);
         const data = await response.json();
 
         // Store response in cache
@@ -253,7 +279,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         return data as Content<T>;
       } catch (error: any) {
         console.error(LOG_GROUP, 'getContentBySlug error : ', error);
-        return {} as Content<T>;
+        throw error;
       }
     },
 
@@ -293,6 +319,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         if (options.debug) {
           console.log(LOG_GROUP, 'getContentById status : ', response.status);
         }
+        await assertOk(response, url);
         const data = await response.json();
 
         // Store response in cache
@@ -301,7 +328,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         return data as Content<T>;
       } catch (error: any) {
         console.error(LOG_GROUP, 'getContentById error : ', error);
-        return {} as Content<T>;
+        throw error;
       }
     },
 
@@ -337,6 +364,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         if (options.debug) {
           console.log(LOG_GROUP, 'getTranslations status : ', response.status);
         }
+        await assertOk(response, url);
         const data = await response.json();
 
         // Store response in cache
@@ -345,7 +373,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         return data as Translations;
       } catch (error: any) {
         console.error(LOG_GROUP, 'getTranslations error : ', error);
-        return {} as Translations;
+        throw error;
       }
     },
 

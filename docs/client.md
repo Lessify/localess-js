@@ -107,6 +107,22 @@ const url = client.assetLink('my-image.png', { w: 400 });
 | `resolveReference` | `boolean`              | `false`     | Inline referenced content objects         |
 | `resolveLink`      | `boolean`              | `false`     | Inline linked content metadata            |
 
+## Error Handling
+
+`getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` throw instead of returning empty data on failure. Network failures reject with the underlying error; non-2xx HTTP responses reject with a `LocalessApiError` (`status`, `statusText`, `url`). Always wrap calls in `try`/`catch`:
+
+```typescript
+import { LocalessApiError } from "@localess/client";
+
+try {
+  const content = await client.getContentBySlug('home');
+} catch (error) {
+  if (error instanceof LocalessApiError) {
+    console.error(error.status, error.statusText);
+  }
+}
+```
+
 ## Caching
 
 Default: in-memory TTL cache, **5 minutes** (300 seconds). Cache key = full request URL. → [ADR 003](decisions/003-ttl-cache-design.md)
@@ -234,6 +250,7 @@ interface Translations { [key: string]: string }
 
 ```typescript
 export { localessClient }
+export { LocalessApiError }
 export { localessEditable, localessEditableField }
 export { loadLocalessSync }
 export { isBrowser, isServer, isIframe }

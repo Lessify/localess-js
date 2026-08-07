@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { localessClient } from './client';
+import { LocalessApiError, localessClient } from './client';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -83,14 +83,24 @@ describe('localessClient', () => {
       expect(second).toEqual({ items: [] });
     });
 
-    it('returns an empty object and logs on fetch error', async () => {
+    it('rejects and logs on network error', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockRejectedValue(new Error('network down'));
       const client = localessClient(baseOptions);
 
-      const result = await client.getLinks();
+      await expect(client.getLinks()).rejects.toThrow('network down');
+      expect(errorSpy).toHaveBeenCalled();
+    });
 
-      expect(result).toEqual({});
+    it('rejects with LocalessApiError on a non-2xx response', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('Unauthorized', { status: 401, statusText: 'Unauthorized' }));
+      const client = localessClient(baseOptions);
+
+      const error = await client.getLinks().catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessApiError);
+      expect(error.status).toBe(401);
       expect(errorSpy).toHaveBeenCalled();
     });
   });
@@ -134,15 +144,24 @@ describe('localessClient', () => {
       expect((url.match(/version=draft/g) ?? []).length).toBe(1);
     });
 
-    it('returns an empty object and logs on fetch error', async () => {
+    it('rejects and logs on fetch error', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockRejectedValue(new Error('boom'));
       const client = localessClient(baseOptions);
 
-      const result = await client.getContentBySlug('home');
-
-      expect(result).toEqual({});
+      await expect(client.getContentBySlug('home')).rejects.toThrow('boom');
       expect(errorSpy).toHaveBeenCalled();
+    });
+
+    it('rejects with LocalessApiError on a non-2xx response', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('Not Found', { status: 404, statusText: 'Not Found' }));
+      const client = localessClient(baseOptions);
+
+      const error = await client.getContentBySlug('missing').catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessApiError);
+      expect(error.status).toBe(404);
     });
   });
 
@@ -170,6 +189,17 @@ describe('localessClient', () => {
         expect.any(Object)
       );
     });
+
+    it('rejects with LocalessApiError on a non-2xx response', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('Server Error', { status: 500, statusText: 'Internal Server Error' }));
+      const client = localessClient(baseOptions);
+
+      const error = await client.getContentById('c1').catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessApiError);
+      expect(error.status).toBe(500);
+    });
   });
 
   describe('getTranslations', () => {
@@ -185,14 +215,12 @@ describe('localessClient', () => {
       );
     });
 
-    it('returns an empty object and logs on fetch error', async () => {
+    it('rejects and logs on fetch error', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockRejectedValue(new Error('boom'));
       const client = localessClient(baseOptions);
 
-      const result = await client.getTranslations('en');
-
-      expect(result).toEqual({});
+      await expect(client.getTranslations('en')).rejects.toThrow('boom');
       expect(errorSpy).toHaveBeenCalled();
     });
   });
