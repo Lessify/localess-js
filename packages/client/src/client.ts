@@ -226,7 +226,8 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const locale = params?.locale ? `&locale=${params.locale}` : '';
       const resolveReference = params?.resolveReference ? `&resolveReference=${params.resolveReference}` : '';
       const resolveLink = params?.resolveLink ? `&resolveLink=${params.resolveLink}` : '';
-      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/slugs/${slug}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
+      const resolveAsset = params?.resolveAsset ? `&resolveAsset=${params.resolveAsset}` : '';
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/slugs/${slug}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}${resolveAsset}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getContentBySlug fetch url : ', url);
       }
@@ -273,7 +274,8 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const locale = params?.locale ? `&locale=${params.locale}` : '';
       const resolveReference = params?.resolveReference ? `&resolveReference=${params.resolveReference}` : '';
       const resolveLink = params?.resolveLink ? `&resolveLink=${params.resolveLink}` : '';
-      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/${id}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}`;
+      const resolveAsset = params?.resolveAsset ? `&resolveAsset=${params.resolveAsset}` : '';
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/${id}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}${resolveAsset}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getContentById fetch url : ', url);
       }

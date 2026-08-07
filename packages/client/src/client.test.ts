@@ -105,10 +105,11 @@ describe('localessClient', () => {
         locale: 'en',
         resolveReference: true,
         resolveLink: true,
+        resolveAsset: true,
       });
 
       expect(fetch).toHaveBeenCalledWith(
-        'https://cms.example.com/api/v1/spaces/space-1/contents/slugs/home?token=token-123&version=draft&locale=en&resolveReference=true&resolveLink=true',
+        'https://cms.example.com/api/v1/spaces/space-1/contents/slugs/home?token=token-123&version=draft&locale=en&resolveReference=true&resolveLink=true&resolveAsset=true',
         expect.any(Object)
       );
     });
@@ -154,6 +155,18 @@ describe('localessClient', () => {
 
       expect(fetch).toHaveBeenCalledWith(
         'https://cms.example.com/api/v1/spaces/space-1/contents/c1?token=token-123&locale=de',
+        expect.any(Object)
+      );
+    });
+
+    it('builds the URL with the resolveAsset param', async () => {
+      (fetch as any).mockResolvedValue(jsonResponse({ _id: 'c1' }));
+      const client = localessClient(baseOptions);
+
+      await client.getContentById('c1', { resolveAsset: true });
+
+      expect(fetch).toHaveBeenCalledWith(
+        'https://cms.example.com/api/v1/spaces/space-1/contents/c1?token=token-123&resolveAsset=true',
         expect.any(Object)
       );
     });
