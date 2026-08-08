@@ -139,17 +139,19 @@ SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
 
 `getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` throw instead of returning empty/default data on failure:
 
-- Network failures (e.g. DNS, timeout) reject with the underlying error.
-- Non-2xx HTTP responses (401, 404, 500, ...) reject with a `LocalessApiError` exposing `status`, `statusText`, and `url`.
+- Non-2xx HTTP responses (401, 404, 500, ...) reject with a `LocalessApiError` exposing `status`, `statusText`, `url` (token redacted), `body` (the API's parsed response body, if present), and `hint` (a status-specific explanation of the likely cause and what to check).
+- Failures before a response is received (DNS, connection refused, TLS, ...) reject with a `LocalessNetworkError` exposing `origin`, `url` (redacted), `hint`, and `cause` (the underlying error).
 
 ```typescript
-import { LocalessApiError, localessClient } from "@localess/client";
+import { LocalessApiError, LocalessNetworkError, localessClient } from "@localess/client";
 
 try {
   const content = await client.getContentBySlug('home');
 } catch (error) {
   if (error instanceof LocalessApiError) {
-    console.error(`Localess request failed: ${error.status} ${error.statusText}`);
+    console.error(`Localess request failed: ${error.status} ${error.statusText} — ${error.hint}`);
+  } else if (error instanceof LocalessNetworkError) {
+    console.error(`Could not reach ${error.origin} — ${error.hint}`);
   } else {
     throw error;
   }
@@ -355,7 +357,8 @@ isIframe()   // true if running inside an iframe (browser only)
 
 ```typescript
 export { localessClient }                          // Client factory
-export { LocalessApiError }                        // Thrown for non-2xx API responses
+export { LocalessApiError }                        // Thrown for non-2xx API responses (status, statusText, url, body, hint)
+export { LocalessNetworkError }                    // Thrown when the API can't be reached (origin, url, hint, cause)
 export { localessEditable, localessEditableField } // Visual editor helpers
 export { loadLocalessSync }                        // Sync script injector
 export { isBrowser, isServer, isIframe }           // Environment utilities

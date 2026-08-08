@@ -25,7 +25,7 @@ export type AssetsFetchParams = {
 
 **3. Implement the method in the `localessClient` factory return object in `src/client.ts`:**
 
-Follow the exact same pattern as existing methods — build the URL, check the cache, fetch, store in cache, return typed data:
+Follow the exact same pattern as existing methods — build the URL, then delegate to the shared `fetchJson<T>(url, methodLabel)` helper (defined once per client instance, above the returned object), which handles the cache check, the fetch, non-2xx/network error handling (as `LocalessApiError`/`LocalessNetworkError`), and storing the result in cache:
 
 ```typescript
 async getAssets(params?: AssetsFetchParams): Promise<Assets> {
@@ -37,24 +37,7 @@ async getAssets(params?: AssetsFetchParams): Promise<Assets> {
   if (options.debug) {
     console.log(LOG_GROUP, 'getAssets fetch url : ', url);
   }
-  if (cache.has(url)) {
-    if (options.debug) {
-      console.log(LOG_GROUP, 'getAssets cache hit');
-    }
-    return cache.get(url) as Assets;
-  }
-  try {
-    const response = await fetch(url, fetchOptions);
-    if (options.debug) {
-      console.log(LOG_GROUP, 'getAssets status : ', response.status);
-    }
-    const data = await response.json();
-    cache.set(url, data);
-    return data as Assets;
-  } catch (error) {
-    console.error(LOG_GROUP, 'getAssets error : ', error);
-    return {} as Assets;
-  }
+  return fetchJson<Assets>(url, 'getAssets');
 },
 ```
 

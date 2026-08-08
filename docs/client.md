@@ -106,16 +106,23 @@ const url = client.assetLink('my-image.png', { w: 400 });
 
 ## Error Handling
 
-`getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` throw instead of returning empty data on failure. Network failures reject with the underlying error; non-2xx HTTP responses reject with a `LocalessApiError` (`status`, `statusText`, `url`). Always wrap calls in `try`/`catch`:
+`getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` throw instead of returning empty data on failure.
+
+- A non-2xx HTTP response rejects with a `LocalessApiError` — `status`, `statusText`, `url` (token redacted), `body` (the API's parsed response body, if any), and `hint` (a status-specific, human-readable explanation of the likely cause).
+- A failure to reach the API at all (DNS, connection refused, TLS, etc.) rejects with a `LocalessNetworkError` — `origin`, `url` (token redacted), `hint`, and `cause` (the underlying error).
 
 ```typescript
-import { LocalessApiError } from "@localess/client";
+import { LocalessApiError, LocalessNetworkError } from "@localess/client";
 
 try {
   const content = await client.getContentBySlug('home');
 } catch (error) {
   if (error instanceof LocalessApiError) {
-    console.error(error.status, error.statusText);
+    console.error(`${error.status} ${error.statusText}: ${error.hint}`);
+  } else if (error instanceof LocalessNetworkError) {
+    console.error(`Could not reach ${error.origin}: ${error.hint}`);
+  } else {
+    throw error;
   }
 }
 ```

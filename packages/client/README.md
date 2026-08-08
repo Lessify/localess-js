@@ -146,16 +146,21 @@ const translations = await client.getTranslations('en');
 
 ## Error Handling
 
-`getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` reject instead of returning empty data when the request fails — either because of a network error or because the Localess API responded with a non-2xx status code. A non-2xx response rejects with a `LocalessApiError`, which exposes `status`, `statusText`, and `url`:
+`getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` reject instead of returning empty data when the request fails.
+
+- A non-2xx HTTP response rejects with a `LocalessApiError`, which exposes `status`, `statusText`, `url` (with the token redacted), `body` (the API's parsed response body, if any — object, string, or `undefined`), and `hint` (a status-specific explanation, e.g. for 401/403/404/429/5xx).
+- A request that never reached the API (DNS failure, connection refused, etc.) rejects with a `LocalessNetworkError`, exposing `origin`, `url` (redacted), `hint`, and `cause` (the underlying error).
 
 ```ts
-import { LocalessApiError, localessClient } from "@localess/client";
+import { LocalessApiError, LocalessNetworkError, localessClient } from "@localess/client";
 
 try {
   const content = await client.getContentBySlug('home');
 } catch (error) {
   if (error instanceof LocalessApiError) {
-    console.error(`Localess request failed: ${error.status} ${error.statusText}`);
+    console.error(`Localess request failed: ${error.status} ${error.statusText} — ${error.hint}`);
+  } else if (error instanceof LocalessNetworkError) {
+    console.error(`Could not reach ${error.origin} — ${error.hint}`);
   } else {
     throw error;
   }

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { LocalessApiError, localessClient } from './client';
+import { LocalessApiError, LocalessNetworkError, localessClient } from './client';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -85,14 +85,21 @@ describe('localessClient', () => {
 
     it('rejects and logs on network error', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      (fetch as any).mockRejectedValue(new Error('network down'));
+      const originalError = new Error('network down');
+      (fetch as any).mockRejectedValue(originalError);
       const client = localessClient(baseOptions);
 
-      await expect(client.getLinks()).rejects.toThrow('network down');
+      const error = await client.getLinks().catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessNetworkError);
+      expect(error.cause).toBe(originalError);
+      expect(error.origin).toBe('https://cms.example.com');
+      expect(error.hint).toContain('firewall');
+      expect(error.url).not.toContain('token-123');
       expect(errorSpy).toHaveBeenCalled();
     });
 
-    it('rejects with LocalessApiError on a non-2xx response', async () => {
+    it('rejects with LocalessApiError on a non-2xx response, with a status-specific hint and a redacted url', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockResolvedValue(new Response('Unauthorized', { status: 401, statusText: 'Unauthorized' }));
       const client = localessClient(baseOptions);
@@ -101,7 +108,173 @@ describe('localessClient', () => {
 
       expect(error).toBeInstanceOf(LocalessApiError);
       expect(error.status).toBe(401);
+      expect(error.hint).toContain('Missing or invalid API token');
+      expect(error.url).not.toContain('token-123');
+      expect(error.url).toContain('token=***');
       expect(errorSpy).toHaveBeenCalled();
+    });
+
+    it('includes the API response body and its message in the hint on a 403', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(
+        new Response(JSON.stringify({ message: 'Space access denied' }), { status: 403, statusText: 'Forbidden' })
+      );
+      const client = localessClient(baseOptions);
+
+      const error = await client.getLinks().catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessApiError);
+      expect(error.body).toEqual({ message: 'Space access denied' });
+      expect(error.hint).toContain("doesn't have access");
+      expect(error.hint).toContain('Space access denied');
+    });
+
+    it('computes a rate-limit hint on a 429', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('', { status: 429, statusText: 'Too Many Requests' }));
+      const client = localessClient(baseOptions);
+
+      const error = await client.getLinks().catch(e => e);
+
+      expect(error.hint).toContain('Rate limited');
+      expect(error.body).toBeUndefined();
+    });
+
+    it('computes a transient-server-error hint on a 5xx', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('', { status: 503, statusText: 'Service Unavailable' }));
+      const client = localessClient(baseOptions);
+
+      const error = await client.getLinks().catch(e => e);
+
+      expect(error.hint).toContain('transient');
+    });
+
+    it('falls back to a generic hint for an uncovered status code', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('', { status: 418, statusText: "I'm a teapot" }));
+      const client = localessClient(baseOptions);
+
+      const error = await client.getLinks().catch(e => e);
+
+      expect(error.hint).toContain('Unexpected response');
+    });
+
+    it('captures a non-JSON response body as raw text', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('upstream timeout', { status: 502, statusText: 'Bad Gateway' }));
+      const client = localessClient(baseOptions);
+
+      const error = await client.getLinks().catch(e => e);
+
+      expect(error.body).toBe('upstream timeout');
+      expect(error.hint).toContain('upstream timeout');
+    });
+  });
+
+  describe('boxed error console output', () => {
+    const originalIsTTY = process.stdout.isTTY;
+
+    afterEach(() => {
+      process.stdout.isTTY = originalIsTTY;
+    });
+
+    it('logs a boxed error message for a LocalessApiError', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(
+        new Response(JSON.stringify({ message: 'Space access denied' }), { status: 403, statusText: 'Forbidden' })
+      );
+      const client = localessClient(baseOptions);
+
+      await client.getLinks().catch(() => {});
+
+      const logged = errorSpy.mock.calls[0][1] as string;
+      expect(logged).toContain('┌');
+      expect(logged).toContain('Localess API Error — getLinks');
+      expect(logged).toContain('Status');
+      expect(logged).toContain('403');
+      expect(logged).toContain('Hint');
+      expect(logged).toContain("doesn't have access");
+    });
+
+    it('logs a boxed error message for a LocalessNetworkError', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockRejectedValue(new Error('network down'));
+      const client = localessClient(baseOptions);
+
+      await client.getLinks().catch(() => {});
+
+      const logged = errorSpy.mock.calls[0][1] as string;
+      expect(logged).toContain('┌');
+      expect(logged).toContain('Localess Network Error — getLinks');
+      expect(logged).toContain('Origin');
+      expect(logged).toContain('Cause');
+      expect(logged).toContain('network down');
+    });
+
+    it('includes ANSI color codes when running in a color-capable TTY', async () => {
+      process.stdout.isTTY = true;
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('', { status: 500, statusText: 'Internal Server Error' }));
+      const client = localessClient(baseOptions);
+
+      await client.getLinks().catch(() => {});
+
+      const logged = errorSpy.mock.calls[0][1] as string;
+      expect(logged).toContain('\x1b[');
+    });
+
+    it('omits ANSI color codes when NO_COLOR is set, even in a TTY', async () => {
+      process.stdout.isTTY = true;
+      vi.stubEnv('NO_COLOR', '1');
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('', { status: 500, statusText: 'Internal Server Error' }));
+      const client = localessClient(baseOptions);
+
+      await client.getLinks().catch(() => {});
+
+      const logged = errorSpy.mock.calls[0][1] as string;
+      expect(logged).toContain('┌');
+      expect(logged).not.toContain('\x1b[');
+
+      vi.unstubAllEnvs();
+    });
+
+    it('wraps a long hint across multiple box lines', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('', { status: 403, statusText: 'Forbidden' }));
+      const client = localessClient(baseOptions);
+
+      await client.getLinks().catch(() => {});
+
+      const logged = errorSpy.mock.calls[0][1] as string;
+      const lines = logged.split('\n');
+      const hintLineIndex = lines.findIndex(l => l.includes('Hint'));
+
+      expect(hintLineIndex).toBeGreaterThanOrEqual(0);
+      // At least one wrapped continuation line before the box's bottom border.
+      expect(lines.length).toBeGreaterThan(hintLineIndex + 2);
+    });
+
+    it('wraps a long URL without breaking the box border alignment', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('', { status: 403, statusText: 'Forbidden' }));
+      const client = localessClient({
+        ...baseOptions,
+        spaceId: 'a-deliberately-long-space-id-to-push-the-url-well-past-the-box-width',
+      });
+
+      await client.getLinks().catch(() => {});
+
+      const logged = errorSpy.mock.calls[0][1] as string;
+      // First line is the "<methodLabel> error :" prefix, not part of the box itself.
+      const boxLines = logged.split('\n').slice(1);
+
+      expect(boxLines.length).toBeGreaterThan(1);
+      // Every box line (top/bottom border, title, divider, and content rows) must be the
+      // same total width — otherwise the right-hand border no longer lines up.
+      const widths = new Set(boxLines.map(l => l.length));
+      expect(widths.size).toBe(1);
     });
   });
 
@@ -144,16 +317,19 @@ describe('localessClient', () => {
       expect((url.match(/version=draft/g) ?? []).length).toBe(1);
     });
 
-    it('rejects and logs on fetch error', async () => {
+    it('rejects and logs on network error, wrapped as LocalessNetworkError', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockRejectedValue(new Error('boom'));
       const client = localessClient(baseOptions);
 
-      await expect(client.getContentBySlug('home')).rejects.toThrow('boom');
+      const error = await client.getContentBySlug('home').catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessNetworkError);
+      expect(error.cause).toBeInstanceOf(Error);
       expect(errorSpy).toHaveBeenCalled();
     });
 
-    it('rejects with LocalessApiError on a non-2xx response', async () => {
+    it('rejects with LocalessApiError on a non-2xx response, with a 404 hint and redacted url', async () => {
       vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockResolvedValue(new Response('Not Found', { status: 404, statusText: 'Not Found' }));
       const client = localessClient(baseOptions);
@@ -162,6 +338,8 @@ describe('localessClient', () => {
 
       expect(error).toBeInstanceOf(LocalessApiError);
       expect(error.status).toBe(404);
+      expect(error.hint).toContain('Resource not found');
+      expect(error.url).not.toContain('token-123');
     });
   });
 
@@ -190,7 +368,7 @@ describe('localessClient', () => {
       );
     });
 
-    it('rejects with LocalessApiError on a non-2xx response', async () => {
+    it('rejects with LocalessApiError on a non-2xx response, with a 5xx hint', async () => {
       vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockResolvedValue(new Response('Server Error', { status: 500, statusText: 'Internal Server Error' }));
       const client = localessClient(baseOptions);
@@ -199,6 +377,18 @@ describe('localessClient', () => {
 
       expect(error).toBeInstanceOf(LocalessApiError);
       expect(error.status).toBe(500);
+      expect(error.hint).toContain('transient');
+    });
+
+    it('rejects and logs on network error, wrapped as LocalessNetworkError', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockRejectedValue(new Error('boom'));
+      const client = localessClient(baseOptions);
+
+      const error = await client.getContentById('c1').catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessNetworkError);
+      expect(errorSpy).toHaveBeenCalled();
     });
   });
 
@@ -215,12 +405,15 @@ describe('localessClient', () => {
       );
     });
 
-    it('rejects and logs on fetch error', async () => {
+    it('rejects and logs on network error, wrapped as LocalessNetworkError', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockRejectedValue(new Error('boom'));
       const client = localessClient(baseOptions);
 
-      await expect(client.getTranslations('en')).rejects.toThrow('boom');
+      const error = await client.getTranslations('en').catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessNetworkError);
+      expect(error.url).not.toContain('token-123');
       expect(errorSpy).toHaveBeenCalled();
     });
   });
