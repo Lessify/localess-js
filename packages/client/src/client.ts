@@ -211,12 +211,25 @@ function extractBodyMessage(body: unknown): string | undefined {
   return undefined;
 }
 
-function staticHintForStatus(status: number): string {
+function extractBodyCode(body: unknown): string | undefined {
+  if (body && typeof body === 'object') {
+    const record = body as Record<string, unknown>;
+    if (typeof record.status === 'string') return record.status;
+    if (typeof record.code === 'string') return record.code;
+  }
+  return undefined;
+}
+
+function tokensSettingsUrl(origin: string, spaceId: string): string {
+  return `${origin}/features/spaces/${spaceId}/settings/tokens`;
+}
+
+function staticHintForStatus(status: number, tokensUrl: string): string {
   switch (status) {
     case 401:
-      return 'Missing or invalid API token. Check that `token` in `localessInit`/`localessClient` matches an active token in your Localess Space settings.';
+      return `Missing or invalid API token. Check that \`token\` in \`localessInit\`/\`localessClient\` matches an active token in your Localess Space settings: ${tokensUrl}`;
     case 403:
-      return "The token is valid but doesn't have access to this resource. Check that `spaceId` matches the token's space and that the token has the permissions needed for this request (e.g. draft access).";
+      return `The token is valid but doesn't have access to this resource. Check that \`spaceId\` matches the token's space and that the token has the permissions needed for this request (e.g. draft access) here: ${tokensUrl}`;
     case 404:
       return 'Resource not found. Check that `origin`, `spaceId`, and the slug/id are correct and that the content exists in this space.';
     case 429:
@@ -229,16 +242,25 @@ function staticHintForStatus(status: number): string {
   }
 }
 
-function hintForStatus(status: number, body: unknown): string {
-  const staticHint = staticHintForStatus(status);
+function hintForStatus(status: number, body: unknown, tokensUrl: string): string {
+  const staticHint = staticHintForStatus(status, tokensUrl);
   const bodyMessage = extractBodyMessage(body);
-  return bodyMessage ? `${staticHint} API response: "${bodyMessage}".` : staticHint;
+  const bodyCode = extractBodyCode(body);
+  if (!bodyMessage) {
+    return staticHint;
+  }
+  return bodyCode ? `${staticHint} API response: "${bodyMessage}" (${bodyCode}).` : `${staticHint} API response: "${bodyMessage}".`;
 }
 
 const BOX_WIDTH = 88;
 
+// Next.js sets NEXT_RUNTIME on its own server process (dev and prod, both the node and edge
+// runtimes) and, in dev, mirrors any console.error/warn raised while rendering a Server
+// Component into the browser's console/error overlay — verbatim, ANSI codes and all, since
+// that's a plain string by the time it leaves this process. A real standalone terminal never
+// sets NEXT_RUNTIME, so skip color there even though `isTTY` is otherwise true.
 function supportsColor(): boolean {
-  return Boolean(process.stdout?.isTTY) && process.env.NO_COLOR === undefined;
+  return Boolean(process.stdout?.isTTY) && process.env.NO_COLOR === undefined && process.env.NEXT_RUNTIME === undefined;
 }
 
 // Breaks a single space-free "word" that's too long to fit a line on its own — the common
@@ -389,13 +411,15 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
 
     if (!response.ok) {
       const body = await readErrorBody(response);
-      const hint = hintForStatus(response.status, body);
+      const hint = hintForStatus(response.status, body, tokensSettingsUrl(normalizedOrigin, options.spaceId));
+      const bodyCode = extractBodyCode(body);
       const apiError = new LocalessApiError(response.status, response.statusText, redactToken(url), body, hint);
       console.error(
         LOG_GROUP,
         `${methodLabel} error :\n` +
           renderErrorBox(`Localess API Error — ${methodLabel}`, [
             ['Status', `${response.status} ${response.statusText}`],
+            ...(bodyCode ? ([['Code', bodyCode]] as [string, string][]) : []),
             ['URL', redactToken(url)],
             ['Hint', hint],
           ])

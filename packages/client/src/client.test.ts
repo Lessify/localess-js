@@ -109,6 +109,7 @@ describe('localessClient', () => {
       expect(error).toBeInstanceOf(LocalessApiError);
       expect(error.status).toBe(401);
       expect(error.hint).toContain('Missing or invalid API token');
+      expect(error.hint).toContain('https://cms.example.com/features/spaces/space-1/settings/tokens');
       expect(error.url).not.toContain('token-123');
       expect(error.url).toContain('token=***');
       expect(errorSpy).toHaveBeenCalled();
@@ -126,7 +127,26 @@ describe('localessClient', () => {
       expect(error).toBeInstanceOf(LocalessApiError);
       expect(error.body).toEqual({ message: 'Space access denied' });
       expect(error.hint).toContain("doesn't have access");
+      expect(error.hint).toContain('https://cms.example.com/features/spaces/space-1/settings/tokens');
       expect(error.hint).toContain('Space access denied');
+    });
+
+    it('includes the API response body message and status code in the hint', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(
+        new Response(JSON.stringify({ message: 'Draft content requires DRAFT permission', status: 'PERMISSION_DENIED' }), {
+          status: 403,
+          statusText: 'Forbidden',
+        })
+      );
+      const client = localessClient(baseOptions);
+
+      const error = await client.getLinks().catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessApiError);
+      expect(error.body).toEqual({ message: 'Draft content requires DRAFT permission', status: 'PERMISSION_DENIED' });
+      expect(error.hint).toContain('Draft content requires DRAFT permission');
+      expect(error.hint).toContain('PERMISSION_DENIED');
     });
 
     it('computes a rate-limit hint on a 429', async () => {
@@ -197,6 +217,23 @@ describe('localessClient', () => {
       expect(logged).toContain("doesn't have access");
     });
 
+    it('logs a boxed error message with a Code row when the body carries a status code', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(
+        new Response(JSON.stringify({ message: 'Draft content requires DRAFT permission', status: 'PERMISSION_DENIED' }), {
+          status: 403,
+          statusText: 'Forbidden',
+        })
+      );
+      const client = localessClient(baseOptions);
+
+      await client.getLinks().catch(() => {});
+
+      const logged = errorSpy.mock.calls[0][1] as string;
+      expect(logged).toContain('Code');
+      expect(logged).toContain('PERMISSION_DENIED');
+    });
+
     it('logs a boxed error message for a LocalessNetworkError', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockRejectedValue(new Error('network down'));
@@ -227,6 +264,22 @@ describe('localessClient', () => {
     it('omits ANSI color codes when NO_COLOR is set, even in a TTY', async () => {
       process.stdout.isTTY = true;
       vi.stubEnv('NO_COLOR', '1');
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(new Response('', { status: 500, statusText: 'Internal Server Error' }));
+      const client = localessClient(baseOptions);
+
+      await client.getLinks().catch(() => {});
+
+      const logged = errorSpy.mock.calls[0][1] as string;
+      expect(logged).toContain('┌');
+      expect(logged).not.toContain('\x1b[');
+
+      vi.unstubAllEnvs();
+    });
+
+    it('omits ANSI color codes when NEXT_RUNTIME is set, even in a TTY', async () => {
+      process.stdout.isTTY = true;
+      vi.stubEnv('NEXT_RUNTIME', 'nodejs');
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockResolvedValue(new Response('', { status: 500, statusText: 'Internal Server Error' }));
       const client = localessClient(baseOptions);

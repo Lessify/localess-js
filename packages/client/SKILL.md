@@ -139,8 +139,9 @@ SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
 
 `getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` throw instead of returning empty/default data on failure:
 
-- Non-2xx HTTP responses (401, 404, 500, ...) reject with a `LocalessApiError` exposing `status`, `statusText`, `url` (token redacted), `body` (the API's parsed response body, if present), and `hint` (a status-specific explanation of the likely cause and what to check).
+- Non-2xx HTTP responses (401, 404, 500, ...) reject with a `LocalessApiError` exposing `status`, `statusText`, `url` (token redacted), `body` (the API's parsed response body, if present), and `hint` (a status-specific explanation of the likely cause and what to check). When the response body has a `message` and/or a `status`/`code` field (e.g. `{ message: 'Draft content requires DRAFT permission', status: 'PERMISSION_DENIED' }`), both are folded into `hint` and printed in the console error box — inspect `error.body` directly for the raw values. On 401/403, `hint` also links to that space's token settings screen (`{origin}/features/spaces/{spaceId}/settings/tokens`) so you can check the token directly.
 - Failures before a response is received (DNS, connection refused, TLS, ...) reject with a `LocalessNetworkError` exposing `origin`, `url` (redacted), `hint`, and `cause` (the underlying error).
+- Both errors are also logged as a boxed, human-readable summary via `console.error`. Colors are skipped (even in a TTY) when `NEXT_RUNTIME` is set, since Next.js dev mode mirrors server console output into the browser's error overlay verbatim, ANSI codes and all.
 
 ```typescript
 import { LocalessApiError, LocalessNetworkError, localessClient } from "@localess/client";
