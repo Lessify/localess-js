@@ -32,7 +32,7 @@ describe('localessClient', () => {
     await client.getLinks();
 
     const requestInit = (fetch as any).mock.calls[0][1] as RequestInit;
-    expect((requestInit.headers as Record<string, string>)['X-Localess-Agent-Version']).toBe('3.4.1');
+    expect((requestInit.headers as Record<string, string>)['X-Localess-Agent-Version']).toBe('3.4.0');
   });
 
   it('normalizes a trailing slash in the origin', async () => {

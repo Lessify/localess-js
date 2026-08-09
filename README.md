@@ -27,10 +27,10 @@ Keeping all packages together in one repository ensures that shared types and in
 
 | Package                                 | Version | Description                                                                                                          |
 |------------------------------------------|---------|------------------------------------------------------------------------------------------------------------------------|
-| [`@localess/client`](packages/client)   | 3.4.1   | Core JavaScript/TypeScript SDK. Fetch content, translations, and assets from the Localess API. **Server-side only.** |
-| [`@localess/react`](packages/react)     | 3.4.1   | React integration. Dynamic component mapping, rich text rendering, and Visual Editor sync.                           |
-| [`@localess/angular`](packages/angular) | 3.4.1   | Angular integration. Components, directives, pipes, and Visual Editor sync.                                          |
-| [`@localess/cli`](packages/cli)         | 3.4.1   | Command-line interface. Manage translations and generate TypeScript types from your content schemas.                 |
+| [`@localess/client`](packages/client)   | 3.4.0   | Core JavaScript/TypeScript SDK. Fetch content, translations, and assets from the Localess API. **Server-side only.** |
+| [`@localess/react`](packages/react)     | 3.4.0   | React integration. Dynamic component mapping, rich text rendering, and Visual Editor sync.                           |
+| [`@localess/angular`](packages/angular) | 3.4.0   | Angular integration. Components, directives, pipes, and Visual Editor sync.                                          |
+| [`@localess/cli`](packages/cli)         | 3.4.0   | Command-line interface. Manage translations and generate TypeScript types from your content schemas.                 |
 
 ### Package Dependency Graph
 
