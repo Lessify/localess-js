@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { version } from '../package.json';
 import { LocalessApiError, localessClient, LocalessNetworkError } from './client';
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -32,7 +33,7 @@ describe('localessClient', () => {
     await client.getLinks();
 
     const requestInit = (fetch as any).mock.calls[0][1] as RequestInit;
-    expect((requestInit.headers as Record<string, string>)['X-Localess-Agent-Version']).toBe('3.4.0');
+    expect((requestInit.headers as Record<string, string>)['X-Localess-Agent-Version']).toBe(version);
   });
 
   it('normalizes a trailing slash in the origin', async () => {
