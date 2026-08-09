@@ -149,6 +149,38 @@ describe('localessClient', () => {
       expect(error.hint).toContain('PERMISSION_DENIED');
     });
 
+    it('includes the reason, required permissions, and API hint from body.details on a 403', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (fetch as any).mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            details: {
+              requiredPermissions: ['content:draft:read'],
+              reason: 'This request includes a `version` query parameter, which requires access to draft content.',
+              hint: 'Add one of the required permissions to this token, or use a token that already has it.',
+            },
+            message: 'Token is missing a required permission',
+            status: 'PERMISSION_DENIED',
+          }),
+          { status: 403, statusText: 'Forbidden' }
+        )
+      );
+      const client = localessClient(baseOptions);
+
+      const error = await client.getLinks().catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessApiError);
+      expect(error.hint).toContain('Token is missing a required permission');
+      expect(error.hint).toContain('Reason: This request includes a `version` query parameter');
+      expect(error.hint).toContain('Required permission(s): content:draft:read.');
+      expect(error.hint).toContain('Add one of the required permissions to this token');
+
+      const logged = errorSpy.mock.calls[0][1] as string;
+      expect(logged).toContain('Reason');
+      expect(logged).toContain('Required');
+      expect(logged).toContain('content:draft:read');
+    });
+
     it('computes a rate-limit hint on a 429', async () => {
       vi.spyOn(console, 'error').mockImplementation(() => {});
       (fetch as any).mockResolvedValue(new Response('', { status: 429, statusText: 'Too Many Requests' }));

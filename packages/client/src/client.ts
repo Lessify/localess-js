@@ -220,6 +220,30 @@ function extractBodyCode(body: unknown): string | undefined {
   return undefined;
 }
 
+interface BodyDetails {
+  reason?: string;
+  hint?: string;
+  requiredPermissions?: string[];
+}
+
+function extractBodyDetails(body: unknown): BodyDetails | undefined {
+  if (!body || typeof body !== 'object') {
+    return undefined;
+  }
+  const details = (body as Record<string, unknown>).details;
+  if (!details || typeof details !== 'object') {
+    return undefined;
+  }
+  const record = details as Record<string, unknown>;
+  const result: BodyDetails = {};
+  if (typeof record.reason === 'string') result.reason = record.reason;
+  if (typeof record.hint === 'string') result.hint = record.hint;
+  if (Array.isArray(record.requiredPermissions) && record.requiredPermissions.every(p => typeof p === 'string')) {
+    result.requiredPermissions = record.requiredPermissions as string[];
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
 function tokensSettingsUrl(origin: string, spaceId: string): string {
   return `${origin}/features/spaces/${spaceId}/settings/tokens`;
 }
@@ -246,10 +270,22 @@ function hintForStatus(status: number, body: unknown, tokensUrl: string): string
   const staticHint = staticHintForStatus(status, tokensUrl);
   const bodyMessage = extractBodyMessage(body);
   const bodyCode = extractBodyCode(body);
-  if (!bodyMessage) {
-    return staticHint;
+  const details = extractBodyDetails(body);
+
+  const segments = [staticHint];
+  if (bodyMessage) {
+    segments.push(bodyCode ? `API response: "${bodyMessage}" (${bodyCode}).` : `API response: "${bodyMessage}".`);
   }
-  return bodyCode ? `${staticHint} API response: "${bodyMessage}" (${bodyCode}).` : `${staticHint} API response: "${bodyMessage}".`;
+  if (details?.reason) {
+    segments.push(`Reason: ${details.reason}`);
+  }
+  if (details?.requiredPermissions?.length) {
+    segments.push(`Required permission(s): ${details.requiredPermissions.join(', ')}.`);
+  }
+  if (details?.hint) {
+    segments.push(details.hint);
+  }
+  return segments.join(' ');
 }
 
 const BOX_WIDTH = 88;
@@ -413,6 +449,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const body = await readErrorBody(response);
       const hint = hintForStatus(response.status, body, tokensSettingsUrl(normalizedOrigin, options.spaceId));
       const bodyCode = extractBodyCode(body);
+      const bodyDetails = extractBodyDetails(body);
       const apiError = new LocalessApiError(response.status, response.statusText, redactToken(url), body, hint);
       console.error(
         LOG_GROUP,
@@ -420,6 +457,10 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
           renderErrorBox(`Localess API Error — ${methodLabel}`, [
             ['Status', `${response.status} ${response.statusText}`],
             ...(bodyCode ? ([['Code', bodyCode]] as [string, string][]) : []),
+            ...(bodyDetails?.reason ? ([['Reason', bodyDetails.reason]] as [string, string][]) : []),
+            ...(bodyDetails?.requiredPermissions?.length
+              ? ([['Required', bodyDetails.requiredPermissions.join(', ')]] as [string, string][])
+              : []),
             ['URL', redactToken(url)],
             ['Hint', hint],
           ])
