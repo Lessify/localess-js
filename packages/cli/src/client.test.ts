@@ -1,3 +1,4 @@
+import { LocalessApiError } from '@localess/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { localessCliClient } from './client';
@@ -67,14 +68,49 @@ describe('localessCliClient', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it('does not retry on a 4xx response, treating it as a resolved (non-retryable) response', async () => {
+  it('getSpace throws a LocalessApiError with the tokens settings URL in the hint on a 401 response', async () => {
+    vi.mocked(fetch).mockImplementation(() => Promise.resolve(jsonResponse({ message: 'Unauthorized' }, { ok: false, status: 401 })));
+    const client = localessCliClient(baseOptions);
+
+    await expect(client.getSpace()).rejects.toThrow(LocalessApiError);
+    await expect(client.getSpace()).rejects.toMatchObject({
+      status: 401,
+      hint: expect.stringContaining('https://cms.example.com/features/spaces/space-1/settings/tokens'),
+    });
+  });
+
+  it('throws a LocalessApiError on a 4xx response without retrying', async () => {
     vi.mocked(fetch).mockImplementation(() => Promise.resolve(jsonResponse({ message: 'not found' }, { ok: false, status: 404 })));
     const client = localessCliClient({ ...baseOptions, retryCount: 3 });
 
-    const schemas = await client.getSchemas();
-
-    expect(schemas).toEqual({ message: 'not found' });
+    await expect(client.getSchemas()).rejects.toThrow(LocalessApiError);
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('getSchemas throws a LocalessApiError with the required-permission hint on a 403 permission-denied response', async () => {
+    vi.mocked(fetch).mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse(
+          {
+            details: {
+              requiredPermissions: ['DEV_TOOLS'],
+              hint: 'Add one of the required permissions to this token, or use a token that already has it.',
+            },
+            message: 'Token is missing a required permission',
+            status: 'PERMISSION_DENIED',
+          },
+          { ok: false, status: 403 }
+        )
+      )
+    );
+    const client = localessCliClient(baseOptions);
+
+    await expect(client.getSchemas()).rejects.toThrow(LocalessApiError);
+    await expect(client.getSchemas()).rejects.toMatchObject({
+      status: 403,
+      message: expect.stringContaining('DEV_TOOLS'),
+      hint: expect.stringContaining('https://cms.example.com/features/spaces/space-1/settings/tokens'),
+    });
   });
 
   it('getOpenApi returns the parsed OpenAPI document on success', async () => {

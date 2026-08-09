@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import process from 'node:process';
 
+import { LocalessApiError } from '@localess/client';
 import { Command } from 'commander';
 
 import { localessCliClient } from '../../../client';
@@ -45,7 +46,9 @@ export const typesGenerateCommand = new Command('generate')
       await writeFile(options.path, content);
       console.log(`Types written to ${options.path}`);
     } catch (error) {
-      console.error('Failed to generate types:', error);
+      if (!(error instanceof LocalessApiError)) {
+        console.error('Failed to generate types:', error);
+      }
       process.exit(1);
     }
   });

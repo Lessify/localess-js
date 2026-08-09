@@ -1,9 +1,9 @@
 import {notFound} from "next/navigation";
 import {getLocalessClient, Content, LocalessDocument} from "@localess/react/rsc";
 import {LOCALES} from "@/shared/utils/locales";
-import {Page} from "@/shared/generated/localess";
 import {localessInit} from "@localess/react/rsc";
 import {PageLocaless} from "@/shared/components/localess/page";
+import {Page} from "@/shared/models/localess";
 
 localessInit({
   origin: "https://demo.localess.org", // Replace it for your origin

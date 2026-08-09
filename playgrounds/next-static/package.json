@@ -7,7 +7,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "lint": "next lint",
-    "generate:localess": "openapi-generator-cli generate"
+    "localess:types": "localess types generate --path ./src/shared/models/localess.d.ts",
+    "localess:login": "localess login"
   },
   "dependencies": {
     "@localess/react": "*",
@@ -16,6 +17,7 @@
     "next": "^16.3.0"
   },
   "devDependencies": {
+    "@localess/cli": "*",
     "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -24,7 +26,6 @@
     "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
-    "@eslint/eslintrc": "^3",
-    "@openapitools/openapi-generator-cli": "^2.25.2"
+    "@eslint/eslintrc": "^3"
   }
 }

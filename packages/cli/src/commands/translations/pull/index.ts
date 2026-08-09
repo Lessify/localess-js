@@ -1,3 +1,4 @@
+import { LocalessApiError } from '@localess/client';
 import { Command } from 'commander';
 
 import { localessCliClient } from '../../../client';
@@ -54,7 +55,9 @@ export const translationsPullCommand = new Command('pull')
       }
       console.log('Successfully saved translations from Localess');
     } catch (error) {
-      console.error('Failed to pull translations from Localess:', error);
+      if (!(error instanceof LocalessApiError)) {
+        console.error('Failed to pull translations from Localess:', error);
+      }
       process.exit(1);
     }
   });

@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 
-import { LocalessComponent } from '../core/components/localess-component';
 import { FONT_BOLD, FONT_NORMAL } from '../console';
+import { LocalessComponent } from '../core/components/localess-component';
 import { Content, ContentData } from '../core/models';
 import { getOrigin, isSyncConfigured } from '../core/state';
 import { LocalessSync } from './localess-sync';

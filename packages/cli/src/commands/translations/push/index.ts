@@ -1,3 +1,4 @@
+import { LocalessApiError } from '@localess/client';
 import { Command } from 'commander';
 
 import { localessCliClient } from '../../../client';
@@ -80,7 +81,9 @@ export const translationsPushCommand = new Command('push')
         console.log('Updated translation IDs:', response.ids);
       }
     } catch (error) {
-      console.error('Failed to push translations to Localess:', error);
+      if (!(error instanceof LocalessApiError)) {
+        console.error('Failed to push translations to Localess:', error);
+      }
       process.exit(1);
     }
   });

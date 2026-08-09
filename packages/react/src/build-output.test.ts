@@ -21,13 +21,13 @@ function startsWithUseClient(contents: string): boolean {
 }
 
 describe.skipIf(!distExists)('dist "use client" directive preservation', () => {
-  it.each(CLIENT_MODULES)('keeps the \'use client\' banner as the first statement in dist/%s', file => {
+  it.each(CLIENT_MODULES)("keeps the 'use client' banner as the first statement in dist/%s", file => {
     const contents = readFileSync(resolve(distDir, file), 'utf-8').trimStart();
 
     expect(startsWithUseClient(contents)).toBe(true);
   });
 
-  it.each(SERVER_SAFE_MODULES)('does not add a \'use client\' banner to the server-safe dist/%s', file => {
+  it.each(SERVER_SAFE_MODULES)("does not add a 'use client' banner to the server-safe dist/%s", file => {
     const contents = readFileSync(resolve(distDir, file), 'utf-8').trimStart();
 
     expect(startsWithUseClient(contents)).toBe(false);
