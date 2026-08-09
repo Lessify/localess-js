@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 It mirrors the `next-latest` playground but targets Next.js static export (`output: 'export'` in `next.config.ts`). Because static export has no request-time server, it uses `@localess/react/ssr` — `getLocalessClient`, `localessInit`, `LocalessServerDocument` — instead of `@localess/react/rsc`, which requires a live server and is not compatible with static export (see that package's `SKILL.md`/`docs/react.md` "Export Variants"). `LocalessServerComponent`/`LocalessServerDocument` render without Visual Editor sync attributes, since live editing has no meaning once the HTML is pre-baked.
 
-Note: the locale switcher links (`?locale=xx`) are carried over from `next-latest` for structural parity, but do not actually change locale in this static build — `searchParams` is always empty during static generation, so every link resolves to the same prerendered page. A working static-export locale switcher would need locale-prefixed routes generated via `generateStaticParams` instead.
+The locale switcher mirrors `next-latest`'s path-segment pattern (`/en`, `/fr`, …), but since static export has no request-time server, every locale is pre-rendered at build time via `generateStaticParams` in `app/[[...locale]]/page.tsx` — one static HTML file per locale, plus `/` for the default.
 
 ## Getting Started
 
