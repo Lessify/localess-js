@@ -2,7 +2,7 @@
 
 Astro integration layer for Localess. Builds on `@localess/client` and adds a component registry and Visual Editor sync. No other UI framework dependency.
 
-**Peer dependency:** Astro 4 or 5.
+**Peer dependency:** Astro 6 or 7.
 
 ## Why one entry point (unlike @localess/react's three)
 
