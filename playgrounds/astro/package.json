@@ -1,0 +1,22 @@
+{
+  "name": "astro",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
+    "localess:types": "localess types generate --path ./src/shared/models/localess.d.ts",
+    "localess:login": "localess login"
+  },
+  "dependencies": {
+    "@localess/astro": "*",
+    "@astrojs/node": "^9.0.0",
+    "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "@localess/cli": "*",
+    "typescript": "^5"
+  }
+}

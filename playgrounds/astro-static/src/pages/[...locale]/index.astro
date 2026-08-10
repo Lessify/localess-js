@@ -1,0 +1,55 @@
+---
+import { getLocalessClient, localessInit } from '@localess/astro';
+import LocalessDocument from '@localess/astro/LocalessDocument.astro';
+import Layout from '../../layouts/Layout.astro';
+import Page from '../../shared/components/localess/Page.astro';
+import { LOCALES } from '../../shared/utils/locales';
+
+localessInit({
+  origin: 'https://demo.localess.org', // Replace it for your origin
+  spaceId: 'MmaT4DL0kJ6nXIILUcQF', // Replace it for your spaceId
+  token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token
+  debug: true,
+  // enableSync omitted — sync has no meaning once HTML is pre-baked at build time.
+  components: {
+    Page,
+  },
+});
+
+export function getStaticPaths() {
+  return LOCALES.map(item => ({ params: { locale: item.id || undefined } }));
+}
+
+const { locale } = Astro.params;
+const client = getLocalessClient();
+const document = await client.getContentBySlug('home', { locale: locale || undefined });
+---
+
+<Layout>
+  <div class="flex flex-col w-full gap-8 mx-auto max-w-5xl">
+    <header class="py-8">
+      <nav class="flex justify-center">
+        <ul class="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 shadow-lg">
+          {
+            LOCALES.map(item => {
+              const isActive = (locale ?? '') === item.id;
+              return (
+                <li>
+                  <a
+                    class={`relative block px-3 py-2 transition hover:text-teal-500${isActive ? ' text-teal-500' : ''}`}
+                    href={item.id ? `/${item.id}` : '/'}
+                    hreflang={item.id}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    {item.name}
+                  </a>
+                </li>
+              );
+            })
+          }
+        </ul>
+      </nav>
+    </header>
+    <LocalessDocument document={document} />
+  </div>
+</Layout>

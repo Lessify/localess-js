@@ -15,11 +15,13 @@ Additionally, the SDK requires Node.js >= 24. It uses the native `fetch` API and
 
 For React apps, always fetch Localess data in Server Components, `getServerSideProps`, API routes, or other server-side contexts, then pass the result as props to client components.
 
+**Exception — the browser-safe utility surface.** A small set of exports carry no token and are safe (and meant) to run in the browser: `isBrowser`, `isIframe`, `loadLocalessSync`, `localessEditable`, `localessEditableField`, and the sync event types (`LocalessSync`, `EventToApp`, `EventCallback`, `EventToAppType`). These exist in `@localess/client` because they're the framework-agnostic primitives every SDK (`@localess/react`, `@localess/angular`, `@localess/astro`) needs identically — duplicating them per-framework would be the real inconsistency. Framework packages re-export them as-is rather than reimplementing them.
+
 ## Consequences
 
 **For contributors:**
 - Never suggest `@localess/client` usage in client-side code, even in examples.
-- Do not use `window`, `document`, `localStorage`, or other browser globals anywhere in `packages/client/`.
+- Do not use `window`, `document`, `localStorage`, or other browser globals anywhere in `packages/client/`, **except** inside the browser-safe utility surface named above (`sync.ts`, `editable.ts`, `utils/`) — those files exist specifically to be called from the browser.
 - `@localess/react` exports `useLocaless` hook and `LocalessDocument` component for client-side usage — these are the correct client-side primitives; they do not expose the token.
 
 **For API design:**

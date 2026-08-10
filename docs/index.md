@@ -9,9 +9,10 @@ This monorepo contains the official JavaScript/TypeScript SDKs for the Localess 
 | `@localess/client` | Core server-side SDK, zero production dependencies | — |
 | `@localess/react` | React integration: components, hooks, Visual Editor sync | `@localess/client` |
 | `@localess/angular` | Angular integration: components, directives, pipes, Visual Editor sync | `@localess/client` |
+| `@localess/astro` | Astro integration: native components, Visual Editor sync via reload | `@localess/client` |
 | `@localess/cli` | CLI for translations and type generation | `@localess/client` |
 
-`@localess/react`, `@localess/angular`, and `@localess/cli` never depend on each other.
+`@localess/react`, `@localess/angular`, `@localess/astro`, and `@localess/cli` never depend on each other.
 
 **Requirements:** Node.js >= 24.0.0, npm >= 10.
 

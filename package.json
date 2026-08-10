@@ -8,8 +8,9 @@
     "playgrounds/*"
   ],
   "scripts": {
-    "build": "npm run build:client && npm run build:react && npm run build:cli && npm run build:angular",
+    "build": "npm run build:client && npm run build:react && npm run build:cli && npm run build:angular && npm run build:astro",
     "build:angular": "npm run build --workspace=@localess/angular",
+    "build:astro": "npm run build --workspace=@localess/astro",
     "build:cli": "npm run build --workspace=@localess/cli",
     "build:client": "npm run build --workspace=@localess/client",
     "build:react": "npm run build --workspace=@localess/react",
@@ -19,8 +20,8 @@
     "version:major": "node scripts/bump-version.mjs major",
     "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"packages/*/src/**/*.{ts,tsx}\" --fix",
-    "test": "npm test --workspace=@localess/client --workspace=@localess/react --workspace=@localess/cli --workspace=@localess/angular --if-present",
-    "test:coverage": "npm run test:coverage --workspace=@localess/client --workspace=@localess/react --workspace=@localess/cli --workspace=@localess/angular --if-present"
+    "test": "npm test --workspace=@localess/client --workspace=@localess/react --workspace=@localess/cli --workspace=@localess/angular --workspace=@localess/astro --if-present",
+    "test:coverage": "npm run test:coverage --workspace=@localess/client --workspace=@localess/react --workspace=@localess/cli --workspace=@localess/angular --workspace=@localess/astro --if-present"
   },
   "repository": {
     "type": "git",

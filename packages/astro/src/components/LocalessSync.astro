@@ -1,0 +1,30 @@
+---
+export interface Props {
+  origin: string;
+}
+
+const { origin } = Astro.props;
+const RELOAD_DEBOUNCE_MS = 500;
+---
+
+<script define:vars={{ origin, RELOAD_DEBOUNCE_MS }}>
+  import { loadLocalessSync } from '@localess/client';
+
+  function isIframe() {
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true;
+    }
+  }
+
+  if (isIframe()) {
+    let reloadTimeout;
+    loadLocalessSync(origin).then(() => {
+      window.localess?.onChange(() => {
+        clearTimeout(reloadTimeout);
+        reloadTimeout = setTimeout(() => window.location.reload(), RELOAD_DEBOUNCE_MS);
+      });
+    });
+  }
+</script>

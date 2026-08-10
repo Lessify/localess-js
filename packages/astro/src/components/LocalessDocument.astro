@@ -1,0 +1,26 @@
+---
+import { getOrigin, isSyncConfigured } from '../state';
+import LocalessComponent from './LocalessComponent.astro';
+import LocalessSync from './LocalessSync.astro';
+
+export interface Props {
+  document: {
+    data: { _id: string; _schema: string } & Record<string, unknown>;
+    links?: unknown;
+    references?: unknown;
+    assets?: unknown;
+  };
+}
+
+const { document } = Astro.props;
+
+if (!document?.data) {
+  throw new Error('LocalessDocument property "document.data" is not provided.');
+}
+
+const syncConfigured = isSyncConfigured();
+const origin = syncConfigured ? getOrigin() : undefined;
+---
+
+<LocalessComponent data={document.data} links={document.links} references={document.references} assets={document.assets} />
+{syncConfigured && origin && <LocalessSync origin={origin} />}

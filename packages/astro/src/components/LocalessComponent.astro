@@ -1,0 +1,33 @@
+---
+import { localessEditable } from '@localess/client';
+import { getComponent, getFallbackComponent } from '../state';
+
+export interface Props {
+  data: { _id: string; _schema: string } & Record<string, unknown>;
+  links?: unknown;
+  references?: unknown;
+  assets?: unknown;
+}
+
+const { data, links, references, assets, ...restProps } = Astro.props;
+
+if (!data) {
+  throw new Error('LocalessComponent property "data" is not provided.');
+}
+
+const Comp = getComponent(data._schema);
+const FallbackComponent = !Comp ? getFallbackComponent() : undefined;
+const editableAttrs = localessEditable(data);
+---
+
+{
+  Comp ? (
+    <Comp data={data} links={links} references={references} assets={assets} {...editableAttrs} {...restProps} />
+  ) : FallbackComponent ? (
+    <FallbackComponent data={data} links={links} references={references} assets={assets} {...restProps} />
+  ) : (
+    <p>
+      <b>LocalessComponent</b> could not find a component for key <b>{data._schema}</b>. Please check if your configuration is correct.
+    </p>
+  )
+}

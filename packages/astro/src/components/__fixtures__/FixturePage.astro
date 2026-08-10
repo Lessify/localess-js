@@ -1,0 +1,10 @@
+---
+export interface Props {
+  data?: unknown;
+  [prop: string]: unknown;
+}
+
+const { data, links, references, assets, ...restProps } = Astro.props;
+---
+
+<div {...restProps}>Page content</div>
