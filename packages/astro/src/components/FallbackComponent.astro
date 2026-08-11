@@ -1,0 +1,35 @@
+---
+export interface Props {
+  data: { _id: string; _schema: string } & Record<string, unknown>;
+  [prop: string]: unknown;
+}
+
+const { data } = Astro.props;
+---
+
+<section>
+  <div>
+    <p>
+      Component could not be found for schema <span class="schema">{data._schema}</span>! Is it configured correctly?
+    </p>
+  </div>
+</section>
+
+<style scoped>
+  section {
+    display: flex;
+    justify-content: center;
+    padding: 60px 0;
+  }
+  div {
+    display: inline-flex;
+    background-color: #eff1f3;
+    text-align: center;
+    padding: 15px 30px;
+    border-radius: 5px;
+  }
+  span.schema {
+    color: #00b3b0;
+    font-weight: bold;
+  }
+</style>

@@ -1,20 +1,8 @@
 ---
-import { getLocalessClient, localessInit } from '@localess/astro';
+import { getLocalessClient } from '@localess/astro';
 import LocalessDocument from '@localess/astro/LocalessDocument.astro';
 import Layout from '../../layouts/Layout.astro';
-import Page from '../../shared/components/localess/Page.astro';
 import { LOCALES } from '../../shared/utils/locales';
-
-localessInit({
-  origin: 'https://demo.localess.org', // Replace it for your origin
-  spaceId: 'MmaT4DL0kJ6nXIILUcQF', // Replace it for your spaceId
-  token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token
-  debug: true,
-  // enableSync omitted — sync has no meaning once HTML is pre-baked at build time.
-  components: {
-    Page,
-  },
-});
 
 export function getStaticPaths() {
   return LOCALES.map(item => ({ params: { locale: item.id || undefined } }));

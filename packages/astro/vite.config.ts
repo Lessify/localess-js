@@ -16,10 +16,12 @@ export default defineConfig({
     lib: {
       entry: {
         index: resolve(__dirname, 'src/index.ts'),
+        'dev-toolbar/toolbar-app': resolve(__dirname, 'src/dev-toolbar/toolbar-app.ts'),
+        'live-preview/middleware': resolve(__dirname, 'src/live-preview/middleware.ts'),
       },
     },
     rollupOptions: {
-      external: ['@localess/client', 'astro/runtime/server/index.js'],
+      external: ['@localess/client', 'astro/runtime/server/index.js', 'astro/toolbar', 'astro/middleware', 'virtual:localess-options'],
       output: [
         {
           format: 'es',

@@ -1,20 +1,8 @@
 ---
-import { getLocalessClient, localessInit } from '@localess/astro';
+import { getLivePayload, getLocalessClient } from '@localess/astro';
 import LocalessDocument from '@localess/astro/LocalessDocument.astro';
 import Layout from '../../layouts/Layout.astro';
-import Page from '../../shared/components/localess/Page.astro';
 import { LOCALES } from '@/shared/utils/locales.ts';
-
-localessInit({
-  origin: 'https://demo.localess.org', // Replace it for your origin
-  spaceId: 'MmaT4DL0kJ6nXIILUcQF', // Replace it for your spaceId
-  token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token
-  debug: true,
-  enableSync: true,
-  components: {
-    Page,
-  },
-});
 
 const { locale: segments } = Astro.params;
 const localeSegments = segments ? segments.split('/') : [];
@@ -26,8 +14,8 @@ if (locale && !LOCALES.some(l => l.id === locale)) {
   return Astro.redirect('/404');
 }
 
-const client = getLocalessClient();
-const document = await client.getContentBySlug('home', { locale: locale || undefined });
+const preview = await getLivePayload(Astro);
+const document = preview.data ? { data: preview.data } : await getLocalessClient().getContentBySlug('home', { locale: locale || undefined });
 ---
 
 <Layout>

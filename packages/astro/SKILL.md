@@ -1,6 +1,6 @@
 # @localess/astro
 
-Astro integration layer for Localess. Builds on `@localess/client` and adds a component registry and Visual Editor sync — no other framework dependency required.
+Astro integration layer for Localess. A full Astro Integration (`localess()` in `astro.config.mjs`), matching `@storyblok/astro`'s architecture — see [ADR 007](../../docs/decisions/007-astro-integration-architecture.md) for why and how it differs where Localess's constraints require it.
 
 **Peer dependency:** Astro 6 or 7.
 
@@ -10,42 +10,39 @@ Astro integration layer for Localess. Builds on `@localess/client` and adds a co
 npm install @localess/astro
 ```
 
-## Initialization
+## Configuration
 
-Call `localessInit()` once, in the frontmatter of the page (or a shared module imported by every page) before rendering:
+```js
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import { localess } from '@localess/astro';
 
-```astro
----
-import { localessInit } from '@localess/astro';
-import Page from '../shared/components/localess/Page.astro';
-
-localessInit({
-  origin: import.meta.env.LOCALESS_ORIGIN,
-  spaceId: import.meta.env.LOCALESS_SPACE_ID,
-  token: import.meta.env.LOCALESS_TOKEN,
-  enableSync: import.meta.env.DEV,
-  components: {
-    Page,
-  },
+export default defineConfig({
+  integrations: [
+    localess({
+      origin: process.env.LOCALESS_ORIGIN,
+      spaceId: process.env.LOCALESS_SPACE_ID,
+      token: process.env.LOCALESS_TOKEN,
+      enableSync: true,
+    }),
+  ],
 });
----
 ```
 
-> **Security:** `token` must never reach the browser. Only call `localessInit` from `.astro` frontmatter (server-rendered), never from a `<script>` block.
+`token` never reaches the browser — the integration builds the `LocalessClient` server-side only, via Astro's `page-ssr` script stage.
 
 ## Rendering content
 
 ```astro
 ---
-import { getLocalessClient, LocalessDocument } from '@localess/astro';
+import { getLocalessClient } from '@localess/astro';
+import LocalessDocument from '@localess/astro/LocalessDocument.astro';
 
 const content = await getLocalessClient().getContentBySlug('home');
 ---
 
 <LocalessDocument document={content} />
 ```
-
-`LocalessDocument` renders the matched component for `content.data._schema` and, when `enableSync` was passed to `localessInit`, also renders `LocalessSync` — a script-only island that reloads the page on Visual Editor edit events (debounced ~500ms). No live DOM patching in this version; structural edits (added/removed blocks) always need a reload, so this SDK doesn't attempt a partial-patch path.
 
 To render a nested block directly (e.g. inside a custom component), use `LocalessComponent`:
 
@@ -59,20 +56,64 @@ import { LocalessComponent } from '@localess/astro';
 
 ## Component registry
 
-```typescript
-import { registerComponent, unregisterComponent, setComponents, getComponent, setFallbackComponent } from '@localess/astro';
+Components auto-register from `<componentsDir>/localess/**/*.astro` (default `componentsDir: 'src'`, so `src/localess/**/*.astro`). Merge in an explicit map via the `components` option:
+
+```js
+localess({
+  // ...
+  components: { 'hero-section': HeroSection },
+});
 ```
 
-Same semantics as `@localess/react`'s registry — schema keys are exact-match strings against `_schema`.
+Both the registry key and `_schema` are compared through `toCamelCase()` — a file named `HeroSection.astro` matches `_schema: 'hero-section'` automatically.
+
+## Fallback component
+
+```js
+localess({
+  // ...
+  enableFallbackComponent: true,
+  customFallbackComponent: 'localess/CustomFallback', // optional; omit to use the built-in FallbackComponent.astro
+});
+```
+
+## Visual Editor sync
+
+Two tiers, mutually exclusive:
+
+- `enableSync: true` — debounced (~500ms) full reload on any edit event. Works under both SSR and static output.
+- `livePreview: true` — SSR-only (`output: 'server'`; the integration throws otherwise). `save`/`publish`/`unpublish` reload; `input`/`change` debounce, POST the updated content to the current page, and `morphdom`-patch the response into the live DOM. No extra configuration needed — the live-preview middleware validates incoming preview requests against the same `spaceId` passed to `localess()`.
+
+## Rich text
+
+```astro
+---
+import LocalessRichText from '@localess/astro/LocalessRichText.astro';
+---
+
+<LocalessRichText content={data.body} />
+```
+
+Same fixed TipTap extension set as `@localess/react`'s `renderRichTextToReact` (Document, Text, Paragraph, Heading 1–6, Bold, Italic, Strike, Underline, History, ListItem, OrderedList, BulletList, Code, CodeBlockLowlight, Link) — no per-node customization.
+
+## Assets
+
+```astro
+---
+import { resolveAsset } from '@localess/astro';
+---
+
+<img src={resolveAsset(data.heroImage, { w: 800 })} alt={data.heroImage.alt} />
+```
 
 ## Import paths — subpath exports required for `.astro` files
 
-`LocalessComponent`, `LocalessDocument`, and `LocalessSync` **cannot** be imported from the package's default entry point (`@localess/astro`) — `.astro` files can't be re-exported through a `.ts` barrel. Import them from their dedicated subpaths instead:
+`LocalessComponent`, `LocalessDocument`, `LocalessRichText`, `FallbackComponent` are `.astro` files and **cannot** be imported from `@localess/astro`'s default entry point. Import them from their dedicated subpaths:
 
 ```typescript
 import LocalessComponent from '@localess/astro/LocalessComponent.astro';
 import LocalessDocument from '@localess/astro/LocalessDocument.astro';
-import LocalessSync from '@localess/astro/LocalessSync.astro';
+import LocalessRichText from '@localess/astro/LocalessRichText.astro';
 ```
 
-Everything else (`localessInit`, registry functions, model types, `isBrowser`, `isIframe`) imports from the default entry point (`@localess/astro`) as shown above.
+Everything else (`localess`/`localessIntegration`, `getLocalessClient`, `getLivePayload`, `resolveAsset`, `handleLocalessMessage`, `toCamelCase`, model types, `isBrowser`, `isIframe`) imports from the default entry point (`@localess/astro`).

@@ -2,7 +2,15 @@
   "name": "@localess/astro",
   "version": "3.4.1",
   "description": "AstroJS integration for Localess's API.",
-  "keywords": ["localess", "sdk", "api", "client", "astro", "javascript", "typescript"],
+  "keywords": [
+    "localess",
+    "sdk",
+    "api",
+    "client",
+    "astro",
+    "javascript",
+    "typescript"
+  ],
   "author": "Lessify",
   "homepage": "https://github.com/Lessify/localess-js",
   "sideEffects": false,
@@ -14,7 +22,10 @@
   "bugs": {
     "url": "https://github.com/Lessify/localess-js/issues"
   },
-  "files": ["dist", "SKILL.md"],
+  "files": [
+    "dist",
+    "SKILL.md"
+  ],
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -26,7 +37,18 @@
     },
     "./LocalessComponent.astro": "./dist/components/LocalessComponent.astro",
     "./LocalessDocument.astro": "./dist/components/LocalessDocument.astro",
-    "./LocalessSync.astro": "./dist/components/LocalessSync.astro"
+    "./LocalessRichText.astro": "./dist/components/LocalessRichText.astro",
+    "./FallbackComponent.astro": "./dist/components/FallbackComponent.astro",
+    "./toolbarApp": {
+      "types": "./dist/dev-toolbar/toolbar-app.d.ts",
+      "import": "./dist/dev-toolbar/toolbar-app.mjs",
+      "require": "./dist/dev-toolbar/toolbar-app.js"
+    },
+    "./middleware": {
+      "types": "./dist/live-preview/middleware.d.ts",
+      "import": "./dist/live-preview/middleware.mjs",
+      "require": "./dist/live-preview/middleware.js"
+    }
   },
   "private": false,
   "license": "MIT",
@@ -40,11 +62,30 @@
     "astro": "^6.0.0 || ^7.0.0"
   },
   "dependencies": {
-    "@localess/client": "*"
+    "@localess/client": "*",
+    "@tiptap/extension-bold": "^3.22.5",
+    "@tiptap/extension-bullet-list": "^3.22.5",
+    "@tiptap/extension-code": "^3.22.5",
+    "@tiptap/extension-code-block-lowlight": "^3.22.5",
+    "@tiptap/extension-document": "^3.22.5",
+    "@tiptap/extension-heading": "^3.22.5",
+    "@tiptap/extension-history": "^3.22.5",
+    "@tiptap/extension-italic": "^3.22.5",
+    "@tiptap/extension-link": "^3.22.5",
+    "@tiptap/extension-list-item": "^3.22.5",
+    "@tiptap/extension-ordered-list": "^3.22.5",
+    "@tiptap/extension-paragraph": "^3.22.5",
+    "@tiptap/extension-strike": "^3.22.5",
+    "@tiptap/extension-text": "^3.22.5",
+    "@tiptap/extension-underline": "^3.22.5",
+    "@tiptap/static-renderer": "^3.22.5",
+    "camelcase": "^8.0.0",
+    "morphdom": "^2.7.8"
   },
   "devDependencies": {
     "@types/node": "^24",
     "astro": "^7.0.0",
+    "happy-dom": "^20.11.2",
     "typescript": "^5.9.3",
     "vite": "^8.0.16",
     "vite-plugin-dts": "^5.0.0",

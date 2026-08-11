@@ -1,0 +1,13 @@
+---
+import { renderLocalessRichTextToHtml } from '../richtext';
+import type { ContentRichText } from '../models';
+
+export interface Props {
+  content: ContentRichText;
+}
+
+const { content } = Astro.props;
+const html = renderLocalessRichTextToHtml(content);
+---
+
+<Fragment set:html={html} />

@@ -1,5 +1,7 @@
 # ADR 006: @localess/astro Ships Native Components, Not a React Adapter
 
+> **Superseded by [ADR 007](./007-astro-integration-architecture.md).** `@localess/astro` is now a full Astro Integration. This document is kept for historical context on the original reasoning.
+
 ## Context
 
 Astro supports two integration styles for a CMS SDK: (a) native `.astro` components with zero UI-framework dependency, or (b) a thin adapter on top of `@localess/react` for apps that already installed Astro's React integration.
