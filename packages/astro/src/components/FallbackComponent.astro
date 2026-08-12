@@ -1,6 +1,8 @@
 ---
+import type { ContentData } from '../models';
+
 export interface Props {
-  data: { _id: string; _schema: string } & Record<string, unknown>;
+  data: ContentData;
   [prop: string]: unknown;
 }
 

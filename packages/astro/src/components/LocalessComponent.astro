@@ -1,15 +1,15 @@
 ---
 import options from 'virtual:localess-options';
 import { localessComponents } from 'virtual:import-localess-components';
-import { localessEditable } from '@localess/client';
-import { toCamelCase } from '../';
+import { localessEditable, toCamelCase } from '../';
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
+import type { Assets, ContentData, Links, References } from '../models';
 
 export interface Props {
-  data: { _id: string; _schema: string } & Record<string, unknown>;
-  links?: unknown;
-  references?: unknown;
-  assets?: unknown;
+  data: ContentData;
+  links?: Links;
+  references?: References;
+  assets?: Assets;
   [prop: string]: unknown;
 }
 

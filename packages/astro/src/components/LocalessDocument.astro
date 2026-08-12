@@ -1,13 +1,9 @@
 ---
 import LocalessComponent from './LocalessComponent.astro';
+import type { Content } from '../models';
 
 export interface Props {
-  document: {
-    data: { _id: string; _schema: string } & Record<string, unknown>;
-    links?: unknown;
-    references?: unknown;
-    assets?: unknown;
-  };
+  document: Content;
 }
 
 const { document } = Astro.props;

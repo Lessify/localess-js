@@ -1,24 +1,5 @@
-import type { LocalessClientOptions } from '@localess/client';
-import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
-
-export type {
-  AssetMetadata,
-  Assets,
-  AssetTransformParams,
-  Content,
-  ContentAsset,
-  ContentData,
-  ContentDataField,
-  ContentDataSchema,
-  ContentLink,
-  ContentMetadata,
-  ContentReference,
-  ContentRichText,
-  EventToApp,
-  Links,
-  References,
-} from '@localess/client';
-export type { LocalessClient } from '@localess/client';
+import {LocalessClientOptions} from "@localess/client";
+import {AstroComponentFactory} from "astro/runtime/server/index.js";
 
 /**
  * Configuration for the `localess()` Astro integration.

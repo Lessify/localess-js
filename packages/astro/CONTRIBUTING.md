@@ -11,11 +11,12 @@ Astro integration layer. Depends on `@localess/client`. Components never fetch d
 ```astro
 ---
 import { localessEditable } from '../';
+import type { ContentData, Links, References } from '../models';
 
 export interface Props {
-  data: { _id: string; _schema: string } & Record<string, unknown>;
-  links?: unknown;
-  references?: unknown;
+  data: ContentData;
+  links?: Links;
+  references?: References;
 }
 
 const { data, links, references, ...restProps } = Astro.props;
@@ -31,6 +32,7 @@ Rules:
 - Always spread `{...restProps}` on the root element so `class`, etc. pass through.
 - Accept `links` and `references` as optional props and forward them to any nested `LocalessComponent` instances.
 - Never call `getLocalessClient()` or fetch data inside a component.
+- Type props against `@localess/client`'s real model types (`ContentData`, `Links`, `References`, `Assets`, `Content`, etc., imported from `../models`) — never `unknown` or an ad hoc inline shape. A component's props are the contract for what data it expects; typing them loosely just pushes the "what shape is this?" question onto every caller.
 
 **2. Import path:** any new `.astro` component that's part of this package's *public* API needs its own subpath export in `package.json` (`"./<Name>.astro": "./dist/components/<Name>.astro"`) and a matching `vite-plugin-static-copy` target in `vite.config.ts` — `.astro` files cannot be re-exported through `index.ts`. `.astro` files export their component as the **default** export, so consumers import with `import <Name> from '@localess/astro/<Name>.astro'`, not a named import.
 
