@@ -7,7 +7,7 @@ function createWindowElement(content: string) {
 }
 
 const links = [
-  { name: 'Localess Docs', description: 'Browse the Localess documentation.', link: 'https://docs.localess.io' },
+  { name: 'Localess Docs', description: 'Browse the Localess documentation.', link: 'https://localess.org/docs/' },
   { name: 'Report a Bug', description: 'Help us make @localess/astro better.', link: 'https://github.com/Lessify/localess-js/issues' },
 ];
 
