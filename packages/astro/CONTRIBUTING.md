@@ -2,13 +2,15 @@
 
 Astro integration layer. Depends on `@localess/client`. Components never fetch data — they accept server-fetched data as props, same rule as `@localess/react`.
 
+`@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples) must only ever import from `@localess/astro` — never `@localess/client` directly. If a consumer needs something from `@localess/client` that isn't re-exported yet, add it to `src/index.ts`'s re-exports rather than telling consumers to import `@localess/client` themselves.
+
 ## Adding a New Component
 
 **1. Create `src/components/<Name>.astro`:**
 
 ```astro
 ---
-import { localessEditable } from '@localess/client';
+import { localessEditable } from '../';
 
 export interface Props {
   data: { _id: string; _schema: string } & Record<string, unknown>;
