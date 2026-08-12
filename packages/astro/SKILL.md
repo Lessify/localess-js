@@ -106,6 +106,26 @@ import { resolveAsset } from '@localess/astro';
 <img src={resolveAsset(data.heroImage, { w: 800 })} alt={data.heroImage.alt} />
 ```
 
+## Error handling
+
+`getContentBySlug`/`getContentById` throw `LocalessApiError` (re-exported from `@localess/astro`) on a non-2xx API response — check `error.status` to distinguish a missing slug (404) from other failures:
+
+```astro
+---
+import { getLocalessClient, LocalessApiError } from '@localess/astro';
+
+let content;
+try {
+  content = await getLocalessClient().getContentBySlug(slug);
+} catch (error) {
+  if (error instanceof LocalessApiError && error.status === 404) {
+    return Astro.rewrite('/404');
+  }
+  throw error;
+}
+---
+```
+
 ## Import paths — subpath exports required for `.astro` files
 
 `LocalessComponent`, `LocalessDocument`, `LocalessRichText`, `FallbackComponent` are `.astro` files and **cannot** be imported from `@localess/astro`'s default entry point. Import them from their dedicated subpaths:
@@ -116,4 +136,4 @@ import LocalessDocument from '@localess/astro/LocalessDocument.astro';
 import LocalessRichText from '@localess/astro/LocalessRichText.astro';
 ```
 
-Everything else (`localess`/`localessIntegration`, `getLocalessClient`, `getLivePayload`, `resolveAsset`, `handleLocalessMessage`, `toCamelCase`, model types, `isBrowser`, `isIframe`) imports from the default entry point (`@localess/astro`).
+Everything else (`localess`/`localessIntegration`, `getLocalessClient`, `getLivePayload`, `resolveAsset`, `handleLocalessMessage`, `toCamelCase`, `LocalessApiError`, model types, `isBrowser`, `isIframe`) imports from the default entry point (`@localess/astro`).

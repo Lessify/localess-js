@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isBrowser, isIframe, localess, localessEditable, localessIntegration, toCamelCase } from './index';
+import { isBrowser, isIframe, localess, LocalessApiError, localessEditable, localessIntegration, toCamelCase } from './index';
 
 describe('index barrel', () => {
   it('re-exports the localess integration factory under both names', () => {
@@ -14,6 +14,11 @@ describe('index barrel', () => {
     expect(typeof isIframe).toBe('function');
     expect(typeof localessEditable).toBe('function');
     expect(typeof toCamelCase).toBe('function');
+  });
+
+  it('re-exports LocalessApiError as a constructible class, not erased as a type-only export', () => {
+    expect(typeof LocalessApiError).toBe('function');
+    expect(new LocalessApiError(404, 'Not Found', 'https://example.com', undefined, 'hint')).toBeInstanceOf(Error);
   });
 
   it('no longer exports the removed plain-library API', async () => {

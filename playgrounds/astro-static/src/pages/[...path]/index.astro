@@ -1,21 +1,30 @@
 ---
-import { getLivePayload, getLocalessClient } from '@localess/astro';
+import { getLocalessClient } from '@localess/astro';
 import LocalessDocument from '@localess/astro/LocalessDocument.astro';
 import Layout from '../../layouts/Layout.astro';
-import { LOCALES } from '@/shared/utils/locales.ts';
+import { LOCALES } from '../../shared/utils/locales';
 
-const { locale: segments } = Astro.params;
-const localeSegments = segments ? segments.split('/') : [];
-if (localeSegments.length > 1) {
-  return Astro.redirect('/404');
-}
-const locale = localeSegments[0];
-if (locale && !LOCALES.some(l => l.id === locale)) {
-  return Astro.redirect('/404');
+export async function getStaticPaths() {
+  const client = getLocalessClient();
+  const links = await client.getLinks({ kind: 'DOCUMENT' });
+  const slugs = new Set(['home', ...Object.values(links).map(link => link.fullSlug)]);
+
+  return LOCALES.flatMap(locale => {
+    // path -> slug, keyed so the bare locale root and an explicit "home" slug
+    // both resolve to the same content, same as the SSR playground's fallback.
+    const paths = new Map(Array.from(slugs, slug => [[locale.id, ...slug.split('/')].filter(Boolean).join('/'), slug]));
+    paths.set(locale.id, 'home');
+
+    return Array.from(paths, ([path, slug]) => ({
+      params: { path: path || undefined },
+      props: { locale: locale.id || undefined, slug },
+    }));
+  });
 }
 
-const preview = await getLivePayload(Astro);
-const document = preview.data ? { data: preview.data } : await getLocalessClient().getContentBySlug('home', { locale: locale || undefined });
+const { locale, slug } = Astro.props as { locale?: string; slug: string };
+const client = getLocalessClient();
+const document = await client.getContentBySlug(slug, { locale });
 ---
 
 <Layout>

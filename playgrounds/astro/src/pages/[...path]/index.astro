@@ -1,16 +1,27 @@
 ---
-import { getLocalessClient } from '@localess/astro';
+import { getLivePayload, getLocalessClient, LocalessApiError } from '@localess/astro';
 import LocalessDocument from '@localess/astro/LocalessDocument.astro';
 import Layout from '../../layouts/Layout.astro';
-import { LOCALES } from '../../shared/utils/locales';
+import { LOCALES } from '@/shared/utils/locales.ts';
+import { resolveLocaleAndSlug } from '@/shared/utils/route.ts';
 
-export function getStaticPaths() {
-  return LOCALES.map(item => ({ params: { locale: item.id || undefined } }));
+const { locale, slug } = resolveLocaleAndSlug(Astro.params.path);
+
+const preview = await getLivePayload(Astro);
+let document;
+if (preview.data) {
+  document = { data: preview.data };
+} else {
+  try {
+    document = await getLocalessClient().getContentBySlug(slug, { locale });
+  } catch (error) {
+    if (error instanceof LocalessApiError && error.status === 404) {
+      Astro.response.status = 404;
+      return Astro.rewrite('/404');
+    }
+    throw error;
+  }
 }
-
-const { locale } = Astro.params;
-const client = getLocalessClient();
-const document = await client.getContentBySlug('home', { locale: locale || undefined });
 ---
 
 <Layout>
