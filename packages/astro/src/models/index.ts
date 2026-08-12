@@ -1,3 +1,4 @@
+export type { LocalessOptions } from './client';
 export type {
   AssetMetadata,
   Assets,
@@ -13,7 +14,6 @@ export type {
   ContentRichText,
   EventToApp,
   Links,
+  LocalessClient,
   References,
-  LocalessClient
 } from '@localess/client';
-export type {LocalessOptions} from './client';

@@ -1,5 +1,5 @@
-import {LocalessClientOptions} from "@localess/client";
-import {AstroComponentFactory} from "astro/runtime/server/index.js";
+import { LocalessClientOptions } from '@localess/client';
+import { AstroComponentFactory } from 'astro/runtime/server/index.js';
 
 /**
  * Configuration for the `localess()` Astro integration.

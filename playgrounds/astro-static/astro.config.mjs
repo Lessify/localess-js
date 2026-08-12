@@ -11,6 +11,7 @@ export default defineConfig({
       debug: true,
       // livePreview requires output: 'server'; enableSync works under static output too (reload-based).
       enableSync: true,
+      componentsDir: 'src/shared/components',
       enableFallbackComponent: true,
     }),
   ],

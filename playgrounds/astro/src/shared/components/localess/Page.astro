@@ -1,5 +1,5 @@
 ---
-import { localessEditable } from '@localess/astro';
+import { localessEditable, localessEditableField } from '@localess/astro';
 import type { Page } from '../../models/localess';
 
 export interface Props {
@@ -9,6 +9,11 @@ export interface Props {
 const { data } = Astro.props;
 ---
 
-<main {...localessEditable(data)}>
-  <h1>{data.title}</h1>
+<main {...localessEditable(data)} class="flex flex-col gap-4">
+  <h1 {...localessEditableField('title')} class="text-center">
+    {data.title}
+  </h1>
+  <p {...localessEditableField('description')} class="text-center whitespace-pre-line">
+    {data.description}
+  </p>
 </main>

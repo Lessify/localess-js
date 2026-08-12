@@ -13,6 +13,7 @@ export default defineConfig({
       token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token
       debug: true,
       livePreview: true,
+      componentsDir: 'src/shared/components',
       enableFallbackComponent: true,
     }),
   ],
