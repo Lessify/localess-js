@@ -1,18 +1,28 @@
 ---
-import { getLivePayload, getLocalessClient, LocalessApiError } from '@localess/astro';
+import {getLivePayload, getLocalessClient, LocalessApiError, type Content} from '@localess/astro';
 import LocalessDocument from '@localess/astro/LocalessDocument.astro';
 import Layout from '../../layouts/Layout.astro';
-import { resolveLocaleAndSlug } from '@/shared/utils/route.ts';
+import {resolveLocaleAndSlug} from '@/shared/utils/route.ts';
 
-const { locale, slug } = resolveLocaleAndSlug(Astro.params.path);
+const {locale, slug} = resolveLocaleAndSlug(Astro.params.path);
 
 const preview = await getLivePayload(Astro);
-let document;
+let document: Content;
 if (preview.data) {
-  document = { data: preview.data };
+  document = {
+    createdAt: "",
+    fullSlug: slug,
+    id: "",
+    kind: 'DOCUMENT',
+    name: "",
+    parentSlug: "",
+    slug: "",
+    updatedAt: "",
+    data: preview.data
+  };
 } else {
   try {
-    document = await getLocalessClient().getContentBySlug(slug, { locale });
+    document = await getLocalessClient().getContentBySlug(slug, {locale});
   } catch (error) {
     if (error instanceof LocalessApiError && error.status === 404) {
       Astro.response.status = 404;
@@ -24,5 +34,5 @@ if (preview.data) {
 ---
 
 <Layout locale={locale}>
-  <LocalessDocument document={document} />
+  <LocalessDocument document={document}/>
 </Layout>
