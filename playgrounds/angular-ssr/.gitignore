@@ -1,3 +1,7 @@
 dist/
 out-tsc/
 .angular/
+
+
+#Localess
+.localess
