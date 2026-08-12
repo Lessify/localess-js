@@ -1,6 +1,7 @@
 import {notFound} from "next/navigation";
-import {getLocalessClient, Content, LocalessDocument} from "@localess/react/rsc";
+import {getLocalessClient, Content, LocalessDocument, LocalessApiError} from "@localess/react/rsc";
 import {LOCALES} from "@/shared/utils/locales";
+import {resolveLocaleAndSlug} from "@/shared/utils/route";
 import {localessInit} from "@localess/react/rsc";
 import {PageLocaless} from "@/shared/components/localess/page";
 import {Page} from "@/shared/models/localess";
@@ -16,12 +17,10 @@ localessInit({
   }
 })
 
-export default async function Home({params}: PageProps<'/[[...locale]]'>) {
-  const {locale: segments} = await params
-  if (segments && segments.length > 1) notFound()
-  const locale = segments?.[0]
-  if (locale && !LOCALES.some(l => l.id === locale)) notFound()
-  const document = await fetchData(locale);
+export default async function Home({params}: PageProps<'/[[...path]]'>) {
+  const {path: segments} = await params
+  const {locale, slug} = resolveLocaleAndSlug(segments)
+  const document = await fetchData(locale, slug);
   return (
     <div className="flex flex-col w-full gap-8 mx-auto max-w-5xl">
       <header className="py-8">
@@ -55,7 +54,14 @@ export default async function Home({params}: PageProps<'/[[...locale]]'>) {
   );
 }
 
-async function fetchData(locale?: string): Promise<Content<Page>> {
+async function fetchData(locale: string | undefined, slug: string): Promise<Content<Page>> {
   const client = getLocalessClient();
-  return client.getContentBySlug<Page>('home', {locale: locale ? locale : undefined});
+  try {
+    return await client.getContentBySlug<Page>(slug, {locale});
+  } catch (error) {
+    if (error instanceof LocalessApiError && error.status === 404) {
+      notFound();
+    }
+    throw error;
+  }
 }

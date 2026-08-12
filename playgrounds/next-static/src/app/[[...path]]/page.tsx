@@ -1,6 +1,6 @@
-import {notFound} from "next/navigation";
 import {getLocalessClient, Content, LocalessServerDocument} from "@localess/react/ssr";
 import {LOCALES} from "@/shared/utils/locales";
+import {resolveLocaleAndSlug} from "@/shared/utils/route";
 import {localessInit} from "@localess/react/ssr";
 import {PageLocaless} from "@/shared/components/localess/page";
 import {Page} from "@/shared/models/localess";
@@ -16,18 +16,27 @@ localessInit({
 })
 
 // `output: 'export'` prerenders every route at build time — there is no request-time
-// server, so each locale needs its own statically generated page via `generateStaticParams`
-// rather than a runtime path/query param.
-export function generateStaticParams() {
-  return LOCALES.map(item => ({locale: item.id ? [item.id] : []}))
+// server, so every navigable locale/slug combination needs its own statically generated
+// page via `generateStaticParams` rather than being resolved on demand.
+export async function generateStaticParams() {
+  const client = getLocalessClient();
+  const links = await client.getLinks({kind: 'DOCUMENT'});
+  const slugs = new Set(['home', ...Object.values(links).map(link => link.fullSlug)]);
+
+  return LOCALES.flatMap(locale => {
+    // joined path -> dedupe key; the bare locale root and an explicit "home" slug
+    // both resolve to the same content, same as the dynamic playground's fallback.
+    const paths = new Set(Array.from(slugs, slug => [locale.id, ...slug.split('/')].filter(Boolean).join('/')));
+    paths.add(locale.id);
+
+    return Array.from(paths, joined => ({path: joined ? joined.split('/') : []}));
+  });
 }
 
-export default async function Home({params}: PageProps<'/[[...locale]]'>) {
-  const {locale: segments} = await params
-  if (segments && segments.length > 1) notFound()
-  const locale = segments?.[0]
-  if (locale && !LOCALES.some(l => l.id === locale)) notFound()
-  const document = await fetchData(locale);
+export default async function Home({params}: PageProps<'/[[...path]]'>) {
+  const {path: segments} = await params
+  const {locale, slug} = resolveLocaleAndSlug(segments)
+  const document = await fetchData(locale, slug);
   return (
     <div className="flex flex-col w-full gap-8 mx-auto max-w-5xl">
       <header className="py-8">
@@ -61,7 +70,7 @@ export default async function Home({params}: PageProps<'/[[...locale]]'>) {
   );
 }
 
-async function fetchData(locale?: string): Promise<Content<Page>> {
+async function fetchData(locale: string | undefined, slug: string): Promise<Content<Page>> {
   const client = getLocalessClient();
-  return client.getContentBySlug<Page>('home', {locale: locale ? locale : undefined});
+  return client.getContentBySlug<Page>(slug, {locale});
 }

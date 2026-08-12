@@ -307,6 +307,7 @@ export { useLocaless }
 export { findLink }
 export { localessEditable, localessEditableField }  // re-exported from @localess/client
 export { isBrowser, isServer, isIframe }             // re-exported from @localess/client
+export { LocalessApiError }                          // re-exported from @localess/client; thrown by getContentBySlug/getContentById on a non-2xx response
 export type { LocalessClient, LocalessOptions, LocalessComponentProps }
 export type { AssetTransformParams }
 export type { Content, ContentData, ContentMetadata, ContentDataSchema, ContentDataField }

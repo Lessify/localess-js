@@ -19,6 +19,7 @@
  * ```
  */
 
+export { LocalessApiError } from '@localess/client';
 export * from './core/components';
 export * from './core/hooks';
 export type * from './core/models';

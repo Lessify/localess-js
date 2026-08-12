@@ -669,6 +669,9 @@ export { localessEditable, localessEditableField }
 // Environment utilities (re-exported from @localess/client)
 export { isBrowser, isServer, isIframe }
 
+// Error handling (re-exported from @localess/client)
+export { LocalessApiError }         // Thrown by getContentBySlug/getContentById on a non-2xx response; check .status
+
 // Types (re-exported from @localess/client + local)
 export type { AssetTransformParams }            // Image transform params for resolveAsset
 export type { LocalessClient, LocalessOptions }
@@ -688,6 +691,7 @@ export { LocalessServerComponent }  // Dynamic schema-to-component renderer, ser
 export { LocalessServerDocument }   // Schema renderer, no sync — server-safe
 export { renderRichTextToReact, resolveAsset, findLink }
 export { localessEditable, localessEditableField, isBrowser, isServer, isIframe }
+export { LocalessApiError }
 // Same shared types as the default export, minus anything sync-specific being meaningful
 
 // @localess/react/rsc — everything from /ssr, plus:
