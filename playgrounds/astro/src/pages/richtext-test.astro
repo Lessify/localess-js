@@ -40,8 +40,6 @@ const asset = resolveAsset({ kind: 'ASSET', uri: 'images/logo.png' }, { w: 800 }
 ---
 
 <Layout title="Localess Astro Playground — Rich Text & Assets">
-  <div class="flex flex-col w-full gap-8 mx-auto max-w-5xl px-4">
-    <LocalessRichText content={content} />
-    <p>resolveAsset() output: <code>{asset}</code></p>
-  </div>
+  <LocalessRichText content={content} />
+  <p>resolveAsset() output: <code>{asset}</code></p>
 </Layout>
