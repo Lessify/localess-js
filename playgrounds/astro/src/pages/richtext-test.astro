@@ -1,0 +1,47 @@
+---
+import { resolveAsset } from '@localess/astro';
+import LocalessRichText from '@localess/astro/LocalessRichText.astro';
+import Layout from '../layouts/Layout.astro';
+import type { ContentRichText } from '@localess/astro';
+
+const content: ContentRichText = {
+  type: 'doc',
+  content: [
+    { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Rich text playground check' }] },
+    {
+      type: 'paragraph',
+      content: [
+        { type: 'text', text: 'Plain, ' },
+        { type: 'text', marks: [{ type: 'bold' }], text: 'bold, ' },
+        { type: 'text', marks: [{ type: 'italic' }], text: 'italic, ' },
+        { type: 'text', marks: [{ type: 'strike' }], text: 'strike, ' },
+        { type: 'text', marks: [{ type: 'underline' }], text: 'underline' },
+        { type: 'text', text: ' and a ' },
+        { type: 'text', marks: [{ type: 'link', attrs: { href: 'https://localess.org' } }], text: 'link' },
+        { type: 'text', text: '.' },
+      ],
+    },
+    {
+      type: 'bulletList',
+      content: [
+        { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Bullet one' }] }] },
+        { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Bullet two' }] }] },
+      ],
+    },
+    {
+      type: 'codeBlock',
+      attrs: { language: 'ts' },
+      content: [{ type: 'text', text: "const x: number = 42;" }],
+    },
+  ],
+};
+
+const asset = resolveAsset({ kind: 'ASSET', uri: 'images/logo.png' }, { w: 800 });
+---
+
+<Layout title="Localess Astro Playground — Rich Text & Assets">
+  <div class="flex flex-col w-full gap-8 mx-auto max-w-5xl px-4">
+    <LocalessRichText content={content} />
+    <p>resolveAsset() output: <code>{asset}</code></p>
+  </div>
+</Layout>

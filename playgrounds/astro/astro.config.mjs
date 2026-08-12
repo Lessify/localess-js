@@ -1,4 +1,5 @@
 import node from '@astrojs/node';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 import { localess } from '@localess/astro';
 
@@ -14,4 +15,7 @@ export default defineConfig({
       livePreview: true,
     }),
   ],
+  vite: {
+    plugins: [tailwindcss()],
+  },
 });

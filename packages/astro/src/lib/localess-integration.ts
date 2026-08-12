@@ -1,14 +1,13 @@
 import type { LocalessClientOptions } from '@localess/client';
 import type { AstroIntegration } from 'astro';
 
+import { localessLogo } from '../dev-toolbar/localess-logo';
 import type { LocalessOptions } from '../models';
 import { vitePluginImportLocalessComponents } from '../vite-plugins/vite-plugin-import-localess-components';
 import { vitePluginLocalessInit } from '../vite-plugins/vite-plugin-localess-init';
 import { vitePluginLocalessOptions } from '../vite-plugins/vite-plugin-localess-options';
 
 const RELOAD_DEBOUNCE_MS = 500;
-
-const LOCALESS_TOOLBAR_ICON = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="4" fill="currentColor"/></svg>`;
 
 /**
  * The `localess()` Astro integration. Add it to `astro.config.mjs`'s `integrations` array
@@ -122,7 +121,7 @@ export function localessIntegration(options: LocalessOptions): AstroIntegration 
         addDevToolbarApp({
           id: 'localess',
           name: 'Localess',
-          icon: LOCALESS_TOOLBAR_ICON,
+          icon: localessLogo,
           entrypoint: '@localess/astro/toolbarApp',
         });
       },

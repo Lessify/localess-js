@@ -17,6 +17,8 @@
   },
   "devDependencies": {
     "@localess/cli": "*",
+    "@tailwindcss/vite": "^4",
+    "tailwindcss": "^4",
     "typescript": "^5"
   }
 }

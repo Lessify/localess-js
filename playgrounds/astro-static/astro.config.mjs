@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 import { localess } from '@localess/astro';
 
@@ -8,7 +9,11 @@ export default defineConfig({
       spaceId: 'MmaT4DL0kJ6nXIILUcQF', // Replace it for your spaceId
       token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token
       debug: true,
-      // enableSync/livePreview omitted — sync has no meaning once HTML is pre-baked at build time.
+      // livePreview requires output: 'server'; enableSync works under static output too (reload-based).
+      enableSync: true,
     }),
   ],
+  vite: {
+    plugins: [tailwindcss()],
+  },
 });
