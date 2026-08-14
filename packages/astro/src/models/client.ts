@@ -10,13 +10,13 @@ import { AstroComponentFactory } from 'astro/runtime/server/index.js';
 export type LocalessOptions = LocalessClientOptions & {
   /**
    * Map of schema keys to Astro components, merged with components auto-discovered from
-   * `<componentsDir>/localess/**\/*.astro`. Both this map's keys and `_schema` values are
+   * `<componentsDir>/**\/*.astro`. Both this map's keys and `_schema` values are
    * compared through `toCamelCase()`.
    */
   components?: Record<string, AstroComponentFactory>;
   /**
    * The directory Astro components live under. Defaults to `"src"`.
-   * Auto-discovery globs `<componentsDir>/localess/**\/*.astro`.
+   * Auto-discovery globs `<componentsDir>/**\/*.astro`.
    */
   componentsDir?: string;
   /**

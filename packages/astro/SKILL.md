@@ -56,7 +56,7 @@ import { LocalessComponent } from '@localess/astro';
 
 ## Component registry
 
-Components auto-register from `<componentsDir>/localess/**/*.astro` (default `componentsDir: 'src'`, so `src/localess/**/*.astro`). Merge in an explicit map via the `components` option:
+Components auto-register from `<componentsDir>/**/*.astro` (default `componentsDir: 'src'`, so `src/**/*.astro`). Merge in an explicit map via the `components` option:
 
 ```js
 localess({

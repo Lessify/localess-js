@@ -15,7 +15,7 @@ export interface ComponentRegistrationParts {
 }
 
 /**
- * Vite plugin that auto-imports Localess components from `<componentsDir>/localess/**\/*.astro`
+ * Vite plugin that auto-imports Localess components from `<componentsDir>/**\/*.astro`
  * and merges them with an explicit `components` map, matching `@storyblok/astro`'s
  * `vite-plugin-import-storyblok-components` architecture.
  */
@@ -52,8 +52,7 @@ export function vitePluginImportLocalessComponents(
 
 /**
  * Generates the virtual module source: static imports up top (for hoisting),
- * glob-imported components from the `localess` convention folder, then manual
- * and fallback registrations.
+ * glob-imported components from `componentsDir`, then manual and fallback registrations.
  */
 export function generateModuleCode(
   componentsDir: string,
@@ -61,7 +60,7 @@ export function generateModuleCode(
   manualRegistrations: ComponentRegistrationParts[]
 ): string {
   const normalizedComponentsDir = normalizePath(componentsDir);
-  const globPattern = `${normalizedComponentsDir}/localess/**/*.astro`;
+  const globPattern = `${normalizedComponentsDir}/**/*.astro`;
 
   const allRegistrations = [...manualRegistrations];
   if (fallbackRegistration) {

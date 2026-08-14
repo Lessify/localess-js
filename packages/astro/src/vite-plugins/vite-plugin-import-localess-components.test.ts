@@ -17,10 +17,10 @@ describe('vite-plugin-import-localess-components', () => {
   });
 
   describe('generateModuleCode', () => {
-    it('uses the localess convention folder for auto-discovery', () => {
+    it('globs componentsDir recursively for auto-discovery', () => {
       const code = generateModuleCode('/src', null, []);
 
-      expect(code).toContain(`import.meta.glob('/src/localess/**/*.astro'`);
+      expect(code).toContain(`import.meta.glob('/src/**/*.astro'`);
       expect(code).toContain('eager: true');
       expect(code).toContain('import { toCamelCase }');
       expect(code).toContain('export { localessComponents }');

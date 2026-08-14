@@ -10,8 +10,8 @@ export default defineConfig({
       token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token
       debug: true,
       // livePreview requires output: 'server'; enableSync works under static output too (reload-based).
-      enableSync: true,
-      componentsDir: 'src/shared/components',
+      //enableSync: true,
+      componentsDir: 'src/shared/components/localess',
       enableFallbackComponent: true,
     }),
   ],
