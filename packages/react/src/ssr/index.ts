@@ -34,6 +34,8 @@ export {
   localessInit,
   registerComponent,
   resolveAsset,
+  setComponents,
+  setFallbackComponent,
   unregisterComponent,
 } from '../core/state';
 export * from '../core/utils';

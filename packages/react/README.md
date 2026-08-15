@@ -51,7 +51,7 @@ pnpm add @localess/react
 - Apps where `localessInit` and components run entirely in the browser
 
 **Use `@localess/react/ssr`** for:
-- Next.js projects with `output: 'export'` (static site generation)
+- Next.js projects with `output: 'export'` (static site generation), when you don't need live editing and want the smallest bundle
 - Server-side rendering where live editing is not required
 - Scenarios where bundle size matters and you want to exclude all browser-only sync code
 
@@ -75,7 +75,7 @@ import { useLocaless, localessEditable } from "@localess/react/rsc";            
 ```
 
 > [!NOTE]
-> When using Next.js with `output: 'export'`, always use `@localess/react/ssr`. The RSC export is not compatible with static exports.
+> `@localess/react/rsc`'s primary `LocalessDocument` is Server-Action-driven and needs a live server at request time — it does not work under `output: 'export'`. For static exports with live editing, use `LocalessClientDocument` (also from `/rsc`) instead, which needs client-side component registration. Use `@localess/react/ssr` only when you deliberately want the smallest bundle and don't need live editing at all.
 
 ---
 
@@ -405,7 +405,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
 
 > `LocalessDocument` subscribes to `input` / `change` editor events automatically when `enableSync` is active.
 >
-> Import it from `@localess/react/rsc` (as above) when calling it directly from a Server Component, as this example does — that variant renders the component registry lookup itself in the Server Component module graph, where `localessInit()`'s registration is visible. The plain `@localess/react` export's `LocalessDocument` is a Client Component internally; calling it directly from a Server Component moves that lookup into a separate client module graph where the registration set by a Server Component's `localessInit()` call was never applied, and it fails to find any registered component. Use the plain `@localess/react` export's `LocalessDocument` only from inside an actual `'use client'` file (see the SPA example below).
+> `@localess/react/rsc`'s `LocalessDocument` is a Server Component — its live sync is driven by a Server Action, not client-side re-render, so no component registration is needed beyond the single server-side `localessInit()` call above. (The default SPA export's `LocalessDocument`, used outside App Router, is a different, `'use client'` implementation — see the SPA example below. `/rsc` also exports `LocalessClientDocument`, an `output: 'export'`-only fallback that does need client-side registration — see `docs/react.md`'s "Client-Side Fallback for Static Export".)
 
 ### Manual Integration
 
@@ -601,7 +601,7 @@ export function PageClientManual({
 
 ## Full Example — Next.js Static Export (`@localess/react/ssr`)
 
-Use `@localess/react/ssr` when your Next.js project uses `output: 'export'` for static site generation. Live editing is not available in this mode.
+Use `@localess/react/ssr` when your Next.js project uses `output: 'export'` for static site generation and you don't need live editing. If you do need live editing on a static export, use `@localess/react/rsc`'s `LocalessClientDocument` instead — see `docs/react.md`'s "Client-Side Fallback for Static Export" section for the registration step this requires.
 
 ### `next.config.js`
 
@@ -673,7 +673,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 Use `LocalessDocument` for a zero-boilerplate live-editing integration, or `useLocaless` for client-side re-fetching with more control.
 
-**Option A — `LocalessDocument` (recommended):** it's a Server Component internally (only its sync subscription runs client-side), so it renders directly in the Server Component — no separate Client Component file needed.
+**Option A — `LocalessDocument` (recommended):** a Server Component, so it renders directly inside the Server Component page — no separate Client Component file needed, and no client-side component registration either. Live sync is handled by a Server Action shipped inside the SDK.
 
 ```tsx
 import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";

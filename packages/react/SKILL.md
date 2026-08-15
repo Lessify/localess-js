@@ -17,14 +17,16 @@
 | Import path | Use for | Includes `'use client'` code |
 |---|---|---|
 | `@localess/react` | Plain SPA (CRA, Vite, etc.) | Yes |
-| `@localess/react/ssr` | SSR / Next.js `output: 'export'` (static, no live editing) | No |
+| `@localess/react/ssr` | SSR / Next.js `output: 'export'`, when you want the smallest bundle and don't need live editing | No |
 | `@localess/react/rsc` | Next.js App Router (React Server Components) | Yes (via client components) |
 
 Using `@localess/react` in a Next.js App Router project causes `'use client'` directive conflicts — use `@localess/react/rsc` there instead.
 
+`@localess/react/rsc`'s primary `LocalessDocument` is Server-Action-driven and needs a live server at request time — it works under `default`/`standalone` but not `output: 'export'`. For `output: 'export'` with live editing, use `LocalessClientDocument` (also from `/rsc`) instead, which needs client-side component registration (see `docs/react.md`'s "Client-Side Fallback for Static Export"). Use `/ssr` only when you deliberately want to exclude all sync code.
+
 **`@localess/react/ssr` renames the renderer and document components** — it exports `LocalessServerComponent` / `LocalessServerDocument` in place of `LocalessComponent` / `LocalessDocument`, and does NOT include `useLocaless`, `isSyncEnabled`, `localessSyncOn`, `localessSyncOnChange`, or `localessSyncReady` (none of them are meaningful without live editing). `localessEditable`, `localessEditableField`, `isBrowser`, `isIframe`, and the sync event types ARE still included — they're cheap to bundle and inert outside a client context.
 
-`@localess/react/rsc` re-exports everything from `/ssr` (so `LocalessServerComponent` / `LocalessServerDocument` are available there too) **plus** the default `LocalessComponent` / `LocalessDocument` (both server-safe here — `LocalessDocument`'s live-sync subscription is delegated to a small internal Client Component), `useLocaless`, and the sync functions.
+`@localess/react/rsc` re-exports everything from `/ssr` (so `LocalessServerComponent` / `LocalessServerDocument` are available there too) **plus** `LocalessComponent` (server-safe), the primary `LocalessDocument` (a Server Component whose live sync is driven by a Server Action — no client-side registration needed), `LocalessClientDocument` (the `output: 'export'` fallback, needing client-side registration — see `docs/react.md`'s "Client-Side Fallback for Static Export"), `useLocaless`, and the sync functions.
 
 ---
 
@@ -395,7 +397,7 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
 
 ## Static Rendering (No Live Editing)
 
-For Next.js `output: 'export'` or any SSR context where Visual Editor sync isn't needed, use `@localess/react/ssr` and its `LocalessServerComponent` / `LocalessServerDocument` instead of the default (sync-capable) `LocalessComponent` / `LocalessDocument`. This is the smallest bundle — it excludes `useLocaless` and every sync function entirely.
+For Next.js `output: 'export'` or any SSR context where Visual Editor sync isn't needed, use `@localess/react/ssr` and its `LocalessServerComponent` / `LocalessServerDocument` instead of the default (sync-capable) `LocalessComponent` / `LocalessDocument`. This is the smallest bundle — it excludes `useLocaless` and every sync function entirely. If you *do* want live editing on a statically-exported build, use `@localess/react/rsc`'s `LocalessClientDocument` instead — see `docs/react.md`'s "Client-Side Fallback for Static Export" section for the registration step it requires.
 
 ```tsx
 import { getLocalessClient, LocalessServerDocument } from "@localess/react/ssr";
@@ -696,7 +698,8 @@ export { LocalessApiError }
 
 // @localess/react/rsc — everything from /ssr, plus:
 export { LocalessComponent }        // server-safe here (no 'use client')
-export { LocalessDocument }         // server-safe wrapper; sync delegated to an internal Client Component island
+export { LocalessDocument }         // primary: Server Component, Server-Action-driven live sync, no client-side registration
+export { LocalessClientDocument }   // fallback for output: 'export'; same 'use client' component as the default export; needs client-side registration (see docs/react.md)
 export { useLocaless }              // requires 'use client'
 export { isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncReady }
 ```

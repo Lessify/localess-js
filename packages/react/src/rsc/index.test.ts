@@ -1,22 +1,24 @@
 import { describe, expect, it } from 'vitest';
 
-import { LocalessComponent as CoreLocalessComponent } from '../core/components/localess-component';
 import { LocalessDocument as CoreLocalessDocument } from '../core/components/localess-document';
-import { useLocaless as CoreUseLocaless } from '../core/hooks';
-import { LocalessComponent as RscLocalessComponent, LocalessDocument as RscLocalessDocument, useLocaless as RscUseLocaless } from './index';
+import { LocalessClientDocument, LocalessDocument as RscLocalessDocument, setComponents, setFallbackComponent } from './index';
 import { LocalessDocument as RscOwnLocalessDocument } from './localess-document';
 
 describe('@localess/react/rsc index', () => {
-  it('re-exports the same LocalessComponent implementation as core/components (no duplicate implementation)', () => {
-    expect(RscLocalessComponent).toBe(CoreLocalessComponent);
-  });
-
-  it('re-exports the same useLocaless implementation as core/hooks (no duplicate implementation)', () => {
-    expect(RscUseLocaless).toBe(CoreUseLocaless);
-  });
-
-  it('exports its own server-safe LocalessDocument, distinct from the client-only core/components one', () => {
+  it('exports its own Server-Action-driven LocalessDocument as the primary export', () => {
     expect(RscLocalessDocument).toBe(RscOwnLocalessDocument);
+  });
+
+  it('the primary LocalessDocument is a different implementation than the client-side core one', () => {
     expect(RscLocalessDocument).not.toBe(CoreLocalessDocument);
+  });
+
+  it('exports LocalessClientDocument as exactly the client-side core/components implementation (the output: export fallback)', () => {
+    expect(LocalessClientDocument).toBe(CoreLocalessDocument);
+  });
+
+  it('exports setComponents and setFallbackComponent, required by the LocalessClientDocument fallback path', () => {
+    expect(typeof setComponents).toBe('function');
+    expect(typeof setFallbackComponent).toBe('function');
   });
 });

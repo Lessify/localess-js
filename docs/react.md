@@ -14,6 +14,8 @@ React integration layer for Localess. Builds on `@localess/client` and adds a co
 | `@localess/react/ssr` | SSR or Next.js `output: 'export'` (static) | No |
 | `@localess/react/rsc` | Next.js App Router (React Server Components) | Yes (via client components) |
 
+`@localess/react/rsc`'s primary `LocalessDocument` needs a live server at request time (its live sync is Server-Action-driven) and works under `default`/`standalone`, but not `output: 'export'` — use `LocalessClientDocument` there instead (see "Client-Side Fallback for Static Export"). `@localess/react/ssr` remains the right choice when you deliberately want to exclude all sync code for the smallest bundle.
+
 ### What `@localess/react/ssr` excludes
 
 The smallest bundle. It exports `LocalessServerComponent` / `LocalessServerDocument` (server-safe, no sync attributes) in place of the default `LocalessComponent` / `LocalessDocument`, and does NOT include:
@@ -26,7 +28,9 @@ The smallest bundle. It exports `LocalessServerComponent` / `LocalessServerDocum
 ### What `@localess/react/rsc` adds back
 
 Re-exports everything from `/ssr`, plus:
-- `LocalessComponent` / `LocalessDocument` — both server-safe here (no `'use client'`); `LocalessDocument`'s live-sync subscription is delegated to a small internal Client Component, so the registry lookup itself stays in the Server Component module graph, where `localessInit()`'s registration is actually visible
+- `LocalessComponent` — server-safe (no `'use client'`), usable directly in a Server Component
+- `LocalessDocument` — the **primary** live-editing entry point: a Server Component whose live sync is driven by a Server Action, with no client-side component registration needed. Requires a live server at request time (not usable under `output: 'export'`)
+- `LocalessClientDocument` — the `output: 'export'` fallback: the exact same `'use client'` component as the default export's `LocalessDocument`; render it from inside a Client Component boundary, and see [Client-Side Fallback for Static Export](#client-side-fallback-for-static-export) for the registration step it requires
 - `useLocaless` hook (requires `'use client'`)
 - `isSyncEnabled`, `localessSyncOn`, `localessSyncOnChange`, `localessSyncReady`
 
@@ -146,7 +150,7 @@ Returns `undefined` while the initial fetch is in flight.
 |---|---|---|---|
 | Fetches content | No | No | Yes |
 | Live sync | No | Yes | Yes |
-| Works in RSC | Yes | Yes (via `/rsc`; the default export's version requires `'use client'`) | No (`'use client'`) |
+| Works in RSC | Yes | Requires a Client Component boundary (same `'use client'` component for default and `/rsc`) | No (`'use client'`) |
 | Best for | Static SSR | Server-preloaded + sync | SPA / client-rendered |
 
 ## Writing Components
@@ -172,6 +176,53 @@ Pass `links` and `references` through the entire tree — child `LocalessCompone
 ## Visual Editor Sync Patterns
 
 Always preload data server-side and pass it as props — the page renders immediately with no loading flash, then sync activates on top.
+
+### How `/rsc` Live Sync Works
+
+`LocalessDocument` from `/rsc` is a Server Component. Live editing is driven by a Server Action shipped inside the SDK: a small client listener calls it on every Visual Editor sync event, the action stashes the edited data in an in-process cache and calls `revalidatePath`, and Next.js refreshes the Server Component tree — which re-renders using the cache and the server's own component registry. **No client-side component registration is needed** — `localessInit({ components })` once, server-side, is enough:
+
+```tsx
+import { getLocalessClient, LocalessDocument, localessInit } from "@localess/react/rsc";
+
+localessInit({
+  origin: process.env.LOCALESS_ORIGIN!,
+  spaceId: process.env.LOCALESS_SPACE_ID!,
+  token: process.env.LOCALESS_TOKEN!,
+  enableSync: true,
+  components: { page: Page, hero: Hero },
+});
+
+export default async function HomePage({ params }) {
+  const { locale } = await params;
+  const content = await getLocalessClient().getContentBySlug('home', { locale });
+  return <LocalessDocument document={content} />;
+}
+```
+
+**Known limitation:** the live-edit cache is in-process memory (`globalThis`), matching how Storyblok's own React SDK implements the same mechanism. On a `default`-mode deployment that runs multiple serverless instances with no shared memory, a live edit may occasionally not appear until a subsequent edit lands on the same instance. This doesn't affect `standalone` deployments or local development (single process). If it matters for your setup, use a `standalone` deployment for live-editing sessions.
+
+**Requires a live server at request time — does not work under `output: 'export'`.** Use `LocalessClientDocument` instead there; see "Client-Side Fallback for Static Export" below.
+
+### Client-Side Fallback for Static Export
+
+`LocalessClientDocument` (also from `/rsc`) is the client-side re-render fallback for `output: 'export'`, where no server exists at request time to run a Server Action against. It's the same implementation as the default SPA export's `LocalessDocument` — a Client Component holding its own state, re-rendering on `window.localess` events.
+
+Because Next.js App Router bundles Server and Client Components into separate module graphs, a `localessInit()` call made only in a Server Component doesn't populate the registry `LocalessClientDocument` needs when it re-renders. Call `setComponents` with the same components map from inside the Client Component boundary that renders it:
+
+```tsx
+// app/[locale]/page-client.tsx
+'use client';
+import { setComponents, LocalessClientDocument } from "@localess/react/rsc";
+import { components } from "@/localess.config"; // the same map passed to localessInit server-side
+
+setComponents(components);
+
+export default function PageClient({ content }) {
+  return <LocalessClientDocument document={content} />;
+}
+```
+
+Use this only when you specifically need live editing on a statically-exported build. For `default`/`standalone`, prefer the primary `LocalessDocument` above — it needs no client-side registration at all.
 
 ### Pattern A — `useLocaless` hook
 
@@ -250,6 +301,36 @@ export function PageClient({ initialContent }) {
 }
 ```
 
+### Advanced: Server-Patch Alternative (`default` / `standalone` only)
+
+The patterns above re-render on the client using React state (they're for the default SPA export and the `LocalessClientDocument` fallback, not the primary `/rsc` `LocalessDocument`, which is already server-driven — see "How `/rsc` Live Sync Works"). An alternative for the SPA/client-side case — useful if you want to avoid registering components in the client bundle at all (see "Client-Side Fallback for Static Export") — is to re-render server-side and patch the DOM, the same approach `@localess/astro` uses for its `livePreview` tier:
+
+1. On a Visual Editor `input`/`change` event, `POST` the updated `data` to a Next.js Route Handler (e.g. `app/api/localess-preview/route.ts`).
+2. In that Route Handler, re-render your page's content server-side with the new data (via RSC) and return the resulting HTML.
+3. On the client, debounce the event, `fetch` the Route Handler, and use a DOM-diffing library such as `morphdom` to patch `document.body` in place, keyed by the `data-ll-id` attribute (matching how `localessEditable` marks elements):
+
+```tsx
+import morphdom from 'morphdom';
+
+async function patchWithUpdatedContent(data: unknown) {
+  const response = await fetch(location.href, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data }),
+  });
+  const html = await response.text();
+  const newBody = new DOMParser().parseFromString(html, 'text/html').body;
+
+  morphdom(document.body, newBody, {
+    getNodeKey(node) {
+      return node.nodeType === 1 ? (node as Element).getAttribute('data-ll-id') ?? undefined : undefined;
+    },
+  });
+}
+```
+
+**This requires a server running at request time and does not work under `output: 'export'`** — there is no server to handle the `POST` in a fully static build. Most apps don't need this: the client-side re-render patterns above already work under all three output modes. Reach for this only if avoiding a client-side component registry specifically matters for your build.
+
 ## Utilities
 
 ### `findLink(links, link)`
@@ -323,6 +404,7 @@ export type { LocalessSync, EventToApp, EventCallback, EventToAppType }
 
 - **Wrong import path.** Using `@localess/react` in a Next.js App Router project instead of `@localess/react/rsc` causes `'use client'` directive conflicts. Use `/rsc` for App Router.
 - **Using `@localess/react/ssr` when you need sync.** The `/ssr` export deliberately excludes all sync and browser-only code. If you need live Visual Editor editing, use `/rsc`.
+- **Using `LocalessClientDocument` without registering components client-side.** Only relevant if you deliberately opted into the `output: 'export'` fallback — the primary `LocalessDocument` needs no client-side registration at all. See "Client-Side Fallback for Static Export" above.
 - **Calling `localessInit()` in a Client Component.** It is safe in Server Components — call it once in the root layout, never in `'use client'` files.
 - **Not passing `links`/`references` down the tree.** Child `LocalessComponent`s need them for resolved data. Always pass them through every level.
 - **Enabling sync in production.** `enableSync: process.env.NODE_ENV !== 'production'` — the sync script is only useful inside the Localess editor iframe.

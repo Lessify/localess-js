@@ -21,7 +21,9 @@
     "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"packages/*/src/**/*.{ts,tsx}\" --fix",
     "test": "npm test --workspace=@localess/client --workspace=@localess/react --workspace=@localess/cli --workspace=@localess/angular --workspace=@localess/astro --if-present",
-    "test:coverage": "npm run test:coverage --workspace=@localess/client --workspace=@localess/react --workspace=@localess/cli --workspace=@localess/angular --workspace=@localess/astro --if-present"
+    "test:coverage": "npm run test:coverage --workspace=@localess/client --workspace=@localess/react --workspace=@localess/cli --workspace=@localess/angular --workspace=@localess/astro --if-present",
+    "test:coverage:angular": "npm run test:coverage --workspace=@localess/angular --if-present",
+    "test:coverage:react": "npm run test:coverage --workspace=@localess/react --if-present"
   },
   "repository": {
     "type": "git",

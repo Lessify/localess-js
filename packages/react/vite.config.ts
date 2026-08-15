@@ -26,6 +26,7 @@ export default defineConfig({
         'react/jsx-runtime',
         '@localess/client',
         /^@tiptap\/.*/,
+        'next/cache',
       ],
       plugins: [preserveDirectives()],
       output: [
