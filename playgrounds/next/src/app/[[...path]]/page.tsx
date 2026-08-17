@@ -1,21 +1,20 @@
 import {notFound} from "next/navigation";
-import {getLocalessClient, Content, LocalessDocument, LocalessApiError} from "@localess/react/rsc";
-import {LOCALES} from "@/shared/utils/locales";
+import { Content, LocalessDocument, LocalessApiError} from "@localess/react/rsc";
+import {getLocalessClient, LOCALES} from "@/shared/utils/locales";
 import {resolveLocaleAndSlug} from "@/shared/utils/route";
-import {localessInit} from "@localess/react/rsc";
-import {PageLocaless} from "@/shared/components/localess/page";
 import {Page} from "@/shared/models/localess";
 
-localessInit({
-  origin: "https://demo.localess.org", // Replace it for your origin
-  spaceId: "MmaT4DL0kJ6nXIILUcQF", // Replace it for your spaceId
-  token: "Y4rvboPnyzVeC7LddEK5", // Replace it for your token
-  debug: true,
-  enableSync: true,
-  components: {
-    'Page': PageLocaless
+async function fetchData(locale: string | undefined, slug: string): Promise<Content<Page>> {
+  const client = getLocalessClient();
+  try {
+    return await client.getContentBySlug<Page>(slug, {locale});
+  } catch (error) {
+    if (error instanceof LocalessApiError && error.status === 404) {
+      notFound();
+    }
+    throw error;
   }
-})
+}
 
 export default async function Home({params}: PageProps<'/[[...path]]'>) {
   const {path: segments} = await params
@@ -52,16 +51,4 @@ export default async function Home({params}: PageProps<'/[[...path]]'>) {
       <LocalessDocument document={document} />
     </div>
   );
-}
-
-async function fetchData(locale: string | undefined, slug: string): Promise<Content<Page>> {
-  const client = getLocalessClient();
-  try {
-    return await client.getContentBySlug<Page>(slug, {locale});
-  } catch (error) {
-    if (error instanceof LocalessApiError && error.status === 404) {
-      notFound();
-    }
-    throw error;
-  }
 }

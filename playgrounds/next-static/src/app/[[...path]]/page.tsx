@@ -21,6 +21,11 @@ export async function generateStaticParams() {
   });
 }
 
+async function fetchData(locale: string | undefined, slug: string): Promise<Content<Page>> {
+  const client = getLocalessClient();
+  return client.getContentBySlug<Page>(slug, {locale});
+}
+
 export default async function Home({params}: PageProps<'/[[...path]]'>) {
   const {path: segments} = await params
   const {locale, slug} = resolveLocaleAndSlug(segments)
@@ -56,9 +61,4 @@ export default async function Home({params}: PageProps<'/[[...path]]'>) {
       <LocalessServerDocument document={document}/>
     </div>
   );
-}
-
-async function fetchData(locale: string | undefined, slug: string): Promise<Content<Page>> {
-  const client = getLocalessClient();
-  return client.getContentBySlug<Page>(slug, {locale});
 }
