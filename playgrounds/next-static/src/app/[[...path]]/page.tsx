@@ -1,20 +1,7 @@
-import {getLocalessClient, Content, LocalessServerDocument} from "@localess/react/ssr";
-import {LOCALES} from "@/shared/utils/locales";
+import {Content, LocalessServerDocument} from "@localess/react/ssr";
+import {getLocalessClient, LOCALES} from "@/shared/utils/locales";
 import {resolveLocaleAndSlug} from "@/shared/utils/route";
-import {localessInit} from "@localess/react/ssr";
-import {PageLocaless} from "@/shared/components/localess/page";
 import {Page} from "@/shared/models/localess";
-
-localessInit({
-  origin: "https://demo.localess.org", // Replace it for your origin
-  spaceId: "MmaT4DL0kJ6nXIILUcQF", // Replace it for your spaceId
-  token: "Y4rvboPnyzVeC7LddEK5", // Replace it for your token
-  debug: true,
-  enableSync: true,
-  components: {
-    'Page': PageLocaless
-  }
-})
 
 // `output: 'export'` prerenders every route at build time — there is no request-time
 // server, so every navigable locale/slug combination needs its own statically generated
@@ -66,7 +53,7 @@ export default async function Home({params}: PageProps<'/[[...path]]'>) {
           </ul>
         </nav>
       </header>
-      <LocalessServerDocument document={document} />
+      <LocalessServerDocument document={document}/>
     </div>
   );
 }
