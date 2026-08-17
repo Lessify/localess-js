@@ -207,20 +207,30 @@ export default async function HomePage({ params }) {
 
 `LocalessClientDocument` (also from `/rsc`) is the client-side re-render fallback for `output: 'export'`, where no server exists at request time to run a Server Action against. It's the same implementation as the default SPA export's `LocalessDocument` — a Client Component holding its own state, re-rendering on `window.localess` events.
 
-Because Next.js App Router bundles Server and Client Components into separate module graphs, a `localessInit()` call made only in a Server Component doesn't populate the registry `LocalessClientDocument` needs when it re-renders. Call `setComponents` with the same components map from inside the Client Component boundary that renders it:
+Because Next.js App Router bundles Server and Client Components into separate module graphs, a `localessInit({ enableSync: true, components })` call made only in a Server Component populates neither the component registry nor the `enableSync` flag in the Client Component module graph that `LocalessClientDocument` actually runs in — both live in module-scope state, and that state is a separate instance per graph. This holds under `output: 'export'` exactly as much as under `default`/`standalone`: static-export Client Components still hydrate and run their effects normally in the browser (see the [Next.js static export docs](https://nextjs.org/docs/app/guides/static-exports#client-components)) — the module-graph split, not the output mode, is what makes a second registration necessary.
+
+Call `localessInit` a **second time**, from inside the Client Component boundary that renders `LocalessClientDocument`, using a **public token** — read-only, scoped to published content and translations only, safe to expose client-side (unlike the secret token used for the server-side call above). See `docs/decisions/001-server-side-only.md` for the full token-secrecy policy this exception is documented under.
 
 ```tsx
 // app/[locale]/page-client.tsx
 'use client';
-import { setComponents, LocalessClientDocument } from "@localess/react/rsc";
+import { localessInit, LocalessClientDocument } from "@localess/react/rsc";
 import { components } from "@/localess.config"; // the same map passed to localessInit server-side
 
-setComponents(components);
+localessInit({
+  origin: process.env.NEXT_PUBLIC_LOCALESS_ORIGIN!,   // same origin as the server-side call
+  spaceId: process.env.NEXT_PUBLIC_LOCALESS_SPACE_ID!, // same spaceId as the server-side call
+  token: process.env.NEXT_PUBLIC_LOCALESS_PUBLIC_TOKEN!, // a public token — never the secret one
+  enableSync: true,
+  components,
+});
 
 export default function PageClient({ content }) {
   return <LocalessClientDocument document={content} />;
 }
 ```
+
+This is a plain second call to the same `localessInit` you already use server-side — no separate function to learn. The server-side call keeps using the secret token (for build-time data fetching); this client-side call uses the public token, and its `components`/`enableSync` populate the *client* module graph that `LocalessClientDocument` actually reads from.
 
 Use this only when you specifically need live editing on a statically-exported build. For `default`/`standalone`, prefer the primary `LocalessDocument` above — it needs no client-side registration at all.
 

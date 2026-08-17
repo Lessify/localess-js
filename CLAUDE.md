@@ -42,7 +42,7 @@ Requirements: Node.js >= 24.0.0, npm >= 10.
 
 1. **Never commit.** Never run `git commit` or any command that creates a commit. Make file changes and stop — the developer reviews all changes and commits themselves when ready.
 
-2. **`@localess/client` is server-side only.** Never suggest using it in browser/client-side code. The API token must remain secret. See `docs/decisions/001-server-side-only.md`.
+2. **`@localess/client` is server-side only, with one exception.** Never suggest using it in browser/client-side code, and a secret token must never be exposed client-side. The one exception: Localess now also issues **public tokens** (read-only, published content and translations only) that are safe to use client-side — currently supported only in `@localess/react` (its `LocalessClientDocument` client-side registration path). `@localess/angular`, `@localess/cli`, and `@localess/astro` have not been reworked for this yet — treat their token as secret-only until they are. See `docs/decisions/001-server-side-only.md`.
 
 3. **`@localess/client` has zero production dependencies.** Never add entries to `dependencies` in `packages/client/package.json`. `devDependencies` are fine. See `docs/decisions/002-zero-production-deps.md`.
 

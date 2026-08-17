@@ -141,4 +141,14 @@ describe('state', () => {
 
     expect(callback).not.toHaveBeenCalled();
   });
+
+  it('a second localessInit call (simulating the LocalessClientDocument fallback client-side init with a public token) overwrites the previous origin/client and enables sync', async () => {
+    const state = await import('./state');
+    state.localessInit(baseOptions);
+
+    state.localessInit({ ...baseOptions, token: 'public-token-abc', enableSync: true });
+
+    expect(state.getOrigin()).toBe(baseOptions.origin);
+    expect(state.isSyncConfigured()).toBe(true);
+  });
 });

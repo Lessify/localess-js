@@ -1,6 +1,6 @@
 # @localess/astro
 
-Astro integration layer for Localess. A full Astro Integration (`localess()` in `astro.config.mjs`), matching `@storyblok/astro`'s architecture — see [ADR 007](../../docs/decisions/007-astro-integration-architecture.md) for why and how it differs where Localess's constraints require it.
+Astro integration layer for Localess. A full Astro Integration (`localess()` in `astro.config.mjs`), matching `@storyblok/astro`'s architecture — see [ADR 006](../../docs/decisions/006-astro-integration-architecture.md) for why and how it differs where Localess's constraints require it.
 
 **Peer dependency:** Astro 6 or 7.
 

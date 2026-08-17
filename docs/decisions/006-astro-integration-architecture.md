@@ -1,8 +1,8 @@
-# ADR 007: @localess/astro Becomes a Full Astro Integration, Superseding ADR 006
+# ADR 006: @localess/astro Becomes a Full Astro Integration
 
 ## Context
 
-ADR 006 reviewed `@storyblok/astro`'s architecture (Vite virtual modules, filesystem component auto-discovery, dev-toolbar app, SSR live-preview via middleware and `morphdom` DOM patching) as prior art and declined to adopt it, keeping `@localess/astro` a plain library: `localessInit()` called in page frontmatter, an explicit `components` map, and reload-only Visual Editor sync.
+An earlier decision reviewed `@storyblok/astro`'s architecture (Vite virtual modules, filesystem component auto-discovery, dev-toolbar app, SSR live-preview via middleware and `morphdom` DOM patching) as prior art and declined to adopt it, keeping `@localess/astro` a plain library: `localessInit()` called in page frontmatter, an explicit `components` map, and reload-only Visual Editor sync. That decision has since been removed as deprecated — this ADR supersedes and replaces it, reusing its number rather than leaving a gap.
 
 Since then, feature-parity pressure against `@storyblok/astro` (and gaps against `@localess/react`: no rich text rendering, no `resolveAsset()`) made the plain-library shape a limitation rather than a simplicity win.
 
@@ -12,14 +12,13 @@ Since then, feature-parity pressure against `@storyblok/astro` (and gaps against
 
 ## Key adaptations from `@storyblok/astro`, not a literal copy
 
-- **Token secrecy (ADR 001).** `@localess/client`'s token is a secret, unlike Storyblok's public CDN access token. `virtual:localess-init` is injected only via Astro's `page-ssr` script stage, never `page` — `page-ssr` scripts run server-side only and are never bundled into client-shipped JS.
+- **Token secrecy (ADR 001).** `@localess/client`'s token is treated as a secret here, unlike Storyblok's public CDN access token. `virtual:localess-init` is injected only via Astro's `page-ssr` script stage, never `page` — `page-ssr` scripts run server-side only and are never bundled into client-shipped JS. (ADR 001 now also documents a public-token exception, but `@localess/astro` hasn't been reworked to use it yet — this package's token stays secret-only until it is.)
 - **No URL-based editor-request signal.** Storyblok's `isEditorRequest` checks `_storyblok*` query parameters the Storyblok editor appends to its preview iframe URL. The Localess editor's preview iframe URL carries none (confirmed against `localess/src/app/features/spaces/contents/content-preview/content-preview.component.ts`). `live-preview/middleware.ts` instead validates same-origin (`Sec-Fetch-Site: same-origin`) plus a `spaceId` match, read via `virtual:localess-options` rather than `import.meta.env` — an early implementation used an environment variable, but `import.meta.env.X` gets statically inlined (and, since it evaluated to `undefined`, dead-code-eliminated) at `@localess/astro`'s own build time rather than the consumer's, because this package ships pre-built code. The virtual-module mechanism (already used for `virtual:localess-init`) defers resolution to the consumer's own Vite build, which is the only place that actually knows the configured `spaceId`. Caught via manual end-to-end verification against a real deployed space, not by unit tests — vitest's module resolution doesn't reproduce the same build-time inlining a production `vite build` does.
 - **Simpler rich text.** `@localess/react`'s rich text renderer uses a fixed TipTap extension set with no per-node customization, unlike `@storyblok/richtext`'s fully overridable node tree. `LocalessRichText.astro` matches react's fixed set via `@tiptap/static-renderer`'s framework-agnostic HTML-string renderer, not a Storyblok-style per-node component tree.
-- **`toCamelCase()` matching.** Component-schema matching changes from exact-string to `toCamelCase()`-normalized on both sides, matching `@storyblok/astro` exactly. This is a compatibility-relevant behavior change from the pre-ADR-007 registry.
+- **`toCamelCase()` matching.** Component-schema matching changes from exact-string to `toCamelCase()`-normalized on both sides, matching `@storyblok/astro` exactly. This is a compatibility-relevant behavior change from the pre-ADR-006 registry.
 
 ## Consequences
 
 **For contributors:**
-- ADR 006 is superseded by this ADR — read it for historical context on why the plain-library shape was chosen originally, but its guidance no longer applies.
 - `LocalessComponent.astro` and `LocalessDocument.astro` have no unit tests (they import `virtual:*` modules that only resolve inside a real Astro build with `localess()`'s Vite plugins registered — `AstroContainer.create()` has no supported way to inject them). Verify changes to these two files manually against `playgrounds/astro`/`playgrounds/astro-static`.
 - `middleware.ts`/`toolbar-app.ts` are referenced by Astro via file-path `entrypoint` strings (`@localess/astro/middleware`, `@localess/astro/toolbarApp`), not imported through `index.ts` — they need their own `vite.config.ts` lib entries to be emitted at all.

@@ -25,13 +25,23 @@ let _assetPathPrefix = '';
 /**
  * Initialize the Localess SDK.
  *
- * Must be called **once** at application startup (e.g. root layout, `_app.tsx`) before any
- * other SDK function is used. Calling it again overwrites the existing client and state.
+ * Normally called **once** per module graph, at application startup (e.g. root layout,
+ * `_app.tsx`) before any other SDK function is used. Calling it again overwrites the
+ * existing client and state in that same module graph.
  *
  * - Creates the underlying {@link LocalessClient} with the supplied API options.
  * - Registers the component map and optional fallback component.
  * - When `enableSync` is `true` and the page is running inside the Visual Editor iframe,
  *   injects the Localess sync script into `<head>` to enable live editing events.
+ *
+ * **Exception — `@localess/react/rsc`'s `LocalessClientDocument` fallback** (used under
+ * Next.js `output: 'export'`, which cannot run the primary `LocalessDocument`'s Server
+ * Action): Next.js App Router bundles Server and Client Components into separate module
+ * graphs, so a server-side `localessInit()` call never populates the registry or `enableSync`
+ * state a Client Component sees. Call `localessInit()` a **second time**, from inside that
+ * Client Component boundary, using a **public token** (read-only, published content and
+ * translations only — safe to expose client-side, unlike a secret token) to populate that
+ * graph's state too. See `docs/react.md`'s "Client-Side Fallback for Static Export".
  *
  * @param options - Initialization options. Extends {@link LocalessClientOptions} with
  *   `components`, `fallbackComponent`, and `enableSync`.
@@ -45,7 +55,7 @@ let _assetPathPrefix = '';
  * localessInit({
  *   origin: 'https://my-localess.web.app',
  *   spaceId: 'YOUR_SPACE_ID',
- *   token: 'YOUR_API_TOKEN',          // keep server-side only
+ *   token: 'YOUR_API_TOKEN',          // secret token — keep server-side only
  *   enableSync: process.env.NODE_ENV !== 'production',
  *   components: { page: Page, header: Header, teaser: Teaser },
  * });
