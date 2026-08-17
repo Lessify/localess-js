@@ -1,5 +1,3 @@
-'use client';
-
 import { forwardRef, useEffect, useState } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../../console';

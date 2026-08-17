@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { LocalessDocument as CoreLocalessDocument } from '../core/components/localess-document';
-import { LocalessClientDocument, localessInit, LocalessDocument as RscLocalessDocument, setComponents, setFallbackComponent } from './index';
+import {
+  LocalessClientDocument,
+  LocalessDocument as RscLocalessDocument,
+  localessInit,
+  setComponents,
+  setFallbackComponent,
+} from './index';
 import { LocalessDocument as RscOwnLocalessDocument } from './localess-document';
 
 describe('@localess/react/rsc index', () => {

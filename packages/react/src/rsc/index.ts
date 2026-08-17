@@ -37,7 +37,3 @@ export * from '../core/hooks';
 export { isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncReady } from '../core/state';
 export * from '../ssr';
 export * from './localess-document';
-export {
-  LocalessDocument as LocalessClientDocument,
-  type LocalessDocumentProps as LocalessClientDocumentProps,
-} from '../core/components/localess-document';

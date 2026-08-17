@@ -24,7 +24,6 @@
  * - isSyncEnabled / localessSyncOn / localessSyncOnChange / localessSyncReady (not meaningful without live editing)
  */
 
-export { LocalessApiError } from '@localess/client';
 export type * from '../core/models';
 export { renderRichTextToReact } from '../core/richtext';
 export {
@@ -41,3 +40,4 @@ export {
 export * from '../core/utils';
 export * from './localess-component';
 export * from './localess-document';
+export { LocalessApiError } from '@localess/client';
