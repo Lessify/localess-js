@@ -1,13 +1,12 @@
 import {notFound} from "next/navigation";
 import { Content, LocalessDocument, LocalessApiError} from "@localess/react/rsc";
-import {getLocalessClient, LOCALES} from "@/shared/utils/locales";
+import {localessClient, LOCALES} from "@/shared/utils/locales";
 import {resolveLocaleAndSlug} from "@/shared/utils/route";
 import {Page} from "@/shared/models/localess";
 
 async function fetchData(locale: string | undefined, slug: string): Promise<Content<Page>> {
-  const client = getLocalessClient();
   try {
-    return await client.getContentBySlug<Page>(slug, {locale});
+    return await localessClient.getContentBySlug<Page>(slug, {locale});
   } catch (error) {
     if (error instanceof LocalessApiError && error.status === 404) {
       notFound();

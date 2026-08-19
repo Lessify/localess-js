@@ -1,5 +1,5 @@
 import {Content, LocalessServerDocument} from "@localess/react/ssr";
-import {getLocalessClient, LOCALES} from "@/shared/utils/locales";
+import {localessClient, LOCALES} from "@/shared/utils/locales";
 import {resolveLocaleAndSlug} from "@/shared/utils/route";
 import {Page} from "@/shared/models/localess";
 
@@ -7,8 +7,7 @@ import {Page} from "@/shared/models/localess";
 // server, so every navigable locale/slug combination needs its own statically generated
 // page via `generateStaticParams` rather than being resolved on demand.
 export async function generateStaticParams() {
-  const client = getLocalessClient();
-  const links = await client.getLinks({kind: 'DOCUMENT'});
+  const links = await localessClient.getLinks({kind: 'DOCUMENT'});
   const slugs = new Set(['home', ...Object.values(links).map(link => link.fullSlug)]);
 
   return LOCALES.flatMap(locale => {
@@ -22,8 +21,7 @@ export async function generateStaticParams() {
 }
 
 async function fetchData(locale: string | undefined, slug: string): Promise<Content<Page>> {
-  const client = getLocalessClient();
-  return client.getContentBySlug<Page>(slug, {locale});
+  return localessClient.getContentBySlug<Page>(slug, {locale});
 }
 
 export default async function Home({params}: PageProps<'/[[...path]]'>) {
