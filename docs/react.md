@@ -234,6 +234,57 @@ This is a plain second call to the same `localessInit` you already use server-si
 
 Use this only when you specifically need live editing on a statically-exported build. For `default`/`standalone`, prefer the primary `LocalessDocument` above — it needs no client-side registration at all.
 
+### Vite Plugin for SSR Frameworks
+
+For Vite-based SSR frameworks (TanStack Start, React Router v7 framework
+mode, Remix Vite), `@localess/react/vite` automates the two-`localessInit`-calls
+pattern above: one Vite plugin, one config object, correct token per build graph.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import { localessVite } from '@localess/react/vite';
+
+export default defineConfig({
+  plugins: [
+    localessVite({
+      origin: process.env.LOCALESS_ORIGIN!,
+      spaceId: process.env.LOCALESS_SPACE_ID!,
+      token: process.env.LOCALESS_TOKEN!,             // secret — SSR graph only
+      publicToken: process.env.LOCALESS_PUBLIC_TOKEN, // optional, public — client graph
+      enableSync: true,
+      componentsDir: 'src/components/localess',        // default: 'src'
+      components: { 'hero-section': './HeroOverride.tsx#HeroOverride' }, // optional, overrides auto-registration
+    }),
+  ],
+});
+```
+
+Then, anywhere in your app:
+
+```ts
+import 'virtual:localess-init';
+import { getLocalessClient } from '@localess/react';
+
+const content = await getLocalessClient().getContentBySlug('home', { locale });
+```
+
+`virtual:localess-init` resolves to a different `localessInit()` call depending
+on which Vite build graph imports it: the SSR/server graph gets the secret
+`token`; the client graph gets `publicToken` (or a no-op module if
+`publicToken` isn't configured). Every `.tsx`/`.jsx` file under `componentsDir`
+is auto-registered under its kebab-cased filename (`hero-section.tsx` ->
+`'hero-section'`) — matching the schema-key convention above. `components`
+overrides take an exact key (no case transformation) and a file path relative
+to `componentsDir`, for cases where the schema key doesn't match a
+kebab-cased filename, or the file lives outside `componentsDir`. A bare path
+assumes a default export; suffix it with `#ExportName` (e.g.
+`'./HeroOverride.tsx#HeroOverride'`) to import a named export instead.
+
+Only use the manual `components` two-`localessInit`-calls pattern above
+directly if you're not on a Vite-based framework, or need control the plugin
+doesn't expose.
+
 ### Pattern A — `useLocaless` hook
 
 Re-fetches on client, falls back to server data until ready, auto-syncs.

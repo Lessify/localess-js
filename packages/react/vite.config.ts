@@ -17,6 +17,7 @@ export default defineConfig({
         index: resolve(__dirname, 'src/index.ts'),
         'ssr/index': resolve(__dirname, 'src/ssr/index.ts'),
         'rsc/index': resolve(__dirname, 'src/rsc/index.ts'),
+        'vite/index': resolve(__dirname, 'src/vite/index.ts'),
       },
     },
     rollupOptions: {
@@ -27,6 +28,7 @@ export default defineConfig({
         '@localess/client',
         /^@tiptap\/.*/,
         'next/cache',
+        'vite',
       ],
       plugins: [preserveDirectives()],
       output: [

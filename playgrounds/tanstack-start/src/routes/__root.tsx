@@ -4,9 +4,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import appCss from '../styles.css?url'
 import { LOCALES } from '@/shared/utils/locales'
-import { initClientLocaless } from '@/shared/utils/localess-client'
-
-initClientLocaless()
+import 'virtual:localess-init'
 
 export const Route = createRootRoute({
   head: () => ({

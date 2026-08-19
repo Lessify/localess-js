@@ -85,6 +85,24 @@ export * from './use-my-hook';
 
 **3. Update `packages/react/SKILL.md`** with the hook signature and usage example.
 
+## Extending the Vite Plugin
+
+The Vite plugin lives in `src/vite/`:
+- `vite-plugin-localess-components.ts` — `virtual:localess-components`, the component auto-registry.
+- `vite-plugin-localess-init.ts` — `virtual:localess-init`, the SSR-aware `localessInit()` call.
+- `localess-vite.ts` — `localessVite()`, the public entry point combining both plugins.
+
+Rules:
+- Both virtual modules are generated as **strings**, not live JS values — a
+  `vite.config.ts` option can't become a live cross-graph reference. Manual
+  `components` overrides must stay file paths, resolved via `this.resolve`,
+  never direct component references.
+- `vite-plugin-localess-init.ts` must never let the client-graph branch
+  (`ssr: false`) see `token` (the secret one) — only `publicToken`.
+- Add new tests to the matching `*.test.ts` file, following the existing
+  string-content-assertion style (assert generated code contains expected
+  substrings) rather than evaluating the generated code.
+
 ## Adding a Utility Function
 
 **1. Create `src/core/utils/<name>.util.ts`:**

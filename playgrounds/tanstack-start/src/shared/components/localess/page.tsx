@@ -4,7 +4,7 @@ import type {Page} from "@/shared/models/localess";
 
 export type PageLocalessProps = LocalessComponentProps<Page>
 
-export function PageLocaless({data}:PageLocalessProps) {
+export default function PageLocaless({data}:PageLocalessProps) {
   return <main {...localessEditable(data)} className="flex flex-col gap-4">
     <h1 {...localessEditableField('title')} className="text-center">
       {data.title}

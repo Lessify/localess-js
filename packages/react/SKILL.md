@@ -19,6 +19,7 @@
 | `@localess/react` | Plain SPA (CRA, Vite, etc.) | Yes |
 | `@localess/react/ssr` | SSR / Next.js `output: 'export'`, when you want the smallest bundle and don't need live editing | No |
 | `@localess/react/rsc` | Next.js App Router (React Server Components) | Yes (via client components) |
+| `@localess/react/vite` | Vite config for SSR frameworks (TanStack Start, React Router v7, Remix Vite) | N/A — Vite plugin, not a runtime import |
 
 Using `@localess/react` in a Next.js App Router project causes `'use client'` directive conflicts — use `@localess/react/rsc` there instead.
 
@@ -69,6 +70,19 @@ localessInit({
 ```
 
 > **Security:** `token` is only safe here because this runs server-side. Never expose it to the browser.
+
+---
+
+## Vite Plugin (SSR Frameworks)
+
+`@localess/react/vite` exports `localessVite(options)`, a Vite plugin for
+TanStack Start / React Router v7 / Remix Vite. It generates two virtual
+modules: `virtual:localess-components` (auto-registers every `.tsx`/`.jsx`
+file under `componentsDir` by kebab-cased filename, merged with explicit
+`components` path overrides — suffix a path with `#ExportName` for a named
+export; a bare path assumes a default export) and `virtual:localess-init` (calls
+`localessInit()` with the secret `token` in the SSR graph, `publicToken` in
+the client graph). See `docs/react.md`'s "Vite Plugin for SSR Frameworks".
 
 ---
 
