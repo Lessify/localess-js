@@ -6,7 +6,6 @@ export const localessClient = localessInit({
   spaceId: "MmaT4DL0kJ6nXIILUcQF", // Replace it for your spaceId
   token: "Y4rvboPnyzVeC7LddEK5", // Replace it for your token
   debug: true,
-  enableSync: process.env.NODE_ENV === "development",
   components: {
     'Page': PageLocaless
   }
