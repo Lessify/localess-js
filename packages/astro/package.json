@@ -63,6 +63,7 @@
   },
   "dependencies": {
     "@localess/client": "*",
+    "@localess/vite": "*",
     "@tiptap/extension-bold": "^3.22.5",
     "@tiptap/extension-bullet-list": "^3.22.5",
     "@tiptap/extension-code": "^3.22.5",

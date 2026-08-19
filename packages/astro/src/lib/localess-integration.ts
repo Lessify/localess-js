@@ -3,9 +3,9 @@ import type { AstroIntegration } from 'astro';
 
 import { localessLogo } from '../dev-toolbar/localess-logo';
 import type { LocalessOptions } from '../models';
+import { vitePluginLocalessInit, vitePluginLocalessOptions } from '@localess/vite';
+
 import { vitePluginImportLocalessComponents } from '../vite-plugins/vite-plugin-import-localess-components';
-import { vitePluginLocalessInit } from '../vite-plugins/vite-plugin-localess-init';
-import { vitePluginLocalessOptions } from '../vite-plugins/vite-plugin-localess-options';
 
 const RELOAD_DEBOUNCE_MS = 500;
 

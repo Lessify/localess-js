@@ -1,0 +1,58 @@
+{
+  "name": "@localess/vite",
+  "version": "3.4.1",
+  "description": "Shared Vite plugins for Localess's Vite-based integration packages.",
+  "keywords": [
+    "localess",
+    "sdk",
+    "vite",
+    "plugin",
+    "javascript",
+    "typescript"
+  ],
+  "author": "Lessify",
+  "homepage": "https://github.com/Lessify/localess-js",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "SKILL.md"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lessify/localess-js.git",
+    "directory": "packages/vite"
+  },
+  "bugs": {
+    "url": "https://github.com/Lessify/localess-js/issues"
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@localess/client": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.16",
+    "vite-plugin-dts": "^5.0.0"
+  },
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}
