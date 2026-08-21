@@ -8,29 +8,23 @@
 
 # @localess/angular
 
-Angular SDK for the [Localess](https://github.com/Lessify/localess) headless CMS. Provides two independent entry points — **browser** and **server** — for content delivery, rich text rendering, asset management, and Visual Editor integration in both client-side and server-side rendered Angular applications.
+Angular SDK for the [Localess](https://github.com/Lessify/localess) headless CMS. Ships as a **single unified package** — no `/browser` or `/server` split — providing content delivery, rich text rendering, asset management, and Visual Editor integration for both client-side and server-side rendered Angular applications.
 
-> **Security note:** The `browser` entry point requires no API token and is safe to use in client-side code. The `server` entry point requires your Localess API token and must only be used in server-side code to keep the token secret.
+> **Security note:** `provideLocaless()` takes a single `token`. Use a **public token** (read-only, published content and translations only) where the configuration is bundled into the browser (`app.config.ts`). Use a **secret token** only where it stays server-side (`app.config.server.ts`, which takes precedence during server rendering).
 
 ## Table of Contents
 
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Browser Module](#browser-module)
-  - [Setup](#browser-setup)
-  - [Schema Components](#schema-components)
-  - [Directives](#directives)
-  - [Pipes](#pipes)
-  - [Asset Service](#browser-asset-service)
-  - [Visual Editor Integration](#visual-editor-integration)
-- [Server Module](#server-module)
-  - [Setup](#server-setup)
-  - [Content Service](#content-service)
-  - [Asset Service](#server-asset-service)
-  - [Translation Service](#translation-service)
-- [SSR with TransferState](#ssr-with-transferstate)
+- [Setup](#setup)
+- [Content Service](#content-service)
+- [Asset Service](#asset-service)
+- [Translation Service](#translation-service)
+- [Schema Components](#schema-components)
+- [Directives](#directives)
+- [Pipes](#pipes)
+- [Visual Editor Integration](#visual-editor-integration)
 - [Angular Image Optimization](#angular-image-optimization)
-- [API Reference](#api-reference)
 
 ---
 
@@ -53,33 +47,34 @@ pnpm add @localess/angular@latest
 
 ## Quick Start
 
-**1. Register the browser provider** in `app.config.ts`:
+**1. Register the provider** in `app.config.ts`, with a public (read-only) token — this configuration is bundled into the browser:
 
 ```ts
 // app.config.ts
-import { provideLocalessBrowser } from '@localess/angular/browser';
+import { provideLocaless } from '@localess/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideLocalessBrowser({
+    provideLocaless({
       origin: 'https://my-localess.web.app',
       spaceId: 'YOUR_SPACE_ID',
+      token: 'YOUR_PUBLIC_TOKEN',
     }),
   ],
 };
 ```
 
-**2. Register the server provider** in `app.config.server.ts`:
+**2. For SSR apps, register it again** in `app.config.server.ts`, with a secret token — this registration takes precedence during server rendering (last provider for a given token wins):
 
 ```ts
 // app.config.server.ts
 import { mergeApplicationConfig } from '@angular/core';
-import { provideLocalessServer } from '@localess/angular/server';
+import { provideLocaless } from '@localess/angular';
 import { appConfig } from './app.config';
 
 const serverConfig: ApplicationConfig = {
   providers: [
-    provideLocalessServer({
+    provideLocaless({
       origin: 'https://my-localess.web.app',
       spaceId: 'YOUR_SPACE_ID',
       token: 'YOUR_SECRET_TOKEN',
@@ -90,33 +85,43 @@ const serverConfig: ApplicationConfig = {
 export const config = mergeApplicationConfig(appConfig, serverConfig);
 ```
 
-**3. Fetch content on the server** and render it on the client:
+**3. Fetch content** with `LocalessContentService`, in a component:
 
 ```ts
-// In a server-side resolver or component
-import { ServerContentService } from '@localess/angular/server';
+import { Component, inject, input, OnInit } from '@angular/core';
+import { LocalessContentService } from '@localess/angular';
 
-const contentService = inject(ServerContentService);
-const content = await firstValueFrom(contentService.getContentBySlug('home'));
+@Component({ ... })
+export class PageComponent implements OnInit {
+  slug = input.required<string>();
+
+  private readonly contentService = inject(LocalessContentService);
+  content!: ReturnType<LocalessContentService['contentBySlug']>;
+
+  ngOnInit(): void {
+    this.content = this.contentService.contentBySlug(() => this.slug());
+  }
+}
 ```
+
+`content.value()`, `content.isLoading()`, and `content.error()` are signals — read them directly in the template. On the server, the fetched content is written to `TransferState`; on the browser, the same call reads it back out instead of re-fetching (or, in a pure client-side-rendered app with no SSR, falls back to fetching directly using the public token).
 
 ---
 
-## Browser Module
+## Setup
 
-Import from `@localess/angular/browser`.
-
-### Browser Setup
-
-Register `provideLocalessBrowser()` once in your root `ApplicationConfig`. It configures all browser-side services and optionally loads the Visual Editor sync script.
+`provideLocaless()` registers everything: `LocalessClientService`, `LocalessContentService`, `LocalessAssetService`, `LocalessTranslationService`, `LocalessSyncService`, and Angular's `IMAGE_LOADER`.
 
 ```ts
-import { provideLocalessBrowser } from '@localess/angular/browser';
+import { provideLocaless } from '@localess/angular';
 
-provideLocalessBrowser({
+provideLocaless({
   origin: 'https://my-localess.web.app', // Required. Localess instance URL (no trailing slash)
-  spaceId: 'YOUR_SPACE_ID',             // Required. Found in Localess Space settings
+  spaceId: 'YOUR_SPACE_ID',              // Required. Found in Localess Space settings
+  token: 'YOUR_TOKEN',                   // Required. Public token if bundled into the browser, secret token if server-only
+  version: 'draft',                      // Optional. Omit for published content
   enableSync: true,                      // Optional. Loads the Visual Editor sync script
+  cacheTTL: 300,                         // Optional. Seconds; false disables caching
   debug: false,                          // Optional. Enables console logging
 })
 ```
@@ -125,14 +130,153 @@ provideLocalessBrowser({
 |---|---|---|---|
 | `origin` | `string` | ✅ | Fully qualified Localess URL, e.g. `https://my-localess.web.app` |
 | `spaceId` | `string` | ✅ | Space ID from the Localess Space settings |
+| `token` | `string` | ✅ | Public token where bundled into the browser, secret token where server-only |
+| `version` | `'draft'` | — | Fetch draft content; omit for published |
 | `enableSync` | `boolean` | — | When `true`, injects the Visual Editor sync script into the page |
-| `debug` | `boolean` | — | When `true`, logs internal activity to the browser console |
+| `cacheTTL` | `number \| false` | — | Response cache TTL in seconds (default 300); `false` disables caching |
+| `debug` | `boolean` | — | When `true`, logs internal activity to the console |
 
-`provideLocalessBrowser()` also registers Angular's built-in `IMAGE_LOADER` provider so that `NgOptimizedImage` automatically appends `?w=<width>` to Localess asset URLs for responsive image optimization.
+`provideLocaless()` also registers Angular's built-in `IMAGE_LOADER` provider so that `NgOptimizedImage` automatically appends `?w=<width>` to Localess asset URLs for responsive image optimization.
 
 ---
 
-### Schema Components
+## Content Service
+
+`LocalessContentService` fetches content and hydrates it from server to browser via `TransferState`, using Angular's `resource()` API.
+
+```ts
+import { LocalessContentService } from '@localess/angular';
+import { inject } from '@angular/core';
+
+const contentService = inject(LocalessContentService);
+```
+
+### `contentBySlug<T>(slug, params?)`
+
+```ts
+content = contentService.contentBySlug<HeroSection>(() => 'home');
+
+// With params
+content = contentService.contentBySlug<HeroSection>(() => 'home', {
+  version: 'draft',
+  locale: 'en',
+  resolveReference: true,
+  resolveLink: true,
+});
+```
+
+`slug` is a function (`() => string`) so the fetch re-runs reactively if the returned value changes (e.g. a signal input).
+
+### `contentById<T>(id, params?)`
+
+```ts
+content = contentService.contentById<ArticlePage>(() => 'abc123', { locale: 'fr' });
+```
+
+### `links(params?)`
+
+```ts
+links = contentService.links({ kind: 'DOCUMENT', parentSlug: 'blog', excludeChildren: false });
+```
+
+### `ContentFetchParams`
+
+| Parameter | Type | Description |
+|---|---|---|
+| `version` | `'draft'` | Override the global version for this request |
+| `locale` | `string` | Locale code, e.g. `'en'`, `'fr'` |
+| `resolveReference` | `boolean` | Inline referenced content objects |
+| `resolveLink` | `boolean` | Inline link objects |
+| `resolveAsset` | `boolean` | Inline referenced asset metadata |
+
+### `LinksFetchParams`
+
+| Parameter | Type | Description |
+|---|---|---|
+| `kind` | `string` | Filter links by content kind |
+| `parentSlug` | `string` | Return only links under this parent slug |
+| `excludeChildren` | `boolean` | Exclude descendant slugs |
+
+### Reading the result
+
+Each method returns a `ResourceRef` — use its signals directly:
+
+```html
+@if (content.value(); as result) {
+  <h1>{{ result.data['title'] }}</h1>
+} @else if (content.isLoading()) {
+  <p>Loading…</p>
+} @else if (content.error()) {
+  <p>Failed to load content.</p>
+}
+```
+
+`resource()` must be called from an injection context (a constructor, a field initializer, or a lifecycle hook like `ngOnInit` — all valid; note that a required signal input cannot be read in a field initializer, only from `ngOnInit` onward, once Angular has bound it).
+
+---
+
+## Asset Service
+
+`LocalessAssetService` generates asset URLs. Its API is identical whether called server-side or in the browser.
+
+```ts
+import { LocalessAssetService } from '@localess/angular';
+
+@Injectable()
+export class MyService {
+  private assetService = inject(LocalessAssetService);
+
+  getUrl(asset: ContentAsset): string {
+    return this.assetService.link(asset);
+    // or: this.assetService.link('path/to/asset.jpg')
+  }
+}
+```
+
+`SchemaComponent.assetUrl()` and the `llAsset` pipe use the same underlying logic (`LocalessClientService.assetLink()`) — all three are equivalent.
+
+### Requesting a transformed asset (resize / format conversion)
+
+Pass an `AssetTransformParams` object as the second argument to request a resized image or a different output format:
+
+```ts
+assetService.link(asset, { w: 400, f: 'webp' });
+assetService.link(asset, { w: 800, h: 600, q: 70, f: 'avif' });
+```
+
+| Param | Type | Description |
+|---|---|---|
+| `w` | `number` | Target width in pixels |
+| `h` | `number` | Target height in pixels (combined with `w`, crops to cover the box) |
+| `q` | `number` | Output quality 1–100 (default 85; ignored for PNG) |
+| `f` | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Converts the output format |
+| `download` | `boolean` | Forces a browser download via `Content-Disposition` |
+| `thumbnail` | `boolean` | Extracts the first frame of an animated/video asset before resizing |
+
+---
+
+## Translation Service
+
+`LocalessTranslationService` fetches translation strings for a given locale.
+
+```ts
+import { LocalessTranslationService } from '@localess/angular';
+
+@Injectable()
+export class MyService {
+  private translationService = inject(LocalessTranslationService);
+
+  async getTranslations(locale: string) {
+    return this.translationService.fetch(locale);
+  }
+}
+```
+
+The returned `Translations` object is a flat key–value map (`Record<string, string>`).
+
+---
+
+## Schema Components
 
 `SchemaComponent<T>` is the abstract base class you extend to render a Localess content schema. It automatically sets the `data-ll-id` and `data-ll-schema` attributes on the host element so the Localess Visual Editor can highlight and select components on the page.
 
@@ -147,10 +291,9 @@ The base class declares four signal inputs:
 
 ```ts
 import { Component } from '@angular/core';
-import { SchemaComponent } from '@localess/angular/browser';
-import type { ContentAsset, ContentLink } from '@localess/angular/browser';
+import { SchemaComponent } from '@localess/angular';
+import type { ContentAsset, ContentLink } from '@localess/angular';
 
-// Define a TypeScript interface matching your Localess schema
 interface HeroSection {
   _id: string;
   _schema: string;
@@ -168,8 +311,6 @@ interface HeroSection {
 export class HeroSectionComponent extends SchemaComponent<HeroSection> {}
 ```
 
-In the template, read inputs with function-call syntax and use the `assetUrl()` and `findLink()` helpers provided by the base class:
-
 ```html
 <!-- hero-section.component.html -->
 <section>
@@ -180,76 +321,28 @@ In the template, read inputs with function-call syntax and use the `assetUrl()` 
 </section>
 ```
 
-Use the component in a parent template by passing the schema object and maps from the CMS:
-
 ```html
-<app-schema-hero-section [data]="content.data" [links]="links" [references]="references" [assets]="assets" />
+<app-schema-hero-section [data]="content.value()?.data" [links]="links.value()" [references]="references" [assets]="assets" />
 ```
 
----
-
-#### Resolving a link with `findLink()`
-
-`findLink(link)` resolves a `ContentLink` field to a path or URL string. Internal `content` links are looked up in the `links` input (a map of content ID → slug); `url` links are returned as-is:
-
-```html
-<a [href]="findLink(data().ctaLink)">{{ data().ctaLabel }}</a>
-```
-
-If `data().ctaLink` is `{ type: 'content', uri: '<contentId>' }` and that ID exists in `links`, it resolves to `/<fullSlug>`. If the ID isn't found, it falls back to `/not-found`. If it's `{ type: 'url', uri: 'https://example.com' }`, it resolves to `https://example.com` unchanged.
-
-#### Resolving an asset with `assetUrl()`
-
-`assetUrl(asset, params?)` builds the fully qualified CDN URL for a `ContentAsset`:
-
-```html
-<img [src]="assetUrl(data().backgroundImage)" [alt]="data().title" />
-```
-
-#### Requesting a transformed asset (resize / format conversion)
-
-Pass an `AssetTransformParams` object as the second argument to request a resized image or a different output format. This appends query parameters (`w`, `h`, `q`, `f`, ...) that the Localess asset endpoint uses to transform the image on the fly:
-
-```html
-<!-- Smaller, WebP thumbnail for a card -->
-<img [src]="assetUrl(data().backgroundImage, { w: 400, f: 'webp' })" [alt]="data().title" />
-
-<!-- Fixed box crop + quality control -->
-<img [src]="assetUrl(data().backgroundImage, { w: 800, h: 600, q: 70, f: 'avif' })" [alt]="data().title" />
-```
-
-| Param | Type | Description |
-|---|---|---|
-| `w` | `number` | Target width in pixels |
-| `h` | `number` | Target height in pixels (combined with `w`, crops to cover the box) |
-| `q` | `number` | Output quality 1–100 (default 85; ignored for PNG) |
-| `f` | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Converts the output format |
-| `download` | `boolean` | Forces a browser download via `Content-Disposition` |
-| `thumbnail` | `boolean` | Extracts the first frame of an animated/video asset before resizing |
-
-The same `params` argument works identically on the `llAsset` pipe (see below) and the standalone `BrowserAssetService.link()`.
-
----
-
-#### Base class helpers
-
-`SchemaComponent<T>` exposes:
+### Base class helpers
 
 | Member | Signature | Description |
 |---|---|---|
 | `assetUrl(asset, params?)` | `(asset: ContentAsset, params?: AssetTransformParams) => string` | Builds the full CDN URL for a Localess asset, with optional transform params |
 | `findLink(link)` | `(link: ContentLink) => string` | Resolves a CMS link to a path or URL, using the `links` input |
-| `config` | `LocalessBrowserConfig` | Injected browser configuration |
+
+`findLink(link)` resolves a `ContentLink` field: internal `content` links are looked up in the `links` input (a map of content ID → slug) and resolve to `/<fullSlug>` (or `/not-found` if the ID isn't found); `url` links are returned as-is.
 
 ---
 
-### Directives
+## Directives
 
 Use these directives when you have a component or element that is **not** a schema component but should still be selectable in the Visual Editor.
 
-#### `[data-ll-id]` and `[data-ll-schema]`
+### `[data-ll-id]` and `[data-ll-schema]`
 
-Marker directives. Apply both together to any element to make it recognizable in the Visual Editor. Set the attribute values manually:
+Marker directives. Apply both together to any element to make it recognizable in the Visual Editor:
 
 ```html
 <div [attr.data-ll-id]="item._id" [attr.data-ll-schema]="item._schema">
@@ -257,7 +350,7 @@ Marker directives. Apply both together to any element to make it recognizable in
 </div>
 ```
 
-#### `[data-ll-field]`
+### `[data-ll-field]`
 
 Marks an individual field within a schema for field-level selection in the Visual Editor:
 
@@ -265,12 +358,12 @@ Marks an individual field within a schema for field-level selection in the Visua
 <p data-ll-field="subtitle">{{ data.subtitle }}</p>
 ```
 
-#### `[llContent]`
+### `[llContent]`
 
-A convenience directive that sets both `data-ll-id` and `data-ll-schema` on the host element from a single `ContentDataSchema` input binding. Useful for sub-schemas rendered without a dedicated component:
+A convenience directive that sets both `data-ll-id` and `data-ll-schema` on the host element from a single `ContentDataSchema` input binding:
 
 ```ts
-import { ContentDirective } from '@localess/angular/browser';
+import { ContentDirective } from '@localess/angular';
 
 @Component({
   imports: [ContentDirective],
@@ -286,132 +379,77 @@ export class PageComponent {}
 
 ---
 
-### Pipes
+## Pipes
 
 Import individual pipes into the `imports` array of any standalone component that uses them.
 
-#### `llAsset` — Asset URL
-
-Transforms a `ContentAsset` object into a fully qualified CDN URL. Equivalent to `SchemaComponent.assetUrl()`.
+### `llAsset` — Asset URL
 
 ```ts
-import { AssetPipe } from '@localess/angular/browser';
+import { AssetPipe } from '@localess/angular';
 
-@Component({
-  imports: [AssetPipe],
-})
+@Component({ imports: [AssetPipe] })
 ```
 
 ```html
 <img [src]="data.image | llAsset" alt="..." />
-```
-
-Pass `AssetTransformParams` as a pipe argument to resize or convert the format:
-
-```html
-<!-- Smaller WebP thumbnail -->
 <img [src]="data.image | llAsset:{ w: 400, f: 'webp' }" alt="..." />
-
-<!-- Fixed box crop + quality control -->
-<img [src]="data.image | llAsset:{ w: 800, h: 600, q: 70, f: 'avif' }" alt="..." />
 ```
 
 See [Requesting a transformed asset](#requesting-a-transformed-asset-resize--format-conversion) above for the full `AssetTransformParams` field reference.
 
----
-
-#### `llLink` — Link Resolution
-
-Resolves a `ContentLink` from the links map to a navigable path or URL. The pipe takes the `links` map as the first argument and the `ContentLink` object as the value:
+### `llLink` — Link Resolution
 
 ```ts
-import { LinkPipe } from '@localess/angular/browser';
+import { LinkPipe } from '@localess/angular';
 ```
 
 ```html
 <a [href]="links | llLink: data.ctaLink">Visit</a>
 ```
 
-Link resolution behavior:
-
 | `ContentLink.type` | Result |
 |---|---|
 | `"content"` | Looks up `link.uri` in the `links` map and returns `/<fullSlug>` |
 | `"url"` | Returns `link.uri` as-is |
 
----
+### `llRtToHtml` — Rich Text to HTML
 
-#### `llRtToHtml` — Rich Text to HTML
-
-Converts a Localess RichText field (Tiptap JSON) to an HTML string. Supports headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links.
+Converts a Localess RichText field (Tiptap JSON) to an HTML string. **Returns `Promise<string>`** — `@tiptap/*` is lazy-loaded on first use, so bind with `| async`:
 
 ```ts
-import { RichTextToHtmlPipe } from '@localess/angular/browser';
+import { RichTextToHtmlPipe, SafeHtmlPipe } from '@localess/angular';
+
+@Component({ imports: [RichTextToHtmlPipe, SafeHtmlPipe] })
 ```
 
 ```html
-<div [innerHTML]="data.body | llRtToHtml"></div>
+<div [innerHTML]="data.body | llRtToHtml | async | llSafeHtml"></div>
 ```
 
-The pipe accepts `JSONContent | ContentRichText | string | null | undefined`. If passed a plain string it returns it unchanged; `null` and `undefined` return an empty string.
+The pipe accepts `JSONContent | ContentRichText | string | null | undefined`. A plain string is returned unchanged; `null`/`undefined` resolve to an empty string. Supports headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links.
 
----
+### `llSafeHtml` — Safe HTML
 
-#### `llSafeHtml` — Safe HTML
-
-Bypasses Angular's DomSanitizer for a trusted HTML string. Always apply this after `llRtToHtml` when binding to `[innerHTML]` to avoid Angular stripping elements:
-
-```ts
-import { RichTextToHtmlPipe, SafeHtmlPipe } from '@localess/angular/browser';
-
-@Component({
-  imports: [RichTextToHtmlPipe, SafeHtmlPipe],
-})
-```
+Bypasses Angular's `DomSanitizer` for a trusted HTML string. Accepts `string | null | undefined` — the latter two (as emitted transiently by `| async` before the promise resolves) are treated as empty HTML.
 
 ```html
-<div [innerHTML]="data.body | llRtToHtml | llSafeHtml"></div>
+<div [innerHTML]="data.body | llRtToHtml | async | llSafeHtml"></div>
 ```
 
 > **Security:** `llSafeHtml` calls `DomSanitizer.bypassSecurityTrustHtml()`. Only use it with HTML that comes directly from your trusted Localess space.
 
 ---
 
-### Browser Asset Service
+## Visual Editor Integration
 
-`BrowserAssetService` is an injectable service that generates asset URLs programmatically. It is equivalent to the `assetUrl()` method on schema components.
+The Localess Visual Editor enables live in-browser content editing. Set `enableSync: true` in `provideLocaless()` to automatically inject the sync script.
 
-```ts
-import { BrowserAssetService } from '@localess/angular/browser';
-
-@Component({ ... })
-export class MyComponent {
-  private assetService = inject(BrowserAssetService);
-
-  getImageUrl(asset: ContentAsset): string {
-    return this.assetService.link(asset);
-  }
-
-  // Also accepts a raw URI string
-  getImageUrlByUri(uri: string): string {
-    return this.assetService.link(uri);
-  }
-}
-```
-
-> This service is browser-only. It logs an error if instantiated during SSR. Use `ServerAssetService` on the server.
-
----
-
-### Visual Editor Integration
-
-The Localess Visual Editor enables live in-browser content editing. Set `enableSync: true` in `provideLocalessBrowser()` to automatically inject the sync script.
-
-To receive real-time content updates from the Visual Editor, subscribe to its events in any component. Inject `LocalessSyncService` and use `onChange()` — it already covers the `enabled()` check (browser + Visual Editor iframe) and the `ready()` wait (avoiding a race where the listener is attached before the sync script has loaded):
+Inject `LocalessSyncService` and use `onChange()` — it already covers the `enabled()` check (browser + Visual Editor iframe) and the `ready()` wait:
 
 ```ts
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { LocalessSyncService } from '@localess/angular/browser';
+import { LocalessSyncService } from '@localess/angular';
 
 @Component({
   selector: 'app-slug',
@@ -428,7 +466,7 @@ export class SlugComponent implements OnInit {
 }
 ```
 
-`onChange(callback)` is shorthand for `on(['input', 'change'], callback)`: the `input` event fires on every keystroke, `change` fires when the editor saves, and `callback` is narrowed to that variant. Render `liveContent()` instead of the server-fetched data when it is set to give authors a live preview.
+`onChange(callback)` is shorthand for `on(['input', 'change'], callback)`: the `input` event fires on every keystroke, `change` fires when the editor saves. Render `liveContent()` instead of the server-fetched data when it is set, to give authors a live preview.
 
 For other event types (`save`, `publish`, `pong`, `enterSchema`, `hoverSchema`), use `on(event, callback)`:
 
@@ -440,288 +478,9 @@ Both methods are no-ops if sync isn't enabled or usable in the current context �
 
 ---
 
-## Server Module
-
-Import from `@localess/angular/server`.
-
-The server module provides services that call the Localess REST API using a secret API token. All services are SSR-only and log an error if instantiated in the browser. They must be registered via `provideLocalessServer()` in the **server** application config.
-
-### Server Setup
-
-```ts
-// app.config.server.ts
-import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-import { provideServerRendering, withRoutes } from '@angular/ssr';
-import { provideLocalessServer } from '@localess/angular/server';
-import { appConfig } from './app.config';
-import { serverRoutes } from './app.routes.server';
-
-const serverConfig: ApplicationConfig = {
-  providers: [
-    provideServerRendering(withRoutes(serverRoutes)),
-    provideLocalessServer({
-      origin: 'https://my-localess.web.app', // Required
-      spaceId: 'YOUR_SPACE_ID',             // Required
-      token: 'YOUR_SECRET_TOKEN',           // Required
-      version: 'draft',                      // Optional. Omit for published content
-      debug: false,                          // Optional
-    }),
-  ],
-};
-
-export const config = mergeApplicationConfig(appConfig, serverConfig);
-```
-
-| Option | Type | Required | Description |
-|---|---|---|---|
-| `origin` | `string` | ✅ | Fully qualified Localess URL |
-| `spaceId` | `string` | ✅ | Space ID from Localess Space settings |
-| `token` | `string` | ✅ | API token from Localess Space settings. Keep this secret — never expose it to the browser |
-| `version` | `'draft' \| string` | — | Set to `'draft'` to fetch unpublished content. Omit to fetch published content |
-| `debug` | `boolean` | — | When `true`, logs API calls and cache activity to the server console |
-
----
-
-### Content Service
-
-`ServerContentService` fetches CMS content from the Localess API. All results are cached in-memory for the lifetime of the server request using `Map`-based caches keyed by slug, ID, or link params. This prevents redundant network requests when the same content is resolved multiple times during SSR.
-
-```ts
-import { ServerContentService } from '@localess/angular/server';
-
-@Injectable()
-export class MyServerService {
-  private contentService = inject(ServerContentService);
-}
-```
-
-#### `getContentBySlug<T>(slug, params?)`
-
-Fetches a content document by its full slug path.
-
-```ts
-const content = await firstValueFrom(
-  contentService.getContentBySlug<HeroSection>('home')
-);
-
-// With params
-const draftContent = await firstValueFrom(
-  contentService.getContentBySlug<HeroSection>('home', {
-    version: 'draft',
-    locale: 'en',
-    resolveReference: true,
-    resolveLink: true,
-  })
-);
-```
-
-#### `getContentById<T>(id, params?)`
-
-Fetches a content document by its unique ID.
-
-```ts
-const content = await firstValueFrom(
-  contentService.getContentById<ArticlePage>('abc123', { locale: 'fr' })
-);
-```
-
-#### `getLinks(params?)`
-
-Fetches the full links map — a dictionary of content IDs to their slug paths. Pass this to browser-side schema components to enable link resolution.
-
-```ts
-const links = await firstValueFrom(
-  contentService.getLinks()
-);
-
-// Filter by content kind or parent
-const blogLinks = await firstValueFrom(
-  contentService.getLinks({
-    kind: 'DOCUMENT',
-    parentSlug: 'blog',
-    excludeChildren: false,
-  })
-);
-```
-
-#### `ContentFetchParams`
-
-| Parameter | Type | Description |
-|---|---|---|
-| `version` | `'draft' \| string` | Override the global version for this request |
-| `locale` | `string` | Locale code, e.g. `'en'`, `'fr'` |
-| `resolveReference` | `boolean` | Inline referenced content objects |
-| `resolveLink` | `boolean` | Inline link objects |
-| `resolveAsset` | `boolean` | Inline referenced asset metadata |
-
-#### `LinksFetchParams`
-
-| Parameter | Type | Description |
-|---|---|---|
-| `kind` | `string` | Filter links by content kind |
-| `parentSlug` | `string` | Return only links under this parent slug |
-| `excludeChildren` | `boolean` | Exclude descendant slugs |
-
----
-
-### Server Asset Service
-
-`ServerAssetService` generates asset URLs on the server. Its API is identical to `BrowserAssetService`.
-
-```ts
-import { ServerAssetService } from '@localess/angular/server';
-
-@Injectable()
-export class MyService {
-  private assetService = inject(ServerAssetService);
-
-  getUrl(asset: ContentAsset): string {
-    return this.assetService.link(asset);
-    // or: this.assetService.link('path/to/asset.jpg')
-  }
-}
-```
-
----
-
-### Translation Service
-
-`ServerTranslationService` fetches all translation strings for a given locale. Results are cached by locale.
-
-```ts
-import { ServerTranslationService } from '@localess/angular/server';
-
-@Injectable()
-export class MyService {
-  private translationService = inject(ServerTranslationService);
-
-  getTranslations(locale: string): Observable<Translations> {
-    return this.translationService.fetch(locale);
-  }
-}
-```
-
-The returned `Translations` object is a flat key–value map (`Record<string, string>`).
-
----
-
-## SSR with TransferState
-
-In an SSR application, content is fetched on the server and must be transferred to the browser to avoid a duplicate fetch on hydration. Use Angular's `TransferState` to store the server response, then read it on the client.
-
-The pattern below uses an abstract service with two implementations — one for the server, one for the browser — and swaps them via the DI system.
-
-**Abstract service** (`localess.service.ts`):
-
-```ts
-import { Injectable, makeStateKey } from '@angular/core';
-import { Content, Links, ContentData } from '@localess/angular';
-import { Observable } from 'rxjs';
-
-@Injectable()
-export abstract class LocalessService {
-  LINKS_KEY = makeStateKey<Links>('ll:links');
-
-  abstract getLinks(): Observable<Links>;
-  abstract getContentBySlug<T extends ContentData>(slug: string | string[], locale?: string): Observable<Content<T>>;
-  abstract getContentById<T extends ContentData>(id: string, locale?: string): Observable<Content<T>>;
-}
-```
-
-**Server implementation** (`localess-server.service.ts`):
-
-```ts
-import { inject, Injectable, makeStateKey, TransferState } from '@angular/core';
-import { tap } from 'rxjs/operators';
-import { ServerContentService } from '@localess/angular/server';
-import { LocalessService } from './localess.service';
-
-@Injectable()
-export class LocalessServerService extends LocalessService {
-  private state = inject(TransferState);
-  private contentService = inject(ServerContentService);
-
-  getLinks() {
-    return this.contentService.getLinks().pipe(
-      tap(links => this.state.set(this.LINKS_KEY, links))
-    );
-  }
-
-  getContentBySlug<T extends ContentData>(slug: string | string[], locale?: string) {
-    const normalizedSlug = Array.isArray(slug) ? slug.join('/') : slug;
-    const key = makeStateKey<Content<T>>(`ll:content:slug:${normalizedSlug}`);
-    return this.contentService.getContentBySlug<T>(normalizedSlug, { locale }).pipe(
-      tap(content => this.state.set(key, content))
-    );
-  }
-
-  getContentById<T extends ContentData>(id: string, locale?: string) {
-    const key = makeStateKey<Content<T>>(`ll:content:id:${id}`);
-    return this.contentService.getContentById<T>(id, { locale }).pipe(
-      tap(content => this.state.set(key, content))
-    );
-  }
-}
-```
-
-**Browser implementation** (`localess-browser.service.ts`):
-
-```ts
-import { inject, Injectable, makeStateKey, TransferState } from '@angular/core';
-import { of } from 'rxjs';
-import { LocalessService } from './localess.service';
-
-@Injectable()
-export class LocalessBrowserService extends LocalessService {
-  private state = inject(TransferState);
-
-  getLinks() {
-    return of(this.state.get(this.LINKS_KEY, {}));
-  }
-
-  getContentBySlug<T extends ContentData>(slug: string | string[], locale?: string) {
-    const normalizedSlug = Array.isArray(slug) ? slug.join('/') : slug;
-    const key = makeStateKey<Content<T>>(`ll:content:slug:${normalizedSlug}`);
-    return of(this.state.get(key, {} as Content<T>));
-  }
-
-  getContentById<T extends ContentData>(id: string, locale?: string) {
-    const key = makeStateKey<Content<T>>(`ll:content:id:${id}`);
-    return of(this.state.get(key, {} as Content<T>));
-  }
-}
-```
-
-**Wire them up:**
-
-```ts
-// app.config.ts — browser uses browser implementation
-providers: [
-  { provide: LocalessService, useClass: LocalessBrowserService },
-]
-
-// app.config.server.ts — server uses server implementation
-providers: [
-  { provide: LocalessService, useClass: LocalessServerService },
-]
-```
-
-**Use the abstract service anywhere** without worrying about the platform:
-
-```ts
-@Component({ ... })
-export class SlugComponent {
-  private localess = inject(LocalessService);
-
-  content = toSignal(this.localess.getContentBySlug('home'));
-}
-```
-
----
-
 ## Angular Image Optimization
 
-`provideLocalessBrowser()` automatically registers Angular's `IMAGE_LOADER` provider. When you use `NgOptimizedImage` (`ngSrc`) with a Localess asset URL, Angular appends `?w=<requested-width>` to the URL, enabling server-side image resizing:
+`provideLocaless()` automatically registers Angular's `IMAGE_LOADER` provider. When you use `NgOptimizedImage` (`ngSrc`) with a Localess asset URL, Angular appends `?w=<requested-width>` to the URL, enabling server-side image resizing:
 
 ```html
 <img
@@ -734,69 +493,3 @@ export class SlugComponent {
 ```
 
 This works automatically — no additional configuration required.
-
----
-
-## API Reference
-
-### `@localess/angular/browser`
-
-| Export | Kind | Description |
-|---|---|---|
-| `provideLocalessBrowser(options)` | Function | Registers all browser-side providers |
-| `SchemaComponent<T>` | Abstract Class | Base component with `data`, `links`, `references`, `assets` signal inputs |
-| `ContentIdDirective` | Directive | `[data-ll-id]` marker |
-| `ContentSchemaDirective` | Directive | `[data-ll-schema]` marker |
-| `ContentFieldDirective` | Directive | `[data-ll-field]` marker |
-| `ContentDirective` | Directive | `[llContent]` — sets both id and schema attributes |
-| `AssetPipe` | Pipe | `llAsset` — asset to URL |
-| `LinkPipe` | Pipe | `llLink` — resolves a ContentLink |
-| `RichTextToHtmlPipe` | Pipe | `llRtToHtml` — Tiptap JSON to HTML |
-| `SafeHtmlPipe` | Pipe | `llSafeHtml` — bypasses DomSanitizer |
-| `BrowserAssetService` | Service | Programmatic asset URL generation |
-| `LOCALESS_BROWSER_CONFIG` | InjectionToken | Browser configuration token |
-| `LocalessBrowserConfig` | Type | Browser config shape |
-| `LocalessBrowserOptions` | Type | Options for `provideLocalessBrowser()` |
-| `findLink(links, link)` | Function | Standalone link resolution utility |
-| `buildAssetQueryString(params?)` | Function | Standalone asset transform query-string builder |
-| `AssetTransformParams` | Type | Asset transform parameters (`w`, `h`, `f`, ...) |
-| `LocalessSync` | Type | Visual Editor sync event types |
-| `EventToApp` / `EventToAppOf` / `EventCallback` / `EventToAppType` | Type | Visual Editor sync event payload types |
-
-### `@localess/angular/server`
-
-| Export | Kind | Description |
-|---|---|---|
-| `provideLocalessServer(options)` | Function | Registers all server-side providers |
-| `ServerContentService` | Service | Fetches content by slug, ID, or links |
-| `ServerAssetService` | Service | Programmatic asset URL generation |
-| `ServerTranslationService` | Service | Fetches translations by locale |
-| `LOCALESS_SERVER_CONFIG` | InjectionToken | Server configuration token |
-| `LocalessServerConfig` | Type | Server config shape |
-| `LocalessServerOptions` | Type | Options for `provideLocalessServer()` |
-
-### `@localess/angular`
-
-Re-exports all types from `@localess/client`:
-
-| Type | Description |
-|---|---|
-| `Content<T>` | CMS document with metadata and typed `data` payload |
-| `ContentData` | Base type for schema data objects |
-| `ContentDataSchema` | Schema data with `_id` and `_schema` fields |
-| `ContentAsset` | Asset reference `{ uri: string }` |
-| `ContentLink` | Link reference `{ type: 'content' \| 'url', uri: string }` |
-| `ContentRichText` | Tiptap JSON rich text |
-| `ContentReference` | Reference to another content document |
-| `Links` | Map of content ID → `{ fullSlug: string }` |
-| `References` | Map of referenced content objects |
-| `Assets` | Map of asset ID → asset metadata |
-| `Translations` | Flat key–value map of translation strings |
-| `ContentFetchParams` | Parameters for content fetch requests |
-| `LinksFetchParams` | Parameters for links fetch requests |
-
----
-
-## License
-
-MIT © [Lessify](https://github.com/Lessify)

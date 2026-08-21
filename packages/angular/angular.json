@@ -29,7 +29,7 @@
           "options": {
             "tsConfig": "tsconfig.spec.json",
             "runner": "vitest",
-            "include": ["**/*.test.ts", "../browser/src/**/*.test.ts", "../server/src/**/*.test.ts"]
+            "include": ["**/*.test.ts"]
           },
           "configurations": {
             "coverage": {

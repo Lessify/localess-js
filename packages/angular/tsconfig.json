@@ -7,9 +7,7 @@
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "paths": {
-      "@localess/angular": ["./src/public-api.ts"],
-      "@localess/angular/browser": ["./browser/src/public-api.ts"],
-      "@localess/angular/server": ["./server/src/public-api.ts"]
+      "@localess/angular": ["./src/public-api.ts"]
     },
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,

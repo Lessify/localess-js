@@ -100,13 +100,14 @@ npm install @localess/angular
 ```
 
 ```ts
-import { provideLocalessBrowser } from "@localess/angular/browser";
+import { provideLocaless } from "@localess/angular";
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideLocalessBrowser({
+    provideLocaless({
       origin: 'https://my-localess.web.app',
       spaceId: 'YOUR_SPACE_ID',
+      token: 'YOUR_PUBLIC_TOKEN',
       enableSync: true,
     }),
   ],

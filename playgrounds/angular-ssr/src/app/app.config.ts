@@ -1,12 +1,9 @@
-import {provideHttpClient, withFetch} from '@angular/common/http';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import {provideRouter, withComponentInputBinding} from '@angular/router';
-
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideClientHydration, withHttpTransferCacheOptions } from '@angular/platform-browser';
+import { provideLocaless } from '@localess/angular';
 import { routes } from './app.routes';
-import {provideClientHydration, withHttpTransferCacheOptions} from '@angular/platform-browser';
-import {provideLocalessBrowser} from '@localess/angular/browser';
-import {LocalessService} from './shared/services/localess.service';
-import { LocalessBrowserService } from './shared/services/localess-browser.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,19 +11,16 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideClientHydration(
       withHttpTransferCacheOptions({
-        filter: req => !req.url.startsWith("https://demo.localess.org"),
-      }),
+        filter: req => !req.url.startsWith('https://demo.localess.org'),
+      })
     ),
     provideHttpClient(withFetch()),
-    provideLocalessBrowser({
-      origin: "https://demo.localess.org", // Replace it for your origin
-      spaceId: "MmaT4DL0kJ6nXIILUcQF", // Replace it for your spaceId
+    provideLocaless({
+      origin: 'https://demo.localess.org', // Replace it for your origin
+      spaceId: 'MmaT4DL0kJ6nXIILUcQF', // Replace it for your spaceId
+      token: 'YOUR_PUBLIC_TOKEN', // Public token — overridden server-side by app.config.server.ts's secret token
       debug: true,
       enableSync: true,
     }),
-    {
-      provide: LocalessService,
-      useClass: LocalessBrowserService,
-    },
-  ]
+  ],
 };

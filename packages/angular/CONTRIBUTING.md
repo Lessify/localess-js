@@ -2,11 +2,7 @@
 
 ## Overview
 
-`@localess/angular` is an Angular library built with ng-packagr. It has three entry points:
-
-- `@localess/angular` — main (re-exports browser + server)
-- `@localess/angular/browser` — client-side components, directives, pipes, services
-- `@localess/angular/server` — server-side services for SSR
+`@localess/angular` is a single unified Angular library built with ng-packagr — one entry point, `@localess/angular`, usable identically in SSR and pure client-side-rendered apps. There is no browser/server split: components, directives, and pipes are platform-agnostic, and `provideLocaless({ token, ... })` is the single provider (a secret token for server-fetched/hydrated content, a public token for content fetched directly in the browser).
 
 ## Build
 
@@ -20,34 +16,29 @@ npx ng build localess-angular
 
 Output goes to `packages/angular/dist/`. Required before running `playgrounds/angular-ssr`.
 
-## Adding a Browser Component
+## Adding a Component
 
-1. Create `packages/angular/browser/src/components/<name>.component.ts`
-2. Export from `packages/angular/browser/src/index.ts`
-3. Export from `packages/angular/browser/src/public-api.ts`
-4. Update `packages/angular/SKILL.md`
-
-## Adding a Browser Pipe
-
-1. Create `packages/angular/browser/src/pipes/<name>.pipe.ts`
-2. Export from `packages/angular/browser/src/index.ts` and `public-api.ts`
+1. Create `packages/angular/src/components/<name>.component.ts`
+2. Export from `packages/angular/src/public-api.ts`
 3. Update `packages/angular/SKILL.md`
 
-## Adding a Browser Service
+## Adding a Pipe
 
-1. Create `packages/angular/browser/src/services/<name>.service.ts`
-2. Export from `packages/angular/browser/src/index.ts` and `public-api.ts`
+1. Create `packages/angular/src/pipes/<name>.pipe.ts`
+2. Export from `packages/angular/src/public-api.ts`
 3. Update `packages/angular/SKILL.md`
 
-## Adding a Server Service
+## Adding a Service
 
-1. Create `packages/angular/server/src/services/<name>.service.ts`
-2. Export from `packages/angular/server/src/index.ts` and `public-api.ts`
-3. Update `packages/angular/SKILL.md`
+1. Create `packages/angular/src/services/<name>.service.ts`
+2. If it needs `@localess/client` access, inject `LocalessClientService` rather than calling `localessClient()` directly
+3. Register it in `provideLocaless()` (`packages/angular/src/localess.providers.ts`) if it should be available without the consumer registering it themselves
+4. Export from `packages/angular/src/public-api.ts`
+5. Update `packages/angular/SKILL.md`
 
 ## Upstream Changes
 
 If `@localess/client` adds or removes a public API method or type:
-1. Update any service in `browser/src/services/` or `server/src/services/` that uses it
+1. Update `LocalessClientService` (`packages/angular/src/services/client.service.ts`) and any service that uses it
 2. Rebuild: `npm run build:angular`
 3. Update `SKILL.md`

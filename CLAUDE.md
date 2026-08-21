@@ -42,7 +42,7 @@ Requirements: Node.js >= 24.0.0, npm >= 10.
 
 1. **Never commit.** Never run `git commit` or any command that creates a commit. Make file changes and stop — the developer reviews all changes and commits themselves when ready.
 
-2. **`@localess/client` is server-side only, with one exception.** Never suggest using it in browser/client-side code, and a secret token must never be exposed client-side. The one exception: Localess now also issues **public tokens** (read-only, published content and translations only) that are safe to use client-side — currently supported only in `@localess/react` (its `LocalessClientDocument` client-side registration path). `@localess/angular`, `@localess/cli`, and `@localess/astro` have not been reworked for this yet — treat their token as secret-only until they are. See `docs/decisions/001-server-side-only.md`.
+2. **`@localess/client` is server-side only, with one exception.** Never suggest using it in browser/client-side code, and a secret token must never be exposed client-side. The one exception: Localess now also issues **public tokens** (read-only, published content and translations only) that are safe to use client-side — currently supported in `@localess/react` (its `LocalessClientDocument` client-side registration path) and `@localess/angular` (its unified `provideLocaless({ token, ... })`, where the token's type is determined by the app's rendering mode). `@localess/cli` and `@localess/astro` have not been reworked for this yet — treat their token as secret-only until they are. See `docs/decisions/001-server-side-only.md`.
 
 3. **`@localess/client` has zero production dependencies.** Never add entries to `dependencies` in `packages/client/package.json`. `devDependencies` are fine. See `docs/decisions/002-zero-production-deps.md`.
 
@@ -56,7 +56,7 @@ Requirements: Node.js >= 24.0.0, npm >= 10.
 
 - TypeScript strict mode with `noImplicitAny: false`. See `tsconfig.json` in each package.
 - `@localess/client`, `@localess/react`, `@localess/cli` build with **Vite in library mode** (`vite.config.ts`). Entry point `src/index.ts` → `dist/`.
-- `@localess/angular` builds with **ng-packagr via Angular CLI** (`ng-package.json`, `angular.json`). Entry point `src/public-api.ts` → `dist/`. Three entry points: main, `browser/`, `server/`.
+- `@localess/angular` builds with **ng-packagr via Angular CLI** (`ng-package.json`, `angular.json`). Entry point `src/public-api.ts` → `dist/`. Single unified entry point — no `/browser` or `/server` split.
 - Dual CJS + ESM output for JS packages: `dist/index.js` (CJS), `dist/index.mjs` (ESM), `dist/index.d.ts` (types).
 - No barrel re-exports except in `index.ts` / `public-api.ts` files.
 - Kebab-case file names (e.g. `content-asset.ts`, `use-localess.ts`).
