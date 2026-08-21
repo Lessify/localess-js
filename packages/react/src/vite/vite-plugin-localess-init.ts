@@ -9,7 +9,6 @@ export interface LocalessInitOptions {
   origin: string;
   spaceId: string;
   token: string;
-  publicToken?: string;
   version?: 'draft';
   cacheTTL?: number | false;
   debug?: boolean;
@@ -17,18 +16,22 @@ export interface LocalessInitOptions {
 }
 
 /**
- * Builds `virtual:localess-init`, resolved differently per Vite build graph:
- * the SSR/server graph gets `localessInit()` called with the secret `token`;
- * the client graph gets it called with `publicToken` if configured, or a
- * no-op module otherwise. Both variants pass the merged component registry
- * from `virtual:localess-components`.
+ * Builds `virtual:localess-init`, calling `localessInit()` with the merged
+ * component registry from `virtual:localess-components`, identically on
+ * every Vite build graph (SSR and client alike).
  *
- * `token` must stay server-side only (never shipped to the browser) — never
- * change which branch (`ssr: true` vs `false`) receives it.
+ * KNOWN GAP (tracked, not yet fixed): this ships the secret `token` to the
+ * browser bundle unconditionally, on both the SSR and client graphs.
+ * `@localess/client`/`@localess/react` are documented as server-side only
+ * precisely because a secret token must never reach client-side code (see
+ * `docs/decisions/001-server-side-only.md`). This plugin is a deliberate,
+ * temporary exception to that rule — do not copy this pattern into
+ * `@localess/astro` or `@localess/angular`, which remain secret-only. A
+ * public/scoped-token mechanism should replace this before recommending
+ * `enableSync` (or any client-facing use of this plugin) for production
+ * deployments.
  */
 export function vitePluginLocalessInit(options: LocalessInitOptions): Plugin {
-  const { publicToken, token, ...rest } = options;
-
   return {
     name: 'vite-plugin-localess-init',
     async resolveId(id: string) {
@@ -36,24 +39,16 @@ export function vitePluginLocalessInit(options: LocalessInitOptions): Plugin {
         return RESOLVED_VIRTUAL_MODULE_ID;
       }
     },
-    async load(id: string, loadOptions?: { ssr?: boolean }) {
+    async load(id: string) {
       if (id !== RESOLVED_VIRTUAL_MODULE_ID) {
         return;
       }
-
-      const isSsr = loadOptions?.ssr ?? false;
-
-      if (!isSsr && !publicToken) {
-        return { code: 'export {}', moduleType: 'js' };
-      }
-
-      const initOptions = { ...rest, token: isSsr ? token : publicToken };
 
       return {
         code: `
           import { localessInit } from "@localess/react";
           import { localessComponents } from "${VIRTUAL_LOCALESS_COMPONENTS_MODULE_ID}";
-          localessInit({ ...${JSON.stringify(initOptions)}, components: localessComponents });
+          localessInit({ ...${JSON.stringify(options)}, components: localessComponents });
         `,
         moduleType: 'js',
       };

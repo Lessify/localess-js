@@ -97,8 +97,12 @@ Rules:
   `vite.config.ts` option can't become a live cross-graph reference. Manual
   `components` overrides must stay file paths, resolved via `this.resolve`,
   never direct component references.
-- `vite-plugin-localess-init.ts` must never let the client-graph branch
-  (`ssr: false`) see `token` (the secret one) — only `publicToken`.
+- `vite-plugin-localess-init.ts` currently ships `token` to both the SSR and
+  client graphs unconditionally — a deliberate, temporary exception to the
+  "secret token never reaches the client" rule (see the warning on
+  `vitePluginLocalessInit`'s JSDoc). Don't quietly "fix" this by re-adding a
+  `publicToken` split without checking with a maintainer first; a real
+  public/scoped-token mechanism is meant to replace it, not a revert.
 - Add new tests to the matching `*.test.ts` file, following the existing
   string-content-assertion style (assert generated code contains expected
   substrings) rather than evaluating the generated code.

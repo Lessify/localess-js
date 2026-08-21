@@ -15,8 +15,7 @@ const config = defineConfig({
     localessVite({
       origin: 'https://demo.localess.org', // Replace it for your origin
       spaceId: 'MmaT4DL0kJ6nXIILUcQF', // Replace it for your spaceId
-      token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token
-      publicToken: 'REPLACE_WITH_A_PUBLIC_TOKEN', // Public, read-only token — never the secret one
+      token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token — shipped to the browser bundle too, see KNOWN GAP on localessVite()
       enableSync: true,
       debug: true,
       //componentsDir: 'src/shared/components/localess',

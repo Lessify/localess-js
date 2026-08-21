@@ -12,11 +12,12 @@ describe('vitePluginLocalessInit', () => {
     expect(resolved).toBe('\0virtual:localess-init');
   });
 
-  it('generates code that imports localessClient from @localess/client', async () => {
+  it('generates code that imports localessClient from @localess/astro, never @localess/client', async () => {
     const plugin = vitePluginLocalessInit(clientOptions);
     const loaded = await (plugin.load as any)('\0virtual:localess-init');
 
-    expect(loaded.code).toContain(`import { localessClient } from "@localess/client";`);
+    expect(loaded.code).toContain(`import { localessClient } from "@localess/astro";`);
+    expect(loaded.code).not.toContain('@localess/client');
   });
 
   it('embeds the client options as JSON and assigns to globalThis', async () => {

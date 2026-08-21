@@ -80,9 +80,14 @@ TanStack Start / React Router v7 / Remix Vite. It generates two virtual
 modules: `virtual:localess-components` (auto-registers every `.tsx`/`.jsx`
 file under `componentsDir` by kebab-cased filename, merged with explicit
 `components` path overrides — suffix a path with `#ExportName` for a named
-export; a bare path assumes a default export) and `virtual:localess-init` (calls
-`localessInit()` with the secret `token` in the SSR graph, `publicToken` in
-the client graph). See `docs/react.md`'s "Vite Plugin for SSR Frameworks".
+export; a bare path assumes a default export) and `virtual:localess-init`
+(calls `localessInit()` with `token` identically on both the SSR and client
+graphs). See `docs/react.md`'s "Vite Plugin for SSR Frameworks".
+
+> **Known gap:** unlike every other `token` usage in this SKILL, the one
+> passed to `localessVite()` IS shipped to the browser bundle — there is no
+> `publicToken`/secret split yet. Treat it as a public value when using this
+> plugin.
 
 ---
 

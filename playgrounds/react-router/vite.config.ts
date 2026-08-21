@@ -1,0 +1,23 @@
+import { reactRouter } from "@react-router/dev/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
+import { localessVite } from "@localess/react/vite";
+
+export default defineConfig({
+  plugins: [
+    tailwindcss(),
+    localessVite({
+      origin: "https://demo.localess.org", // Replace it for your origin
+      spaceId: "MmaT4DL0kJ6nXIILUcQF", // Replace it for your spaceId
+      token: "Y4rvboPnyzVeC7LddEK5", // Replace it for your token — shipped to the browser bundle too, see KNOWN GAP on localessVite()
+      enableSync: true,
+      debug: true,
+      componentsDir: "app",
+      components: { Page: "./shared/components/localess/page.tsx" },
+    }),
+    reactRouter(),
+  ],
+  resolve: {
+    tsconfigPaths: true,
+  },
+});

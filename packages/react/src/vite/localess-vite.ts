@@ -14,6 +14,10 @@ export interface LocalessViteOptions extends LocalessInitOptions {
  * `plugins` array to replace hand-written, duplicated `localessInit()` calls
  * across your server and client module graphs.
  *
+ * KNOWN GAP: `token` is currently shipped to the browser bundle as well as
+ * the SSR graph — see the warning on {@link vitePluginLocalessInit}. Treat
+ * `token` as public until a scoped/public-token mechanism replaces this.
+ *
  * @example
  * ```ts
  * // vite.config.ts
@@ -25,8 +29,7 @@ export interface LocalessViteOptions extends LocalessInitOptions {
  *     localessVite({
  *       origin: process.env.LOCALESS_ORIGIN!,
  *       spaceId: process.env.LOCALESS_SPACE_ID!,
- *       token: process.env.LOCALESS_TOKEN!,           // secret — SSR graph only
- *       publicToken: process.env.LOCALESS_PUBLIC_TOKEN, // optional, public — client graph
+ *       token: process.env.LOCALESS_TOKEN!, // shipped to SSR graph AND the browser bundle
  *       enableSync: true,
  *       componentsDir: 'src/components/localess',
  *     }),

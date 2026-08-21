@@ -238,7 +238,14 @@ Use this only when you specifically need live editing on a statically-exported b
 
 For Vite-based SSR frameworks (TanStack Start, React Router v7 framework
 mode, Remix Vite), `@localess/react/vite` automates the two-`localessInit`-calls
-pattern above: one Vite plugin, one config object, correct token per build graph.
+pattern above: one Vite plugin, one config object, one `localessInit()` call
+generated identically for every build graph.
+
+> **Known gap:** `token` here is shipped to the browser bundle as well as the
+> SSR graph — there is currently no secret/public token split for this
+> plugin (unlike the manual `LocalessClientDocument` pattern above, which
+> does have one via `publicToken`). Treat `token` as a public value when
+> using `localessVite()`, until a scoped/public-token mechanism replaces this.
 
 ```ts
 // vite.config.ts
@@ -250,8 +257,7 @@ export default defineConfig({
     localessVite({
       origin: process.env.LOCALESS_ORIGIN!,
       spaceId: process.env.LOCALESS_SPACE_ID!,
-      token: process.env.LOCALESS_TOKEN!,             // secret — SSR graph only
-      publicToken: process.env.LOCALESS_PUBLIC_TOKEN, // optional, public — client graph
+      token: process.env.LOCALESS_TOKEN!, // shipped to the SSR graph AND the browser bundle
       enableSync: true,
       componentsDir: 'src/components/localess',        // default: 'src'
       components: { 'hero-section': './HeroOverride.tsx#HeroOverride' }, // optional, overrides auto-registration
@@ -269,10 +275,9 @@ import { getLocalessClient } from '@localess/react';
 const content = await getLocalessClient().getContentBySlug('home', { locale });
 ```
 
-`virtual:localess-init` resolves to a different `localessInit()` call depending
-on which Vite build graph imports it: the SSR/server graph gets the secret
-`token`; the client graph gets `publicToken` (or a no-op module if
-`publicToken` isn't configured). Every `.tsx`/`.jsx` file under `componentsDir`
+`virtual:localess-init` resolves to the same `localessInit()` call regardless
+of which Vite build graph imports it — both the SSR/server graph and the
+client graph get `token`. Every `.tsx`/`.jsx` file under `componentsDir`
 is auto-registered under its kebab-cased filename (`hero-section.tsx` ->
 `'hero-section'`) — matching the schema-key convention above. `components`
 overrides take an exact key (no case transformation) and a file path relative
