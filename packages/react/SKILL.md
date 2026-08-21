@@ -89,6 +89,18 @@ graphs). See `docs/react.md`'s "Vite Plugin for SSR Frameworks".
 > `publicToken`/secret split yet. Treat it as a public value when using this
 > plugin.
 
+**Static prerendering (SSG) needs a second, separate `localessClient` for path enumeration — this is expected, not a bug to dedupe.** React Router v7's `ssr: false` + `prerender()` (in `react-router.config.ts`) and TanStack Start's `prerender.pages` (in `vite.config.ts`) both need the list of paths to prerender *before* `localessVite()`'s virtual modules exist — that config-resolution code runs as plain Node, outside any Vite module graph, so it can't reach the `localessInit()` singleton `getLocalessClient()` reads from. Build its own client instead, importing from `@localess/react/ssr` (never `@localess/client` directly):
+
+```ts
+// react-router.config.ts / vite.config.ts — path enumeration only, never bundled
+import { localessClient } from '@localess/react/ssr';
+
+const client = localessClient({ origin, spaceId, token });
+const links = await client.getLinks({ kind: 'DOCUMENT' });
+```
+
+Next.js `output: 'export'` is the one exception: `generateStaticParams()` and the page component are the same route module evaluated once by Next's build, so a single module-level `localessInit()` result can be shared between them — see `docs/react.md`'s "Static Prerendering (SSG): Two Client Instances Are Expected" for the full breakdown per framework.
+
 ---
 
 ## LocalessComponent

@@ -290,6 +290,125 @@ Only use the manual `components` two-`localessInit`-calls pattern above
 directly if you're not on a Vite-based framework, or need control the plugin
 doesn't expose.
 
+### Static Prerendering (SSG): Two Client Instances Are Expected
+
+When a Vite-based framework prerenders pages ahead of time (React Router v7's
+`ssr: false` + `prerender`, TanStack Start's `prerender: { enabled: true }`),
+you end up constructing a `localessClient` **twice**, in two different
+places, and that's correct — not a bug to dedupe into one instance.
+
+1. **Config-resolution time.** Before any page can be prerendered, the build
+   tool needs the *list* of paths to render. For a static/dynamic route (a
+   splat/catch-all matching arbitrary CMS slugs), that list doesn't exist
+   until you fetch it — so the framework's config file constructs its own
+   `localessClient` (from `@localess/react/ssr` — never `@localess/client`
+   directly, see below) and calls `getLinks()` to build the path list. This
+   runs as plain Node code before any Vite plugin or virtual module exists;
+   `virtual:localess-init` isn't resolvable yet, so there's no singleton to
+   reuse.
+2. **Module-graph execution time.** Once the path list is known, the build
+   tool renders each path by executing your actual route/loader code inside
+   the SSR module graph — where `import 'virtual:localess-init'` runs,
+   calling `localessInit()`, which builds a second `localessClient` and
+   stores it as the singleton `getLocalessClient()` reads from.
+
+These are separate Node module instantiations in separate lifecycle stages —
+there's no reference from stage 1 that could be handed to stage 2, since
+stage 2's module graph is built fresh by the framework's SSR compiler. This
+mirrors Next.js's `generateStaticParams()` running independently of the
+page's own data fetch. It's also not wasteful in requests: `getLinks()`
+(path enumeration) and `getContentBySlug()` (per-page content) are different
+endpoints, so nothing is fetched twice — only the `{ origin, spaceId, token }`
+literal is duplicated between the two call sites, which you can factor into
+one shared constant if you want a single source of truth.
+
+**React Router v7 (framework mode)** — the path-enumeration client lives in
+`react-router.config.ts`'s `prerender()`:
+
+```ts
+// react-router.config.ts
+import type { Config } from '@react-router/dev/config';
+import { localessClient } from '@localess/react/ssr'; // not @localess/client directly
+
+async function getPrerenderPaths(): Promise<string[]> {
+  const client = localessClient({ origin: '...', spaceId: '...', token: '...' });
+  const links = await client.getLinks({ kind: 'DOCUMENT' });
+  return Object.values(links).map(link => `/${link.fullSlug}`);
+}
+
+export default {
+  ssr: false,
+  async prerender() {
+    return getPrerenderPaths();
+  },
+} satisfies Config;
+```
+
+The second `localessClient` is built by `localessVite()` in `vite.config.ts`,
+as shown above.
+
+**TanStack Start** — both the path-enumeration client and `localessVite()`
+live in the same `vite.config.ts`, since TanStack Start's `prerender.pages`
+option is passed directly to `defineConfig`'s plugins array:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
+import { localessClient } from '@localess/react/ssr'; // not @localess/client directly
+import { localessVite } from '@localess/react/vite';
+
+async function getPrerenderPaths(): Promise<string[]> {
+  const client = localessClient({ origin: '...', spaceId: '...', token: '...' });
+  const links = await client.getLinks({ kind: 'DOCUMENT' });
+  return Object.values(links).map(link => `/${link.fullSlug}`);
+}
+
+export default defineConfig(async () => {
+  const pages = await getPrerenderPaths();
+  return {
+    plugins: [
+      localessVite({ origin: '...', spaceId: '...', token: '...' }),
+      tanstackStart({ prerender: { enabled: true }, pages: pages.map(path => ({ path })) }),
+    ],
+  };
+});
+```
+
+**Next.js `output: 'export'`** doesn't use `@localess/react/vite` at all (it's
+not Vite-based), and — unlike the two Vite frameworks above — it genuinely
+can share **one** client instance between path enumeration and page
+rendering. `generateStaticParams()` and the page component are both part of
+the same route module, evaluated once in the same Node process by Next's
+build, so a plain module-level constant works:
+
+```ts
+// shared/utils/locales.ts
+export const localessClient = localessInit({ origin: '...', spaceId: '...', token: '...' });
+```
+
+```ts
+// app/[[...path]]/page.tsx
+import { localessClient } from '@/shared/utils/locales';
+
+export async function generateStaticParams() {
+  const links = await localessClient.getLinks({ kind: 'DOCUMENT' });
+  // ...build path list from links
+}
+
+async function fetchData(locale: string | undefined, slug: string) {
+  return localessClient.getContentBySlug(slug, { locale });
+}
+```
+
+The reason this works for Next but not for React Router v7 / TanStack Start
+is Next's module-caching model: importing the same module twice within one
+build process returns the same evaluated instance. The Vite frameworks'
+config-resolution phase and SSR module-graph phase are not the same module
+graph, so no import can bridge them. See "Client-Side Fallback for Static
+Export" above for the separate client-side registration piece that's
+specific to Next's static export (live editing in the browser).
+
 ### Pattern A — `useLocaless` hook
 
 Re-fetches on client, falls back to server data until ready, auto-syncs.
