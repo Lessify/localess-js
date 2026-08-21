@@ -2,6 +2,8 @@
 
 React integration layer. Depends on `@localess/client`. Components never fetch data — they accept server-fetched data as props.
 
+`@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples — including `vite.config.ts`/`react-router.config.ts`-style build scripts that need a standalone client for tasks like prerender-path enumeration) must only ever import from `@localess/react` or one of its subpath exports (`@localess/react/ssr`, `@localess/react/rsc`) — never `@localess/client` directly. If something from `@localess/client` isn't re-exported yet, add it to the appropriate export surface's re-exports (`src/index.ts` for the SPA export, `src/ssr/index.ts` for server-only) rather than telling consumers to import `@localess/client` themselves.
+
 ## Adding a New Component
 
 **1. Create `src/core/components/<name>.tsx`:**

@@ -17,7 +17,6 @@
     "localess:login": "localess login"
   },
   "dependencies": {
-    "@localess/client": "*",
     "@localess/react": "*",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",

@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@localess/cli": "*",
-    "@localess/client": "*",
     "@react-router/dev": "^8",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^22",

@@ -18,6 +18,13 @@
  * import { localessInit, LocalessServerComponent } from '@localess/react/ssr';
  * ```
  *
+ * `localessClient` (the raw client factory, re-exported from `@localess/client`) is
+ * included here for standalone build-time scripts that need their own client instance
+ * outside the `localessInit()`/`getLocalessClient()` singleton lifecycle — e.g. a
+ * `vite.config.ts` or `react-router.config.ts` enumerating prerender paths before any
+ * app graph exists. Never import `@localess/client` directly in consumer code — go
+ * through `@localess/react` (or `@localess/react/ssr`) instead.
+ *
  * NOT available in this export:
  * - LocalessDocument   (requires 'use client')
  * - useLocaless        (requires 'use client')
@@ -40,4 +47,4 @@ export {
 export * from '../core/utils';
 export * from './localess-component';
 export * from './localess-document';
-export { LocalessApiError } from '@localess/client';
+export { LocalessApiError, localessClient } from '@localess/client';

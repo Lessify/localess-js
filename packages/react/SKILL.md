@@ -594,6 +594,18 @@ const [content, translations] = await Promise.all([
 ]);
 ```
 
+For a standalone build-time script that needs its own client instance outside the `localessInit()`/`getLocalessClient()` singleton lifecycle — e.g. a `vite.config.ts` or `react-router.config.ts` enumerating static-prerender paths before any app graph exists — import the raw factory from `@localess/react/ssr`, never from `@localess/client` directly:
+
+```typescript
+// vite.config.ts / react-router.config.ts — build-time only, never bundled
+import { localessClient } from "@localess/react/ssr";
+
+const client = localessClient({ origin, spaceId, token });
+const links = await client.getLinks({ kind: "DOCUMENT" });
+```
+
+> **Never import `@localess/client` directly in consumer code (playgrounds, docs, examples).** `@localess/client` is an implementation detail of `@localess/react`. If something you need isn't re-exported yet, add it to `src/index.ts` (SPA export) or `src/ssr/index.ts` (server-only export) — don't reach past `@localess/react`.
+
 ---
 
 ## Full Next.js 16.2 App Router Setup

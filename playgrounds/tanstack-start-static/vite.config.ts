@@ -5,15 +5,18 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { localessClient } from '@localess/client'
+import { localessClient } from '@localess/react/ssr'
 import { localessVite } from '@localess/react/vite'
 
 import { LOCALES } from './src/shared/utils/locales'
 
 // Static prerendering needs an explicit list of URLs for our dynamic `$` catch-all route — it
-// has no fixed set of paths the way `src/routes/about.tsx` would. `@localess/client` (not
-// `@localess/react`) is deliberately used here: this only ever runs in this Node build script,
-// never bundled, so the secret token used for this one build-time fetch never ships anywhere.
+// has no fixed set of paths the way `src/routes/about.tsx` would. This needs a standalone
+// client outside the `localessInit()`/`getLocalessClient()` singleton lifecycle, since this
+// runs before any app graph exists — `localessClient` from `@localess/react/ssr` (never
+// `@localess/client` directly, per that package's contributor rules). This only ever runs in
+// this Node build script, never bundled, so the token used for this one build-time fetch never
+// ships anywhere.
 async function getPrerenderPaths(): Promise<string[]> {
   const client = localessClient({
     origin: 'https://demo.localess.org', // Replace it for your origin
