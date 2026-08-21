@@ -5,9 +5,6 @@ import { LocalessClientService } from './client.service';
 import { LocalessContentService } from './content.service';
 
 describe('LocalessContentService', () => {
-  // None of these calls are wrapped in TestBed.runInInjectionContext — contentBySlug() must work
-  // when called from outside an injection context (e.g. a component's ngOnInit), since it creates
-  // its resource() using this service's own injector internally.
   function createService(platformId: string, getContentBySlug = vi.fn()) {
     TestBed.configureTestingModule({
       providers: [
@@ -27,10 +24,10 @@ describe('LocalessContentService', () => {
     const getContentBySlug = vi.fn().mockResolvedValue({ _id: 'c1' });
     const { service, transferState } = createService('server', getContentBySlug);
 
-    const ref = service.contentBySlug(() => 'home');
-    await vi.waitFor(() => expect(ref.hasValue()).toBe(true));
+    const value = await service.contentBySlug('home');
 
     expect(getContentBySlug).toHaveBeenCalledWith('home', undefined);
+    expect(value).toEqual({ _id: 'c1' });
     expect(transferState.get(makeStateKey<{ _id: string }>('ll:content:slug:home'), undefined)).toEqual({ _id: 'c1' });
   });
 
@@ -39,21 +36,19 @@ describe('LocalessContentService', () => {
     const { service, transferState } = createService('browser', getContentBySlug);
     transferState.set(makeStateKey<{ _id: string }>('ll:content:slug:home'), { _id: 'c1' });
 
-    const ref = service.contentBySlug(() => 'home');
-    await vi.waitFor(() => expect(ref.hasValue()).toBe(true));
+    const value = await service.contentBySlug('home');
 
     expect(getContentBySlug).not.toHaveBeenCalled();
-    expect(ref.value()).toEqual({ _id: 'c1' });
+    expect(value).toEqual({ _id: 'c1' });
   });
 
   it('falls back to calling the client on the browser when nothing was hydrated (pure CSR)', async () => {
     const getContentBySlug = vi.fn().mockResolvedValue({ _id: 'c1' });
     const { service } = createService('browser', getContentBySlug);
 
-    const ref = service.contentBySlug(() => 'home');
-    await vi.waitFor(() => expect(ref.hasValue()).toBe(true));
+    const value = await service.contentBySlug('home');
 
     expect(getContentBySlug).toHaveBeenCalledWith('home', undefined);
-    expect(ref.value()).toEqual({ _id: 'c1' });
+    expect(value).toEqual({ _id: 'c1' });
   });
 });

@@ -52,32 +52,30 @@ const serverConfig: ApplicationConfig = {
 
 ## Content Fetching — `LocalessContentService`
 
-`LocalessContentService` is a `resource()`-based service that fetches content and, on the server, hydrates it to the browser via `TransferState` — no duplicate network request on hydration, and no manual `TransferState` wiring required.
+`LocalessContentService` fetches content and, on the server, hydrates it to the browser via `TransferState` — no duplicate network request on hydration, and no manual `TransferState` wiring required. All methods return a `Promise`, so the natural place to call them is a route resolver:
 
 ```typescript
-import { Component, inject, input, OnInit } from '@angular/core';
-import { LocalessContentService } from '@localess/angular';
+import { inject } from '@angular/core';
+import { ResolveFn } from '@angular/router';
+import { Content, LocalessContentService } from '@localess/angular';
 
-export class PageComponent implements OnInit {
-  slug = input.required<string>();
-  private readonly contentService = inject(LocalessContentService);
-  content!: ReturnType<LocalessContentService['contentBySlug']>;
+const contentResolver: ResolveFn<Content> = route => {
+  return inject(LocalessContentService).contentBySlug(route.paramMap.get('slug')!, { locale: 'en', resolveReference: true });
+};
+```
 
-  ngOnInit(): void {
-    this.content = this.contentService.contentBySlug(() => this.slug(), { locale: 'en', resolveReference: true });
-  }
+```typescript
+@Component({ ... })
+export class PageComponent {
+  content = input.required<Content>(); // bound from resolved route data via withComponentInputBinding()
 }
 ```
 
 ```html
-@if (content.value(); as data) {
-  <h1>{{ data.data['title'] }}</h1>
-} @else if (content.isLoading()) {
-  <p>Loading…</p>
-}
+<h1>{{ content().data['title'] }}</h1>
 ```
 
-`contentBySlug<T>(slug, params?)`, `contentById<T>(id, params?)`, and `links(params?)` all return a `ResourceRef` exposing `.value()`, `.isLoading()`, `.error()` signals.
+`contentBySlug<T>(slug, params?)`, `contentById<T>(id, params?)`, and `links(params?)` all return a `Promise` — call from any `async` context (a resolver, an event handler); wrap in Angular's `resource()` yourself if a component needs reactive re-fetching.
 
 ## `LocalessAssetService` and `LocalessTranslationService`
 

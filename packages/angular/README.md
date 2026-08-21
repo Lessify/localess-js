@@ -85,26 +85,19 @@ const serverConfig: ApplicationConfig = {
 export const config = mergeApplicationConfig(appConfig, serverConfig);
 ```
 
-**3. Fetch content** with `LocalessContentService`, in a component:
+**3. Fetch content** with `LocalessContentService`, e.g. in a route resolver:
 
 ```ts
-import { Component, inject, input, OnInit } from '@angular/core';
-import { LocalessContentService } from '@localess/angular';
+import { inject } from '@angular/core';
+import { ResolveFn } from '@angular/router';
+import { Content, LocalessContentService } from '@localess/angular';
 
-@Component({ ... })
-export class PageComponent implements OnInit {
-  slug = input.required<string>();
-
-  private readonly contentService = inject(LocalessContentService);
-  content!: ReturnType<LocalessContentService['contentBySlug']>;
-
-  ngOnInit(): void {
-    this.content = this.contentService.contentBySlug(() => this.slug());
-  }
-}
+const contentResolver: ResolveFn<Content> = route => {
+  return inject(LocalessContentService).contentBySlug(route.paramMap.get('slug')!);
+};
 ```
 
-`content.value()`, `content.isLoading()`, and `content.error()` are signals — read them directly in the template. On the server, the fetched content is written to `TransferState`; on the browser, the same call reads it back out instead of re-fetching (or, in a pure client-side-rendered app with no SSR, falls back to fetching directly using the public token).
+On the server, the fetched content is written to `TransferState`; on the browser, the same call reads it back out instead of re-fetching (or, in a pure client-side-rendered app with no SSR, falls back to fetching directly using the public token).
 
 ---
 
@@ -142,7 +135,7 @@ provideLocaless({
 
 ## Content Service
 
-`LocalessContentService` fetches content and hydrates it from server to browser via `TransferState`, using Angular's `resource()` API.
+`LocalessContentService` fetches content and hydrates it from server to browser via `TransferState`. All methods return a `Promise` — call from anywhere `async`/`await` works, e.g. a route resolver or an event handler; wrap in Angular's `resource()` yourself if you need reactive re-fetching.
 
 ```ts
 import { LocalessContentService } from '@localess/angular';
@@ -154,10 +147,10 @@ const contentService = inject(LocalessContentService);
 ### `contentBySlug<T>(slug, params?)`
 
 ```ts
-content = contentService.contentBySlug<HeroSection>(() => 'home');
+content = await contentService.contentBySlug<HeroSection>('home');
 
 // With params
-content = contentService.contentBySlug<HeroSection>(() => 'home', {
+content = await contentService.contentBySlug<HeroSection>('home', {
   version: 'draft',
   locale: 'en',
   resolveReference: true,
@@ -165,18 +158,16 @@ content = contentService.contentBySlug<HeroSection>(() => 'home', {
 });
 ```
 
-`slug` is a function (`() => string`) so the fetch re-runs reactively if the returned value changes (e.g. a signal input).
-
 ### `contentById<T>(id, params?)`
 
 ```ts
-content = contentService.contentById<ArticlePage>(() => 'abc123', { locale: 'fr' });
+content = await contentService.contentById<ArticlePage>('abc123', { locale: 'fr' });
 ```
 
 ### `links(params?)`
 
 ```ts
-links = contentService.links({ kind: 'DOCUMENT', parentSlug: 'blog', excludeChildren: false });
+links = await contentService.links({ kind: 'DOCUMENT', parentSlug: 'blog', excludeChildren: false });
 ```
 
 ### `ContentFetchParams`
@@ -199,19 +190,18 @@ links = contentService.links({ kind: 'DOCUMENT', parentSlug: 'blog', excludeChil
 
 ### Reading the result
 
-Each method returns a `ResourceRef` — use its signals directly:
+Each method returns a `Promise` that rejects on a failed fetch (e.g. `LocalessApiError` for a 404) — handle it wherever you call it, such as a route resolver:
 
-```html
-@if (content.value(); as result) {
-  <h1>{{ result.data['title'] }}</h1>
-} @else if (content.isLoading()) {
-  <p>Loading…</p>
-} @else if (content.error()) {
-  <p>Failed to load content.</p>
-}
+```ts
+const contentResolver: ResolveFn<Content | undefined> = async () => {
+  try {
+    return await contentService.contentBySlug('home');
+  } catch (error) {
+    if (error instanceof LocalessApiError && error.status === 404) return undefined;
+    throw error;
+  }
+};
 ```
-
-`resource()` must be called from an injection context (a constructor, a field initializer, or a lifecycle hook like `ngOnInit` — all valid; note that a required signal input cannot be read in a field initializer, only from `ngOnInit` onward, once Angular has bound it).
 
 ---
 
