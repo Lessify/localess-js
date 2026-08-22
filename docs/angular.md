@@ -85,6 +85,37 @@ import { LocalessAssetService, LocalessTranslationService } from '@localess/angu
 // translationService.fetch('en') → Promise<Translations>
 ```
 
+## Component Registry & Dynamic Rendering
+
+Register `_schema` → component mappings, then render content without a hand-written switch over schema types.
+
+```typescript
+import { provideLocaless, withLocalessComponents } from '@localess/angular';
+
+provideLocaless(
+  { origin: '...', spaceId: '...', token: '...' },
+  withLocalessComponents(
+    {
+      hero: HeroSectionComponent, // eager
+      teaser: () => import('./teaser.component').then(m => m.TeaserComponent), // lazy
+    },
+    UnknownBlockComponent // optional fallback for unmatched `_schema` keys
+  )
+);
+```
+
+`provideLocaless()` accepts features as trailing arguments (same pattern as `provideRouter()`). `withLocalessComponents` is the only one today.
+
+```html
+<!-- top-level: renders a full Content response, wires up Visual Editor sync internally -->
+<ll-document [document]="content()" />
+
+<!-- inside a schema component: renders a nested schema item or array (e.g. a body field) -->
+<ll-component [data]="data().body" [links]="links()" [references]="references()" [assets]="assets()" />
+```
+
+`<ll-component>` (and the lower-level `[llComponent]` directive it wraps) resolves each item's `_schema` via the registry and creates the matching component with `ViewContainerRef.createComponent`, recreating it only when `_schema` changes. Registered components aren't required to extend `SchemaComponent` — only the inputs (`data`/`links`/`references`/`assets`) a component actually declares are set, so a fallback commonly only needs `data`.
+
 ## Components
 
 ### Schema Components

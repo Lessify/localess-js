@@ -9,6 +9,7 @@ Angular SDK for the [Localess](https://github.com/Lessify/localess) headless CMS
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Setup](#setup)
+- [Component Registry & Dynamic Rendering](#component-registry--dynamic-rendering)
 - [Content Service](#content-service)
 - [Asset Service](#asset-service)
 - [Translation Service](#translation-service)
@@ -122,6 +123,80 @@ provideLocaless({
 | `debug` | `boolean` | — | When `true`, logs internal activity to the console |
 
 `provideLocaless()` also registers Angular's built-in `IMAGE_LOADER` provider so that `NgOptimizedImage` automatically appends `?w=<width>` to Localess asset URLs for responsive image optimization.
+
+`provideLocaless()` accepts optional trailing **features**, the same pattern as `provideRouter()`/`provideHttpClient()`. Today there's one: [`withLocalessComponents()`](#component-registry--dynamic-rendering).
+
+---
+
+## Component Registry & Dynamic Rendering
+
+Register a map of content `_schema` keys to Angular components, then render content without writing a switch statement over schema types yourself.
+
+### `withLocalessComponents(components, fallback?)`
+
+Pass to `provideLocaless()` as a feature. Entries can be an eager component reference or a lazy loader (`() => Promise<Type<any>>`) — mix both in the same map:
+
+```ts
+import { provideLocaless, withLocalessComponents } from '@localess/angular';
+import { HeroSectionComponent } from './components/hero-section.component';
+import { UnknownBlockComponent } from './components/unknown-block.component';
+
+provideLocaless(
+  { origin: 'https://my-localess.web.app', spaceId: 'YOUR_SPACE_ID', token: 'YOUR_TOKEN' },
+  withLocalessComponents(
+    {
+      hero: HeroSectionComponent, // eager — bundled immediately
+      teaser: () => import('./components/teaser.component').then(m => m.TeaserComponent), // lazy — loaded on demand
+    },
+    UnknownBlockComponent // optional fallback, rendered when a `_schema` has no match
+  )
+);
+```
+
+Registered components aren't required to extend `SchemaComponent` or declare any particular input — `data`/`links`/`references`/`assets` are only set on the ones a component actually declares as inputs. This matters most for the fallback: it commonly only needs `data` (e.g. to log or display the unmatched `_schema` key) and can ignore the rest.
+
+### `<ll-document>` — render a full `Content` response
+
+The top-level entry point for a fetched page. Owns the rendered data and keeps it live: it subscribes to `LocalessSyncService.onChange` internally, so `input`/`change` events from the Visual Editor update the page without a full reload — no manual sync wiring needed.
+
+```ts
+import { Component, input } from '@angular/core';
+import { Content, LocalessDocument } from '@localess/angular';
+
+@Component({
+  selector: 'app-slug',
+  imports: [LocalessDocument],
+  template: `<ll-document [document]="content()" />`,
+})
+export class SlugComponent {
+  content = input.required<Content>();
+}
+```
+
+### `<ll-component>` — render a schema item or list
+
+Used by `<ll-document>` internally, and directly useful inside your own schema components to render nested content (e.g. a page's `body` array):
+
+```html
+<!-- inside a schema component's own template -->
+<ll-component [data]="data().body" [links]="links()" [references]="references()" [assets]="assets()" />
+```
+
+`data` accepts a single `ContentData` item or an array — pass a schema's body field straight through, no `@for` loop required.
+
+### `[llComponent]` — low-level directive
+
+`<ll-component>` is a thin wrapper around this attribute directive, which does the actual dynamic creation via `ViewContainerRef`. Reach for it directly only if you need to place it somewhere other than inside a plain `<ng-container>` loop:
+
+```html
+<ng-container [llComponent]="item" [links]="links()" [references]="references()" [assets]="assets()" />
+```
+
+It recreates the rendered component only when `_schema` changes — updating `data` on an existing instance (e.g. a live edit to the same block) does not tear down component state.
+
+### Unregistered schema keys
+
+When a `_schema` key has no match in the registry: the fallback component (if configured) is rendered, and a console error is logged either way. With no fallback configured, nothing is rendered for that item.
 
 ---
 

@@ -1,10 +1,10 @@
 import { Component, input } from '@angular/core';
-import { Content } from '@localess/angular';
-import {Page} from "../shared/models/localess";
+import { Content, LocalessDocument } from '@localess/angular';
+import { Page } from '../shared/models/localess';
 
 @Component({
   selector: 'app-slug',
-  imports: [],
+  imports: [LocalessDocument],
   templateUrl: './slug.component.html',
   styleUrl: './slug.component.scss',
 })

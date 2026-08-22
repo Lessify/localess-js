@@ -1,9 +1,12 @@
 import { IMAGE_LOADER, ImageLoaderConfig } from '@angular/common';
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 import { loadLocalessSync } from '@localess/client';
+
+import { LocalessFeature } from './localess.components';
 import { LOCALESS_CONFIG, LOCALESS_SYNC_READY, LocalessConfig } from './localess.config';
 import { LocalessAssetService } from './services/asset.service';
 import { LocalessClientService } from './services/client.service';
+import { LocalessComponentResolver } from './services/component-resolver.service';
 import { LocalessContentService } from './services/content.service';
 import { LocalessSyncService } from './services/sync.service';
 import { LocalessTranslationService } from './services/translation.service';
@@ -42,7 +45,7 @@ export type LocalessOptions = {
   cacheTTL?: number | false;
 };
 
-export function provideLocaless(options: LocalessOptions): EnvironmentProviders[] {
+export function provideLocaless(options: LocalessOptions, ...features: LocalessFeature[]): EnvironmentProviders[] {
   if (options.origin === undefined || options.origin === '') {
     throw new Error("Localess Origin can't be empty");
   }
@@ -93,6 +96,8 @@ export function provideLocaless(options: LocalessOptions): EnvironmentProviders[
       LocalessTranslationService,
       LocalessContentService,
       LocalessSyncService,
+      LocalessComponentResolver,
+      ...features.flatMap(feature => feature.ɵproviders),
     ]),
   ];
 }

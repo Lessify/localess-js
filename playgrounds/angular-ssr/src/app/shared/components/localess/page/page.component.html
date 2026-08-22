@@ -2,6 +2,9 @@
   <main class="flex flex-col gap-4">
     <h1 class="text-center">{{data.title}}</h1>
     <p class="text-center whitespace-pre-line">{{data.description}}</p>
+    <div class="flex justify-center gap-2">
+      <ll-component [data]="data.buttons" [links]="links()" [references]="references()" [assets]="assets()" />
+    </div>
   </main>
 }
 

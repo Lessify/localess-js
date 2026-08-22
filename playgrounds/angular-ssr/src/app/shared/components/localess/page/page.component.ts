@@ -1,13 +1,11 @@
-import { Component, input } from '@angular/core';
-import { Content } from '@localess/angular';
-import {SchemaComponent} from "@localess/angular/src/components/schema.component";
-import {Page} from "../../../models/localess";
+import { Component } from '@angular/core';
+import { LocalessComponent, SchemaComponent } from '@localess/angular';
+import { Page } from '../../../models/localess';
 
 @Component({
   selector: 'app-page',
-  imports: [],
+  imports: [LocalessComponent],
   templateUrl: './page.component.html',
   styleUrl: './page.component.scss',
 })
-export class PageComponent extends SchemaComponent<Page>{
-}
+export class PageComponent extends SchemaComponent<Page> {}
