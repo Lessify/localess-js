@@ -20,7 +20,7 @@ export const appConfig: ApplicationConfig = {
       {
         origin: 'https://demo.localess.org', // Replace it for your origin
         spaceId: 'MmaT4DL0kJ6nXIILUcQF', // Replace it for your spaceId
-        token: 'YOUR_PUBLIC_TOKEN', // Public token — overridden server-side by app.config.server.ts's secret token
+        token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your Public token
         debug: true,
         enableSync: true,
       },
