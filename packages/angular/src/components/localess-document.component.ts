@@ -2,14 +2,14 @@ import { ChangeDetectionStrategy, Component, effect, inject, input, linkedSignal
 import type { Content, ContentData } from '@localess/client';
 
 import { LocalessSyncService } from '../services/sync.service';
-import { LocalessComponent } from './localess-component.component';
+import { LocalessComponentDirective } from '../directives/localess-component.directive';
 
 /**
  * Renders a full `Content` response and keeps it in sync with the Localess Visual Editor.
  *
- * Wraps {@link LocalessComponent} with a signal seeded from `document().data`, and subscribes
- * once to `LocalessSyncService.onChange` so `input`/`change` events replace the rendered content
- * without a full page reload — no manual sync wiring needed in consumer code.
+ * Wraps the `[llComponent]` directive with a signal seeded from `document().data`, and
+ * subscribes once to `LocalessSyncService.onChange` so `input`/`change` events replace the
+ * rendered content without a full page reload — no manual sync wiring needed in consumer code.
  *
  * Sync only activates when `LocalessSyncService.enabled()` is `true` (`enableSync: true` was
  * passed to `provideLocaless`, running in the browser, inside the Visual Editor iframe).
@@ -22,10 +22,10 @@ import { LocalessComponent } from './localess-component.component';
 @Component({
   selector: 'll-document',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LocalessComponent],
+  imports: [LocalessComponentDirective],
   template: `
     @if (contentData(); as data) {
-      <ll-component [data]="data" [links]="document().links" [references]="document().references" [assets]="document().assets" />
+      <ng-container [llComponent]="data" [links]="document().links" [references]="document().references" [assets]="document().assets" />
     } @else {
       <p><b>LocalessDocument</b> property <b>document.data</b> is not provided.</p>
     }

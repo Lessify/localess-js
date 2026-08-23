@@ -173,26 +173,26 @@ export class SlugComponent {
 }
 ```
 
-### `<ll-component>` — render a schema item or list
+### `[llComponent]` — render a single schema item
 
-Used by `<ll-document>` internally, and directly useful inside your own schema components to render nested content (e.g. a page's `body` array):
+Used by `<ll-document>` internally, and directly useful inside your own schema components to render a nested schema item. Apply it to a plain `ng-container`:
 
 ```html
 <!-- inside a schema component's own template -->
-<ll-component [data]="data().body" [links]="links()" [references]="references()" [assets]="assets()" />
+<ng-container [llComponent]="data().hero" [links]="links()" [references]="references()" [assets]="assets()" />
 ```
 
-`data` accepts a single `ContentData` item or an array — pass a schema's body field straight through, no `@for` loop required.
+It resolves the item's `_schema` against the registry and creates the matching component with `ViewContainerRef.createComponent`, directly at the `ng-container`'s position — no wrapper element is inserted, so the component renders as a direct sibling of whatever its parent's CSS (e.g. Grid/Flexbox) expects.
 
-### `[llComponent]` — low-level directive
+Recreates the rendered component only when `_schema` changes; otherwise the existing instance is reused and just gets updated `data`/`links`/`references`/`assets` inputs, so unrelated content edits don't tear down component state.
 
-`<ll-component>` is a thin wrapper around this attribute directive, which does the actual dynamic creation via `ViewContainerRef`. Reach for it directly only if you need to place it somewhere other than inside a plain `<ng-container>` loop:
+For an array field (e.g. a page's `body`), loop it yourself with `@for` — `@for` already handles keyed add/remove/reorder, and neither it nor `ng-container` produce a DOM element, so nesting stays wrapper-free at any depth:
 
 ```html
-<ng-container [llComponent]="item" [links]="links()" [references]="references()" [assets]="assets()" />
+@for (item of data().body; track item._id) {
+  <ng-container [llComponent]="item" [links]="links()" [references]="references()" [assets]="assets()" />
+}
 ```
-
-It recreates the rendered component only when `_schema` changes — updating `data` on an existing instance (e.g. a live edit to the same block) does not tear down component state.
 
 ### Unregistered schema keys
 

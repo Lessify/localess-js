@@ -13,7 +13,6 @@ export * from './services/content.service';
 export * from './services/sync.service';
 export * from './services/component-resolver.service';
 export * from './components/schema.component';
-export * from './components/localess-component.component';
 export * from './components/localess-document.component';
 export * from './directives/content.directive';
 export * from './directives/localess-component.directive';

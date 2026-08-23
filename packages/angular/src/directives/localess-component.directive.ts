@@ -23,9 +23,16 @@ import { LocalessComponentResolver } from '../services/component-resolver.servic
  * otherwise reuses the existing instance and updates its `data`/`links`/`references`/`assets`
  * inputs, so unrelated content edits don't tear down component state.
  *
+ * Renders directly at this directive's `ng-container` anchor — no wrapper element — so to
+ * render a list, apply it inside an `@for` block rather than passing an array:
+ *
  * @example
  * ```html
  * <ng-container [llComponent]="content.data" [links]="content.links" [references]="content.references" [assets]="content.assets" />
+ *
+ * @for (item of data().body; track item._id) {
+ *   <ng-container [llComponent]="item" [links]="links()" [references]="references()" [assets]="assets()" />
+ * }
  * ```
  */
 @Directive({

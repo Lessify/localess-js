@@ -110,11 +110,16 @@ provideLocaless(
 <!-- top-level: renders a full Content response, wires up Visual Editor sync internally -->
 <ll-document [document]="content()" />
 
-<!-- inside a schema component: renders a nested schema item or array (e.g. a body field) -->
-<ll-component [data]="data().body" [links]="links()" [references]="references()" [assets]="assets()" />
+<!-- inside a schema component: renders a single nested schema item -->
+<ng-container [llComponent]="data().hero" [links]="links()" [references]="references()" [assets]="assets()" />
+
+<!-- for an array field (e.g. a body field), loop it with @for -->
+@for (item of data().body; track item._id) {
+  <ng-container [llComponent]="item" [links]="links()" [references]="references()" [assets]="assets()" />
+}
 ```
 
-`<ll-component>` (and the lower-level `[llComponent]` directive it wraps) resolves each item's `_schema` via the registry and creates the matching component with `ViewContainerRef.createComponent`, recreating it only when `_schema` changes. Registered components aren't required to extend `SchemaComponent` — only the inputs (`data`/`links`/`references`/`assets`) a component actually declares are set, so a fallback commonly only needs `data`.
+`[llComponent]` resolves an item's `_schema` via the registry and creates the matching component with `ViewContainerRef.createComponent` directly at the `ng-container` anchor — no wrapper element — recreating the component only when its `_schema` changes. Registered components aren't required to extend `SchemaComponent` — only the inputs (`data`/`links`/`references`/`assets`) a component actually declares are set, so a fallback commonly only needs `data`.
 
 ## Components
 

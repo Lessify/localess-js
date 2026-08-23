@@ -3,7 +3,9 @@
     <h1 class="text-center" data-ll-field="title">{{data.title}}</h1>
     <p class="text-center whitespace-pre-line" data-ll-field="description">{{data.description}}</p>
     <div class="flex justify-center gap-2">
-      <ll-component [data]="data.buttons" [links]="links()" [references]="references()" [assets]="assets()" />
+      @for (button of data.buttons; track button._id) {
+        <ng-container [llComponent]="button" [links]="links()" [references]="references()" [assets]="assets()" />
+      }
     </div>
   </main>
 }

@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { LocalessComponent, SchemaComponent } from '@localess/angular';
+import { LocalessComponentDirective, SchemaComponent } from '@localess/angular';
 import { Page } from '../../../models/localess';
 
 @Component({
   selector: 'app-page',
-  imports: [LocalessComponent],
+  imports: [LocalessComponentDirective],
   templateUrl: './page.component.html',
   styleUrl: './page.component.scss',
 })
