@@ -1,5 +1,5 @@
 <div class="flex flex-col w-full gap-8 mx-auto max-w-5xl">
-  <header class="py-8">
+  <header class="flex items-center justify-center gap-4 py-8">
     <nav class="flex justify-center">
       <ul
         class="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
@@ -12,6 +12,12 @@
         }
       </ul>
     </nav>
+    <button
+      type="button"
+      (click)="themeService.toggle()"
+      class="flex size-9 items-center justify-center rounded-full bg-white/90 text-sm shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:ring-white/10">
+      {{ themeService.theme() === 'dark' ? '☀️' : '🌙' }}
+    </button>
   </header>
   <router-outlet />
 </div>
