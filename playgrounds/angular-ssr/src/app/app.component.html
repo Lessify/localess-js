@@ -18,6 +18,7 @@
     <button
       type="button"
       (click)="themeService.toggle()"
+      aria-label="Toggle theme"
       class="flex size-9 items-center justify-center rounded-full bg-white/90 text-sm shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:ring-white/10">
       {{ themeService.theme() === 'dark' ? '☀️' : '🌙' }}
     </button>
