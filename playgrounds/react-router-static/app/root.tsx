@@ -9,6 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import { LOCALES } from "~/shared/utils/locales";
+import { ThemeToggle } from "~/components/theme-toggle";
 import "./app.css";
 import "virtual:localess-init";
 
@@ -29,7 +30,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <div className="flex flex-col w-full gap-8 mx-auto max-w-5xl">
-          <header className="py-8">
+          <header className="flex items-center justify-center gap-4 py-8">
             <nav className="flex justify-center">
               <ul className="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
                 {LOCALES.map(item => (
@@ -45,6 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 ))}
               </ul>
             </nav>
+            <ThemeToggle />
           </header>
           {children}
         </div>

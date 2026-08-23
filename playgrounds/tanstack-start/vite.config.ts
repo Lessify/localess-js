@@ -19,7 +19,7 @@ const config = defineConfig({
       enableSync: true,
       debug: true,
       //componentsDir: 'src/shared/components/localess',
-      components: { Page: './shared/components/localess/page.tsx' },
+      components: { Page: './shared/components/localess/page.tsx', Button: './shared/components/localess/button.tsx' },
     }),
     tanstackStart(),
     viteReact(),

@@ -1,5 +1,6 @@
 import {localessInit} from "@localess/react/ssr";
 import {PageLocaless} from "@/shared/components/localess/page";
+import {ButtonLocaless} from "@/shared/components/localess/button";
 
 export const localessClient = localessInit({
   origin: "https://demo.localess.org", // Replace it for your origin
@@ -7,7 +8,8 @@ export const localessClient = localessInit({
   token: "Y4rvboPnyzVeC7LddEK5", // Replace it for your token
   debug: true,
   components: {
-    'Page': PageLocaless
+    'Page': PageLocaless,
+    'Button': ButtonLocaless
   }
 })
 

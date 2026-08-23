@@ -12,8 +12,11 @@ export default defineConfig({
       token: "Y4rvboPnyzVeC7LddEK5", // Replace it for your token — shipped to the browser bundle too, see KNOWN GAP on localessVite()
       enableSync: true,
       debug: true,
-      componentsDir: "app",
-      components: { Page: "./shared/components/localess/page.tsx" },
+      componentsDir: "app/shared/components/localess",
+      components: {
+        Page: "./page.tsx",
+        Button: "./button.tsx",
+      },
     }),
     reactRouter(),
   ],

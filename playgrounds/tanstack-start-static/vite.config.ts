@@ -50,7 +50,7 @@ export default defineConfig(async () => {
         spaceId: 'MmaT4DL0kJ6nXIILUcQF', // Replace it for your spaceId
         token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token
         debug: true,
-        components: { Page: './shared/components/localess/page.tsx' },
+        components: { Page: './shared/components/localess/page.tsx', Button: './shared/components/localess/button.tsx' },
       }),
       tanstackStart({
         prerender: {

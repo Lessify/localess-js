@@ -17,7 +17,7 @@ const { title = 'Localess Astro Playground', locale } = Astro.props;
   </head>
   <body>
     <div class="flex flex-col w-full gap-8 mx-auto max-w-5xl">
-      <header class="py-8">
+      <header class="flex items-center justify-center gap-4 py-8">
         <nav class="flex justify-center">
           <ul class="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
             {
@@ -39,8 +39,42 @@ const { title = 'Localess Astro Playground', locale } = Astro.props;
             }
           </ul>
         </nav>
+        <button
+          id="theme-toggle"
+          type="button"
+          class="flex size-9 items-center justify-center rounded-full bg-white/90 text-sm shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:ring-white/10"
+          aria-label="Toggle theme"
+        >
+          🌙
+        </button>
       </header>
       <slot />
     </div>
+
+    <script>
+      const STORAGE_KEY = 'theme';
+      const root = document.documentElement;
+      const toggle = document.getElementById('theme-toggle');
+
+      function getInitialTheme() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored === 'light' || stored === 'dark') return stored;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+
+      function applyTheme(theme: string) {
+        root.classList.toggle('dark', theme === 'dark');
+        if (toggle) toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        localStorage.setItem(STORAGE_KEY, theme);
+      }
+
+      let theme = getInitialTheme();
+      applyTheme(theme);
+
+      toggle?.addEventListener('click', () => {
+        theme = theme === 'dark' ? 'light' : 'dark';
+        applyTheme(theme);
+      });
+    </script>
   </body>
 </html>

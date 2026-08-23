@@ -1,5 +1,6 @@
 import {localessInit} from "@localess/react/rsc";
 import {PageLocaless} from "@/shared/components/localess/page";
+import {ButtonLocaless} from "@/shared/components/localess/button";
 
 export const localessClient = localessInit({
   origin: "https://demo.localess.org", // Replace it for your origin
@@ -8,7 +9,8 @@ export const localessClient = localessInit({
   debug: true,
   enableSync: true,
   components: {
-    'Page': PageLocaless
+    'Page': PageLocaless,
+    'Button': ButtonLocaless
   }
 })
 

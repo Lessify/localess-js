@@ -1,4 +1,4 @@
-import {LocalessComponentProps, localessEditable, localessEditableField} from "@localess/react";
+import {LocalessComponent, LocalessComponentProps, localessEditable, localessEditableField} from "@localess/react";
 import {Page} from "@/shared/models/localess";
 
 export type PageLocalessProps = LocalessComponentProps<Page>
@@ -11,5 +11,10 @@ export function PageLocaless({data}:PageLocalessProps) {
     <p {...localessEditableField('description')} className="text-center whitespace-pre-line">
       {data.description}
     </p>
+    <div className="flex justify-center gap-2">
+      {data.buttons?.map(button => (
+        <LocalessComponent key={button._id} data={button} />
+      ))}
+    </div>
   </main>
 }
