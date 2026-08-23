@@ -1,87 +1,40 @@
-# Welcome to React Router!
+# Localess + React Router v7 (Static Prerendering)
 
-A modern, production-ready template for building full-stack React applications using React Router.
+The static-prerendering counterpart to the `react-router` playground: `ssr: false` with an explicit `prerender()` path list in `react-router.config.ts`, so the whole site is built to static HTML.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## What this demonstrates
 
-## Features
+- The "two client instances" pattern documented in [docs/react.md](https://github.com/Lessify/localess-js/blob/main/docs/react.md): `react-router.config.ts`'s `prerender()` runs as plain Node, before any Vite module graph exists, so it can't reach the `localessVite()`-managed `localessInit()` singleton. It builds a **second, standalone client** via `localessClient` from `@localess/react/ssr` purely to enumerate every locale × slug path to prerender — this is expected, not a bug to dedupe
+- The same `localessVite()` setup as `react-router` for the actual page rendering at build time
+- Same active-locale nav link + theme toggle UX as the SSR variant, now baked into static HTML
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
-
-## Getting Started
-
-### Installation
-
-Install the dependencies:
+## Run it
 
 ```bash
 npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+Open the local URL printed in the terminal. Run `npm run build` to produce the static site.
 
-## Building for Production
+## Point it at your own Localess space
 
-Create a production build:
+Both places need updating — they use independent clients:
 
-```bash
-npm run build
-```
+1. `vite.config.ts` — the `localessVite({...})` options used for the actual build
+2. `react-router.config.ts` — the standalone `localessClient({...})` used only to enumerate prerender paths
 
-## Deployment
+Replace `origin`, `spaceId`, and `token` in both (pre-filled against a shared public demo space) with your own.
 
-### Docker Deployment
+## Key files
 
-To build and run using Docker:
+| File | Shows |
+| --- | --- |
+| `react-router.config.ts` | Standalone `localessClient` for `prerender()` path enumeration |
+| `vite.config.ts` | `localessVite()` plugin setup for the build itself |
+| `app/routes/catch-all.tsx` | Static route rendering |
+| `app/shared/utils/route.ts` | `resolveLocaleAndSlug` |
 
-```bash
-docker build -t my-app .
+## Learn more
 
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+- [Localess React docs — Static Prerendering: Two Client Instances Are Expected](https://github.com/Lessify/localess-js/blob/main/docs/react.md)

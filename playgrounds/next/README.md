@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Localess + Next.js (App Router / RSC)
 
-## Getting Started
+A [Next.js](https://nextjs.org) App Router app rendering [Localess](https://github.com/Lessify/localess) content via `@localess/react/rsc`. Bootstrapped with `create-next-app`; see [docs/react.md](https://github.com/Lessify/localess-js/blob/main/docs/react.md) and [`@localess/react`'s SKILL.md](https://github.com/Lessify/localess-js/blob/main/packages/react/SKILL.md) for the full API this playground exercises.
 
-First, run the development server:
+## What this demonstrates
+
+- Server/Client component split with `@localess/react/rsc` — `localessInit()` in `app/layout.tsx`, content fetched in a Server Component, live sync handled by `LocalessDocument`
+- A `[[...path]]` catch-all page (`src/app/[[...path]]/page.tsx`) resolving any CMS slug, including the root `/` as `home`
+- Locale-prefixed routing with an active-locale nav link indicator and a light/dark theme toggle (`src/components/theme-toggle.tsx`) — these two are plain UX patterns built on top of the SDK, not part of its public API
+- A schema component registry under `src/shared/components/localess/`
+
+## Run it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Point it at your own Localess space
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The Localess config in `src/shared/utils/locales.ts` (`localessInit(...)`) is pre-filled with a public read-only token against a shared demo space (`https://demo.localess.org`). Replace `origin`, `spaceId`, and `token` there with your own space's values to use your own content. Since this app renders via RSC, the token is read server-side only — see the security note in [docs/client.md](https://github.com/Lessify/localess-js/blob/main/docs/client.md).
 
-## Learn More
+## Key files
 
-To learn more about Next.js, take a look at the following resources:
+| File | Shows |
+| --- | --- |
+| `src/shared/utils/locales.ts` | `localessInit()`, component registration, supported locale list |
+| `src/app/[[...path]]/page.tsx` | Catch-all routing + slug resolution |
+| `src/shared/utils/route.ts` | `resolveLocaleAndSlug` — splitting a path into locale + CMS slug |
+| `src/shared/components/localess/page.tsx` | A registered schema component |
+| `src/components/theme-toggle.tsx` | Dark-mode toggle (not an SDK feature) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Learn more
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Localess React docs](https://github.com/Lessify/localess-js/blob/main/docs/react.md)
+- [Next.js Documentation](https://nextjs.org/docs)

@@ -1,40 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Localess + Next.js (Static Export)
 
-It mirrors the `next-latest` playground but targets Next.js static export (`output: 'export'` in `next.config.ts`). Because static export has no request-time server, it uses `@localess/react/ssr` — `getLocalessClient`, `localessInit`, `LocalessServerDocument` — instead of `@localess/react/rsc`, which requires a live server and is not compatible with static export (see that package's `SKILL.md`/`docs/react.md` "Export Variants"). `LocalessServerComponent`/`LocalessServerDocument` render without Visual Editor sync attributes, since live editing has no meaning once the HTML is pre-baked.
+The static-export counterpart to the `next` playground: same content model, but built with `output: 'export'` in `next.config.ts`, so there's no request-time server. It uses `@localess/react/ssr` (`getLocalessClient`, `localessInit`, `LocalessServerDocument`) instead of `/rsc` — the RSC export needs a live server and isn't compatible with static export (see [docs/react.md](https://github.com/Lessify/localess-js/blob/main/docs/react.md)'s "Export Variants").
 
-The locale switcher mirrors `next-latest`'s path-segment pattern (`/en`, `/fr`, …), but since static export has no request-time server, every locale is pre-rendered at build time via `generateStaticParams` in `app/[[...locale]]/page.tsx` — one static HTML file per locale, plus `/` for the default.
+## What this demonstrates
 
-## Getting Started
+- Fully static-exported Next.js app reading Localess content at **build time** — no live Visual Editor sync, since there's no server left once the HTML is baked
+- Every locale pre-rendered via `generateStaticParams()` in `src/app/[[...path]]/page.tsx` — one static HTML file per locale, plus `/` for the default
+- The same active-locale nav link + theme toggle UX patterns as the `next` playground, still purely client-side additions on top of the static HTML
 
-First, run the development server:
+## Run it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). Run `npm run build` to produce the static export in `out/`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Point it at your own Localess space
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Edit the `localessInit(...)` call in `src/shared/utils/locales.ts` — replace `origin`, `spaceId`, and `token` (pre-filled against a shared public demo space) with your own. Because this build is static, the token is only ever read at build time, never shipped to the browser.
 
-## Learn More
+## Key files
 
-To learn more about Next.js, take a look at the following resources:
+| File | Shows |
+| --- | --- |
+| `src/shared/utils/locales.ts` | `localessInit()` from `@localess/react/ssr`, component registration |
+| `src/app/[[...path]]/page.tsx` | `generateStaticParams()` enumerating every locale × slug combination |
+| `src/shared/utils/route.ts` | `resolveLocaleAndSlug` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Learn more
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Localess React docs — Static Rendering](https://github.com/Lessify/localess-js/blob/main/docs/react.md)
+- [Next.js static export docs](https://nextjs.org/docs/app/building-your-application/deploying/static-exports)

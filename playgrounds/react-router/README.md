@@ -1,87 +1,38 @@
-# Welcome to React Router!
+# Localess + React Router v7 (SSR)
 
-A modern, production-ready template for building full-stack React applications using React Router.
+[React Router v7](https://reactrouter.com/) in framework mode (`ssr: true`), rendering [Localess](https://github.com/Lessify/localess) content through `@localess/react`'s Vite plugin. TailwindCSS for styling.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## What this demonstrates
 
-## Features
+- `localessVite()` from `@localess/react/vite` in `vite.config.ts` — replaces a hand-written `localessInit()` call with a Vite plugin that wires up initialization and component auto-registration for both the SSR and client module graphs
+- A catch-all route (`app/routes/catch-all.tsx`) resolving any CMS slug through a loader
+- An active-locale nav link indicator and light/dark theme toggle (`app/components/theme-toggle.tsx`) in `app/root.tsx` — UX patterns built on the SDK, not part of its API
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
-
-## Getting Started
-
-### Installation
-
-Install the dependencies:
+## Run it
 
 ```bash
 npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+Open the local URL printed in the terminal (Vite's default is `http://localhost:5173`).
 
-## Building for Production
+## Point it at your own Localess space
 
-Create a production build:
+Edit the `localessVite({...})` options in `vite.config.ts` — replace `origin`, `spaceId`, and `token` (pre-filled against a shared public demo space) with your own.
 
-```bash
-npm run build
-```
+> `localessVite()`'s `token` option is bundled into the client — there's no public/secret token split for this plugin yet. Treat it as a public value (see the "Known gap" note in [`@localess/react`'s SKILL.md](https://github.com/Lessify/localess-js/blob/main/packages/react/SKILL.md)).
 
-## Deployment
+## Key files
 
-### Docker Deployment
+| File | Shows |
+| --- | --- |
+| `vite.config.ts` | `localessVite()` plugin setup, `componentsDir` + explicit `components` map |
+| `app/routes/catch-all.tsx` | Loader-based slug resolution and rendering |
+| `app/shared/utils/route.ts` | `resolveLocaleAndSlug` |
+| `app/root.tsx` | Active-locale nav links + theme toggle |
 
-To build and run using Docker:
+## Learn more
 
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+- [Localess React docs — Vite Plugin for SSR Frameworks](https://github.com/Lessify/localess-js/blob/main/docs/react.md)
+- [React Router docs](https://reactrouter.com/)
