@@ -1,37 +1,11 @@
 import { forwardRef } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../../console';
-import { Assets, ContentData, Links, References } from '../models';
+import type { LocalessComponentProps } from '../models';
 import { getComponent, getFallbackComponent } from '../state';
 import { localessEditable } from '../utils';
 
-/**
- * Props for {@link LocalessComponent}.
- *
- * @template T - The content data shape. Defaults to the base {@link ContentData} type.
- */
-export type LocalessComponentProps<T extends ContentData = ContentData> = {
-  /**
-   * The content data object to render. Must have a `_schema` field that matches a key
-   * in the component registry configured via `localessInit`.
-   */
-  data: T;
-  /**
-   * Optional map of content links keyed by link ID.
-   * Pass through to child components so they can resolve {@link ContentLink} values with `findLink`.
-   */
-  links?: Links;
-  /**
-   * Optional map of resolved content references keyed by reference ID.
-   * Pass through to child components that consume referenced content.
-   */
-  references?: References;
-  /**
-   * Optional map of resolved content assets keyed by asset ID.
-   * Pass through to child components that consume asset content.
-   */
-  assets?: Assets;
-};
+export type { LocalessComponentProps } from '../models';
 
 /**
  * Dynamic schema-to-component renderer for use in SPA and client-side contexts.

@@ -1,5 +1,6 @@
 import { LocalessClientOptions } from '@localess/client';
-import type React from 'react';
+
+import type { AnyLocalessComponent } from './component';
 
 export type { LocalessClient } from '@localess/client';
 
@@ -26,13 +27,13 @@ export type LocalessOptions = LocalessClientOptions & {
    * }
    * ```
    */
-  components?: Record<string, React.ElementType>;
+  components?: Record<string, AnyLocalessComponent>;
   /**
    * Fallback React component rendered when `_schema` has no match in the registry.
    * Receives the same `data`, `links`, and `references` props as any registered component.
    * If omitted, an inline error message is rendered instead.
    */
-  fallbackComponent?: React.ElementType;
+  fallbackComponent?: AnyLocalessComponent;
   /**
    * When `true`, injects the Localess Visual Editor sync script (`sync-v1.js`) into
    * `<head>` so that `input` and `change` events from the editor reach the app.

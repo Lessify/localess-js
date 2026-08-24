@@ -12,7 +12,7 @@ import {
 import type React from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';
-import { type ContentAsset, type LocalessOptions } from './models';
+import { type AnyLocalessComponent, type ContentAsset, type LocalessOptions } from './models';
 
 let _origin: string | undefined = undefined;
 let _client: LocalessClient | undefined = undefined;
@@ -109,9 +109,10 @@ export function getLocalessClient(): LocalessClient {
  * Overwrites any previously registered component for the same key.
  *
  * @param key - The schema key (e.g. `'hero-section'`).
- * @param component - The React component to render for this schema key.
+ * @param component - The React component to render for this schema key. Must accept
+ *   {@link LocalessComponentProps} (`data`, plus optional `links`/`references`/`assets`).
  */
-export function registerComponent(key: string, component: React.ElementType): void {
+export function registerComponent(key: string, component: AnyLocalessComponent): void {
   _components[key] = component;
 }
 
@@ -131,9 +132,10 @@ export function unregisterComponent(key: string): void {
  * Useful when you need to swap all components at once (e.g. lazy-loaded registry).
  * Any previously registered components (including those set via `localessInit`) are discarded.
  *
- * @param components - A record mapping schema keys to React components.
+ * @param components - A record mapping schema keys to React components, each accepting
+ *   {@link LocalessComponentProps}.
  */
-export function setComponents(components: Record<string, React.ElementType>): void {
+export function setComponents(components: Record<string, AnyLocalessComponent>): void {
   _components = components;
 }
 
@@ -160,9 +162,10 @@ export function getComponent(key: string): React.ElementType | undefined {
  * The fallback receives the same `data`, `links`, and `references` props as any
  * registered component, so it can render a generic placeholder or log the unknown schema.
  *
- * @param fallbackComponent - The React component to use as the fallback.
+ * @param fallbackComponent - The React component to use as the fallback. Must accept
+ *   {@link LocalessComponentProps} (`data`, plus optional `links`/`references`/`assets`).
  */
-export function setFallbackComponent(fallbackComponent: React.ElementType): void {
+export function setFallbackComponent(fallbackComponent: AnyLocalessComponent): void {
   _fallbackComponent = fallbackComponent;
 }
 
