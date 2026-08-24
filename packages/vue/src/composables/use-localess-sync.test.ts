@@ -1,6 +1,6 @@
+import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
-import { mount } from '@vue/test-utils';
 
 import * as state from '../core/state';
 import { useLocalessSync } from './use-localess-sync';

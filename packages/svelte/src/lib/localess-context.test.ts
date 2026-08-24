@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { flushSync, mount, unmount } from 'svelte';
+import { describe, expect, it } from 'vitest';
 
 import Harness from './__fixtures__/context-harness.svelte';
 

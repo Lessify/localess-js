@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
+import { describe, expect, it, vi } from 'vitest';
 
 import * as state from '../core/state';
 import { localessSync } from './localess-sync';

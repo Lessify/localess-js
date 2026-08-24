@@ -10,7 +10,11 @@ export interface ManualComponentRegistration {
 }
 
 function normalizePath(p: string): string {
-  return `/${p.trim().replace(/^\/+/, '').replace(/\/+$/, '').replace(/\/{2,}/g, '/')}`;
+  return `/${p
+    .trim()
+    .replace(/^\/+/, '')
+    .replace(/\/+$/, '')
+    .replace(/\/{2,}/g, '/')}`;
 }
 
 export function generateComponentsModuleCode(componentsDir: string, manualRegistrations: ManualComponentRegistration[]): string {
@@ -21,9 +25,7 @@ export function generateComponentsModuleCode(componentsDir: string, manualRegist
       ? `import { ${r.exportName} as __manual_component_${i}__ } from '${r.importPath}';`
       : `import __manual_component_${i}__ from '${r.importPath}';`
   );
-  const manualAssignments = manualRegistrations.map(
-    (r, i) => `localessComponents[${JSON.stringify(r.key)}] = __manual_component_${i}__;`
-  );
+  const manualAssignments = manualRegistrations.map((r, i) => `localessComponents[${JSON.stringify(r.key)}] = __manual_component_${i}__;`);
 
   return `
     ${importStatements.join('\n    ')}
