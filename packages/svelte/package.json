@@ -1,0 +1,86 @@
+{
+  "name": "@localess/svelte",
+  "version": "3.4.1",
+  "description": "Svelte JavaScript/TypeScript SDK for Localess's API.",
+  "keywords": ["localess", "sdk", "api", "client", "svelte", "javascript", "typescript"],
+  "author": "Lessify",
+  "homepage": "https://github.com/Lessify/localess-js",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lessify/localess-js.git",
+    "directory": "packages/svelte"
+  },
+  "bugs": {
+    "url": "https://github.com/Lessify/localess-js/issues"
+  },
+  "files": ["dist", "!dist/**/*.test.*", "!dist/__fixtures__", "SKILL.md"],
+  "type": "module",
+  "svelte": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "svelte": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite/index.d.ts",
+      "import": "./dist/vite/index.mjs",
+      "require": "./dist/vite/index.js"
+    }
+  },
+  "private": false,
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "npm run build:lib && npm run build:vite-plugin && publint",
+    "build:lib": "svelte-kit sync && svelte-package",
+    "build:vite-plugin": "tsc -p tsconfig.vite-plugin.json && vite build --config vite.plugin.config.mts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
+  "dependencies": {
+    "@localess/client": "*",
+    "@tiptap/core": "^3.22.5",
+    "@tiptap/extension-bold": "^3.22.5",
+    "@tiptap/extension-bullet-list": "^3.22.5",
+    "@tiptap/extension-code": "^3.22.5",
+    "@tiptap/extension-code-block-lowlight": "^3.22.5",
+    "@tiptap/extension-document": "^3.22.5",
+    "@tiptap/extension-heading": "^3.22.5",
+    "@tiptap/extension-history": "^3.22.5",
+    "@tiptap/extension-italic": "^3.22.5",
+    "@tiptap/extension-link": "^3.22.5",
+    "@tiptap/extension-list-item": "^3.22.5",
+    "@tiptap/extension-ordered-list": "^3.22.5",
+    "@tiptap/extension-paragraph": "^3.22.5",
+    "@tiptap/extension-strike": "^3.22.5",
+    "@tiptap/extension-text": "^3.22.5",
+    "@tiptap/extension-underline": "^3.22.5",
+    "@tiptap/html": "^3.22.5",
+    "@tiptap/static-renderer": "^3.22.5"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-auto": "^7.0.1",
+    "@sveltejs/kit": "^2.70.3",
+    "@sveltejs/package": "^2.5.8",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/svelte": "^5.4.2",
+    "@types/node": "^24",
+    "jsdom": "^30.0.1",
+    "publint": "^0.3.24",
+    "svelte": "^5.56.10",
+    "svelte-check": "^4.7.6",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.16"
+  },
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

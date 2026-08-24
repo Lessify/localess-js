@@ -1,0 +1,227 @@
+# SKILL: @localess/svelte
+
+## Overview
+
+`@localess/svelte` is the **Svelte 5 integration layer** for Localess. It builds on `@localess/client` and adds:
+
+- A **component registry** mapping Localess schema keys to Svelte components, set up via `localessInit()` and Svelte context
+- `<LocalessComponent>` — dynamic content renderer
+- `localessEditable` — a Svelte action applying Visual Editor editable attributes
+- **Visual Editor sync** support via the `localessSync` store
+- **Rich text** rendering from Tiptap JSON via `localessRichText`
+- `@localess/svelte/vite` — Vite plugin for component auto-registration
+
+**Peer dependency:** Svelte `^5.0.0`.
+
+**Rendering-only package.** `@localess/svelte` does not fetch data for you. For CSR, call `getLocaless().getContentBySlug(...)` yourself. For SSR (e.g. SvelteKit), fetch with `@localess/client` directly in a `+page.server.ts` `load()` function, using a **secret** token — SvelteKit guarantees `.server.ts` files never reach the client bundle. See "SSR with SvelteKit" below.
+
+---
+
+## Installation
+
+```bash
+npm install @localess/svelte svelte
+```
+
+---
+
+## CSR Setup
+
+Call `localessInit()` once, synchronously, during a root component's initialization — this is a hard Svelte constraint (`setContext` only works during component init), so it must run at the top of a `<script>` block, typically in a root `+layout.svelte`, not inside `onMount` or a `+layout.ts`:
+
+```svelte
+<!-- +layout.svelte -->
+<script lang="ts">
+  import { localessInit } from '@localess/svelte';
+  import type { Snippet } from 'svelte';
+
+  let { children }: { children: Snippet } = $props();
+
+  localessInit({
+    origin: import.meta.env.VITE_LOCALESS_ORIGIN,
+    spaceId: import.meta.env.VITE_LOCALESS_SPACE_ID,
+    token: import.meta.env.VITE_LOCALESS_TOKEN, // public token — safe for the browser bundle
+    components: { page: Page, button: Button },
+    enableSync: true, // only meaningful inside the Localess Visual Editor iframe
+  });
+</script>
+
+{@render children()}
+```
+
+> **Security:** only ever pass a **public** (read-only) token here — this runs in the browser. Never pass a secret token to `localessInit`.
+
+---
+
+## `<LocalessComponent>`
+
+Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Always applies `localessEditable(data)`'s `data-ll-id`/`data-ll-schema` attributes to the rendered component's root.
+
+```svelte
+<script lang="ts">
+  import { LocalessComponent } from '@localess/svelte';
+  let { data }: { data: { title?: string; body?: any[] } } = $props();
+</script>
+
+<main>
+  <h1>{data.title}</h1>
+  {#each data.body ?? [] as item (item._id)}
+    <LocalessComponent data={item} />
+  {/each}
+</main>
+```
+
+Falls back to `fallbackComponent` (if registered) when the schema key is unregistered, or renders an inline error message as a last resort.
+
+---
+
+## `localessEditable` action
+
+Applies the same `data-ll-id`/`data-ll-schema` attributes directly to an element, for cases not going through `<LocalessComponent>`:
+
+```svelte
+<section use:localessEditable={data}>
+  ...
+</section>
+```
+
+---
+
+## `getLocaless()`
+
+Returns the client from Svelte context. Throws if called outside a component tree where `localessInit()` ran.
+
+```svelte
+<script lang="ts">
+  import { getLocaless } from '@localess/svelte';
+
+  const content = await getLocaless().getContentBySlug('home');
+</script>
+```
+
+---
+
+## `localessSync` store
+
+Subscribes to Visual Editor bridge events (`input`, `change`, etc.) and exposes the latest matching event as a readable store. No-ops when `enableSync` was not set (or outside the Visual Editor iframe).
+
+```svelte
+<script lang="ts">
+  import { localessSync } from '@localess/svelte';
+
+  const latest = localessSync(['input', 'change']);
+</script>
+
+<p>{$latest?.data}</p>
+```
+
+---
+
+## `localessRichText` store
+
+Renders a Tiptap JSON rich-text document to HTML.
+
+```svelte
+<script lang="ts">
+  import { localessRichText } from '@localess/svelte';
+
+  let { data }: { data: { body?: unknown } } = $props();
+  const html = localessRichText(data.body as any);
+</script>
+
+{@html $html}
+```
+
+---
+
+## `@localess/svelte/vite` — Component Auto-Registration
+
+`localess(options)` returns a Vite plugin exposing `virtual:localess-svelte-components`, a glob-based auto-registry of every `.svelte` file under `componentsDir` (keyed by kebab-cased filename), merged with explicit `components` path overrides (suffix a path with `#ExportName` for a named export; a bare path assumes a default export — manual entries win on key collision).
+
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite';
+import { localess } from '@localess/svelte/vite';
+
+export default defineConfig({
+  plugins: [
+    localess({
+      componentsDir: 'src/lib/components/localess', // default: 'src'
+      components: { hero: 'HeroOverride.svelte' },
+    }),
+  ],
+});
+```
+
+```typescript
+// +layout.svelte's <script>
+// @ts-expect-error -- virtual module generated by the plugin above
+import { localessComponents } from 'virtual:localess-svelte-components';
+
+localessInit({ origin, spaceId, token, components: localessComponents });
+```
+
+> This plugin only ever handles a **public**, client-graph-only registration flow — it does not do SSR data-fetching, and unlike `@localess/react/vite` it never sees or emits a secret token. For SSR, fetch with `@localess/client` directly server-side (see below).
+
+---
+
+## SSR with SvelteKit
+
+`@localess/svelte` doesn't own data-fetching, so SSR looks like any other SvelteKit data flow: fetch with `@localess/client` directly in a `+page.server.ts` `load()` function (secret token), and pass the result to the page via `data`.
+
+```typescript
+// src/routes/[...slug]/+page.server.ts
+import { localessClient } from '@localess/client';
+import { LOCALESS_ORIGIN, LOCALESS_SPACE_ID, LOCALESS_TOKEN } from '$env/static/private';
+import type { PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ params }) => {
+  const client = localessClient({
+    origin: LOCALESS_ORIGIN,
+    spaceId: LOCALESS_SPACE_ID,
+    token: LOCALESS_TOKEN, // secret, server-only
+  });
+  return { content: await client.getContentBySlug(params.slug || 'home') };
+};
+```
+
+```svelte
+<!-- src/routes/[...slug]/+page.svelte -->
+<script lang="ts">
+  import { LocalessComponent } from '@localess/svelte';
+  import type { PageData } from './$types';
+
+  let { data }: { data: PageData } = $props();
+</script>
+
+<LocalessComponent data={data.content.data} />
+```
+
+SvelteKit's own `data`-prop serialization hydrates the server-fetched result to the client — `@localess/svelte` needs no hydration mechanism of its own. Call `localessInit()` in the root `+layout.svelte` with a **public** token only if you also want Visual Editor sync on top.
+
+---
+
+## Exports Reference
+
+```typescript
+// Context & init
+export { localessInit }             // Initializes the client + component registry, sets Svelte context
+export { getLocaless }              // Returns the client from context
+
+// Rendering
+export { LocalessComponent }        // Dynamic schema-to-component renderer
+export { localessEditable }         // use:localessEditable action
+
+// Reactivity
+export { localessSync }             // Visual Editor bridge event subscription, returns a Readable
+export { localessRichText }         // Tiptap JSON -> HTML, returns a Readable<string>
+
+// Error handling (re-exported from @localess/client)
+export { LocalessApiError }
+```
+
+```typescript
+// @localess/svelte/vite
+export { localess }                                 // Vite plugin factory
+export { VIRTUAL_LOCALESS_SVELTE_COMPONENTS_MODULE_ID } // 'virtual:localess-svelte-components'
+```

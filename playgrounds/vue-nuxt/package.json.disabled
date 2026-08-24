@@ -1,0 +1,17 @@
+{
+  "name": "playground-vue-nuxt",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --https",
+    "build": "nuxt build",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "@localess/client": "*",
+    "@localess/vue": "*",
+    "nuxt": "^3.15.0",
+    "vue": "^3.5.13"
+  }
+}

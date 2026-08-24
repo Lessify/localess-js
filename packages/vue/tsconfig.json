@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "allowJs": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "outDir": "dist",
+    "lib": ["ESNext", "DOM"],
+    "esModuleInterop": true,
+    "declaration": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/*.ts", "src/**/*.ts", "src/**/*.vue"],
+  "exclude": ["node_modules"]
+}

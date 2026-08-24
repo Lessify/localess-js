@@ -1,0 +1,87 @@
+{
+  "name": "@localess/vue",
+  "version": "3.4.1",
+  "description": "Vue JavaScript/TypeScript SDK for Localess's API.",
+  "keywords": [
+    "localess",
+    "sdk",
+    "api",
+    "client",
+    "vue",
+    "javascript",
+    "typescript"
+  ],
+  "author": "Lessify",
+  "homepage": "https://github.com/Lessify/localess-js",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lessify/localess-js.git",
+    "directory": "packages/vue"
+  },
+  "bugs": {
+    "url": "https://github.com/Lessify/localess-js/issues"
+  },
+  "files": ["dist", "SKILL.md"],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite/index.d.ts",
+      "import": "./dist/vite/index.mjs",
+      "require": "./dist/vite/index.js"
+    }
+  },
+  "private": false,
+  "license": "MIT",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "vue": ">=3.4"
+  },
+  "dependencies": {
+    "@localess/client": "*",
+    "@tiptap/core": "^3.22.5",
+    "@tiptap/extension-bold": "^3.22.5",
+    "@tiptap/extension-bullet-list": "^3.22.5",
+    "@tiptap/extension-code": "^3.22.5",
+    "@tiptap/extension-code-block-lowlight": "^3.22.5",
+    "@tiptap/extension-document": "^3.22.5",
+    "@tiptap/extension-heading": "^3.22.5",
+    "@tiptap/extension-history": "^3.22.5",
+    "@tiptap/extension-italic": "^3.22.5",
+    "@tiptap/extension-link": "^3.22.5",
+    "@tiptap/extension-list-item": "^3.22.5",
+    "@tiptap/extension-ordered-list": "^3.22.5",
+    "@tiptap/extension-paragraph": "^3.22.5",
+    "@tiptap/extension-strike": "^3.22.5",
+    "@tiptap/extension-text": "^3.22.5",
+    "@tiptap/extension-underline": "^3.22.5",
+    "@tiptap/html": "^3.22.5",
+    "@tiptap/static-renderer": "^3.22.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/language-core": "^3.3.11",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^20.9.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.16",
+    "vite-plugin-dts": "^5.0.0",
+    "vue": "^3.5.13"
+  },
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

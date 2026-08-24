@@ -10,9 +10,11 @@ This monorepo contains the official JavaScript/TypeScript SDKs for the Localess 
 | `@localess/react` | React integration: components, hooks, Visual Editor sync | `@localess/client` |
 | `@localess/angular` | Angular integration: components, directives, pipes, Visual Editor sync | `@localess/client` |
 | `@localess/astro` | Astro integration: native components, Visual Editor sync via reload | `@localess/client` |
+| `@localess/vue` | Vue integration: plugin, component, directive, composables, Visual Editor sync | `@localess/client` |
+| `@localess/svelte` | Svelte integration: context init, component, action, stores, Visual Editor sync | `@localess/client` |
 | `@localess/cli` | CLI for translations and type generation | `@localess/client` |
 
-`@localess/react`, `@localess/angular`, `@localess/astro`, and `@localess/cli` never depend on each other.
+`@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, `@localess/svelte`, and `@localess/cli` never depend on each other.
 
 **Requirements:** Node.js >= 24.0.0, npm >= 10.
 
@@ -22,9 +24,9 @@ This monorepo contains the official JavaScript/TypeScript SDKs for the Localess 
 
 2. **`@localess/client` has zero production dependencies.** Never add to `dependencies` in `packages/client/package.json`. `devDependencies` are fine. → [ADR 002](decisions/002-zero-production-deps.md)
 
-3. **Package boundaries.** `@localess/react`, `@localess/angular`, and `@localess/cli` all depend on `@localess/client`. They never depend on each other. → [ADR 005](decisions/005-package-boundary-discipline.md)
+3. **Package boundaries.** `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, `@localess/svelte`, and `@localess/cli` all depend on `@localess/client`. They never depend on each other. → [ADR 005](decisions/005-package-boundary-discipline.md)
 
-4. **Upstream check.** When changing `@localess/client`'s public API (add/remove/rename methods or types), check whether `@localess/react`, `@localess/angular`, and `@localess/cli` consume the changed surface and update them.
+4. **Upstream check.** When changing `@localess/client`'s public API (add/remove/rename methods or types), check whether `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, `@localess/svelte`, and `@localess/cli` consume the changed surface and update them.
 
 5. **SKILL.md sync.** When changing a package's public API, options, or behavior, update `packages/<name>/SKILL.md`. These files ship inside the npm packages for downstream AI agents.
 
@@ -37,6 +39,8 @@ npm run build
 # Build individual packages
 npm run build:client
 npm run build:react
+npm run build:vue
+npm run build:svelte
 npm run build:cli
 npm run build:angular
 
@@ -52,7 +56,8 @@ npx vitest run packages/cli/src/commands/login/login.test.ts  # single file
 ```
 
 Build tools per package:
-- `@localess/client`, `@localess/react`, `@localess/cli`: **Vite library mode** (`vite.config.ts`) → CJS + ESM + types
+- `@localess/client`, `@localess/react`, `@localess/vue`, `@localess/cli`: **Vite library mode** (`vite.config.ts`) → CJS + ESM + types
+- `@localess/svelte`: **`svelte-package`** (ESM-only) for the library surface, plus a separate Vite library-mode build for `/vite`
 - `@localess/angular`: **ng-packagr via Angular CLI** (`ng-package.json`) → `dist/` with main, `browser/`, `server/` sub-entries
 
 Tests use **vitest** everywhere, including `@localess/angular` (via the Angular CLI's `@angular/build:unit-test` builder with `runner: "vitest"`).
@@ -72,6 +77,8 @@ Tests use **vitest** everywhere, including `@localess/angular` (via the Angular 
 | [docs/client.md](client.md) | `@localess/client` — initialization, API methods, caching, types |
 | [docs/react.md](react.md) | `@localess/react` — export variants, components, hooks, sync patterns |
 | [docs/angular.md](angular.md) | `@localess/angular` — entry points, components, directives, pipes, sync |
+| [docs/vue.md](vue.md) | `@localess/vue` — plugin, component, directive, composables, Vite plugin, SSR |
+| [docs/svelte.md](svelte.md) | `@localess/svelte` — context init, component, action, stores, Vite plugin, SSR |
 | [docs/cli.md](cli.md) | `@localess/cli` — commands, credentials, CI/CD |
 | [docs/decisions/](decisions/) | ADRs — the WHY behind hard constraints |
 
