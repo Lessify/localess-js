@@ -8,16 +8,11 @@ Svelte 5 integration layer. Depends on `@localess/client`. Components never fetc
 
 `@localess/svelte`'s `core/state.ts` (client/registry/sync state) is a hand-ported near-duplicate of `@localess/vue`'s equivalent module — same function names and behavior, Vue's `Component` type swapped for Svelte's. ADR 005 forbids extracting this into a shared package, so keep this a manual-sync discipline: when fixing a bug here, check `packages/vue/src/core/state.ts` for the same bug.
 
-## Package Layout — Two Build Roots
+## Package Layout
 
-Unlike every other package in this repo, `@localess/svelte` has **two independent build roots**:
+`@localess/svelte` has a single build root: `src/lib/**` — the library surface (components, actions, stores, context), built by `svelte-package` (ESM-only, ships `.svelte` files as-is).
 
-- `src/lib/**` — the library surface (components, actions, stores, context), built by `svelte-package` (ESM-only, ships `.svelte` files as-is).
-- `src/vite/**` — the Vite plugin (`localess()`), built separately via plain `tsc` (declarations) + Vite library mode (JS), producing dual CJS/ESM.
-
-**Never move Vite-plugin files into `src/lib/vite/`.** `svelte-package` processes the entire `src/lib` tree with no exclude option in this tool version — a file placed there gets double-built (once by `svelte-package`, once by the dedicated Vite build) and the two outputs collide in `dist/`. This was a real bug hit during initial implementation; keep the two roots separate.
-
-`svelte-package` always wipes `dist/` before writing (there's no reliable way to make it preserve prior output), so the build order in `package.json`'s `build` script matters: `build:lib` (svelte-package) must run **first**, `build:vite-plugin` **second** (it only adds to `dist/vite/`, `emptyOutDir: false`), and `publint` **last** (it needs both to exist to validate the full `exports` map). Don't reorder this.
+There is no Vite plugin in this package. Component registration and client initialization both go through `localessInit()` (see "Hard Constraints" below) — pass a `components` map directly rather than auto-discovering it via a Vite virtual module. This was tried (a `src/vite/`-based `localess()` plugin mirroring `@localess/react/vite`) and removed: `localessInit()`'s `setContext` call only works when invoked synchronously during a component's own initialization, and a Vite virtual module's top-level code always finishes evaluating *before* the importing component's function body runs (per the ES module spec) — so a generated module can never safely call it. Don't reintroduce a Vite plugin here without solving that constraint first (e.g. dropping `setContext` in favor of the plain singleton `core/state.ts` already uses).
 
 `svelte-package` also has no way to exclude `*.test.*` files from `dist/` — they get shipped as `.test.js`/`.test.d.ts` alongside real source. This is handled at the `package.json` `files` field level instead, via negation patterns (`"!dist/**/*.test.*"`, `"!dist/__fixtures__"`) — `npm pack`/`npm publish` respect these even though the files still exist locally in `dist/` after a build. Don't try to "fix" this by deleting them from `dist/` in a build step; the negation-pattern approach is simpler and doesn't require a cleanup script.
 
@@ -55,23 +50,11 @@ Rules:
 
 **3. Update `packages/svelte/SKILL.md`.**
 
-## Extending the Vite Plugin
-
-The Vite plugin lives in `src/vite/` (not `src/lib/vite/` — see "Package Layout" above):
-- `vite-plugin-localess-components.ts` — `virtual:localess-svelte-components`, the component auto-registry.
-- `localess.ts` — `localess()`, the public entry point.
-
-Rules:
-- The virtual module is generated as a **string**, not a live JS value — a `vite.config.ts` option can't become a live cross-graph reference. Manual `components` overrides must stay file paths, resolved via `this.resolve`, never direct component references.
-- Unlike `@localess/react/vite`, this plugin is **single-graph, public-token-only by design** — it never sees or emits a secret token, and there is no `virtual:localess-init` equivalent. Don't add SSR/ssr-graph branching here; SSR data-fetching goes through the app's own `+page.server.ts` calling `@localess/client` directly (see `docs/svelte.md`).
-- New `.d.ts` output for this subpath comes from `tsconfig.vite-plugin.json` (plain `tsc --emitDeclarationOnly`), not `vite-plugin-dts` — that plugin's `outDir`/`entryRoot` options didn't produce correct paths for this custom-renamed single-file entry during initial implementation. Don't reintroduce it without verifying the exact output path first.
-- Add new tests to the matching `*.test.ts` file, following the existing string-content-assertion style (assert generated code contains expected substrings) rather than evaluating the generated code.
-
 ## Hard Constraints
 
 - **No data fetching in components.** `<LocalessComponent>`, `<LocalessDocument>`, and consumer components accept content (`data`, `assets`, `links`, `references`, or the full `document`) as props only.
 - **No dependency on `@localess/react`, `@localess/angular`, `@localess/vue`, or `@localess/cli`.** ADR 005 — depend only on `@localess/client`.
-- **No secret token anywhere in this package.** Only a public (read-only) token flows through `localessInit`/`localess()` (the Vite plugin).
+- **No secret token anywhere in this package.** Only a public (read-only) token flows through `localessInit`.
 - **`localessInit()` must be called during component initialization**, not inside `onMount`, an event handler, or a `+layout.ts` — Svelte's `setContext` requires it.
 
 ## Build
@@ -82,4 +65,4 @@ npm run build:svelte
 npm run build
 ```
 
-Runs, in order: `build:lib` (svelte-package), `build:vite-plugin` (tsc + Vite), `publint`. Output: `dist/index.js` + `.d.ts`, component `.svelte` files, `dist/vite/index.{js,mjs,d.ts}`.
+Runs, in order: `build:lib` (svelte-package), `publint`. Output: `dist/index.js` + `.d.ts`, component `.svelte` files.

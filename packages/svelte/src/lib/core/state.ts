@@ -12,14 +12,14 @@ import {
 } from '../models';
 
 export type LocalessSvelteInitOptions = LocalessClientOptions & {
-  components?: Record<string, Component>;
-  fallbackComponent?: Component;
+  components?: Record<string, Component<any>>;
+  fallbackComponent?: Component<any>;
   enableSync?: boolean;
 };
 
 let _client: LocalessClient | undefined = undefined;
-let _components: Record<string, Component> = {};
-let _fallbackComponent: Component | undefined = undefined;
+let _components: Record<string, Component<any>> = {};
+let _fallbackComponent: Component<any> | undefined = undefined;
 let _enableSync = false;
 let _syncPromise: Promise<void> | undefined = undefined;
 
@@ -44,11 +44,11 @@ export function getLocalessClient(): LocalessClient {
   return _client;
 }
 
-export function getComponent(key: string): Component | undefined {
+export function getComponent(key: string): Component<any> | undefined {
   return Object.hasOwn(_components, key) ? _components[key] : undefined;
 }
 
-export function getFallbackComponent(): Component | undefined {
+export function getFallbackComponent(): Component<any> | undefined {
   return _fallbackComponent;
 }
 
@@ -75,11 +75,11 @@ export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | '
 }
 
 /** @internal test-only helper to reset the component registry between test cases. */
-export function setComponentsForTest(components: Record<string, Component>): void {
+export function setComponentsForTest(components: Record<string, Component<any>>): void {
   _components = components;
 }
 
 /** @internal test-only helper to set the fallback component between test cases. */
-export function setFallbackComponentForTest(component: Component | undefined): void {
+export function setFallbackComponentForTest(component: Component<any> | undefined): void {
   _fallbackComponent = component;
 }

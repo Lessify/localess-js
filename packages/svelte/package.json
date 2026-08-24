@@ -23,20 +23,14 @@
       "types": "./dist/index.d.ts",
       "svelte": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./vite": {
-      "types": "./dist/vite/index.d.ts",
-      "import": "./dist/vite/index.mjs",
-      "require": "./dist/vite/index.js"
     }
   },
   "private": false,
   "license": "MIT",
   "scripts": {
     "dev": "vite dev",
-    "build": "npm run build:lib && npm run build:vite-plugin && publint",
+    "build": "npm run build:lib && publint",
     "build:lib": "svelte-kit sync && svelte-package",
-    "build:vite-plugin": "tsc -p tsconfig.vite-plugin.json && vite build --config vite.plugin.config.mts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

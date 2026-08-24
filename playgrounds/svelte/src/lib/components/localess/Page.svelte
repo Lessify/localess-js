@@ -1,12 +1,20 @@
 <script lang="ts">
-  import { LocalessComponent } from '@localess/svelte';
+  import { LocalessComponent, localessEditable } from '@localess/svelte';
+  import type { Page } from '../../../shared/models/localess';
 
-  let { data }: { data: { title?: string; body?: any[] } } = $props();
+  let { data }: { data: Page } = $props();
 </script>
 
-<main>
-  <h1>{data.title}</h1>
-  {#each data.body ?? [] as item (item._id)}
-    <LocalessComponent data={item} />
-  {/each}
+<main use:localessEditable={data} class="flex flex-col gap-4">
+  <h1 class="text-center">{data.title}</h1>
+  {#if data.description}
+    <p class="text-center whitespace-pre-line">{data.description}</p>
+  {/if}
+  {#if data.buttons?.length}
+    <div class="flex justify-center gap-2">
+      {#each data.buttons as button (button._id)}
+        <LocalessComponent data={button} />
+      {/each}
+    </div>
+  {/if}
 </main>

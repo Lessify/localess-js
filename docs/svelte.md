@@ -1,6 +1,6 @@
 # `@localess/svelte`
 
-Svelte 5 integration for Localess. Rendering-only: component registry, editable attributes, Visual Editor sync, rich-text rendering, and a Vite plugin for component auto-registration. Does not fetch data — see "SSR with SvelteKit" for how server-side fetching fits in.
+Svelte 5 integration for Localess. Rendering-only: component registry, editable attributes, Visual Editor sync, rich-text rendering. Does not fetch data — see "SSR with SvelteKit" for how server-side fetching fits in. There is no Vite plugin — register components by passing a `components` map to `localessInit()` directly (see "Component Registry" below for why).
 
 **Peer dependency:** Svelte `^5.0.0`.
 
@@ -62,27 +62,19 @@ Prefer `LocalessDocument` over `LocalessComponent` whenever the rendered content
 
 ## Component Registry
 
-Two ways to register components, usable together (manual entries win on key collision):
+Pass `components: { schemaKey: Component }` to `localessInit({...})` directly:
 
-1. **Manual** — pass `components: { schemaKey: Component }` to `localessInit({...})`.
-2. **Vite plugin** — `@localess/svelte/vite`'s `localess({ componentsDir, components })` auto-globs a folder's `.svelte` files into `virtual:localess-svelte-components`, keyed by kebab-cased filename.
+```svelte
+<script lang="ts">
+  import { localessInit } from '@localess/svelte';
+  import Page from './lib/components/localess/Page.svelte';
+  import Button from './lib/components/localess/Button.svelte';
 
-```typescript
-// vite.config.ts
-import { localess } from '@localess/svelte/vite';
-
-export default defineConfig({
-  plugins: [localess({ componentsDir: 'src/lib/components/localess' })],
-});
+  localessInit({ origin, spaceId, token, components: { page: Page, button: Button } });
+</script>
 ```
 
-```typescript
-// +layout.svelte's <script>
-// @ts-expect-error -- generated at build time
-import { localessComponents } from 'virtual:localess-svelte-components';
-
-localessInit({ origin, spaceId, token, components: localessComponents });
-```
+There's no Vite plugin auto-discovering these from a folder. That was tried and removed: `localessInit()`'s `setContext` call only works when it runs synchronously during a component's own initialization, and a Vite virtual module's top-level code always finishes evaluating *before* the importing component's function body runs — so a plugin-generated module can never safely drive it.
 
 ## Editable Attributes
 
@@ -164,6 +156,5 @@ SvelteKit's own `data`-prop serialization hydrates the server-fetched result to 
 | `localessSync(event)` | Function | Visual Editor bridge event subscription, returns a `Readable` |
 | `localessRichText(doc)` | Function | Tiptap JSON → HTML, returns a `Readable<string>` |
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |
-| `@localess/svelte/vite`'s `localess(options)` | Vite plugin factory | Component auto-registration |
 
 See `packages/svelte/SKILL.md` for the full usage guide (also shipped inside the npm package).
