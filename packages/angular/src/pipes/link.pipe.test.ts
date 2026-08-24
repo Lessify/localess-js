@@ -1,5 +1,5 @@
-import { LinkPipe } from './link.pipe';
 import type { ContentLink, Links } from '../models';
+import { LinkPipe } from './link.pipe';
 
 describe('LinkPipe', () => {
   it('delegates to findLink to resolve a content link', () => {

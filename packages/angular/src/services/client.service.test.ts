@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+
 import { LOCALESS_CONFIG, LocalessConfig } from '../localess.config';
 import { LocalessClientService } from './client.service';
 

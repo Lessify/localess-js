@@ -1,13 +1,16 @@
 import { TestBed } from '@angular/core/testing';
-import { vi } from 'vitest';
 import type { ContentAsset } from '@localess/client';
-import { AssetPipe } from './asset.pipe';
+import { vi } from 'vitest';
+
 import { LocalessClientService } from '../services/client.service';
+import { AssetPipe } from './asset.pipe';
 
 describe('AssetPipe', () => {
   const asset: ContentAsset = { kind: 'ASSET', uri: 'images/logo.png' } as ContentAsset;
 
-  function createPipe(assetLink = vi.fn().mockReturnValue('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png')): AssetPipe {
+  function createPipe(
+    assetLink = vi.fn().mockReturnValue('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png')
+  ): AssetPipe {
     TestBed.configureTestingModule({
       providers: [AssetPipe, { provide: LocalessClientService, useValue: { assetLink } }],
     });

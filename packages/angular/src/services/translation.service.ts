@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import type { Translations, TranslationFetchParams } from '@localess/client';
+import type { TranslationFetchParams, Translations } from '@localess/client';
+
 import { LocalessClientService } from './client.service';
 
 @Injectable()

@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, linkedSignal } from '@angular/core';
 import type { Content, ContentData } from '@localess/client';
 
-import { LocalessSyncService } from '../services/sync.service';
 import { LocalessComponentDirective } from '../directives/localess-component.directive';
+import { LocalessSyncService } from '../services/sync.service';
 
 /**
  * Renders a full `Content` response and keeps it in sync with the Localess Visual Editor.

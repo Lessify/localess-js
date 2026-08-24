@@ -1,38 +1,33 @@
-import {Directive, ElementRef, input, OnInit} from "@angular/core";
-import type {ContentDataSchema} from "../models";
+import { Directive, ElementRef, input, OnInit } from '@angular/core';
+
+import type { ContentDataSchema } from '../models';
 
 @Directive({
   selector: '[data-ll-id]',
-  standalone: true
+  standalone: true,
 })
-export class ContentIdDirective {
-}
+export class ContentIdDirective {}
 
 @Directive({
   selector: '[data-ll-schema]',
-  standalone: true
+  standalone: true,
 })
-export class ContentSchemaDirective {
-}
+export class ContentSchemaDirective {}
 
 @Directive({
   selector: '[data-ll-field]',
-  standalone: true
+  standalone: true,
 })
-export class ContentFieldDirective {
-}
+export class ContentFieldDirective {}
 
 @Directive({
   selector: '[llContent]',
-  standalone: true
+  standalone: true,
 })
 export class ContentDirective implements OnInit {
-  content = input.required<ContentDataSchema>({alias: 'llContent'})
+  content = input.required<ContentDataSchema>({ alias: 'llContent' });
 
-  constructor(
-    private el: ElementRef
-  ) {
-  }
+  constructor(private el: ElementRef) {}
 
   ngOnInit(): void {
     this.el.nativeElement.setAttribute('data-ll-id', this.content()._id);

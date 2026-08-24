@@ -4,8 +4,8 @@ import type { ContentData } from '@localess/client';
 
 import { SchemaComponent } from '../components/schema.component';
 import { LOCALESS_COMPONENTS, LOCALESS_FALLBACK_COMPONENT } from '../localess.components';
-import { LocalessComponentResolver } from '../services/component-resolver.service';
 import { LocalessClientService } from '../services/client.service';
+import { LocalessComponentResolver } from '../services/component-resolver.service';
 import { LocalessComponentDirective } from './localess-component.directive';
 
 @Component({ selector: 'll-test-hero', template: "hero: {{ data()['title'] }}" })

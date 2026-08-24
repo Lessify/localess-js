@@ -1,6 +1,7 @@
-import { PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
+import { makeStateKey, PLATFORM_ID, TransferState } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
+
 import { LocalessClientService } from './client.service';
 import { LocalessContentService } from './content.service';
 

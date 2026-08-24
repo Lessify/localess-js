@@ -8,9 +8,10 @@ import {
   Links,
   LinksFetchParams,
   localessClient,
-  Translations,
   TranslationFetchParams,
+  Translations,
 } from '@localess/client';
+
 import { LOCALESS_CONFIG } from '../localess.config';
 
 @Injectable()

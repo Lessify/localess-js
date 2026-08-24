@@ -1,6 +1,7 @@
-import {Injectable, inject} from '@angular/core';
-import {type EventToAppOf, type EventToAppType, isBrowser, isIframe} from '@localess/client';
-import {LOCALESS_CONFIG, LOCALESS_SYNC_READY} from '../localess.config';
+import { inject, Injectable } from '@angular/core';
+import { type EventToAppOf, type EventToAppType, isBrowser, isIframe } from '@localess/client';
+
+import { LOCALESS_CONFIG, LOCALESS_SYNC_READY } from '../localess.config';
 
 /**
  * Visual Editor sync state, provided by `provideLocaless`.

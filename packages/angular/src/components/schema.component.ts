@@ -1,5 +1,6 @@
 import { Component, inject, input } from '@angular/core';
-import type { AssetTransformParams, Assets, ContentAsset, ContentData, ContentLink, Links, References } from '@localess/client';
+import type { Assets, AssetTransformParams, ContentAsset, ContentData, ContentLink, Links, References } from '@localess/client';
+
 import { LocalessClientService } from '../services/client.service';
 import { findLink } from '../utils';
 

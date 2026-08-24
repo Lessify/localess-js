@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
+
 import { LOCALESS_CONFIG, LocalessConfig } from '../localess.config';
 import { LocalessClientService } from './client.service';
 import { LocalessTranslationService } from './translation.service';

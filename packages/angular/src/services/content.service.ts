@@ -1,6 +1,7 @@
 import { isPlatformServer } from '@angular/common';
 import { inject, Injectable, makeStateKey, PLATFORM_ID, StateKey, TransferState } from '@angular/core';
 import type { Content, ContentData, ContentFetchParams, Links, LinksFetchParams } from '@localess/client';
+
 import { LocalessClientService } from './client.service';
 
 @Injectable()

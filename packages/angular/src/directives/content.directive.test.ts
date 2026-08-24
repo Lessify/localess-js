@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ContentDirective } from './content.directive';
 import type { ContentDataSchema } from '../models';
+import { ContentDirective } from './content.directive';
 
 @Component({
   standalone: true,

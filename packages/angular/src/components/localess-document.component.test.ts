@@ -4,11 +4,11 @@ import type { Content, EventToAppOf } from '@localess/client';
 import { vi } from 'vitest';
 
 import { LOCALESS_COMPONENTS } from '../localess.components';
-import { LocalessComponentResolver } from '../services/component-resolver.service';
 import { LocalessClientService } from '../services/client.service';
+import { LocalessComponentResolver } from '../services/component-resolver.service';
 import { LocalessSyncService } from '../services/sync.service';
-import { SchemaComponent } from './schema.component';
 import { LocalessDocument } from './localess-document.component';
+import { SchemaComponent } from './schema.component';
 
 @Component({ selector: 'll-test-hero', template: "hero: {{ data()['title'] }}" })
 class HeroComponent extends SchemaComponent {}
