@@ -4,6 +4,8 @@ React integration layer. Depends on `@localess/client`. Components never fetch d
 
 `@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples — including `vite.config.ts`/`react-router.config.ts`-style build scripts that need a standalone client for tasks like prerender-path enumeration) must only ever import from `@localess/react` or one of its subpath exports (`@localess/react/ssr`, `@localess/react/rsc`) — never `@localess/client` directly. If something from `@localess/client` isn't re-exported yet, add it to the appropriate export surface's re-exports (`src/index.ts` for the SPA export, `src/ssr/index.ts` for server-only) rather than telling consumers to import `@localess/client` themselves.
 
+`src/core/models/` is the only place allowed to import from `@localess/client` directly. Every other file in this package — including the public entry points (`index.ts`, `src/ssr/index.ts`, `src/rsc/index.ts`) — imports the types/values it needs from `./core/models` (or the correct relative path) instead. When a new file needs something from `@localess/client` that `core/models` doesn't re-export yet, add it there first.
+
 ## Adding a New Component
 
 **1. Create `src/core/components/<name>.tsx`:**
