@@ -3,13 +3,13 @@ import type { Plugin } from 'vite';
 import { vitePluginLocalessComponents } from './vite-plugin-localess-components';
 import { type LocalessInitOptions, vitePluginLocalessInit } from './vite-plugin-localess-init';
 
-export interface LocalessViteOptions extends LocalessInitOptions {
+export interface LocalessOptions extends LocalessInitOptions {
   componentsDir?: string;
   components?: Record<string, string>;
 }
 
 /**
- * The `localessVite()` Vite plugin for React SSR frameworks (TanStack Start,
+ * The `localess()` Vite plugin for React SSR frameworks (TanStack Start,
  * React Router v7 framework mode, Remix Vite). Add it to `vite.config.ts`'s
  * `plugins` array to replace hand-written, duplicated `localessInit()` calls
  * across your server and client module graphs.
@@ -22,11 +22,11 @@ export interface LocalessViteOptions extends LocalessInitOptions {
  * ```ts
  * // vite.config.ts
  * import { defineConfig } from 'vite';
- * import { localessVite } from '@localess/react/vite';
+ * import { localess } from '@localess/react/vite';
  *
  * export default defineConfig({
  *   plugins: [
- *     localessVite({
+ *     localess({
  *       origin: process.env.LOCALESS_ORIGIN!,
  *       spaceId: process.env.LOCALESS_SPACE_ID!,
  *       token: process.env.LOCALESS_TOKEN!, // shipped to SSR graph AND the browser bundle
@@ -37,9 +37,9 @@ export interface LocalessViteOptions extends LocalessInitOptions {
  * });
  * ```
  */
-export function localessVite(options: LocalessViteOptions): Plugin[] {
+export function localess(options: LocalessOptions): Plugin[] {
   if (!options.origin || !options.spaceId || !options.token) {
-    throw new Error('[@localess/react/vite] localessVite() requires "origin", "spaceId", and "token".');
+    throw new Error('[@localess/react/vite] localess() requires "origin", "spaceId", and "token".');
   }
 
   const { componentsDir = 'src', components = {}, ...initOptions } = options;

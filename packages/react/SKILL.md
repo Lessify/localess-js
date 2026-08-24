@@ -75,7 +75,7 @@ localessInit({
 
 ## Vite Plugin (SSR Frameworks)
 
-`@localess/react/vite` exports `localessVite(options)`, a Vite plugin for
+`@localess/react/vite` exports `localess(options)`, a Vite plugin for
 TanStack Start / React Router v7 / Remix Vite. It generates two virtual
 modules: `virtual:localess-components` (auto-registers every `.tsx`/`.jsx`
 file under `componentsDir` by kebab-cased filename, merged with explicit
@@ -85,11 +85,11 @@ export; a bare path assumes a default export) and `virtual:localess-init`
 graphs). See `docs/react.md`'s "Vite Plugin for SSR Frameworks".
 
 > **Known gap:** unlike every other `token` usage in this SKILL, the one
-> passed to `localessVite()` IS shipped to the browser bundle — there is no
+> passed to `localess()` IS shipped to the browser bundle — there is no
 > `publicToken`/secret split yet. Treat it as a public value when using this
 > plugin.
 
-**Static prerendering (SSG) needs a second, separate `localessClient` for path enumeration — this is expected, not a bug to dedupe.** React Router v7's `ssr: false` + `prerender()` (in `react-router.config.ts`) and TanStack Start's `prerender.pages` (in `vite.config.ts`) both need the list of paths to prerender *before* `localessVite()`'s virtual modules exist — that config-resolution code runs as plain Node, outside any Vite module graph, so it can't reach the `localessInit()` singleton `getLocalessClient()` reads from. Build its own client instead, importing from `@localess/react/ssr` (never `@localess/client` directly):
+**Static prerendering (SSG) needs a second, separate `localessClient` for path enumeration — this is expected, not a bug to dedupe.** React Router v7's `ssr: false` + `prerender()` (in `react-router.config.ts`) and TanStack Start's `prerender.pages` (in `vite.config.ts`) both need the list of paths to prerender *before* `localess()`'s virtual modules exist — that config-resolution code runs as plain Node, outside any Vite module graph, so it can't reach the `localessInit()` singleton `getLocalessClient()` reads from. Build its own client instead, importing from `@localess/react/ssr` (never `@localess/client` directly):
 
 ```ts
 // react-router.config.ts / vite.config.ts — path enumeration only, never bundled

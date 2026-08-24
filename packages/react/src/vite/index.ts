@@ -8,9 +8,9 @@
  *
  * @example
  * ```ts
- * import { localessVite } from '@localess/react/vite';
+ * import { localess } from '@localess/react/vite';
  * ```
  */
-export type { LocalessViteOptions } from './localess-vite';
-export { localessVite } from './localess-vite';
+export type { LocalessOptions } from './localess';
+export { localess } from './localess';
 export type { LocalessInitOptions } from './vite-plugin-localess-init';

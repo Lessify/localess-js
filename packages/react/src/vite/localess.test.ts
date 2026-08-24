@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { localessVite } from './localess-vite';
+import { localess } from './localess';
 
 const baseOptions = { origin: 'https://cms.example.com', spaceId: 'space-1', token: 'secret-token' };
 
-describe('localessVite', () => {
+describe('localess', () => {
   it('returns the components plugin and the init plugin, in that order', () => {
-    const plugins = localessVite(baseOptions);
+    const plugins = localess(baseOptions);
 
     expect(plugins).toHaveLength(2);
     expect(plugins[0].name).toBe('vite-plugin-localess-components');
@@ -14,7 +14,7 @@ describe('localessVite', () => {
   });
 
   it('defaults componentsDir to "src"', async () => {
-    const plugins = localessVite(baseOptions);
+    const plugins = localess(baseOptions);
     const ctx = { resolve: async () => null };
     const loaded = await (plugins[0].load as any).call(ctx, '\0virtual:localess-components');
 
@@ -22,7 +22,7 @@ describe('localessVite', () => {
   });
 
   it('passes a custom componentsDir through to the components plugin', async () => {
-    const plugins = localessVite({ ...baseOptions, componentsDir: 'app/localess' });
+    const plugins = localess({ ...baseOptions, componentsDir: 'app/localess' });
     const ctx = { resolve: async () => null };
     const loaded = await (plugins[0].load as any).call(ctx, '\0virtual:localess-components');
 
@@ -30,18 +30,18 @@ describe('localessVite', () => {
   });
 
   it('throws when origin is missing', () => {
-    expect(() => localessVite({ ...baseOptions, origin: '' })).toThrow(
-      '[@localess/react/vite] localessVite() requires "origin", "spaceId", and "token".'
+    expect(() => localess({ ...baseOptions, origin: '' })).toThrow(
+      '[@localess/react/vite] localess() requires "origin", "spaceId", and "token".'
     );
   });
 
   it('throws when spaceId is missing', () => {
     const { spaceId: _spaceId, ...rest } = baseOptions as any;
-    expect(() => localessVite(rest)).toThrow('requires "origin", "spaceId", and "token"');
+    expect(() => localess(rest)).toThrow('requires "origin", "spaceId", and "token"');
   });
 
   it('throws when token is missing', () => {
     const { token: _token, ...rest } = baseOptions as any;
-    expect(() => localessVite(rest)).toThrow('requires "origin", "spaceId", and "token"');
+    expect(() => localess(rest)).toThrow('requires "origin", "spaceId", and "token"');
   });
 });

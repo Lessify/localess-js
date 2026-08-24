@@ -92,7 +92,7 @@ export * from './use-my-hook';
 The Vite plugin lives in `src/vite/`:
 - `vite-plugin-localess-components.ts` — `virtual:localess-components`, the component auto-registry.
 - `vite-plugin-localess-init.ts` — `virtual:localess-init`, the SSR-aware `localessInit()` call.
-- `localess-vite.ts` — `localessVite()`, the public entry point combining both plugins.
+- `localess-vite.ts` — `localess()`, the public entry point combining both plugins.
 
 Rules:
 - Both virtual modules are generated as **strings**, not live JS values — a

@@ -5,17 +5,17 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { localessVite } from '@localess/react/vite'
+import { localess } from '@localess/react/vite'
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
   plugins: [
     devtools(),
     tailwindcss(),
-    localessVite({
+    localess({
       origin: 'https://demo.localess.org', // Replace it for your origin
       spaceId: 'MmaT4DL0kJ6nXIILUcQF', // Replace it for your spaceId
-      token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token — shipped to the browser bundle too, see KNOWN GAP on localessVite()
+      token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token — shipped to the browser bundle too, see KNOWN GAP on localess()
       enableSync: true,
       debug: true,
       //componentsDir: 'src/shared/components/localess',

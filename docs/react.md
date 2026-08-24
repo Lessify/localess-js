@@ -245,16 +245,16 @@ generated identically for every build graph.
 > SSR graph — there is currently no secret/public token split for this
 > plugin (unlike the manual `LocalessClientDocument` pattern above, which
 > does have one via `publicToken`). Treat `token` as a public value when
-> using `localessVite()`, until a scoped/public-token mechanism replaces this.
+> using `localess()`, until a scoped/public-token mechanism replaces this.
 
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite';
-import { localessVite } from '@localess/react/vite';
+import { localess } from '@localess/react/vite';
 
 export default defineConfig({
   plugins: [
-    localessVite({
+    localess({
       origin: process.env.LOCALESS_ORIGIN!,
       spaceId: process.env.LOCALESS_SPACE_ID!,
       token: process.env.LOCALESS_TOKEN!, // shipped to the SSR graph AND the browser bundle
@@ -344,10 +344,10 @@ export default {
 } satisfies Config;
 ```
 
-The second `localessClient` is built by `localessVite()` in `vite.config.ts`,
+The second `localessClient` is built by `localess()` in `vite.config.ts`,
 as shown above.
 
-**TanStack Start** — both the path-enumeration client and `localessVite()`
+**TanStack Start** — both the path-enumeration client and `localess()`
 live in the same `vite.config.ts`, since TanStack Start's `prerender.pages`
 option is passed directly to `defineConfig`'s plugins array:
 
@@ -356,7 +356,7 @@ option is passed directly to `defineConfig`'s plugins array:
 import { defineConfig } from 'vite';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import { localessClient } from '@localess/react/ssr'; // not @localess/client directly
-import { localessVite } from '@localess/react/vite';
+import { localess } from '@localess/react/vite';
 
 async function getPrerenderPaths(): Promise<string[]> {
   const client = localessClient({ origin: '...', spaceId: '...', token: '...' });
@@ -368,7 +368,7 @@ export default defineConfig(async () => {
   const pages = await getPrerenderPaths();
   return {
     plugins: [
-      localessVite({ origin: '...', spaceId: '...', token: '...' }),
+      localess({ origin: '...', spaceId: '...', token: '...' }),
       tanstackStart({ prerender: { enabled: true }, pages: pages.map(path => ({ path })) }),
     ],
   };
