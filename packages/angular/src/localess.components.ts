@@ -3,6 +3,20 @@ import { InjectionToken, Provider, Type } from '@angular/core';
 import { SchemaComponent } from './components/schema.component';
 
 /**
+ * A concrete component class extending {@link SchemaComponent} for *some* schema-specific
+ * `ContentData` subtype — which one varies per registry entry, so it can't be named here.
+ *
+ * Uses `any` for that subtype, not to opt out of the `T extends ContentData` bound, but because
+ * TypeScript has no way to express "a subtype of `ContentData`, just not statically which one"
+ * (an existential type) other than `any`. The bound itself is still enforced — at the point each
+ * concrete class is declared (e.g. `class PageComponent extends SchemaComponent<Page>`), because
+ * {@link SchemaComponent}'s own declaration is `SchemaComponent<T extends ContentData = ContentData>`.
+ * A class extending `SchemaComponent<SomethingElse>` where `SomethingElse` doesn't satisfy
+ * `ContentData` fails to compile right there, regardless of how this registry types its map.
+ */
+export type AnySchemaComponent = Type<SchemaComponent<any>>;
+
+/**
  * Lazy component loader. Returns a promise resolving to the component type.
  *
  * @example
@@ -10,7 +24,7 @@ import { SchemaComponent } from './components/schema.component';
  * const loader: LocalessComponentLoader = () => import('./teaser.component').then(m => m.TeaserComponent);
  * ```
  */
-export type LocalessComponentLoader = () => Promise<Type<SchemaComponent>>;
+export type LocalessComponentLoader = () => Promise<AnySchemaComponent>;
 
 /**
  * Registry mapping content `_schema` keys to Angular components.
@@ -27,7 +41,7 @@ export type LocalessComponentLoader = () => Promise<Type<SchemaComponent>>;
  * };
  * ```
  */
-export type LocalessComponentsMap = Record<string, Type<SchemaComponent> | LocalessComponentLoader>;
+export type LocalessComponentsMap = Record<string, AnySchemaComponent | LocalessComponentLoader>;
 
 /**
  * Injection token for the Localess component registry, set via {@link withLocalessComponents}.
@@ -39,7 +53,7 @@ export const LOCALESS_COMPONENTS = new InjectionToken<LocalessComponentsMap>('LO
  * Injection token for the fallback component rendered when a `_schema` key has no registry match.
  * Set via {@link withLocalessComponents}.
  */
-export const LOCALESS_FALLBACK_COMPONENT = new InjectionToken<Type<SchemaComponent>>('LOCALESS_FALLBACK_COMPONENT');
+export const LOCALESS_FALLBACK_COMPONENT = new InjectionToken<AnySchemaComponent>('LOCALESS_FALLBACK_COMPONENT');
 
 /**
  * A feature to pass as one of `provideLocaless()`'s trailing arguments.
@@ -68,7 +82,7 @@ export type LocalessFeature = { ɵkind: 'components'; ɵproviders: Provider[] };
  * )
  * ```
  */
-export function withLocalessComponents(components: LocalessComponentsMap, fallback?: Type<SchemaComponent>): LocalessFeature {
+export function withLocalessComponents(components: LocalessComponentsMap, fallback?: AnySchemaComponent): LocalessFeature {
   const providers: Provider[] = [{ provide: LOCALESS_COMPONENTS, useValue: components }];
   if (fallback) {
     providers.push({ provide: LOCALESS_FALLBACK_COMPONENT, useValue: fallback });
@@ -79,6 +93,6 @@ export function withLocalessComponents(components: LocalessComponentsMap, fallba
 /**
  * Type guard distinguishing a {@link LocalessComponentLoader} from a direct component reference.
  */
-export function isComponentLoader(entry: Type<SchemaComponent> | LocalessComponentLoader): entry is LocalessComponentLoader {
+export function isComponentLoader(entry: AnySchemaComponent | LocalessComponentLoader): entry is LocalessComponentLoader {
   return typeof entry === 'function' && entry.length === 0 && !entry.prototype;
 }
