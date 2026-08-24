@@ -1,37 +1,27 @@
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
-import preserveDirectives from 'rollup-preserve-directives';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
   plugins: [
-    react(),
     dts({
-      include: ['src'],
+      include: ['src/**/*.ts'],
+    }),
+    viteStaticCopy({
+      targets: [{ src: 'src/components/*.astro', dest: 'components', rename: { stripBase: true } }],
     }),
   ],
   build: {
     lib: {
       entry: {
-        index: resolve(__dirname, 'src/index.ts'),
-        'ssr/index': resolve(__dirname, 'src/ssr/index.ts'),
-        'rsc/index': resolve(__dirname, 'src/rsc/index.ts'),
-        'vite/index': resolve(__dirname, 'src/vite/index.ts'),
-        'vite/virtual-modules': resolve(__dirname, 'src/vite/virtual-modules.ts'),
+        index: resolve(import.meta.dirname, 'src/index.ts'),
+        'dev-toolbar/toolbar-app': resolve(import.meta.dirname, 'src/dev-toolbar/toolbar-app.ts'),
+        'live-preview/middleware': resolve(import.meta.dirname, 'src/live-preview/middleware.ts'),
       },
     },
     rollupOptions: {
-      external: [
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-        '@localess/client',
-        /^@tiptap\/.*/,
-        'next/cache',
-        'vite',
-      ],
-      plugins: [preserveDirectives()],
+      external: ['@localess/client', 'astro/runtime/server/index.js', 'astro/toolbar', 'astro/middleware', 'virtual:localess-options'],
       output: [
         {
           format: 'es',

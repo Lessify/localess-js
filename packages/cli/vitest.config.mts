@@ -9,11 +9,11 @@ export default defineConfig({
   resolve: {
     alias: {
       // Point directly to the built dist files to bypass the exports field entirely.
-      orval: resolve(__dirname, '../../node_modules/orval/dist/index.mjs'),
+      orval: resolve(import.meta.dirname, '../../node_modules/orval/dist/index.mjs'),
       ...Object.fromEntries(
         ORVAL_PACKAGES.map((pkg) => [
           `@orval/${pkg}`,
-          resolve(__dirname, `../../node_modules/@orval/${pkg}/dist/index.mjs`),
+          resolve(import.meta.dirname, `../../node_modules/@orval/${pkg}/dist/index.mjs`),
         ])
       ),
     },
@@ -27,7 +27,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      exclude: ['**/*.test.ts', '**/*.d.ts', 'dist/**', 'vite.config.ts', 'vitest.config.ts', 'src/orval/**', 'src/generated/**'],
+      exclude: ['**/*.test.ts', '**/*.d.ts', 'dist/**', 'vite.config.mts', 'vitest.config.mts', 'src/orval/**', 'src/generated/**'],
       thresholds: {
         statements: 70,
         branches: 65,

@@ -13,7 +13,7 @@ function makeBinExecutable() {
     name: 'make-bin-executable',
     writeBundle(_options: unknown, bundle: Record<string, unknown>) {
       for (const fileName of Object.keys(bundle)) {
-        chmodSync(resolve(__dirname, 'dist', fileName), 0o755);
+        chmodSync(resolve(import.meta.dirname, 'dist', fileName), 0o755);
       }
     },
   };
@@ -30,7 +30,7 @@ export default defineConfig({
   build: {
     target: 'node20',
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: resolve(import.meta.dirname, 'src/index.ts'),
       formats: ['es'],
       fileName: () => 'index.mjs',
     },

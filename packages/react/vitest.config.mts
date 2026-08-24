@@ -8,7 +8,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      exclude: ['**/*.test.ts', '**/*.test.tsx', '**/*.d.ts', 'dist/**', 'vite.config.ts', 'vitest.config.ts'],
+      exclude: ['**/*.test.ts', '**/*.test.tsx', '**/*.d.ts', 'dist/**', 'vite.config.mts', 'vitest.config.mts'],
       thresholds: {
         statements: 70,
         branches: 65,
