@@ -67,6 +67,26 @@ localess({
 
 Both the registry key and `_schema` are compared through `toCamelCase()` — a file named `HeroSection.astro` matches `_schema: 'hero-section'` automatically.
 
+## Writing components
+
+Type a registered component's `Props` with `LocalessComponentProps<T>` — the same generic shape `@localess/react`'s `LocalessComponentProps<T>` uses, so `data`/`links`/`references`/`assets` stay typed against your own content type:
+
+```astro
+---
+import { localessEditable, localessEditableField } from '@localess/astro';
+import type { LocalessComponentProps } from '@localess/astro';
+import type { HeroSection } from './.localess/localess'; // your generated content type
+
+export type Props = LocalessComponentProps<HeroSection>;
+
+const { data } = Astro.props;
+---
+
+<section {...localessEditable(data)}>
+  <h1 {...localessEditableField('title')}>{data.title}</h1>
+</section>
+```
+
 ## Fallback component
 
 ```js

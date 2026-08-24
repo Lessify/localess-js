@@ -1,10 +1,7 @@
 ---
-import type { ContentData } from '../models';
+import type { LocalessComponentProps } from '../models';
 
-export interface Props {
-  data: ContentData;
-  [prop: string]: unknown;
-}
+export type Props = LocalessComponentProps;
 
 const { data } = Astro.props;
 ---

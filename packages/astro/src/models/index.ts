@@ -1,4 +1,5 @@
 export type { LocalessOptions } from './client';
+export type { LocalessComponentProps } from './localess-component-props';
 export type {
   AssetMetadata,
   Assets,
