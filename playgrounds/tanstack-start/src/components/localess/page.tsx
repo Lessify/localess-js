@@ -1,6 +1,6 @@
 import {LocalessComponent, localessEditable, localessEditableField} from "@localess/react";
 import type {LocalessComponentProps} from "@localess/react";
-import type {Page} from "@/shared/models/localess";
+import type {Page} from "#/shared/models/localess";
 
 export type PageLocalessProps = LocalessComponentProps<Page>
 

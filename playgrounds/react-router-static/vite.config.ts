@@ -11,7 +11,7 @@ export default defineConfig({
       spaceId: "MmaT4DL0kJ6nXIILUcQF", // Replace it for your spaceId
       token: "Y4rvboPnyzVeC7LddEK5", // Replace it for your token
       debug: true,
-      componentsDir: "app/shared/components/localess",
+      componentsDir: "app/components/localess",
       components: {
         Page: "./page.tsx",
         Button: "./button.tsx",

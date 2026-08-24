@@ -18,8 +18,8 @@ const config = defineConfig({
       token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token — shipped to the browser bundle too, see KNOWN GAP on localess()
       enableSync: true,
       debug: true,
-      //componentsDir: 'src/shared/components/localess',
-      components: { Page: './shared/components/localess/page.tsx', Button: './shared/components/localess/button.tsx' },
+      //componentsDir: 'src/components/localess',
+      components: { Page: './components/localess/page.tsx', Button: './components/localess/button.tsx' },
     }),
     tanstackStart(),
     viteReact(),

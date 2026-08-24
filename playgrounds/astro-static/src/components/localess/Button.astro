@@ -1,0 +1,14 @@
+---
+import { localessEditable, localessEditableField } from '@localess/astro';
+import type { LocalessComponentProps } from '@localess/astro';
+import type { Button as ButtonModel } from '../../shared/models/localess';
+import { Button } from '@/components/ui/button.tsx';
+
+export type Props = LocalessComponentProps<ButtonModel>;
+
+const { data } = Astro.props;
+---
+
+<Button {...localessEditable(data)} type="button" variant={data.type === 'primary' ? 'default' : 'secondary'}>
+  <span {...localessEditableField('label')}>{data.label}</span>
+</Button>

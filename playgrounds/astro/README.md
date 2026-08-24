@@ -31,7 +31,7 @@ Edit the `localess({...})` options in `astro.config.mjs` — replace `origin`, `
 | `src/shared/utils/route.ts` | `resolveLocaleAndSlug` |
 | `src/layouts/Layout.astro` | Theme toggle, locale nav links |
 | `src/pages/richtext-test.astro` | Rich text rendering |
-| `src/shared/components/localess/` | Registered schema components |
+| `src/components/localess/` | Registered schema components |
 
 Generate CMS-driven TypeScript types for your own schemas with:
 

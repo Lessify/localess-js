@@ -7,7 +7,7 @@ A [Next.js](https://nextjs.org) App Router app rendering [Localess](https://gith
 - Server/Client component split with `@localess/react/rsc` — `localessInit()` in `app/layout.tsx`, content fetched in a Server Component, live sync handled by `LocalessDocument`
 - A `[[...path]]` catch-all page (`src/app/[[...path]]/page.tsx`) resolving any CMS slug, including the root `/` as `home`
 - Locale-prefixed routing with an active-locale nav link indicator and a light/dark theme toggle (`src/components/theme-toggle.tsx`) — these two are plain UX patterns built on top of the SDK, not part of its public API
-- A schema component registry under `src/shared/components/localess/`
+- A schema component registry under `src/components/localess/`
 
 ## Run it
 
@@ -29,7 +29,7 @@ The Localess config in `src/shared/utils/locales.ts` (`localessInit(...)`) is pr
 | `src/shared/utils/locales.ts` | `localessInit()`, component registration, supported locale list |
 | `src/app/[[...path]]/page.tsx` | Catch-all routing + slug resolution |
 | `src/shared/utils/route.ts` | `resolveLocaleAndSlug` — splitting a path into locale + CMS slug |
-| `src/shared/components/localess/page.tsx` | A registered schema component |
+| `src/components/localess/page.tsx` | A registered schema component |
 | `src/components/theme-toggle.tsx` | Dark-mode toggle (not an SDK feature) |
 
 ## Learn more

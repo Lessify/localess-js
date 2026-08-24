@@ -1,6 +1,6 @@
 import {localessInit} from "@localess/react/ssr";
-import {PageLocaless} from "@/shared/components/localess/page";
-import {ButtonLocaless} from "@/shared/components/localess/button";
+import {PageLocaless} from "@/components/localess/page";
+import {ButtonLocaless} from "@/components/localess/button";
 
 export const localessClient = localessInit({
   origin: "https://demo.localess.org", // Replace it for your origin

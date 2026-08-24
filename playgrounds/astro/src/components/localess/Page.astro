@@ -1,11 +1,12 @@
 ---
 import { localessEditable, localessEditableField } from '@localess/astro';
 import type { LocalessComponentProps } from '@localess/astro';
-import type { Page } from '../../models/localess';
+import type { Page } from '../../shared/models/localess';
+import LocalessComponent from '@localess/astro/LocalessComponent.astro';
 
 export type Props = LocalessComponentProps<Page>;
 
-const { data } = Astro.props;
+const { data, links, references, assets } = Astro.props;
 ---
 
 <main {...localessEditable(data)} class="flex flex-col gap-4">
@@ -15,4 +16,7 @@ const { data } = Astro.props;
   <p {...localessEditableField('description')} class="text-center whitespace-pre-line">
     {data.description}
   </p>
+  <div class="flex justify-center gap-2">
+    {data.buttons?.map(button => <LocalessComponent data={button} links={links} references={references} assets={assets} />)}
+  </div>
 </main>

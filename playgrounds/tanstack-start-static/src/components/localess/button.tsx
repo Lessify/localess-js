@@ -1,7 +1,7 @@
 import {localessEditable, localessEditableField} from "@localess/react/ssr";
 import type {LocalessServerComponentProps} from "@localess/react/ssr";
-import type {Button as ButtonModel} from "@/shared/models/localess";
-import {Button} from "@/components/ui/button";
+import type {Button as ButtonModel} from "#/shared/models/localess";
+import {Button} from "#/components/ui/button.tsx";
 
 export type ButtonLocalessProps = LocalessServerComponentProps<ButtonModel>
 
