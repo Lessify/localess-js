@@ -18,6 +18,7 @@ export default defineConfig({
         'ssr/index': resolve(__dirname, 'src/ssr/index.ts'),
         'rsc/index': resolve(__dirname, 'src/rsc/index.ts'),
         'vite/index': resolve(__dirname, 'src/vite/index.ts'),
+        'vite/virtual-modules': resolve(__dirname, 'src/vite/virtual-modules.ts'),
       },
     },
     rollupOptions: {

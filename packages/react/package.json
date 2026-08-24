@@ -49,6 +49,11 @@
       "types": "./dist/vite/index.d.ts",
       "import": "./dist/vite/index.mjs",
       "require": "./dist/vite/index.js"
+    },
+    "./vite/virtual-modules": {
+      "types": "./dist/vite/virtual-modules.d.ts",
+      "import": "./dist/vite/virtual-modules.mjs",
+      "require": "./dist/vite/virtual-modules.js"
     }
   },
   "private": false,
