@@ -119,7 +119,7 @@ provideLocaless(
 }
 ```
 
-`[llComponent]` resolves an item's `_schema` via the registry and creates the matching component with `ViewContainerRef.createComponent` directly at the `ng-container` anchor — no wrapper element — recreating the component only when its `_schema` changes. Registered components aren't required to extend `SchemaComponent` — only the inputs (`data`/`links`/`references`/`assets`) a component actually declares are set, so a fallback commonly only needs `data`.
+`[llComponent]` resolves an item's `_schema` via the registry and creates the matching component with `ViewContainerRef.createComponent` directly at the `ng-container` anchor — no wrapper element — recreating the component only when its `_schema` changes. Every registered component, including the fallback, must extend `SchemaComponent` — `withLocalessComponents()`'s type signature enforces it, so `data`/`links`/`references`/`assets` are always set unconditionally.
 
 ## Components
 

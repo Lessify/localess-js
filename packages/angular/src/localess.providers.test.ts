@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
+import { SchemaComponent } from './components/schema.component';
 import { LOCALESS_COMPONENTS, withLocalessComponents } from './localess.components';
 import { provideLocaless } from './localess.providers';
 
 @Component({ selector: 'll-test-hero', template: '' })
-class HeroComponent {}
+class HeroComponent extends SchemaComponent {}
 
 describe('provideLocaless', () => {
   const validOptions = { origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' };

@@ -1,17 +1,17 @@
 import { Component, input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { Content, ContentData, EventToAppOf } from '@localess/client';
+import type { Content, EventToAppOf } from '@localess/client';
 import { vi } from 'vitest';
 
 import { LOCALESS_COMPONENTS } from '../localess.components';
 import { LocalessComponentResolver } from '../services/component-resolver.service';
+import { LocalessClientService } from '../services/client.service';
 import { LocalessSyncService } from '../services/sync.service';
+import { SchemaComponent } from './schema.component';
 import { LocalessDocument } from './localess-document.component';
 
-@Component({ selector: 'll-test-hero', template: "hero: {{ data()?.['title'] }}" })
-class HeroComponent {
-  data = input<ContentData>();
-}
+@Component({ selector: 'll-test-hero', template: "hero: {{ data()['title'] }}" })
+class HeroComponent extends SchemaComponent {}
 
 @Component({
   standalone: true,
@@ -36,6 +36,7 @@ describe('LocalessDocument', () => {
       imports: [HostComponent],
       providers: [
         LocalessComponentResolver,
+        LocalessClientService,
         { provide: LOCALESS_COMPONENTS, useValue: { hero: HeroComponent } },
         {
           provide: LocalessSyncService,

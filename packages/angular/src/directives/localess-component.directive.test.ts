@@ -2,24 +2,20 @@ import { Component, input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { ContentData } from '@localess/client';
 
+import { SchemaComponent } from '../components/schema.component';
 import { LOCALESS_COMPONENTS, LOCALESS_FALLBACK_COMPONENT } from '../localess.components';
 import { LocalessComponentResolver } from '../services/component-resolver.service';
+import { LocalessClientService } from '../services/client.service';
 import { LocalessComponentDirective } from './localess-component.directive';
 
-@Component({ selector: 'll-test-hero', template: "hero: {{ data()?.['title'] }}" })
-class HeroComponent {
-  data = input<ContentData>();
-}
+@Component({ selector: 'll-test-hero', template: "hero: {{ data()['title'] }}" })
+class HeroComponent extends SchemaComponent {}
 
 @Component({ selector: 'll-test-teaser', template: 'teaser' })
-class TeaserComponent {
-  data = input<ContentData>();
-}
+class TeaserComponent extends SchemaComponent {}
 
-@Component({ selector: 'll-test-fallback', template: 'fallback: {{ data()?._schema }}' })
-class FallbackComponent {
-  data = input<ContentData>();
-}
+@Component({ selector: 'll-test-fallback', template: 'fallback: {{ data()._schema }}' })
+class FallbackComponent extends SchemaComponent {}
 
 @Component({
   standalone: true,
@@ -47,6 +43,7 @@ describe('LocalessComponentDirective', () => {
       imports: [HostComponent],
       providers: [
         LocalessComponentResolver,
+        LocalessClientService,
         { provide: LOCALESS_COMPONENTS, useValue: components },
         ...(fallback ? [{ provide: LOCALESS_FALLBACK_COMPONENT, useValue: fallback }] : []),
       ],

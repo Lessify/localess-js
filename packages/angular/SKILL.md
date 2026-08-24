@@ -134,7 +134,7 @@ Register a map of content `_schema` keys to Angular components, then render cont
 
 ### `withLocalessComponents(components, fallback?)`
 
-Pass to `provideLocaless()` as a feature. Entries can be an eager component reference or a lazy loader (`() => Promise<Type<any>>`) — mix both in the same map:
+Pass to `provideLocaless()` as a feature. Entries can be an eager component reference or a lazy loader (`() => Promise<Type<SchemaComponent>>`) — mix both in the same map. Every entry, including the optional `fallback`, must be a class that extends `SchemaComponent` — `LocalessComponentsMap` and the `fallback` parameter are both typed `Type<SchemaComponent>`, so anything else is a compile error:
 
 ```ts
 import { provideLocaless, withLocalessComponents } from '@localess/angular';
@@ -148,12 +148,19 @@ provideLocaless(
       hero: HeroSectionComponent, // eager — bundled immediately
       teaser: () => import('./components/teaser.component').then(m => m.TeaserComponent), // lazy — loaded on demand
     },
-    UnknownBlockComponent // optional fallback, rendered when a `_schema` has no match
+    UnknownBlockComponent // optional fallback, rendered when a `_schema` has no match — also a SchemaComponent
   )
 );
 ```
 
-Registered components aren't required to extend `SchemaComponent` or declare any particular input — `data`/`links`/`references`/`assets` are only set on the ones a component actually declares as inputs. This matters most for the fallback: it commonly only needs `data` (e.g. to log or display the unmatched `_schema` key) and can ignore the rest.
+Because every registered component extends `SchemaComponent`, `data`/`links`/`references`/`assets` are always set unconditionally — no need to conditionally declare inputs. The fallback commonly only reads `data()._schema` (e.g. to log or display the unmatched key) and ignores `links`/`references`/`assets`, but it still must extend `SchemaComponent` to be accepted by `withLocalessComponents()`:
+
+```ts
+import { SchemaComponent } from '@localess/angular';
+
+@Component({ selector: 'app-unknown-block', template: `Unknown block: {{ data()._schema }}` })
+export class UnknownBlockComponent extends SchemaComponent {}
+```
 
 ### `<ll-document>` — render a full `Content` response
 

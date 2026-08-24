@@ -1,16 +1,7 @@
-import {
-  ComponentRef,
-  DestroyRef,
-  Directive,
-  effect,
-  inject,
-  input,
-  reflectComponentType,
-  untracked,
-  ViewContainerRef,
-} from '@angular/core';
+import { ComponentRef, DestroyRef, Directive, effect, inject, input, untracked, ViewContainerRef } from '@angular/core';
 import type { Assets, ContentData, Links, References } from '@localess/client';
 
+import type { SchemaComponent } from '../components/schema.component';
 import { LocalessComponentResolver } from '../services/component-resolver.service';
 
 /**
@@ -48,7 +39,7 @@ export class LocalessComponentDirective {
   readonly references = input<References>();
   readonly assets = input<Assets>();
 
-  private componentRef: ComponentRef<unknown> | null = null;
+  private componentRef: ComponentRef<SchemaComponent> | null = null;
   private currentSchema: string | null = null;
   private renderVersion = 0;
 
@@ -106,18 +97,16 @@ export class LocalessComponentDirective {
   }
 
   /**
-   * Sets only the inputs the target component actually declares — registered components are
-   * not required to accept `links`/`references`/`assets` (a fallback commonly only cares
-   * about `data`), and `ComponentRef.setInput` throws for inputs a component doesn't declare.
+   * Sets the `data`/`links`/`references`/`assets` inputs every registered component declares
+   * by extending {@link SchemaComponent}.
    */
   private setInputs(data: ContentData, links: Links | undefined, references: References | undefined, assets: Assets | undefined): void {
     if (!this.componentRef) {
       return;
     }
-    const inputNames = new Set(reflectComponentType(this.componentRef.componentType)?.inputs.map(i => i.propName));
-    if (inputNames.has('data')) this.componentRef.setInput('data', data);
-    if (inputNames.has('links')) this.componentRef.setInput('links', links);
-    if (inputNames.has('references')) this.componentRef.setInput('references', references);
-    if (inputNames.has('assets')) this.componentRef.setInput('assets', assets);
+    this.componentRef.setInput('data', data);
+    this.componentRef.setInput('links', links);
+    this.componentRef.setInput('references', references);
+    this.componentRef.setInput('assets', assets);
   }
 }

@@ -1,5 +1,6 @@
 import { inject, Injectable, Type } from '@angular/core';
 
+import type { SchemaComponent } from '../components/schema.component';
 import { isComponentLoader, LOCALESS_COMPONENTS, LOCALESS_FALLBACK_COMPONENT } from '../localess.components';
 
 /**
@@ -13,7 +14,7 @@ import { isComponentLoader, LOCALESS_COMPONENTS, LOCALESS_FALLBACK_COMPONENT } f
 export class LocalessComponentResolver {
   private readonly components = inject(LOCALESS_COMPONENTS, { optional: true });
   private readonly fallback = inject(LOCALESS_FALLBACK_COMPONENT, { optional: true });
-  private readonly cache = new Map<string, Type<unknown>>();
+  private readonly cache = new Map<string, Type<SchemaComponent>>();
 
   /**
    * Returns `true` when the given schema key has a registered component.
@@ -29,7 +30,7 @@ export class LocalessComponentResolver {
    * Falls back to the registered fallback component when the key has no match, logging a
    * console error either way. Returns `null` when there is no match and no fallback.
    */
-  async resolve(key: string): Promise<Type<unknown> | null> {
+  async resolve(key: string): Promise<Type<SchemaComponent> | null> {
     if (this.cache.has(key)) {
       return this.cache.get(key)!;
     }

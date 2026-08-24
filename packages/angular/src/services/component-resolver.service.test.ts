@@ -1,17 +1,18 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
+import { SchemaComponent } from '../components/schema.component';
 import { LOCALESS_COMPONENTS, LOCALESS_FALLBACK_COMPONENT } from '../localess.components';
 import { LocalessComponentResolver } from './component-resolver.service';
 
 @Component({ selector: 'll-test-hero', template: '' })
-class HeroComponent {}
+class HeroComponent extends SchemaComponent {}
 
 @Component({ selector: 'll-test-teaser', template: '' })
-class TeaserComponent {}
+class TeaserComponent extends SchemaComponent {}
 
 @Component({ selector: 'll-test-fallback', template: '' })
-class FallbackComponent {}
+class FallbackComponent extends SchemaComponent {}
 
 describe('LocalessComponentResolver', () => {
   function createResolver(components?: Record<string, unknown>, fallback?: unknown): LocalessComponentResolver {
