@@ -2,6 +2,10 @@
 
 CLI tool built with Commander.js. Entry point: `src/index.ts`. All commands live under `src/commands/`.
 
+## Importing from `@localess/client`
+
+`src/models/index.ts` is the only file allowed to import from `@localess/client` directly. Every other file in this package imports the types/values it needs from `./models` (or the correct relative path) instead. When a new file needs something from `@localess/client` that `models/index.ts` doesn't re-export yet, add it there first.
+
 ## Session / Credentials
 
 Commands that need to talk to the Localess API must read the session first:

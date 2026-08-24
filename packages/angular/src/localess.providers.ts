@@ -1,6 +1,5 @@
 import { IMAGE_LOADER, ImageLoaderConfig } from '@angular/common';
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
-import { loadLocalessSync } from '@localess/client';
 
 import { LocalessFeature } from './localess.components';
 import { LOCALESS_CONFIG, LOCALESS_SYNC_READY, LocalessConfig } from './localess.config';
@@ -10,6 +9,7 @@ import { LocalessComponentResolver } from './services/component-resolver.service
 import { LocalessContentService } from './services/content.service';
 import { LocalessSyncService } from './services/sync.service';
 import { LocalessTranslationService } from './services/translation.service';
+import { loadLocalessSync } from './utils';
 
 export type LocalessOptions = {
   /**

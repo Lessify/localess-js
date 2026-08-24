@@ -3,6 +3,7 @@ import { LocalessClientOptions } from '@localess/client';
 import type { AnyLocalessComponent } from './component';
 
 export type { LocalessClient } from '@localess/client';
+export { LocalessApiError, localessClient } from '@localess/client';
 
 /**
  * Initialization options for {@link localessInit}.

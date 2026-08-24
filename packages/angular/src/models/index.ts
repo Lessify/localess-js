@@ -11,8 +11,11 @@ export type {
   ContentMetadata,
   ContentReference,
   ContentRichText,
+  EventToAppOf,
+  EventToAppType,
   Links,
   LinksFetchParams,
   References,
+  TranslationFetchParams,
   Translations,
 } from '@localess/client';

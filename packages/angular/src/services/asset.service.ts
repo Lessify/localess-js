@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import type { AssetTransformParams, ContentAsset } from '@localess/client';
 
+import type { AssetTransformParams, ContentAsset } from '../models';
 import { LocalessClientService } from './client.service';
 
 @Injectable()

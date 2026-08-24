@@ -1,7 +1,7 @@
 import { ComponentRef, DestroyRef, Directive, effect, inject, input, untracked, ViewContainerRef } from '@angular/core';
-import type { Assets, ContentData, Links, References } from '@localess/client';
 
 import type { SchemaComponent } from '../components/schema.component';
+import type { Assets, ContentData, Links, References } from '../models';
 import { LocalessComponentResolver } from '../services/component-resolver.service';
 
 /**

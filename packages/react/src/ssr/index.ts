@@ -32,6 +32,7 @@
  */
 
 export type * from '../core/models';
+export { LocalessApiError, localessClient } from '../core/models';
 export { renderRichTextToReact } from '../core/richtext';
 export {
   getComponent,
@@ -47,4 +48,3 @@ export {
 export * from '../core/utils';
 export * from './localess-component';
 export * from './localess-document';
-export { LocalessApiError, localessClient } from '@localess/client';

@@ -4,7 +4,9 @@ Vue 3 integration layer. Depends on `@localess/client`. Components never fetch d
 
 `@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples) must only ever import from `@localess/vue` — never `@localess/client` directly. If something from `@localess/client` isn't re-exported yet, add it to `src/index.ts`'s re-exports rather than telling consumers to import `@localess/client` themselves.
 
-`@localess/vue`'s `core/state.ts` (client/registry/sync state) is a hand-ported near-duplicate of `@localess/svelte`'s equivalent module — same function names and behavior, `vue`'s `Component` type swapped for Svelte's. ADR 005 forbids extracting this into a shared package, so keep this a manual-sync discipline: when fixing a bug here, check `packages/svelte/src/lib/core/state.ts` for the same bug.
+**`src/core/models.ts` is the only file allowed to import from `@localess/client` directly.** Every other file in this package — including `index.ts` — imports the types/values it needs from `./core/models` (or the correct relative path, e.g. `../core/models` from a sibling directory) instead. When a new file needs something from `@localess/client` that `models.ts` doesn't re-export yet, add it there first. This keeps the client-package boundary auditable at a single file instead of scattered across every component/composable/directive.
+
+`@localess/vue`'s `core/state.ts` (client/registry/sync state) is a hand-ported near-duplicate of `@localess/svelte`'s equivalent module — same function names and behavior, `vue`'s `Component` type swapped for Svelte's. ADR 005 forbids extracting this into a shared package, so keep this a manual-sync discipline: when fixing a bug here, check `packages/svelte/src/lib/core/state.ts` for the same bug. `src/core/models.ts` should likewise stay structurally parallel to `packages/svelte/src/lib/models.ts` — same shape (a short header comment plus `export type { ... }` / `export { ... }` blocks from `@localess/client`), so a re-export added on one side is easy to mirror on the other.
 
 ## Adding a New Composable
 

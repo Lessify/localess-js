@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import process from 'node:process';
 
-import { LocalessApiError } from '@localess/client';
 import { Command } from 'commander';
 
 import { localessCliClient } from '../../../client';
 import { DEFAULT_CONFIG_DIR, writeFile } from '../../../file';
+import { LocalessApiError } from '../../../models';
 import { getSession } from '../../../session';
 import { generateTypes } from './generator';
 

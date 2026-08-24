@@ -1,9 +1,8 @@
-import { LocalessApiError } from '@localess/client';
 import { Command } from 'commander';
 
 import { localessCliClient } from '../../../client';
 import { readFile } from '../../../file';
-import { TranslationFileFormat, Translations, TranslationUpdateType } from '../../../models';
+import { LocalessApiError, TranslationFileFormat, Translations, TranslationUpdateType } from '../../../models';
 import { zLocaleTranslationsSchema, zTranslationUpdateTypeSchema } from '../../../models/translation.zod';
 import { getSession } from '../../../session';
 import { nestedObjectToFlat } from '../../../utils';

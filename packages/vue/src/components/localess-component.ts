@@ -1,6 +1,6 @@
-import { localessEditable, type ContentDataSchema } from '@localess/client';
 import { defineComponent, h, type PropType } from 'vue';
 
+import { type ContentDataSchema, localessEditable } from '../core/models';
 import { getComponent, getFallbackComponent } from '../core/state';
 
 export const LocalessComponent = defineComponent({

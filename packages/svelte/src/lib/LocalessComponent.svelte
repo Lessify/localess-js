@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { localessEditable, type ContentDataSchema } from '@localess/client';
-
   import { getComponent, getFallbackComponent } from './core/state';
+  import { localessEditable, type Assets, type ContentDataSchema, type Links, type References } from './models';
 
-  let { data }: { data: ContentDataSchema } = $props();
+  let { data, assets, links, references }: { data: ContentDataSchema; assets?: Assets; links?: Links; references?: References } =
+    $props();
 
   let Comp = $derived(getComponent(data._schema));
   let Fallback = $derived(getFallbackComponent());
@@ -11,9 +11,9 @@
 </script>
 
 {#if Comp}
-  <Comp {data} {...attrs} />
+  <Comp {data} {assets} {links} {references} {...attrs} />
 {:else if Fallback}
-  <Fallback {data} />
+  <Fallback {data} {assets} {links} {references} />
 {:else}
   <p>LocalessComponent could not find component with key <b>{data._schema}</b>. Please check if your configuration is correct.</p>
 {/if}

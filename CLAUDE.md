@@ -52,6 +52,8 @@ Requirements: Node.js >= 24.0.0, npm >= 10.
 
 6. **SKILL.md sync.** When changing a package's public API, options, or behavior, update the corresponding `packages/<name>/SKILL.md`. These files ship inside the npm packages for downstream AI agents.
 
+7. **Internal-reference-only imports.** Within a package's `src/`, only that package's dedicated internal re-export module (e.g. `core/models/`, `models.ts`) may import from `@localess/client` directly. Every other internal file — including the public entry point (`index.ts` / `public-api.ts`) — imports those types/values through that internal module instead (e.g. `from '../models'`, never `from '@localess/client'`). This keeps the client-package boundary at one file per package, so it can be audited or changed in one place. Currently enforced in `@localess/svelte` (`src/lib/models.ts`); `react`, `vue`, `angular`, `cli`, and `astro` still have files that bypass their internal models module — bring a package into compliance when you're already touching its imports, rather than as a standalone sweep.
+
 ## Code Style
 
 - TypeScript strict mode with `noImplicitAny: false`. See `tsconfig.json` in each package.

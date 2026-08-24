@@ -1,7 +1,7 @@
-import type { LocalessClient } from '@localess/client';
 import { getContext, setContext } from 'svelte';
 
 import { localessInit as coreLocalessInit, type LocalessSvelteInitOptions } from './core/state';
+import type { LocalessClient } from './models';
 
 const LOCALESS_CONTEXT_KEY = Symbol('localess');
 

@@ -1,7 +1,7 @@
-import type { EventToAppOf, EventToAppType } from '@localess/client';
-import { readable, type Readable } from 'svelte/store';
+import { type Readable, readable } from 'svelte/store';
 
 import { localessSyncOn } from '../core/state';
+import type { EventToAppOf, EventToAppType } from '../models';
 
 export function localessSync<T extends EventToAppType>(event: T | T[]): Readable<EventToAppOf<T> | undefined> {
   return readable<EventToAppOf<T> | undefined>(undefined, set => {

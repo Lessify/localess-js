@@ -1,6 +1,11 @@
+import type React from 'react';
+
+import { FONT_BOLD, FONT_NORMAL } from '../console';
 import {
+  type AnyLocalessComponent,
   type AssetTransformParams,
   buildAssetQueryString,
+  type ContentAsset,
   type EventToAppOf,
   type EventToAppType,
   isBrowser,
@@ -8,11 +13,8 @@ import {
   loadLocalessSync,
   type LocalessClient,
   localessClient,
-} from '@localess/client';
-import type React from 'react';
-
-import { FONT_BOLD, FONT_NORMAL } from '../console';
-import { type AnyLocalessComponent, type ContentAsset, type LocalessOptions } from './models';
+  type LocalessOptions,
+} from './models';
 
 let _origin: string | undefined = undefined;
 let _client: LocalessClient | undefined = undefined;

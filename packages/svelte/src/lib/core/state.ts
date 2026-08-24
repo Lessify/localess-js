@@ -1,3 +1,5 @@
+import type { Component } from 'svelte';
+
 import {
   type EventToAppOf,
   type EventToAppType,
@@ -7,8 +9,7 @@ import {
   type LocalessClient,
   localessClient,
   type LocalessClientOptions,
-} from '@localess/client';
-import type { Component } from 'svelte';
+} from '../models';
 
 export type LocalessSvelteInitOptions = LocalessClientOptions & {
   components?: Record<string, Component>;
@@ -76,4 +77,9 @@ export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | '
 /** @internal test-only helper to reset the component registry between test cases. */
 export function setComponentsForTest(components: Record<string, Component>): void {
   _components = components;
+}
+
+/** @internal test-only helper to set the fallback component between test cases. */
+export function setFallbackComponentForTest(component: Component | undefined): void {
+  _fallbackComponent = component;
 }

@@ -4,6 +4,10 @@
 
 `@localess/angular` is a single unified Angular library built with ng-packagr — one entry point, `@localess/angular`, usable identically in SSR and pure client-side-rendered apps. There is no browser/server split: components, directives, and pipes are platform-agnostic, and `provideLocaless({ token, ... })` is the single provider (a secret token for server-fetched/hydrated content, a public token for content fetched directly in the browser).
 
+**`src/models/index.ts` (types) and `src/utils/index.ts` (values) are the only internal files allowed to import from `@localess/client` directly.** Every other file — services, components, directives, pipes, providers — imports the `@localess/client` types/values it needs through `../models` and/or `../utils` (relative path per file depth) instead. When a new file needs something from `@localess/client` that isn't re-exported yet, add it to whichever of the two files matches (types → `models/index.ts`, values/functions → `utils/index.ts`) rather than importing `@localess/client` directly. This keeps the client-package boundary auditable at two files instead of scattered across every service/component/directive/pipe.
+
+The one sanctioned exception is `src/public-api.ts`'s `export * from '@localess/client'` — this package's unified-entry-point design intentionally re-exports the full `@localess/client` surface to consumers, so leave that pass-through as-is; it is not subject to the rule above.
+
 ## Build
 
 ```bash

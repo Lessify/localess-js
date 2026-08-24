@@ -1,6 +1,6 @@
 import { inject, Pipe, PipeTransform } from '@angular/core';
-import type { AssetTransformParams, ContentAsset } from '@localess/client';
 
+import type { AssetTransformParams, ContentAsset } from '../models';
 import { LocalessClientService } from '../services/client.service';
 
 @Pipe({

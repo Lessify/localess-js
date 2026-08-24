@@ -1,7 +1,6 @@
-import { ContentFetchParams } from '@localess/client';
 import { useEffect, useState } from 'react';
 
-import { Content, ContentData } from '../models';
+import { Content, ContentData, ContentFetchParams } from '../models';
 import { getLocalessClient, localessSyncOn } from '../state';
 
 /**

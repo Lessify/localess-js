@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, linkedSignal } from '@angular/core';
-import type { Content, ContentData } from '@localess/client';
 
 import { LocalessComponentDirective } from '../directives/localess-component.directive';
+import type { Content, ContentData } from '../models';
 import { LocalessSyncService } from '../services/sync.service';
 
 /**

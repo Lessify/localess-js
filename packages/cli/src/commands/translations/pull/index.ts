@@ -1,9 +1,8 @@
-import { LocalessApiError } from '@localess/client';
 import { Command } from 'commander';
 
 import { localessCliClient } from '../../../client';
 import { writeFile } from '../../../file';
-import { TranslationFileFormat } from '../../../models';
+import { LocalessApiError, TranslationFileFormat } from '../../../models';
 import { getSession } from '../../../session';
 import { dotToNestedObject, sortObjectKeys } from '../../../utils';
 

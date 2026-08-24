@@ -41,8 +41,24 @@ npm install @localess/svelte svelte
   const content = await getLocaless().getContentBySlug('home');
 </script>
 
-<LocalessComponent data={content.data} />
+<LocalessComponent data={content.data} assets={content.assets} links={content.links} references={content.references} />
 ```
+
+## `LocalessDocument` — static renderer + live sync
+
+Wraps `LocalessComponent` and subscribes to Visual Editor `input`/`change` events automatically when `enableSync` is active, updating the rendered content in place. Does not fetch content — pass the full `Content` object (e.g. from `getLocaless().getContentBySlug(...)` or a SvelteKit `load()` function) as the `document` prop.
+
+```svelte
+<script lang="ts">
+  import { getLocaless, LocalessDocument } from '@localess/svelte';
+
+  const content = await getLocaless().getContentBySlug('home');
+</script>
+
+<LocalessDocument document={content} />
+```
+
+Prefer `LocalessDocument` over `LocalessComponent` whenever the rendered content should update live inside the Visual Editor iframe; use `LocalessComponent` directly for nested blocks within an already-synced tree.
 
 ## Component Registry
 
@@ -125,16 +141,16 @@ export const load: PageServerLoad = async ({ params }) => {
 ```svelte
 <!-- src/routes/[...slug]/+page.svelte -->
 <script lang="ts">
-  import { LocalessComponent } from '@localess/svelte';
+  import { LocalessDocument } from '@localess/svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 </script>
 
-<LocalessComponent data={data.content.data} />
+<LocalessDocument document={data.content} />
 ```
 
-SvelteKit's own `data`-prop serialization hydrates the server-fetched result to the client — `@localess/svelte` needs no hydration mechanism of its own. Call `localessInit()` in the root `+layout.svelte` with a **public** token only if you also want Visual Editor sync on top.
+SvelteKit's own `data`-prop serialization hydrates the server-fetched result to the client — `@localess/svelte` needs no hydration mechanism of its own. Call `localessInit()` in the root `+layout.svelte` with a **public** token only if you also want Visual Editor sync on top, then `LocalessDocument` picks up live `input`/`change` events automatically; use `LocalessComponent` instead if you don't need sync.
 
 ## API Reference
 
@@ -143,6 +159,7 @@ SvelteKit's own `data`-prop serialization hydrates the server-fetched result to 
 | `localessInit(options)` | Function | Initializes the client + component registry, sets Svelte context |
 | `getLocaless()` | Function | Returns the client from context |
 | `LocalessComponent` | Component | Dynamic schema-to-component renderer |
+| `LocalessDocument` | Component | Wraps `LocalessComponent` and re-renders on Visual Editor sync events |
 | `localessEditable` | Action | Applies `data-ll-id`/`data-ll-schema` |
 | `localessSync(event)` | Function | Visual Editor bridge event subscription, returns a `Readable` |
 | `localessRichText(doc)` | Function | Tiptap JSON → HTML, returns a `Readable<string>` |

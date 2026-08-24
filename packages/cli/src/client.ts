@@ -1,8 +1,16 @@
-import { LocalessApiError, localessClient, LocalessClientOptions } from '@localess/client';
 import { OpenAPIObject } from 'openapi3-ts/oas30';
 
 import { version } from '../package.json';
-import type { Schemas, Space, Translations, TranslationUpdate, TranslationUpdateResponse, TranslationUpdateType } from './models';
+import type {
+  LocalessClientOptions,
+  Schemas,
+  Space,
+  Translations,
+  TranslationUpdate,
+  TranslationUpdateResponse,
+  TranslationUpdateType,
+} from './models';
+import { LocalessApiError, localessClient } from './models';
 import { BRIGHT, FG_BLUE, FG_RED, RESET } from './utils';
 
 export type LocalessCliClientOptions = LocalessClientOptions & {

@@ -1,6 +1,6 @@
-import type { EventToAppOf, EventToAppType } from '@localess/client';
-import { onMounted, ref, type Ref } from 'vue';
+import { onMounted, type Ref, ref } from 'vue';
 
+import type { EventToAppOf, EventToAppType } from '../core/models';
 import { localessSyncOn } from '../core/state';
 
 export function useLocalessSync<T extends EventToAppType>(event: T | T[]): Ref<EventToAppOf<T> | undefined> {

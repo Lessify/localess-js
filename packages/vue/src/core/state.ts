@@ -1,3 +1,5 @@
+import type { Component } from 'vue';
+
 import {
   type EventToAppOf,
   type EventToAppType,
@@ -7,8 +9,7 @@ import {
   type LocalessClient,
   localessClient,
   type LocalessClientOptions,
-} from '@localess/client';
-import type { Component } from 'vue';
+} from './models';
 
 export type LocalessVueInitOptions = LocalessClientOptions & {
   components?: Record<string, Component>;

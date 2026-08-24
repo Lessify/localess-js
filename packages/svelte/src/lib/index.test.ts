@@ -7,6 +7,7 @@ describe('@localess/svelte public API', () => {
     expect(pkg.localessInit).toBeDefined();
     expect(pkg.getLocaless).toBeDefined();
     expect(pkg.LocalessComponent).toBeDefined();
+    expect(pkg.LocalessDocument).toBeDefined();
     expect(pkg.localessEditable).toBeDefined();
     expect(pkg.localessSync).toBeDefined();
     expect(pkg.localessRichText).toBeDefined();

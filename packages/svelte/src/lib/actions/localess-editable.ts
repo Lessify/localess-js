@@ -1,5 +1,6 @@
-import { localessEditable as buildAttrs, type ContentDataSchema } from '@localess/client';
 import type { Action } from 'svelte/action';
+
+import { type ContentDataSchema, localessEditable as buildAttrs } from '../models';
 
 function apply(node: HTMLElement, content: ContentDataSchema): void {
   const attrs = buildAttrs(content);

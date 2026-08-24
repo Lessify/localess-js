@@ -1,5 +1,7 @@
 import { inject, Injectable } from '@angular/core';
-import {
+
+import { LOCALESS_CONFIG } from '../localess.config';
+import type {
   AssetTransformParams,
   Content,
   ContentAsset,
@@ -7,12 +9,10 @@ import {
   ContentFetchParams,
   Links,
   LinksFetchParams,
-  localessClient,
   TranslationFetchParams,
   Translations,
-} from '@localess/client';
-
-import { LOCALESS_CONFIG } from '../localess.config';
+} from '../models';
+import { localessClient } from '../utils';
 
 @Injectable()
 export class LocalessClientService {

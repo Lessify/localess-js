@@ -1,6 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import type { ContentRichText } from '@localess/client';
 import type { JSONContent } from '@tiptap/core';
+
+import type { ContentRichText } from '../models';
 
 let extensionsPromise: ReturnType<typeof loadExtensions> | undefined;
 

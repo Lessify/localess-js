@@ -1,8 +1,8 @@
 'use client';
 
-import { loadLocalessSync } from '@localess/client';
 import { useEffect } from 'react';
 
+import { loadLocalessSync } from '../core/models';
 import { isBrowser, isIframe } from '../core/utils';
 
 export type LiveEditListenerProps = {

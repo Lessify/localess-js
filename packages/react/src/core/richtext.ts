@@ -1,4 +1,3 @@
-import { ContentRichText } from '@localess/client';
 import { Bold } from '@tiptap/extension-bold';
 import { BulletList } from '@tiptap/extension-bullet-list';
 import { Code } from '@tiptap/extension-code';
@@ -16,6 +15,8 @@ import { Text } from '@tiptap/extension-text';
 import { Underline } from '@tiptap/extension-underline';
 import { renderToReactElement } from '@tiptap/static-renderer/pm/react';
 import React from 'react';
+
+import type { ContentRichText } from './models';
 
 /**
  * Renders a Localess rich text field to a React node tree.

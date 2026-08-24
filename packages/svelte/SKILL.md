@@ -6,6 +6,7 @@
 
 - A **component registry** mapping Localess schema keys to Svelte components, set up via `localessInit()` and Svelte context
 - `<LocalessComponent>` — dynamic content renderer
+- `<LocalessDocument>` — wraps `<LocalessComponent>` with automatic Visual Editor live sync
 - `localessEditable` — a Svelte action applying Visual Editor editable attributes
 - **Visual Editor sync** support via the `localessSync` store
 - **Rich text** rendering from Tiptap JSON via `localessRichText`
@@ -55,23 +56,42 @@ Call `localessInit()` once, synchronously, during a root component's initializat
 
 ## `<LocalessComponent>`
 
-Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Always applies `localessEditable(data)`'s `data-ll-id`/`data-ll-schema` attributes to the rendered component's root.
+Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Always applies `localessEditable(data)`'s `data-ll-id`/`data-ll-schema` attributes to the rendered component's root. Accepts `assets`, `links`, and `references` alongside `data` and forwards all four to the resolved component (or `fallbackComponent`) — registered components should declare the same four props and pass `assets`/`links`/`references` through when rendering nested `<LocalessComponent>`s.
 
 ```svelte
 <script lang="ts">
   import { LocalessComponent } from '@localess/svelte';
-  let { data }: { data: { title?: string; body?: any[] } } = $props();
+  let { data, assets, links, references }: { data: { title?: string; body?: any[] }; assets?: any; links?: any; references?: any } =
+    $props();
 </script>
 
 <main>
   <h1>{data.title}</h1>
   {#each data.body ?? [] as item (item._id)}
-    <LocalessComponent data={item} />
+    <LocalessComponent data={item} {assets} {links} {references} />
   {/each}
 </main>
 ```
 
 Falls back to `fallbackComponent` (if registered) when the schema key is unregistered, or renders an inline error message as a last resort.
+
+---
+
+## `<LocalessDocument>`
+
+Wraps `<LocalessComponent>` and subscribes to Visual Editor `input`/`change` events automatically (when `enableSync` is active), re-rendering with the updated content in place. Does not fetch content — pass the full `Content` object as `document`.
+
+```svelte
+<script lang="ts">
+  import { getLocaless, LocalessDocument } from '@localess/svelte';
+
+  const content = await getLocaless().getContentBySlug('home');
+</script>
+
+<LocalessDocument document={content} />
+```
+
+Renders an inline error message if `document.data` is missing. Prefer this over `<LocalessComponent>` for the top-level content of a page when Visual Editor sync should apply; use `<LocalessComponent>` directly for nested blocks within an already-synced tree.
 
 ---
 
@@ -188,16 +208,16 @@ export const load: PageServerLoad = async ({ params }) => {
 ```svelte
 <!-- src/routes/[...slug]/+page.svelte -->
 <script lang="ts">
-  import { LocalessComponent } from '@localess/svelte';
+  import { LocalessDocument } from '@localess/svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 </script>
 
-<LocalessComponent data={data.content.data} />
+<LocalessDocument document={data.content} />
 ```
 
-SvelteKit's own `data`-prop serialization hydrates the server-fetched result to the client — `@localess/svelte` needs no hydration mechanism of its own. Call `localessInit()` in the root `+layout.svelte` with a **public** token only if you also want Visual Editor sync on top.
+SvelteKit's own `data`-prop serialization hydrates the server-fetched result to the client — `@localess/svelte` needs no hydration mechanism of its own. Call `localessInit()` in the root `+layout.svelte` with a **public** token only if you also want Visual Editor sync on top — `LocalessDocument` picks up live `input`/`change` events automatically; use `LocalessComponent` instead if you don't need sync.
 
 ---
 
@@ -210,6 +230,7 @@ export { getLocaless }              // Returns the client from context
 
 // Rendering
 export { LocalessComponent }        // Dynamic schema-to-component renderer
+export { LocalessDocument }         // Wraps LocalessComponent with automatic Visual Editor live sync
 export { localessEditable }         // use:localessEditable action
 
 // Reactivity
@@ -218,6 +239,9 @@ export { localessRichText }         // Tiptap JSON -> HTML, returns a Readable<s
 
 // Error handling (re-exported from @localess/client)
 export { LocalessApiError }
+
+// Types (re-exported from @localess/client)
+export type { Assets, Content, ContentData, ContentDataSchema, Links, References }
 ```
 
 ```typescript
