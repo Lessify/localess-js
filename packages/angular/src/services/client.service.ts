@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { localessClient } from '@localess/client';
 
 import { LOCALESS_CONFIG } from '../localess.config';
 import type {
@@ -12,7 +13,6 @@ import type {
   TranslationFetchParams,
   Translations,
 } from '../models';
-import { localessClient } from '../utils';
 
 @Injectable()
 export class LocalessClientService {
