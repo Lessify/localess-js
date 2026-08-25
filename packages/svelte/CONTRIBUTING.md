@@ -4,7 +4,7 @@ Svelte 5 integration layer. Depends on `@localess/client`. Components never fetc
 
 `@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples) must only ever import from `@localess/svelte` — never `@localess/client` directly. If something from `@localess/client` isn't re-exported yet, add it to `src/lib/index.ts`'s re-exports rather than telling consumers to import `@localess/client` themselves.
 
-**`src/lib/models.ts` is the only file allowed to import from `@localess/client`.** Every other file in this package — including `index.ts` — imports the types/values it needs from `./models` (or `../models`, `../../models`, depending on depth) instead. When a new file needs something from `@localess/client` that `models.ts` doesn't re-export yet, add it there first. This keeps the client-package boundary auditable at a single file instead of scattered across every component/store/action.
+**`src/lib/models/index.ts` and `src/lib/utils.ts` are the only files allowed to import from `@localess/client`.** `models/index.ts` re-exports client types plus the core client value exports (`LocalessApiError`, `localessClient`); `utils.ts` re-exports client-side utility functions (`isBrowser`, `isIframe`, `loadLocalessSync`, `localessEditable`, `localessEditableField`, `findLink`, `isServer`). Every other file in this package — including `index.ts` — imports what it needs from `./models`/`../models` or `./utils`/`../utils` instead (adjust relative depth as needed). When a new file needs something from `@localess/client` that neither re-exports yet, add it to whichever matches (types/core client → `models/index.ts`, plain functions → `utils.ts`). This keeps the client-package boundary auditable at two well-known files instead of scattered across every component/store/action.
 
 `@localess/svelte`'s `core/state.ts` (client/registry/sync state) is a hand-ported near-duplicate of `@localess/vue`'s equivalent module — same function names and behavior, Vue's `Component` type swapped for Svelte's. ADR 005 forbids extracting this into a shared package, so keep this a manual-sync discipline: when fixing a bug here, check `packages/vue/src/core/state.ts` for the same bug.
 
@@ -65,4 +65,6 @@ npm run build:svelte
 npm run build
 ```
 
-Runs, in order: `build:lib` (svelte-package), `publint`. Output: `dist/index.js` + `.d.ts`, component `.svelte` files.
+Runs, in order: `typecheck` (`svelte-check`), `build:lib` (svelte-package), `publint`. Output: `dist/index.js` + `.d.ts`, component `.svelte` files.
+
+Run `npm run typecheck` on its own (`svelte-kit sync && svelte-check --tsconfig ./tsconfig.json`) to catch type errors without building — `svelte-package` only transpiles and does not type-check, so this is the only thing in the build that does.

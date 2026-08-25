@@ -57,7 +57,7 @@ npx vitest run packages/cli/src/commands/login/login.test.ts  # single file
 
 Build tools per package:
 - `@localess/client`, `@localess/react`, `@localess/vue`, `@localess/cli`: **Vite library mode** (`vite.config.ts`) → CJS + ESM + types
-- `@localess/svelte`: **`svelte-package`** (ESM-only) for the library surface, plus a separate Vite library-mode build for `/vite`
+- `@localess/svelte`: **`svelte-package`** (ESM-only) for the library surface, gated by a `svelte-check` typecheck step
 - `@localess/angular`: **ng-packagr via Angular CLI** (`ng-package.json`) → `dist/` with main, `browser/`, `server/` sub-entries
 
 Tests use **vitest** everywhere, including `@localess/angular` (via the Angular CLI's `@angular/build:unit-test` builder with `runner: "vitest"`).
@@ -78,7 +78,7 @@ Tests use **vitest** everywhere, including `@localess/angular` (via the Angular 
 | [docs/react.md](react.md) | `@localess/react` — export variants, components, hooks, sync patterns |
 | [docs/angular.md](angular.md) | `@localess/angular` — entry points, components, directives, pipes, sync |
 | [docs/vue.md](vue.md) | `@localess/vue` — plugin, component, directive, composables, Vite plugin, SSR |
-| [docs/svelte.md](svelte.md) | `@localess/svelte` — context init, component, action, stores, Vite plugin, SSR |
+| [docs/svelte.md](svelte.md) | `@localess/svelte` — context init, component, action, stores, SSR |
 | [docs/cli.md](cli.md) | `@localess/cli` — commands, credentials, CI/CD |
 | [docs/decisions/](decisions/) | ADRs — the WHY behind hard constraints |
 
