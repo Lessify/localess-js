@@ -29,8 +29,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite dev",
-    "build": "npm run build:lib && publint",
+    "build": "npm run typecheck && npm run build:lib && publint",
     "build:lib": "svelte-kit sync && svelte-package",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

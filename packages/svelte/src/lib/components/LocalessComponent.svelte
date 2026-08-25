@@ -1,9 +1,9 @@
-<script lang="ts">
-  import { getComponent, getFallbackComponent } from './core/state';
-  import { localessEditable, type Assets, type ContentDataSchema, type Links, type References } from './models';
+<script lang="ts" generics="T extends ContentData = ContentData">
+  import { getComponent, getFallbackComponent } from '../core/state';
+  import type { LocalessComponentProps, ContentData} from '../models';
+  import {localessEditable} from "$lib/utils";
 
-  let { data, assets, links, references }: { data: ContentDataSchema; assets?: Assets; links?: Links; references?: References } =
-    $props();
+  let { data, assets, links, references }: LocalessComponentProps<T> = $props();
 
   let Comp = $derived(getComponent(data._schema));
   let Fallback = $derived(getFallbackComponent());

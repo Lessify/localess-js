@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 
-import Hero from './__fixtures__/hero.svelte';
-import PropsProbe from './__fixtures__/props-probe.svelte';
-import { setComponentsForTest, setFallbackComponentForTest } from './core/state';
+import Hero from '../__fixtures__/hero.svelte';
+import PropsProbe from '../__fixtures__/props-probe.svelte';
+import { setComponentsForTest, setFallbackComponentForTest } from '../core/state';
 import LocalessComponent from './LocalessComponent.svelte';
 
 describe('LocalessComponent', () => {

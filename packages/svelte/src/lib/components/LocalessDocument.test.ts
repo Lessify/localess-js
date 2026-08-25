@@ -2,9 +2,9 @@ import { cleanup, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import TitleProbe from './__fixtures__/title-probe.svelte';
-import * as state from './core/state';
-import { setComponentsForTest } from './core/state';
+import TitleProbe from '../__fixtures__/title-probe.svelte';
+import * as state from '../core/state';
+import { setComponentsForTest } from '../core/state';
 import LocalessDocument from './LocalessDocument.svelte';
 
 describe('LocalessDocument', () => {

@@ -3,13 +3,11 @@ import type { Component } from 'svelte';
 import {
   type EventToAppOf,
   type EventToAppType,
-  isBrowser,
-  isIframe,
-  loadLocalessSync,
   type LocalessClient,
   localessClient,
   type LocalessClientOptions,
 } from '../models';
+import { isBrowser, isIframe, loadLocalessSync } from '../utils';
 
 export type LocalessSvelteInitOptions = LocalessClientOptions & {
   components?: Record<string, Component<any>>;

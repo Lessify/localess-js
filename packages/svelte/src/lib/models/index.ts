@@ -3,6 +3,7 @@
  * types and values through this module (relatively, e.g. `../models`) instead of importing
  * `@localess/client` directly — see `packages/svelte/CONTRIBUTING.md`.
  */
+export type { LocalessComponentProps, LocalessDocumentProps } from './components';
 export type {
   Assets,
   Content,
@@ -15,4 +16,4 @@ export type {
   LocalessClientOptions,
   References,
 } from '@localess/client';
-export { isBrowser, isIframe, loadLocalessSync, LocalessApiError, localessClient, localessEditable } from '@localess/client';
+export { LocalessApiError, localessClient } from '@localess/client';

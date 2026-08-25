@@ -1,12 +1,12 @@
 <script lang="ts" generics="T extends ContentData = ContentData">
   import { untrack } from 'svelte';
 
-  import { FONT_BOLD, FONT_NORMAL } from './console';
-  import { localessSyncOnChange } from './core/state';
+  import { FONT_BOLD, FONT_NORMAL } from '../console';
+  import { localessSyncOnChange } from '../core/state';
   import LocalessComponent from './LocalessComponent.svelte';
-  import type { Content, ContentData } from './models';
+  import type { LocalessDocumentProps, ContentData } from '../models';
 
-  let { document }: { document: Content<T> } = $props();
+  let { document }: LocalessDocumentProps<T> = $props();
 
   let contentData = $state(untrack(() => document.data));
 
