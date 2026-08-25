@@ -85,16 +85,15 @@ components: {
 }
 ```
 
-### Dynamic registry management
+### Reading the registry
+
+The registry (and fallback component) are set via `localessInit`'s `components`/`fallbackComponent` options — calling `localessInit` again replaces the registry entirely.
 
 ```typescript
-import { registerComponent, unregisterComponent, setComponents, getComponent, setFallbackComponent } from "@localess/react";
+import { getComponent, getFallbackComponent } from "@localess/react";
 
-registerComponent('promo-banner', PromoBanner);
-unregisterComponent('promo-banner');
-setComponents({ 'page': Page, 'hero': Hero }); // replaces entire registry
 const HeroComp = getComponent('hero');
-setFallbackComponent(UnknownBlock);
+const fallback = getFallbackComponent();
 ```
 
 ## Rendering Components
@@ -565,8 +564,7 @@ const client = getLocalessClient(); // throws if localessInit() not called
 ```typescript
 // Default export (@localess/react)
 export { localessInit, getLocalessClient }
-export { registerComponent, unregisterComponent, setComponents, getComponent }
-export { setFallbackComponent, getFallbackComponent, isSyncEnabled }
+export { getComponent, getFallbackComponent, isSyncEnabled }
 export { LocalessComponent, LocalessDocument }
 export { renderRichTextToReact, resolveAsset }
 export { useLocaless }
