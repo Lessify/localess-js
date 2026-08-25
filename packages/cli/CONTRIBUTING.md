@@ -4,7 +4,9 @@ CLI tool built with Commander.js. Entry point: `src/index.ts`. All commands live
 
 ## Importing from `@localess/client`
 
-`src/models/index.ts` is the only file allowed to import from `@localess/client` directly. Every other file in this package imports the types/values it needs from `./models` (or the correct relative path) instead. When a new file needs something from `@localess/client` that `models/index.ts` doesn't re-export yet, add it there first.
+**`src/models/index.ts` and `src/client.ts` are the only files allowed to import from `@localess/client` directly.** `models/index.ts` re-exports every `@localess/client` type the package needs plus `LocalessApiError` (a class, but consumed in type position via `catch`/`instanceof`, so it lives with the domain model). `client.ts` is the one place that calls `localessClient(...)` and wraps it in `localessCliClient` (the CLI-specific client with retry/error-formatting behavior) — `localessClient` is a callable factory, not a type, so it's imported there directly rather than re-exported through `models`. Every other file in this package imports what it needs from `./models` (or the correct relative path) instead. When a new file needs something from `@localess/client` that neither re-exports yet, add it to whichever matches.
+
+Known gap: `src/models/space.ts` currently imports `Locale` from `@localess/client` directly instead of going through `models/index.ts` — bring it into compliance next time that file is touched, rather than as a standalone fix.
 
 ## Session / Credentials
 
