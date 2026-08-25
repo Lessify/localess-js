@@ -4,17 +4,14 @@ import { FONT_BOLD, FONT_NORMAL } from '../console';
 import {
   type AnyLocalessComponent,
   type AssetTransformParams,
-  buildAssetQueryString,
   type ContentAsset,
   type EventToAppOf,
   type EventToAppType,
-  isBrowser,
-  isIframe,
-  loadLocalessSync,
   type LocalessClient,
   localessClient,
   type LocalessOptions,
 } from './models';
+import { buildAssetQueryString, isBrowser, isIframe, loadLocalessSync } from './utils';
 
 let _origin: string | undefined = undefined;
 let _client: LocalessClient | undefined = undefined;

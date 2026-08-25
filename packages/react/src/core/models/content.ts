@@ -15,4 +15,3 @@ export type {
   Links,
   References,
 } from '@localess/client';
-export { buildAssetQueryString } from '@localess/client';

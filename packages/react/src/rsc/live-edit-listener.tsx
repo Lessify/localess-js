@@ -2,8 +2,7 @@
 
 import { useEffect } from 'react';
 
-import { loadLocalessSync } from '../core/models';
-import { isBrowser, isIframe } from '../core/utils';
+import { isBrowser, isIframe, loadLocalessSync } from '../core/utils';
 
 export type LiveEditListenerProps = {
   /** The content's top-level `id` (`Content.id`), forwarded to the Server Action as the cache key. */

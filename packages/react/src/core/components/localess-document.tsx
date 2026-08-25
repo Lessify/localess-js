@@ -2,21 +2,8 @@ import { forwardRef, useEffect, useState } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../../console';
 import { LocalessComponent } from '../components';
-import { Content, ContentData } from '../models';
+import { ContentData, LocalessDocumentProps } from '../models';
 import { localessSyncOnChange } from '../state';
-
-/**
- * Props for {@link LocalessDocument}.
- *
- * @template T - The content data shape. Defaults to the base {@link ContentData} type.
- */
-export type LocalessDocumentProps<T extends ContentData = ContentData> = {
-  /**
-   * The full content response object as returned by `getContentBySlug` or `getContentById`.
-   * Must contain a `data` field with a valid `_schema` key.
-   */
-  document: Content<T>;
-};
 
 /**
  * Client Component that renders content and automatically subscribes to Visual Editor sync events.

@@ -1,6 +1,19 @@
 import type React from 'react';
 
-import type { Assets, ContentData, Links, References } from './content';
+import type { Assets, Content, ContentData, Links, References } from './content';
+
+/**
+ * Props for {@link LocalessDocument}.
+ *
+ * @template T - The content data shape. Defaults to the base {@link ContentData} type.
+ */
+export type LocalessDocumentProps<T extends ContentData = ContentData> = {
+  /**
+   * The full content response object as returned by `getContentBySlug` or `getContentById`.
+   * Must contain a `data` field with a valid `_schema` key.
+   */
+  document: Content<T>;
+};
 
 /**
  * Props every component registered in the Localess component registry must accept.
