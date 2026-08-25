@@ -1,8 +1,10 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { registerComponent, setFallbackComponent, unregisterComponent } from '../client';
+import { localessInit } from '../client';
 import { LocalessComponent } from './localess-component';
+
+const baseOptions = { origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' };
 
 function Hero({ data, ...rest }: any) {
   return <h1 {...rest}>{data.title}</h1>;
@@ -11,12 +13,10 @@ function Hero({ data, ...rest }: any) {
 describe('LocalessComponent', () => {
   afterEach(() => {
     cleanup();
-    unregisterComponent('hero');
-    setFallbackComponent(undefined as any);
   });
 
   it('renders the registered component for a matching schema key', () => {
-    registerComponent('hero', Hero);
+    localessInit({ ...baseOptions, components: { hero: Hero } });
 
     render(<LocalessComponent data={{ _schema: 'hero', title: 'Welcome' } as any} />);
 
@@ -24,7 +24,7 @@ describe('LocalessComponent', () => {
   });
 
   it('spreads localessEditable data-ll-* attributes onto the rendered component', () => {
-    registerComponent('hero', Hero);
+    localessInit({ ...baseOptions, components: { hero: Hero } });
 
     const { container } = render(<LocalessComponent data={{ _schema: 'hero', _id: 'block-1', title: 'Welcome' } as any} />);
 
@@ -37,7 +37,7 @@ describe('LocalessComponent', () => {
     function Fallback({ data }: any) {
       return <div>Unknown: {data._schema}</div>;
     }
-    setFallbackComponent(Fallback);
+    localessInit({ ...baseOptions, fallbackComponent: Fallback });
 
     render(<LocalessComponent data={{ _schema: 'missing-schema' } as any} />);
 
@@ -46,6 +46,7 @@ describe('LocalessComponent', () => {
 
   it('renders an inline error when neither a matching component nor a fallback is registered', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    localessInit(baseOptions);
 
     render(<LocalessComponent data={{ _schema: 'missing-schema' } as any} />);
 
@@ -54,6 +55,7 @@ describe('LocalessComponent', () => {
 
   it('renders an inline error when data is missing', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    localessInit(baseOptions);
 
     render(<LocalessComponent data={undefined as any} />);
 

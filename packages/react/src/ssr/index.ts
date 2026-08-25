@@ -31,17 +31,7 @@
  * - isSyncEnabled / localessSyncOn / localessSyncOnChange / localessSyncReady (not meaningful without live editing)
  */
 
-export {
-  getComponent,
-  getFallbackComponent,
-  getLocalessClient,
-  localessInit,
-  registerComponent,
-  resolveAsset,
-  setComponents,
-  setFallbackComponent,
-  unregisterComponent,
-} from '../core/client';
+export { getComponent, getFallbackComponent, getLocalessClient, localessInit, resolveAsset } from '../core/client';
 export type * from '../core/models';
 export { LocalessApiError } from '../core/models';
 export { renderRichTextToReact } from '../core/richtext';

@@ -58,37 +58,27 @@ describe('client', () => {
     );
   });
 
-  it('registers, retrieves, and unregisters components', async () => {
-    const state = await import('./client');
-    const Component = () => null;
-
-    state.registerComponent('hero', Component);
-    expect(state.getComponent('hero')).toBe(Component);
-
-    state.unregisterComponent('hero');
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(state.getComponent('hero')).toBeUndefined();
-  });
-
-  it('setComponents replaces the entire registry', async () => {
+  it('localessInit populates the component registry, and a later call replaces it entirely', async () => {
     const state = await import('./client');
     const ComponentA = () => null;
     const ComponentB = () => null;
 
-    state.registerComponent('a', ComponentA);
-    state.setComponents({ b: ComponentB });
+    state.localessInit({ ...baseOptions, components: { a: ComponentA } });
+    expect(state.getComponent('a')).toBe(ComponentA);
 
+    state.localessInit({ ...baseOptions, components: { b: ComponentB } });
     vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(state.getComponent('a')).toBeUndefined();
     expect(state.getComponent('b')).toBe(ComponentB);
   });
 
-  it('gets and sets the fallback component', async () => {
+  it('localessInit sets the fallback component', async () => {
     const state = await import('./client');
+    state.localessInit(baseOptions);
     expect(state.getFallbackComponent()).toBeUndefined();
 
     const Fallback = () => null;
-    state.setFallbackComponent(Fallback);
+    state.localessInit({ ...baseOptions, fallbackComponent: Fallback });
     expect(state.getFallbackComponent()).toBe(Fallback);
   });
 

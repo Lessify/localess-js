@@ -240,33 +240,13 @@ async function fetchPageData(locale?: string) {
 
 ## Component Registry API
 
-These functions allow dynamic management of the component registry after initialization.
+The component registry (and fallback component) are set via `localessInit`'s `components`/`fallbackComponent` options. Calling `localessInit` again replaces the registry entirely. These functions let you read the registry without going through `localessInit`.
 
 ```ts
-import {
-  registerComponent,
-  unregisterComponent,
-  setComponents,
-  getComponent,
-  setFallbackComponent,
-  getFallbackComponent,
-  isSyncEnabled,
-} from "@localess/react";
-
-// Register a new component
-registerComponent('hero-block', HeroBlock);
-
-// Unregister a component
-unregisterComponent('hero-block');
-
-// Replace the entire registry
-setComponents({ 'page': Page, 'hero': Hero });
+import { getComponent, getFallbackComponent, isSyncEnabled } from "@localess/react";
 
 // Retrieve a component by schema key
 const Component = getComponent('hero');
-
-// Configure the fallback component
-setFallbackComponent(UnknownComponent);
 
 // Get the current fallback component
 const fallback = getFallbackComponent();
@@ -726,8 +706,8 @@ The table below shows which symbols are available in each export.
 |--------------------------------------------------------|:-----------------:|:---------------------:|:---------------------:|
 | `localessInit`                                         |         ✅         |           ✅           |           ✅           |
 | `getLocalessClient`                                    |         ✅         |           ✅           |           ✅           |
-| `registerComponent` / `setComponents` / `getComponent` |         ✅         |           ✅           |           ✅           |
-| `setFallbackComponent` / `getFallbackComponent`        |         ✅         |           ✅           |           ✅           |
+| `getComponent`                                         |         ✅         |           ✅           |           ✅           |
+| `getFallbackComponent`                                 |         ✅         |           ✅           |           ✅           |
 | `resolveAsset`                                         |         ✅         |           ✅           |           ✅           |
 | `LocalessComponent`                                    |         ✅         |           ❌           |           ✅           |
 | `LocalessServerComponent` / `LocalessServerDocument`   |         ❌         |           ✅           |           ✅           |

@@ -16,8 +16,8 @@ export { LocalessApiError } from '@localess/client';
  * pattern) is never assignable to a registry slot typed with a concrete `ContentData` — only
  * `any` keeps every schema-specific component assignable here.
  *
- * Only used at the **registration** surface (`localessInit`'s `components`/`fallbackComponent`,
- * `registerComponent`, `setComponents`, `setFallbackComponent`). The registry's internal storage
+ * Only used at the **registration** surface (`localessInit`'s `components`/`fallbackComponent`).
+ * The registry's internal storage
  * and lookup (`getComponent`/`getFallbackComponent`) intentionally stay typed as the looser
  * `React.ElementType` — the render call sites pass a `ref` through, which only
  * `React.ElementType`'s broader union tolerates; narrowing it there reintroduces a "Property

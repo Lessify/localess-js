@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { LocalessDocument as CoreLocalessDocument } from '../core/components/localess-document';
-import { LocalessDocument as RscLocalessDocument, localessInit, setComponents, setFallbackComponent } from './index';
+import { LocalessDocument as RscLocalessDocument, localessInit } from './index';
 import { LocalessDocument as RscOwnLocalessDocument } from './localess-document';
 
 describe('@localess/react/rsc index', () => {
@@ -13,9 +13,7 @@ describe('@localess/react/rsc index', () => {
     expect(RscLocalessDocument).not.toBe(CoreLocalessDocument);
   });
 
-  it('exports setComponents, setFallbackComponent, and localessInit, required by the LocalessClientDocument fallback path (localessInit called again client-side with a public token)', () => {
-    expect(typeof setComponents).toBe('function');
-    expect(typeof setFallbackComponent).toBe('function');
+  it('exports localessInit, required by the LocalessClientDocument fallback path (called again client-side with a public token to re-populate the registry)', () => {
     expect(typeof localessInit).toBe('function');
   });
 });

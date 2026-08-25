@@ -1,8 +1,10 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { registerComponent, unregisterComponent } from '../core/client';
+import { localessInit } from '../core/client';
 import { LocalessServerDocument } from './localess-document';
+
+const baseOptions = { origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' };
 
 function Page({ data }: any) {
   return <p>{data.title}</p>;
@@ -11,11 +13,10 @@ function Page({ data }: any) {
 describe('LocalessServerDocument', () => {
   afterEach(() => {
     cleanup();
-    unregisterComponent('page');
   });
 
   it('renders the registered component using document.data', () => {
-    registerComponent('page', Page);
+    localessInit({ ...baseOptions, components: { page: Page } });
 
     render(<LocalessServerDocument document={{ _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
 

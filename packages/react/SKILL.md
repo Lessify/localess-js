@@ -571,23 +571,13 @@ SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
 
 ## Component Registry Management
 
-For dynamic/lazy registration (e.g., plugin systems):
+The registry (and fallback component) are set via `localessInit`'s `components`/`fallbackComponent` options — calling `localessInit` again replaces the registry entirely. Use `getComponent`/`getFallbackComponent` to read it:
 
 ```typescript
-import {
-  registerComponent,
-  unregisterComponent,
-  setComponents,
-  getComponent,
-  setFallbackComponent,
-  getFallbackComponent,
-} from "@localess/react";
+import { getComponent, getFallbackComponent } from "@localess/react";
 
-registerComponent('promo-banner', PromoBanner);
-unregisterComponent('promo-banner');
-setComponents({ 'page': Page, 'hero': Hero }); // replaces entire registry
 const HeroComp = getComponent('hero');
-setFallbackComponent(UnknownBlock);
+const fallback = getFallbackComponent();
 ```
 
 ---
@@ -692,9 +682,8 @@ components: {
 // Initialization & client
 export { localessInit, getLocalessClient }
 
-// Component registry
-export { registerComponent, unregisterComponent, setComponents, getComponent }
-export { setFallbackComponent, getFallbackComponent, isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncReady }
+// Component registry (populated via localessInit's components/fallbackComponent options)
+export { getComponent, getFallbackComponent, isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncReady }
 
 // Rendering
 export { LocalessComponent }        // Dynamic schema-to-component renderer
@@ -731,7 +720,7 @@ export type {
 ```typescript
 // @localess/react/ssr — smallest bundle, no sync, no 'use client'
 export { localessInit, getLocalessClient }
-export { registerComponent, unregisterComponent, getComponent, getFallbackComponent }
+export { getComponent, getFallbackComponent }
 export { LocalessServerComponent }  // Dynamic schema-to-component renderer, server-safe
 export { LocalessServerDocument }   // Schema renderer, no sync — server-safe
 export { renderRichTextToReact, resolveAsset, findLink }

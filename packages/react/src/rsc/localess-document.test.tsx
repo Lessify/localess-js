@@ -6,9 +6,11 @@ vi.mock('../core/client', async importOriginal => {
   return { ...actual, getOrigin: () => 'https://cms.example.com', isSyncConfigured: () => false };
 });
 
-import { registerComponent, unregisterComponent } from '../core/client';
+import { localessInit } from '../core/client';
 import { clearLiveEdit, setLiveEdit } from './live-edit-cache';
 import { LocalessDocument } from './localess-document';
+
+const baseOptions = { origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' };
 
 function Page({ data }: any) {
   return <p>{data.title}</p>;
@@ -16,12 +18,11 @@ function Page({ data }: any) {
 
 describe('LocalessDocument (rsc, Server-Action-driven)', () => {
   afterEach(() => {
-    unregisterComponent('page');
     clearLiveEdit('doc-1');
   });
 
   it('renders using document.data when no live edit is cached', () => {
-    registerComponent('page', Page);
+    localessInit({ ...baseOptions, components: { page: Page } });
 
     render(<LocalessDocument document={{ id: 'doc-1', data: { _schema: 'page', title: 'Hello' } } as any} />);
 
@@ -29,7 +30,7 @@ describe('LocalessDocument (rsc, Server-Action-driven)', () => {
   });
 
   it('renders using the cached live edit, overlaid over document.data, when one exists for this id', () => {
-    registerComponent('page', Page);
+    localessInit({ ...baseOptions, components: { page: Page } });
     setLiveEdit('doc-1', { _schema: 'page', title: 'Live Edited' });
 
     render(<LocalessDocument document={{ id: 'doc-1', data: { _schema: 'page', title: 'Hello' } } as any} />);
@@ -38,7 +39,7 @@ describe('LocalessDocument (rsc, Server-Action-driven)', () => {
   });
 
   it('consumes the cached live edit (one-shot) so a second render falls back to document.data', () => {
-    registerComponent('page', Page);
+    localessInit({ ...baseOptions, components: { page: Page } });
     setLiveEdit('doc-1', { _schema: 'page', title: 'Live Edited' });
 
     render(<LocalessDocument document={{ id: 'doc-1', data: { _schema: 'page', title: 'Hello' } } as any} />);

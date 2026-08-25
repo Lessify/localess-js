@@ -3,7 +3,6 @@ import type React from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';
 import {
-  type AnyLocalessComponent,
   type AssetTransformParams,
   type ContentAsset,
   type EventToAppOf,
@@ -102,43 +101,6 @@ export function getLocalessClient(): LocalessClient {
 }
 
 /**
- * Adds a single component to the registry under the given schema key.
- *
- * The key must match the `_schema` field of the content objects you want to render.
- * Overwrites any previously registered component for the same key.
- *
- * @param key - The schema key (e.g. `'hero-section'`).
- * @param component - The React component to render for this schema key. Must accept
- *   {@link LocalessComponentProps} (`data`, plus optional `links`/`references`/`assets`).
- */
-export function registerComponent(key: string, component: AnyLocalessComponent): void {
-  _components[key] = component;
-}
-
-/**
- * Removes a component from the registry by schema key.
- * No-op if the key does not exist.
- *
- * @param key - The schema key to remove.
- */
-export function unregisterComponent(key: string): void {
-  delete _components[key];
-}
-
-/**
- * Replaces the entire component registry with the supplied map.
- *
- * Useful when you need to swap all components at once (e.g. lazy-loaded registry).
- * Any previously registered components (including those set via `localessInit`) are discarded.
- *
- * @param components - A record mapping schema keys to React components, each accepting
- *   {@link LocalessComponentProps}.
- */
-export function setComponents(components: Record<string, AnyLocalessComponent>): void {
-  _components = components;
-}
-
-/**
  * Looks up a React component by its schema key.
  *
  * Returns `undefined` and logs a console error when the key is not found.
@@ -153,19 +115,6 @@ export function getComponent(key: string): React.ElementType | undefined {
   }
   console.error(`[Localess] component %c${key}%c can't be found.`, FONT_BOLD, FONT_NORMAL);
   return undefined;
-}
-
-/**
- * Sets the fallback component rendered when no registry match is found for a schema key.
- *
- * The fallback receives the same `data`, `links`, and `references` props as any
- * registered component, so it can render a generic placeholder or log the unknown schema.
- *
- * @param fallbackComponent - The React component to use as the fallback. Must accept
- *   {@link LocalessComponentProps} (`data`, plus optional `links`/`references`/`assets`).
- */
-export function setFallbackComponent(fallbackComponent: AnyLocalessComponent): void {
-  _fallbackComponent = fallbackComponent;
 }
 
 /**

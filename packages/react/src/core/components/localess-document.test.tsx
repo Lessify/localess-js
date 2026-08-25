@@ -2,7 +2,7 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import type { Mock } from 'vitest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { registerComponent, unregisterComponent } from '../client';
+import { localessInit } from '../client';
 import { LocalessDocument } from './localess-document';
 
 vi.mock('../client', async importOriginal => {
@@ -12,6 +12,8 @@ vi.mock('../client', async importOriginal => {
 
 import { localessSyncOnChange } from '../client';
 
+const baseOptions = { origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' };
+
 function Page({ data }: any) {
   return <p>{data.title}</p>;
 }
@@ -19,12 +21,11 @@ function Page({ data }: any) {
 describe('LocalessDocument', () => {
   afterEach(() => {
     cleanup();
-    unregisterComponent('page');
     (localessSyncOnChange as Mock).mockClear();
   });
 
   it('renders the registered component using document.data', () => {
-    registerComponent('page', Page);
+    localessInit({ ...baseOptions, components: { page: Page } });
 
     render(<LocalessDocument document={{ _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
 
@@ -32,7 +33,7 @@ describe('LocalessDocument', () => {
   });
 
   it('re-renders with updated content when the sync subscription fires an input/change event', () => {
-    registerComponent('page', Page);
+    localessInit({ ...baseOptions, components: { page: Page } });
 
     render(<LocalessDocument document={{ _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
     expect(screen.getByText('Hello')).toBeDefined();
