@@ -1,4 +1,4 @@
-import { LocalessClientOptions } from '@localess/client';
+import type { LocalessClientOptions } from '@localess/client';
 
 import { LocalessComponentProps } from '../components';
 
