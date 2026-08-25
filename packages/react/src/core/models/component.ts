@@ -1,6 +1,6 @@
 import type React from 'react';
 
-import type { Assets, Content, ContentData, Links, References } from './content';
+import type { Assets, Content, ContentData, Links, References } from './';
 
 /**
  * Props for {@link LocalessDocument}.
