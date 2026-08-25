@@ -1,3 +1,4 @@
+import { localessClient } from '@localess/client';
 import type React from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';
@@ -8,7 +9,6 @@ import {
   type EventToAppOf,
   type EventToAppType,
   type LocalessClient,
-  localessClient,
   type LocalessOptions,
 } from './models';
 import { buildAssetQueryString, isBrowser, isIframe, loadLocalessSync } from './utils';

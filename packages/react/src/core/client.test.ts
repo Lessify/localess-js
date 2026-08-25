@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('state', () => {
+describe('client', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.stubGlobal('fetch', vi.fn());
@@ -18,21 +18,21 @@ describe('state', () => {
   };
 
   it('throws when getLocalessClient is called before localessInit', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
     expect(() => state.getLocalessClient()).toThrow('[Localess] No client found.');
   });
 
   it('throws when getOrigin is called before localessInit', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
     expect(() => state.getOrigin()).toThrow('[Localess] No origin found.');
   });
 
   it('localessInit returns the client, and getLocalessClient/getOrigin return the same values afterwards', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
 
     const client = state.localessInit(baseOptions);
 
@@ -41,7 +41,7 @@ describe('state', () => {
   });
 
   it('resolveAsset builds the asset URL from the initialized origin and spaceId', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     state.localessInit(baseOptions);
 
     expect(state.resolveAsset({ kind: 'ASSET', uri: 'images/logo.png' } as any)).toBe(
@@ -50,7 +50,7 @@ describe('state', () => {
   });
 
   it('resolveAsset appends transform params as a query string', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     state.localessInit(baseOptions);
 
     expect(state.resolveAsset({ kind: 'ASSET', uri: 'images/logo.png' } as any, { w: 800 })).toBe(
@@ -59,7 +59,7 @@ describe('state', () => {
   });
 
   it('registers, retrieves, and unregisters components', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     const Component = () => null;
 
     state.registerComponent('hero', Component);
@@ -71,7 +71,7 @@ describe('state', () => {
   });
 
   it('setComponents replaces the entire registry', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     const ComponentA = () => null;
     const ComponentB = () => null;
 
@@ -84,7 +84,7 @@ describe('state', () => {
   });
 
   it('gets and sets the fallback component', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     expect(state.getFallbackComponent()).toBeUndefined();
 
     const Fallback = () => null;
@@ -93,7 +93,7 @@ describe('state', () => {
   });
 
   it('logs an error when a component key is not registered', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     expect(state.getComponent('missing')).toBeUndefined();
@@ -101,14 +101,14 @@ describe('state', () => {
   });
 
   it('isSyncEnabled is false when enableSync was not passed to localessInit', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     state.localessInit(baseOptions);
 
     expect(state.isSyncEnabled()).toBe(false);
   });
 
   it('isSyncEnabled is false when enableSync is true but not running inside an iframe', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     state.localessInit({ ...baseOptions, enableSync: true });
 
     // jsdom's default window is not embedded in an iframe (window.top === window.self).
@@ -116,14 +116,14 @@ describe('state', () => {
   });
 
   it('localessSyncReady resolves even when sync was never enabled', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     state.localessInit(baseOptions);
 
     await expect(state.localessSyncReady()).resolves.toBeUndefined();
   });
 
   it('localessSyncOn is a no-op when sync is disabled', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     state.localessInit(baseOptions);
     const callback = vi.fn();
 
@@ -133,7 +133,7 @@ describe('state', () => {
   });
 
   it('localessSyncOnChange is a no-op when sync is disabled', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     state.localessInit(baseOptions);
     const callback = vi.fn();
 
@@ -143,7 +143,7 @@ describe('state', () => {
   });
 
   it('a second localessInit call (simulating the LocalessClientDocument fallback client-side init with a public token) overwrites the previous origin/client and enables sync', async () => {
-    const state = await import('./state');
+    const state = await import('./client');
     state.localessInit(baseOptions);
 
     state.localessInit({ ...baseOptions, token: 'public-token-abc', enableSync: true });

@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { registerComponent, unregisterComponent } from '../core/state';
+import { registerComponent, unregisterComponent } from '../core/client';
 import { LocalessServerDocument } from './localess-document';
 
 function Page({ data }: any) {

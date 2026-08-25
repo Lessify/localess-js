@@ -19,10 +19,10 @@
  * ```
  */
 
+export * from './core/client';
 export * from './core/components';
 export * from './core/hooks';
 export type * from './core/models';
 export { LocalessApiError } from './core/models';
 export * from './core/richtext';
-export * from './core/state';
 export * from './core/utils';

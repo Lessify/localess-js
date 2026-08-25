@@ -1,8 +1,8 @@
 import { forwardRef } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';
+import { getComponent, getFallbackComponent } from '../core/client';
 import { Assets, ContentData, Links, References } from '../core/models';
-import { getComponent, getFallbackComponent } from '../core/state';
 
 /**
  * Props for {@link LocalessServerComponent}.

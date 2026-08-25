@@ -1,3 +1,6 @@
+export * from './component';
+export * from './options';
+export * from './sync';
 export type {
   Assets,
   AssetTransformParams,
@@ -19,6 +22,3 @@ export type {
   TranslationFetchParams,
   Translations,
 } from '@localess/client';
-export * from './client';
-export * from './component';
-export * from './sync';

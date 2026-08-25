@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { registerComponent, setFallbackComponent, unregisterComponent } from '../core/state';
+import { registerComponent, setFallbackComponent, unregisterComponent } from '../core/client';
 import { LocalessServerComponent } from './localess-component';
 
 function Hero({ data, ...rest }: any) {

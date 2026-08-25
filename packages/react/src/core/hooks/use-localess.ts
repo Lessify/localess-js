@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { getLocalessClient, localessSyncOn } from '../client';
 import { Content, ContentData, ContentFetchParams } from '../models';
-import { getLocalessClient, localessSyncOn } from '../state';
 
 /**
  * Options for {@link useLocaless}.

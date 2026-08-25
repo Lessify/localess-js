@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { localessInit } from '../state';
+import { localessInit } from '../client';
 import { useLocaless } from './use-localess';
 
 function jsonResponse(body: unknown): Response {

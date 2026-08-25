@@ -2,15 +2,15 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import type { Mock } from 'vitest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { registerComponent, unregisterComponent } from '../state';
+import { registerComponent, unregisterComponent } from '../client';
 import { LocalessDocument } from './localess-document';
 
-vi.mock('../state', async importOriginal => {
-  const actual = await importOriginal<typeof import('../state')>();
+vi.mock('../client', async importOriginal => {
+  const actual = await importOriginal<typeof import('../client')>();
   return { ...actual, localessSyncOnChange: vi.fn() };
 });
 
-import { localessSyncOnChange } from '../state';
+import { localessSyncOnChange } from '../client';
 
 function Page({ data }: any) {
   return <p>{data.title}</p>;

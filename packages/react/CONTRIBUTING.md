@@ -4,7 +4,14 @@ React integration layer. Depends on `@localess/client`. Components never fetch d
 
 `@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples — including `vite.config.ts`/`react-router.config.ts`-style build scripts that need a standalone client for tasks like prerender-path enumeration) must only ever import from `@localess/react` or one of its subpath exports (`@localess/react/ssr`, `@localess/react/rsc`) — never `@localess/client` directly. If something from `@localess/client` isn't re-exported yet, add it to the appropriate export surface's re-exports (`src/index.ts` for the SPA export, `src/ssr/index.ts` for server-only) rather than telling consumers to import `@localess/client` themselves.
 
-`src/core/models/` is the only place allowed to import from `@localess/client` directly. Every other file in this package — including the public entry points (`index.ts`, `src/ssr/index.ts`, `src/rsc/index.ts`) — imports the types/values it needs from `./core/models` (or the correct relative path) instead. When a new file needs something from `@localess/client` that `core/models` doesn't re-export yet, add it there first.
+**`src/core/models/`, `src/core/utils/`, and `src/core/client.ts` are the only places allowed to import from `@localess/client` directly.** Each has one job:
+- `core/models/` — every `@localess/client` **type** the package needs, plus `LocalessApiError` (a class, but consumed in type position via `catch`/`instanceof`, so it lives with the domain model). `core/models/options.ts` additionally defines the React-specific `LocalessOptions` type (extends `LocalessClientOptions` with `components`/`fallbackComponent`/`enableSync`).
+- `core/utils/` — every `@localess/client` plain **function** the package needs (`isBrowser`, `isIframe`, `findLink`, `loadLocalessSync`, `localessEditable`, `localessEditableField`, `buildAssetQueryString`, `isServer`). Not `localessClient` — see below.
+- `core/client.ts` — the one place that calls `localessClient(...)` and wraps it in the singleton (client instance + component registry + Visual Editor sync state) that the rest of the package reads through `localessInit()`/`getLocalessClient()`. `localessClient` is a callable factory, not a type or a stateless helper, so it's imported here directly rather than re-exported through `core/models` or `core/utils`.
+
+Every other file in this package — including the public entry points (`index.ts`, `src/ssr/index.ts`, `src/rsc/index.ts`) — imports the types/values it needs from `./core/models`, `./core/utils`, or `./core/client` (relative path per file depth) instead. When a new file needs something from `@localess/client` that none of the three re-exports yet, add it to whichever matches.
+
+**One documented exception:** `src/ssr/index.ts` re-exports `localessClient` directly from `@localess/client` (not through `core/client`) for standalone build-time scripts (e.g. a `vite.config.ts` enumerating prerender paths) that need a client instance outside the `localessInit()`/`getLocalessClient()` singleton lifecycle — see the comment above that re-export. This is a public-entry-point pass-through, the same kind of sanctioned exception `@localess/angular`'s `public-api.ts` has for the whole client surface — it isn't a second "wrap the client" file.
 
 ## Adding a New Component
 
@@ -54,7 +61,7 @@ export * from './my-component';
 import { useEffect, useState } from 'react';
 
 import { ContentData } from '../models';
-import { getLocalessClient, localessSyncOn } from '../state';
+import { getLocalessClient, localessSyncOn } from '../client';
 
 export const useMyHook = <T extends ContentData = ContentData>(
   param: string

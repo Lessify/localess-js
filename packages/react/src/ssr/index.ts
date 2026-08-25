@@ -31,9 +31,6 @@
  * - isSyncEnabled / localessSyncOn / localessSyncOnChange / localessSyncReady (not meaningful without live editing)
  */
 
-export type * from '../core/models';
-export { LocalessApiError, localessClient } from '../core/models';
-export { renderRichTextToReact } from '../core/richtext';
 export {
   getComponent,
   getFallbackComponent,
@@ -44,7 +41,11 @@ export {
   setComponents,
   setFallbackComponent,
   unregisterComponent,
-} from '../core/state';
+} from '../core/client';
+export type * from '../core/models';
+export { LocalessApiError } from '../core/models';
+export { renderRichTextToReact } from '../core/richtext';
 export * from '../core/utils';
 export * from './localess-component';
 export * from './localess-document';
+export { localessClient } from '@localess/client';

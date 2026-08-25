@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../core/state', async importOriginal => {
-  const actual = await importOriginal<typeof import('../core/state')>();
+vi.mock('../core/client', async importOriginal => {
+  const actual = await importOriginal<typeof import('../core/client')>();
   return { ...actual, getOrigin: () => 'https://cms.example.com', isSyncConfigured: () => false };
 });
 
-import { registerComponent, unregisterComponent } from '../core/state';
+import { registerComponent, unregisterComponent } from '../core/client';
 import { clearLiveEdit, setLiveEdit } from './live-edit-cache';
 import { LocalessDocument } from './localess-document';
 

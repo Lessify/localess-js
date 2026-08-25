@@ -1,9 +1,9 @@
 import { forwardRef } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';
+import { getOrigin, isSyncConfigured } from '../core/client';
 import { LocalessComponent } from '../core/components';
 import { Content, ContentData } from '../core/models';
-import { getOrigin, isSyncConfigured } from '../core/state';
 import { consumeLiveEdit } from './live-edit-cache';
 import { LiveEditListener } from './live-edit-listener';
 
