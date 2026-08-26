@@ -4,4 +4,4 @@
  * `./utils` or `../utils`) instead of importing `@localess/client` directly — see
  * `packages/vue/CONTRIBUTING.md`.
  */
-export { isBrowser, isIframe, loadLocalessSync, localessEditable } from '@localess/client';
+export { isBrowser, isIframe, loadLocalessSync, localessEditable, localessEditableField } from '@localess/client';

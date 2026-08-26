@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "nuxt dev --https",
+    "dev": "nuxt dev",
     "build": "nuxt build",
     "preview": "nuxt preview"
   },
@@ -13,5 +13,9 @@
     "@localess/vue": "*",
     "nuxt": "^3.15.0",
     "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "tailwindcss": "^4.2.2"
   }
 }

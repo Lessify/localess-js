@@ -6,7 +6,9 @@
 
 - A **component registry** mapping Localess schema keys to Vue components, installed via the `Localess` plugin
 - `<LocalessComponent>` — dynamic content renderer
+- `<LocalessDocument>` — wraps `<LocalessComponent>` with automatic Visual Editor live sync
 - `v-localess-editable` — directive applying Visual Editor editable attributes
+- `localessEditableField()` — field-level editable attribute, bound onto an element
 - **Visual Editor sync** support via `useLocalessSync`
 - **Rich text** rendering from Tiptap JSON via `useLocalessRichText`
 - `@localess/vue/vite` — Vite plugin for component auto-registration
@@ -55,18 +57,18 @@ app.mount('#app');
 
 ## `<LocalessComponent>`
 
-Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Always applies `localessEditable(data)`'s `data-ll-id`/`data-ll-schema` attributes to the rendered component's root.
+Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Always applies `localessEditable(data)`'s `data-ll-id`/`data-ll-schema` attributes to the rendered component's root. Accepts `assets`, `links`, and `references` alongside `data` and forwards all four to the resolved component (or `fallbackComponent`) — registered components should declare the same four props and pass `assets`/`links`/`references` through when rendering nested `<LocalessComponent>`s.
 
 ```vue
 <script setup lang="ts">
-import { LocalessComponent } from '@localess/vue';
-defineProps<{ data: { title?: string; body?: any[] } }>();
+import { LocalessComponent, type LocalessComponentProps } from '@localess/vue';
+defineProps<LocalessComponentProps>();
 </script>
 
 <template>
   <main>
     <h1>{{ data.title }}</h1>
-    <LocalessComponent v-for="item in data.body" :key="item._id" :data="item" />
+    <LocalessComponent v-for="item in data.body" :key="item._id" :data="item" :assets="assets" :links="links" :references="references" />
   </main>
 </template>
 ```
@@ -75,17 +77,59 @@ Falls back to `fallbackComponent` (if registered) when the schema key is unregis
 
 ---
 
-## `v-localess-editable`
+## `<LocalessDocument>`
 
-Applies the same `data-ll-id`/`data-ll-schema` attributes directly to an element, for cases not going through `<LocalessComponent>`:
+Wraps `<LocalessComponent>` and subscribes to Visual Editor `input`/`change` events automatically (when `enableSync` is active), re-rendering with the updated content in place. Also re-syncs when the `document` prop itself changes — important for SSR frameworks like Nuxt, where client-side navigation to a new slug reuses the same component instance rather than remounting it.
 
 ```vue
+<script setup lang="ts">
+import { LocalessDocument, type LocalessDocumentProps } from '@localess/vue';
+defineProps<LocalessDocumentProps>();
+</script>
+
+<template>
+  <LocalessDocument :document="document" />
+</template>
+```
+
+Renders an inline error message if `document.data` is missing. Prefer this over `<LocalessComponent>` for the top-level content of a page when Visual Editor sync should apply; use `<LocalessComponent>` directly for nested blocks within an already-synced tree.
+
+---
+
+## `v-localess-editable`
+
+Applies the same `data-ll-id`/`data-ll-schema` attributes directly to an element, for cases not going through `<LocalessComponent>`. Must be imported in `<script setup>` even though it's never referenced by name there — Vue 3.3+ resolves a template's `v-localess-editable` from an in-scope `vLocalessEditable` import by naming convention:
+
+```vue
+<script setup lang="ts">
+import { vLocalessEditable } from '@localess/vue';
+</script>
+
 <template>
   <section v-localess-editable="data">
     ...
   </section>
 </template>
 ```
+
+---
+
+## `localessEditableField()`
+
+A plain function (not a directive — the field name is static, known at author time) returning `{ 'data-ll-field': fieldName }`. Bind it onto the element rendering a single field, so editors can click-to-edit that field directly instead of only the whole block:
+
+```vue
+<script setup lang="ts">
+import { localessEditableField } from '@localess/vue';
+defineProps<{ data: { title?: string } }>();
+</script>
+
+<template>
+  <h1 v-bind="localessEditableField('title')">{{ data.title }}</h1>
+</template>
+```
+
+Use alongside `v-localess-editable` on the block root, not instead of it.
 
 ---
 
@@ -187,17 +231,17 @@ export default defineEventHandler(async event => {
 ```vue
 <!-- pages/[...slug].vue -->
 <script setup lang="ts">
-import { LocalessComponent } from '@localess/vue';
+import { LocalessDocument } from '@localess/vue';
 
 const { data: content } = await useAsyncData('content', () => $fetch('/api/content', { query: { slug: 'home' } }));
 </script>
 
 <template>
-  <LocalessComponent v-if="content" :data="content.data" />
+  <LocalessDocument v-if="content" :document="content" />
 </template>
 ```
 
-Nuxt's own payload transfer hydrates the server-fetched result to the client — no `@localess/vue`-specific hydration step is needed.
+Nuxt's own payload transfer hydrates the server-fetched result to the client — no `@localess/vue`-specific hydration step is needed. Call `Localess`'s `app.use(...)` with a **public** token only if you also want Visual Editor sync on top — `LocalessDocument` picks up live `input`/`change` events automatically; use `LocalessComponent` instead if you don't need sync.
 
 ---
 
@@ -210,7 +254,9 @@ export { LOCALESS_INJECTION_KEY }   // provide/inject key, for advanced use
 
 // Rendering
 export { LocalessComponent }        // Dynamic schema-to-component renderer
+export { LocalessDocument }         // Wraps LocalessComponent with automatic Visual Editor live sync
 export { vLocalessEditable }        // v-localess-editable directive
+export { localessEditableField }    // Field-level data-ll-field attribute
 
 // Composables
 export { useLocaless }              // Returns the injected LocalessClient
@@ -219,6 +265,12 @@ export { useLocalessRichText }      // Tiptap JSON -> HTML
 
 // Error handling (re-exported from @localess/client)
 export { LocalessApiError }
+
+// Types (re-exported from @localess/client + local)
+export type { LocalessClient, LocalessClientOptions }
+export type { LocalessComponentProps, LocalessDocumentProps }
+export type { Content, ContentData, ContentDataSchema, EventToAppOf, EventToAppType }
+export type { Assets, Links, References }
 ```
 
 ```typescript

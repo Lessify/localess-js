@@ -6,7 +6,7 @@ Vue 3 integration layer. Depends on `@localess/client`. Components never fetch d
 
 **`src/models/index.ts`, `src/utils/index.ts`, and `src/client.ts` are the only files allowed to import from `@localess/client` directly.** Each has one job:
 - `models/index.ts` — every `@localess/client` **type** the package needs, plus `LocalessApiError` (a class, but consumed in type position via `catch`/`instanceof`, so it lives with the domain model).
-- `utils/index.ts` — every `@localess/client` plain **function** the package needs (`isBrowser`, `isIframe`, `loadLocalessSync`, `localessEditable`). Not `localessClient` — see below.
+- `utils/index.ts` — every `@localess/client` plain **function** the package needs (`isBrowser`, `isIframe`, `loadLocalessSync`, `localessEditable`, `localessEditableField`). Not `localessClient` — see below.
 - `client.ts` — the one place that calls `localessClient(...)` and wraps it in the singleton (client instance + component registry + Visual Editor sync state) that the rest of the package reads through `localessInit()`/`getLocalessClient()`. `localessClient` is a callable factory, not a type or a stateless helper, so it's imported here directly rather than re-exported through `models` or `utils`.
 
 Every other file in this package — including `index.ts` — imports what it needs from `./models`/`../models`, `./utils`/`../utils`, or `./client`/`../client` (relative path per file depth) instead. When a new file needs something from `@localess/client` that none of the three re-exports yet, add it to whichever matches. This keeps the client-package boundary auditable at three well-known files instead of scattered across every component/composable/directive.
@@ -57,7 +57,7 @@ Rules:
 
 ## Hard Constraints
 
-- **No data fetching in components.** `<LocalessComponent>` and consumer components accept `data` as a prop only.
+- **No data fetching in components.** `<LocalessComponent>`, `<LocalessDocument>`, and consumer components accept content (`data`, `assets`, `links`, `references`, or the full `document`) as props only.
 - **No dependency on `@localess/react`, `@localess/angular`, `@localess/svelte`, or `@localess/cli`.** ADR 005 — depend only on `@localess/client`.
 - **No secret token anywhere in this package.** Only a public (read-only) token flows through `Localess`/`localessInit`/`localess()` (the Vite plugin).
 
@@ -69,4 +69,4 @@ npm run build:vue
 npm run build
 ```
 
-Output: `dist/index.js`, `dist/index.mjs`, `dist/index.d.ts`, `dist/vite/index.{js,mjs,d.ts}`.
+Runs `typecheck` (`vue-tsc --noEmit`) before `vite build` — `vite build`/`vite-plugin-dts` alone don't type-check `.vue` SFCs, so `npm run typecheck` on its own is the fast way to check types without building. Output: `dist/index.js`, `dist/index.mjs`, `dist/index.d.ts`, `dist/vite/index.{js,mjs,d.ts}`.

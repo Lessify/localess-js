@@ -71,6 +71,7 @@ app.use(Localess, { origin, spaceId, token, components: localessComponents });
 ```vue
 <LocalessComponent :data="blok" />              <!-- applies data-ll-id/data-ll-schema automatically -->
 <section v-localess-editable="blok">...</section> <!-- manual application -->
+<h1 v-bind="localessEditableField('title')">{{ blok.title }}</h1> <!-- field-level -->
 ```
 
 ## Visual Editor Sync
@@ -121,17 +122,17 @@ export default defineEventHandler(async event => {
 ```vue
 <!-- pages/[...slug].vue -->
 <script setup lang="ts">
-import { LocalessComponent } from '@localess/vue';
+import { LocalessDocument } from '@localess/vue';
 
 const { data: content } = await useAsyncData('content', () => $fetch('/api/content', { query: { slug: 'home' } }));
 </script>
 
 <template>
-  <LocalessComponent v-if="content" :data="content.data" />
+  <LocalessDocument v-if="content" :document="content" />
 </template>
 ```
 
-Nuxt's own payload transfer hydrates the server-fetched result to the client — `@localess/vue` needs no hydration mechanism of its own. Register the `Localess` plugin client-side (in a `.client.ts` Nuxt plugin) with a **public** token only if you also want Visual Editor sync on top.
+Nuxt's own payload transfer hydrates the server-fetched result to the client — `@localess/vue` needs no hydration mechanism of its own. Register the `Localess` plugin client-side (in a `.client.ts` Nuxt plugin) with a **public** token only if you also want Visual Editor sync on top — `LocalessDocument` picks up live `input`/`change` events automatically; use `LocalessComponent` instead if you don't need sync.
 
 ## API Reference
 
@@ -140,7 +141,9 @@ Nuxt's own payload transfer hydrates the server-fetched result to the client —
 | `Localess` | Vue plugin | `app.use(Localess, options)` — installs the client + component registry |
 | `LOCALESS_INJECTION_KEY` | `InjectionKey` | provide/inject key, for advanced use |
 | `LocalessComponent` | Component | Dynamic schema-to-component renderer |
+| `LocalessDocument` | Component | Wraps `LocalessComponent` and re-renders on Visual Editor sync events |
 | `vLocalessEditable` | Directive | Applies `data-ll-id`/`data-ll-schema` |
+| `localessEditableField(name)` | Function | Applies `data-ll-field`, bound onto an element |
 | `useLocaless()` | Composable | Returns the injected `LocalessClient` |
 | `useLocalessSync(event)` | Composable | Visual Editor bridge event subscription, returns a `Ref` |
 | `useLocalessRichText(doc)` | Composable | Tiptap JSON → HTML, returns a `ComputedRef<string>` |

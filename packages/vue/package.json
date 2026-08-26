@@ -41,7 +41,8 @@
   "private": false,
   "license": "MIT",
   "scripts": {
-    "build": "vite build",
+    "build": "npm run typecheck && vite build",
+    "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
@@ -79,7 +80,8 @@
     "typescript": "^5.9.3",
     "vite": "^8.0.16",
     "vite-plugin-dts": "^5.0.0",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+    "vue-tsc": "^3.3.11"
   },
   "engines": {
     "node": ">= 24.0.0"
