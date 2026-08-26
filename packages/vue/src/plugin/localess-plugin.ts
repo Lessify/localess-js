@@ -1,6 +1,6 @@
 import type { App, Plugin } from 'vue';
 
-import { localessInit, type LocalessVueInitOptions } from '../core/state';
+import { localessInit, type LocalessVueInitOptions } from '../client';
 import { LOCALESS_INJECTION_KEY } from './localess-symbol';
 
 export const Localess: Plugin<LocalessVueInitOptions> = {

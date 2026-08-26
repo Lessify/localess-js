@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import { describe, expect, it, vi } from 'vitest';
 
-import * as state from '../core/state';
+import * as state from '../client';
 import { localessSync } from './localess-sync';
 
 describe('localessSync store', () => {

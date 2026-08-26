@@ -1,7 +1,8 @@
 import { defineComponent, h, type PropType } from 'vue';
 
-import { type ContentDataSchema, localessEditable } from '../core/models';
-import { getComponent, getFallbackComponent } from '../core/state';
+import { getComponent, getFallbackComponent } from '../client';
+import type { ContentDataSchema } from '../models';
+import { localessEditable } from '../utils';
 
 export const LocalessComponent = defineComponent({
   name: 'LocalessComponent',

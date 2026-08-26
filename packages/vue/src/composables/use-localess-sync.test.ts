@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
-import * as state from '../core/state';
+import * as state from '../client';
 import { useLocalessSync } from './use-localess-sync';
 
 describe('useLocalessSync', () => {

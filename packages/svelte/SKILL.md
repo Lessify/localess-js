@@ -106,6 +106,23 @@ Applies the same `data-ll-id`/`data-ll-schema` attributes directly to an element
 
 ---
 
+## `localessEditableField()`
+
+A plain function (not an action — the field name is static, known at author time) returning `{ 'data-ll-field': fieldName }`. Spread it onto the element rendering a single field, so editors can click-to-edit that field directly instead of only the whole block:
+
+```svelte
+<script lang="ts">
+  import { localessEditableField } from '@localess/svelte';
+  import type { Page } from '../shared/models/localess';
+</script>
+
+<h1 {...localessEditableField<Page>('title')}>{data.title}</h1>
+```
+
+Type-safe: `fieldName` must be a key of `Page` (excluding `_id`/`_schema`). Use alongside `localessEditable` on the block root, not instead of it.
+
+---
+
 ## `getLocaless()`
 
 Returns the client from Svelte context. Throws if called outside a component tree where `localessInit()` ran.
@@ -200,6 +217,7 @@ export { getLocaless }              // Returns the client from context
 export { LocalessComponent }        // Dynamic schema-to-component renderer
 export { LocalessDocument }         // Wraps LocalessComponent with automatic Visual Editor live sync
 export { localessEditable }         // use:localessEditable action
+export { localessEditableField }    // Field-level data-ll-field attribute, spread onto an element
 
 // Reactivity
 export { localessSync }             // Visual Editor bridge event subscription, returns a Readable

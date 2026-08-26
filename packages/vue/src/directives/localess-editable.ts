@@ -1,6 +1,7 @@
 import type { ObjectDirective } from 'vue';
 
-import { type ContentDataSchema, localessEditable } from '../core/models';
+import type { ContentDataSchema } from '../models';
+import { localessEditable } from '../utils';
 
 function apply(el: HTMLElement, content: ContentDataSchema): void {
   const attrs = localessEditable(content);

@@ -81,6 +81,7 @@ There's no Vite plugin auto-discovering these from a folder. That was tried and 
 ```svelte
 <LocalessComponent data={blok} />                <!-- applies data-ll-id/data-ll-schema automatically -->
 <section use:localessEditable={blok}>...</section> <!-- manual application -->
+<h1 {...localessEditableField<Page>('title')}>{blok.title}</h1> <!-- field-level, spread onto the element -->
 ```
 
 ## Visual Editor Sync
@@ -153,6 +154,7 @@ SvelteKit's own `data`-prop serialization hydrates the server-fetched result to 
 | `LocalessComponent` | Component | Dynamic schema-to-component renderer |
 | `LocalessDocument` | Component | Wraps `LocalessComponent` and re-renders on Visual Editor sync events |
 | `localessEditable` | Action | Applies `data-ll-id`/`data-ll-schema` |
+| `localessEditableField(name)` | Function | Applies `data-ll-field`, spread onto an element |
 | `localessSync(event)` | Function | Visual Editor bridge event subscription, returns a `Readable` |
 | `localessRichText(doc)` | Function | Tiptap JSON → HTML, returns a `Readable<string>` |
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |

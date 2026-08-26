@@ -1,7 +1,7 @@
 import type { Action } from 'svelte/action';
 
-import type {  ContentDataSchema } from '../models';
-import {localessEditable as buildAttrs } from '../utils';
+import type { ContentDataSchema } from '../models';
+import { localessEditable as buildAttrs } from '../utils';
 
 function apply(node: HTMLElement, content: ContentDataSchema): void {
   const attrs = buildAttrs(content);

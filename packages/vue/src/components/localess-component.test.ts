@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 
-import { setComponentsForTest } from '../core/state';
+import { setComponentsForTest } from '../client';
 import { LocalessComponent } from './localess-component';
 
 const Hero = defineComponent({

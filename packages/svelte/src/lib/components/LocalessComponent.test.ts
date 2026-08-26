@@ -3,12 +3,14 @@ import { describe, expect, it } from 'vitest';
 
 import Hero from '../__fixtures__/hero.svelte';
 import PropsProbe from '../__fixtures__/props-probe.svelte';
-import { setComponentsForTest, setFallbackComponentForTest } from '../core/state';
+import { localessInit } from '../client';
 import LocalessComponent from './LocalessComponent.svelte';
+
+const baseOptions = { origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' };
 
 describe('LocalessComponent', () => {
   it('renders the registered component and applies editable attrs', () => {
-    setComponentsForTest({ hero: Hero as any });
+    localessInit({ ...baseOptions, components: { hero: Hero as any } });
     render(LocalessComponent, { data: { _id: 'abc', _schema: 'hero' } });
     const el = screen.getByTestId('hero');
     expect(el).toHaveAttribute('data-ll-id', 'abc');
@@ -16,13 +18,13 @@ describe('LocalessComponent', () => {
   });
 
   it('renders a not-found message when unregistered and no fallback', () => {
-    setComponentsForTest({});
+    localessInit(baseOptions);
     render(LocalessComponent, { data: { _id: 'abc', _schema: 'missing' } });
     expect(screen.getByText(/could not find/)).toBeInTheDocument();
   });
 
   it('forwards assets, links, and references to the registered component', () => {
-    setComponentsForTest({ probe: PropsProbe as any });
+    localessInit({ ...baseOptions, components: { probe: PropsProbe as any } });
     render(LocalessComponent, {
       data: { _id: 'abc', _schema: 'probe' },
       assets: { a1: { uri: 'x' } as any },
@@ -35,8 +37,7 @@ describe('LocalessComponent', () => {
   });
 
   it('forwards assets, links, and references to the fallback component', () => {
-    setComponentsForTest({});
-    setFallbackComponentForTest(PropsProbe as any);
+    localessInit({ ...baseOptions, fallbackComponent: PropsProbe as any });
     render(LocalessComponent, {
       data: { _id: 'abc', _schema: 'missing' },
       assets: { a1: { uri: 'x' } as any },

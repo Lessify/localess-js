@@ -1,13 +1,14 @@
 <script lang="ts">
   type Theme = 'light' | 'dark';
 
-  function getInitialTheme(): Theme {
-    const stored = window.localStorage.getItem('theme');
-    if (stored === 'light' || stored === 'dark') return stored;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
+  let theme = $state<Theme>('light');
 
-  let theme = $state<Theme>(getInitialTheme());
+  // Reads the persisted/preferred theme after mount only — `window` isn't available during SSR,
+  // so the server-rendered markup always starts from the 'light' default above.
+  $effect(() => {
+    const stored = window.localStorage.getItem('theme');
+    theme = stored === 'light' || stored === 'dark' ? stored : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
 
   $effect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');

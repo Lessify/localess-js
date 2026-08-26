@@ -1,5 +1,5 @@
 <script lang="ts" generics="T extends ContentData = ContentData">
-  import { getComponent, getFallbackComponent } from '../core/state';
+  import { getComponent, getFallbackComponent } from '../client';
   import type { LocalessComponentProps, ContentData} from '../models';
   import {localessEditable} from "$lib/utils";
 

@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 
-import type { LocalessClient } from '../core/models';
+import type { LocalessClient } from '../models';
 import { LOCALESS_INJECTION_KEY } from '../plugin/localess-symbol';
 
 export function useLocaless(): LocalessClient {

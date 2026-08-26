@@ -2,13 +2,20 @@
   import { untrack } from 'svelte';
 
   import { FONT_BOLD, FONT_NORMAL } from '../console';
-  import { localessSyncOnChange } from '../core/state';
+  import { localessSyncOnChange } from '../client';
   import LocalessComponent from './LocalessComponent.svelte';
   import type { LocalessDocumentProps, ContentData } from '../models';
 
   let { document }: LocalessDocumentProps<T> = $props();
 
   let contentData = $state(untrack(() => document.data));
+
+  // Re-syncs whenever the `document` prop itself changes — e.g. client-side navigation to a new
+  // slug in SvelteKit reuses this component instance and just updates its props, so without this
+  // the previously rendered content would stick even though `document` now points elsewhere.
+  $effect(() => {
+    contentData = document.data;
+  });
 
   $effect(() => {
     if (!contentData) {

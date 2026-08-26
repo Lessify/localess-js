@@ -1,29 +1,16 @@
-import type { Component } from 'vue';
+import { localessClient } from '@localess/client';
+import type { Component } from 'svelte';
 
-import {
-  type EventToAppOf,
-  type EventToAppType,
-  isBrowser,
-  isIframe,
-  loadLocalessSync,
-  type LocalessClient,
-  localessClient,
-  type LocalessClientOptions,
-} from './models';
-
-export type LocalessVueInitOptions = LocalessClientOptions & {
-  components?: Record<string, Component>;
-  fallbackComponent?: Component;
-  enableSync?: boolean;
-};
+import { type EventToAppOf, type EventToAppType, type LocalessClient, type LocalessSvelteInitOptions } from './models';
+import { isBrowser, isIframe, loadLocalessSync } from './utils';
 
 let _client: LocalessClient | undefined = undefined;
-let _components: Record<string, Component> = {};
-let _fallbackComponent: Component | undefined = undefined;
+let _components: Record<string, Component<any>> = {};
+let _fallbackComponent: Component<any> | undefined = undefined;
 let _enableSync = false;
 let _syncPromise: Promise<void> | undefined = undefined;
 
-export function localessInit(options: LocalessVueInitOptions): LocalessClient {
+export function localessInit(options: LocalessSvelteInitOptions): LocalessClient {
   const { components, fallbackComponent, enableSync, ...restOptions } = options;
   _client = localessClient(restOptions);
   _components = components || {};
@@ -39,16 +26,16 @@ export function localessInit(options: LocalessVueInitOptions): LocalessClient {
 
 export function getLocalessClient(): LocalessClient {
   if (!_client) {
-    throw new Error('[Localess] No client found. Please check if the Localess is initialized. Use the Localess plugin or localessInit.');
+    throw new Error('[Localess] No client found. Please check if the Localess is initialized. Use localessInit.');
   }
   return _client;
 }
 
-export function getComponent(key: string): Component | undefined {
+export function getComponent(key: string): Component<any> | undefined {
   return Object.hasOwn(_components, key) ? _components[key] : undefined;
 }
 
-export function getFallbackComponent(): Component | undefined {
+export function getFallbackComponent(): Component<any> | undefined {
   return _fallbackComponent;
 }
 
@@ -72,9 +59,4 @@ export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | '
   localessSyncReady().then(() => {
     window.localess?.onChange(callback);
   });
-}
-
-/** @internal test-only helper to reset the component registry between test cases. */
-export function setComponentsForTest(components: Record<string, Component>): void {
-  _components = components;
 }

@@ -1,9 +1,11 @@
 /**
- * Sole internal boundary to `@localess/client`. Every other file in this package imports
- * types and values through this module (relatively, e.g. `../models`) instead of importing
- * `@localess/client` directly — see `packages/svelte/CONTRIBUTING.md`.
+ * One of three internal boundaries to `@localess/client` (with `../utils` and `../client`).
+ * Every other file in this package imports types through this module (relatively, e.g.
+ * `./models` or `../models`) instead of importing `@localess/client` directly — see
+ * `packages/svelte/CONTRIBUTING.md`.
  */
 export type { LocalessComponentProps, LocalessDocumentProps } from './components';
+export type { LocalessSvelteInitOptions } from './options';
 export type {
   Assets,
   Content,
@@ -16,4 +18,4 @@ export type {
   LocalessClientOptions,
   References,
 } from '@localess/client';
-export { LocalessApiError, localessClient } from '@localess/client';
+export { LocalessApiError } from '@localess/client';

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
-import { getComponent, getFallbackComponent, isSyncEnabled, localessInit, localessSyncOn } from './state';
+import { getComponent, getFallbackComponent, isSyncEnabled, localessInit, localessSyncOn } from './client';
 
 const HelloComponent = defineComponent({ render: () => h('div', 'hello') });
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createApp, defineComponent, h, inject } from 'vue';
 
-import { getLocalessClient } from '../core/state';
+import { getLocalessClient } from '../client';
 import { Localess } from './localess-plugin';
 import { LOCALESS_INJECTION_KEY } from './localess-symbol';
 

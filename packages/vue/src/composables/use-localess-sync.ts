@@ -1,7 +1,7 @@
 import { onMounted, type Ref, ref } from 'vue';
 
-import type { EventToAppOf, EventToAppType } from '../core/models';
-import { localessSyncOn } from '../core/state';
+import { localessSyncOn } from '../client';
+import type { EventToAppOf, EventToAppType } from '../models';
 
 export function useLocalessSync<T extends EventToAppType>(event: T | T[]): Ref<EventToAppOf<T> | undefined> {
   const latest = ref<EventToAppOf<T>>();

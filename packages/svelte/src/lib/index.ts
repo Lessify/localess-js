@@ -5,3 +5,4 @@ export * from './localess-context';
 export * from './models';
 export * from './stores/localess-rich-text';
 export * from './stores/localess-sync';
+export { localessEditableField } from './utils';

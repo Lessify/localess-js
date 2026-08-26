@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { getComponent, getFallbackComponent, isSyncEnabled, localessInit, localessSyncOn } from './state';
+import { getComponent, getFallbackComponent, isSyncEnabled, localessInit, localessSyncOn } from './client';
 
 class FakeComponent {}
 
-describe('state', () => {
+describe('client', () => {
   it('localessInit registers components and returns a client', () => {
     const client = localessInit({
       origin: 'https://example.com',
