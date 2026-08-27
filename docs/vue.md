@@ -69,8 +69,8 @@ app.use(Localess, { origin, spaceId, token, components: localessComponents });
 ## Editable Attributes
 
 ```vue
-<LocalessComponent :data="blok" />              <!-- applies data-ll-id/data-ll-schema automatically -->
-<section v-localess-editable="blok">...</section> <!-- manual application -->
+<LocalessComponent :data="blok" />                          <!-- applies data-ll-id/data-ll-schema automatically -->
+<section v-bind="localessEditable(blok)">...</section>       <!-- manual application -->
 <h1 v-bind="localessEditableField('title')">{{ blok.title }}</h1> <!-- field-level -->
 ```
 
@@ -142,7 +142,7 @@ Nuxt's own payload transfer hydrates the server-fetched result to the client —
 | `LOCALESS_INJECTION_KEY` | `InjectionKey` | provide/inject key, for advanced use |
 | `LocalessComponent` | Component | Dynamic schema-to-component renderer |
 | `LocalessDocument` | Component | Wraps `LocalessComponent` and re-renders on Visual Editor sync events |
-| `vLocalessEditable` | Directive | Applies `data-ll-id`/`data-ll-schema` |
+| `localessEditable(data)` | Function | Applies `data-ll-id`/`data-ll-schema`, bound onto an element |
 | `localessEditableField(name)` | Function | Applies `data-ll-field`, bound onto an element |
 | `useLocaless()` | Composable | Returns the injected `LocalessClient` |
 | `useLocalessSync(event)` | Composable | Visual Editor bridge event subscription, returns a `Ref` |

@@ -7,7 +7,7 @@
 - A **component registry** mapping Localess schema keys to Vue components, installed via the `Localess` plugin
 - `<LocalessComponent>` — dynamic content renderer
 - `<LocalessDocument>` — wraps `<LocalessComponent>` with automatic Visual Editor live sync
-- `v-localess-editable` — directive applying Visual Editor editable attributes
+- `localessEditable()` — block-level editable attributes (`data-ll-id`/`data-ll-schema`), bound onto an element
 - `localessEditableField()` — field-level editable attribute, bound onto an element
 - **Visual Editor sync** support via `useLocalessSync`
 - **Rich text** rendering from Tiptap JSON via `useLocalessRichText`
@@ -96,17 +96,18 @@ Renders an inline error message if `document.data` is missing. Prefer this over 
 
 ---
 
-## `v-localess-editable`
+## `localessEditable()`
 
-Applies the same `data-ll-id`/`data-ll-schema` attributes directly to an element, for cases not going through `<LocalessComponent>`. Must be imported in `<script setup>` even though it's never referenced by name there — Vue 3.3+ resolves a template's `v-localess-editable` from an in-scope `vLocalessEditable` import by naming convention:
+Applies the same `data-ll-id`/`data-ll-schema` attributes directly to an element, for cases not going through `<LocalessComponent>`:
 
 ```vue
 <script setup lang="ts">
-import { vLocalessEditable } from '@localess/vue';
+import { localessEditable } from '@localess/vue';
+defineProps<{ data: { _id: string; _schema: string } }>();
 </script>
 
 <template>
-  <section v-localess-editable="data">
+  <section v-bind="localessEditable(data)">
     ...
   </section>
 </template>
@@ -129,7 +130,7 @@ defineProps<{ data: { title?: string } }>();
 </template>
 ```
 
-Use alongside `v-localess-editable` on the block root, not instead of it.
+Use alongside `localessEditable()` on the block root, not instead of it.
 
 ---
 
@@ -255,7 +256,7 @@ export { LOCALESS_INJECTION_KEY }   // provide/inject key, for advanced use
 // Rendering
 export { LocalessComponent }        // Dynamic schema-to-component renderer
 export { LocalessDocument }         // Wraps LocalessComponent with automatic Visual Editor live sync
-export { vLocalessEditable }        // v-localess-editable directive
+export { localessEditable }         // Block-level data-ll-id/data-ll-schema attributes
 export { localessEditableField }    // Field-level data-ll-field attribute
 
 // Composables

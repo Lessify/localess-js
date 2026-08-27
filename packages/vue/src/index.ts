@@ -3,7 +3,6 @@ export { default as LocalessDocument } from './components/localess-document.vue'
 export * from './composables/use-localess';
 export * from './composables/use-localess-rich-text';
 export * from './composables/use-localess-sync';
-export * from './directives/localess-editable';
 export type {
   Assets,
   Content,
@@ -21,4 +20,4 @@ export type {
 export { LocalessApiError } from './models';
 export * from './plugin/localess-plugin';
 export * from './plugin/localess-symbol';
-export { localessEditableField } from './utils';
+export { localessEditable, localessEditableField } from './utils';
