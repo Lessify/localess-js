@@ -36,6 +36,14 @@ describe('LocalessComponent', () => {
     expect(screen.getByTestId('references-keys')).toHaveTextContent('r1');
   });
 
+  it('defaults assets, links, and references to empty objects when omitted', () => {
+    localessInit({ ...baseOptions, components: { probe: PropsProbe as any } });
+    render(LocalessComponent, { data: { _id: 'abc', _schema: 'probe' } });
+    expect(screen.getByTestId('assets-keys')).toHaveTextContent('');
+    expect(screen.getByTestId('links-keys')).toHaveTextContent('');
+    expect(screen.getByTestId('references-keys')).toHaveTextContent('');
+  });
+
   it('forwards assets, links, and references to the fallback component', () => {
     localessInit({ ...baseOptions, fallbackComponent: PropsProbe as any });
     render(LocalessComponent, {
