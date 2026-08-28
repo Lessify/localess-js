@@ -113,11 +113,11 @@ There's no Vite plugin auto-discovering these from a folder. That was tried and 
 
 ## SSR with SvelteKit
 
-`@localess/svelte` is rendering-only — SSR data-fetching goes through SvelteKit's own `+page.server.ts` `load()` convention, calling `@localess/client` directly with a **secret** token:
+`@localess/svelte` is rendering-only — SSR data-fetching goes through SvelteKit's own `+page.server.ts` `load()` convention, calling `localessClient` (re-exported from `@localess/svelte` — never import `@localess/client` directly) with a **secret** token:
 
 ```typescript
 // src/routes/[...slug]/+page.server.ts
-import { localessClient } from '@localess/client';
+import { localessClient } from '@localess/svelte';
 import { LOCALESS_ORIGIN, LOCALESS_SPACE_ID, LOCALESS_TOKEN } from '$env/static/private';
 import type { PageServerLoad } from './$types';
 
@@ -151,6 +151,7 @@ SvelteKit's own `data`-prop serialization hydrates the server-fetched result to 
 |---|---|---|
 | `localessInit(options)` | Function | Initializes the client + component registry, sets Svelte context |
 | `getLocaless()` | Function | Returns the client from context |
+| `localessClient(options)` | Function | Raw client factory, re-exported from `@localess/client`, for standalone SSR data-loading outside `localessInit` |
 | `LocalessComponent` | Component | Dynamic schema-to-component renderer |
 | `LocalessDocument` | Component | Wraps `LocalessComponent` and re-renders on Visual Editor sync events |
 | `localessEditable` | Action | Applies `data-ll-id`/`data-ll-schema` |

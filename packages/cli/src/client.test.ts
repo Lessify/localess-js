@@ -1,7 +1,7 @@
-import { LocalessApiError } from '@localess/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { localessCliClient } from './client';
+import { LocalessApiError } from './models';
 
 function jsonResponse(body: unknown, init?: { status?: number; ok?: boolean }): Response {
   return {

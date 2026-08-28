@@ -1,9 +1,9 @@
 import { Component, input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { Content, EventToAppOf } from '@localess/client';
 import { vi } from 'vitest';
 
 import { LOCALESS_COMPONENTS } from '../localess.components';
+import type { Content, EventToAppOf } from '../models';
 import { LocalessClientService } from '../services/client.service';
 import { LocalessComponentResolver } from '../services/component-resolver.service';
 import { LocalessSyncService } from '../services/sync.service';

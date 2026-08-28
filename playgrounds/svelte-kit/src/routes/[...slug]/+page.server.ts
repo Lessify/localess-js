@@ -1,4 +1,4 @@
-import { LocalessApiError, localessClient } from '@localess/client';
+import { LocalessApiError, localessClient } from '@localess/svelte';
 import { error } from '@sveltejs/kit';
 
 import { resolveLocaleAndSlug } from '$lib/route';

@@ -172,11 +172,11 @@ Renders a Tiptap JSON rich-text document to HTML.
 
 ## SSR with SvelteKit
 
-`@localess/svelte` doesn't own data-fetching, so SSR looks like any other SvelteKit data flow: fetch with `@localess/client` directly in a `+page.server.ts` `load()` function (secret token), and pass the result to the page via `data`.
+`@localess/svelte` doesn't own data-fetching, so SSR looks like any other SvelteKit data flow: fetch with `localessClient` (re-exported from `@localess/svelte` — never import `@localess/client` directly) in a `+page.server.ts` `load()` function (secret token), and pass the result to the page via `data`.
 
 ```typescript
 // src/routes/[...slug]/+page.server.ts
-import { localessClient } from '@localess/client';
+import { localessClient } from '@localess/svelte';
 import { LOCALESS_ORIGIN, LOCALESS_SPACE_ID, LOCALESS_TOKEN } from '$env/static/private';
 import type { PageServerLoad } from './$types';
 
@@ -212,6 +212,7 @@ SvelteKit's own `data`-prop serialization hydrates the server-fetched result to 
 // Context & init
 export { localessInit }             // Initializes the client + component registry, sets Svelte context
 export { getLocaless }              // Returns the client from context
+export { localessClient }           // Raw client factory (re-exported from @localess/client), for standalone SSR data-loading outside localessInit
 
 // Rendering
 export { LocalessComponent }        // Dynamic schema-to-component renderer

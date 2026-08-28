@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import type { ContentAsset } from '@localess/client';
 import { vi } from 'vitest';
 
+import type { ContentAsset } from '../models';
 import { LocalessClientService } from '../services/client.service';
 import { AssetPipe } from './asset.pipe';
 

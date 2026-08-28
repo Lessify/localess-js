@@ -1,9 +1,9 @@
 import { Component, input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { ContentData } from '@localess/client';
 
 import { SchemaComponent } from '../components/schema.component';
 import { LOCALESS_COMPONENTS, LOCALESS_FALLBACK_COMPONENT } from '../localess.components';
+import type { ContentData } from '../models';
 import { LocalessClientService } from '../services/client.service';
 import { LocalessComponentResolver } from '../services/component-resolver.service';
 import { LocalessComponentDirective } from './localess-component.directive';

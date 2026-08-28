@@ -1,6 +1,8 @@
 import { localessClient } from '@localess/client';
 import type { Component } from 'svelte';
 
+export { localessClient };
+
 import { type EventToAppOf, type EventToAppType, type LocalessClient, type LocalessSvelteInitOptions } from './models';
 import { isBrowser, isIframe, loadLocalessSync } from './utils';
 
