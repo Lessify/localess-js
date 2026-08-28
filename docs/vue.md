@@ -103,11 +103,11 @@ const html = useLocalessRichText(() => props.data.body);
 
 ## SSR with Nuxt
 
-`@localess/vue` is rendering-only — SSR data-fetching goes through Nuxt's own server conventions, calling `@localess/client` directly with a **secret** token in a server-only file:
+`@localess/vue` is rendering-only — SSR data-fetching goes through Nuxt's own server conventions, calling `localessClient` (re-exported from `@localess/vue`, never `@localess/client` directly) with a **secret** token in a server-only file:
 
 ```typescript
 // server/api/content.ts
-import { localessClient } from '@localess/client';
+import { localessClient } from '@localess/vue';
 
 export default defineEventHandler(async event => {
   const client = localessClient({
@@ -148,6 +148,7 @@ Nuxt's own payload transfer hydrates the server-fetched result to the client —
 | `useLocalessSync(event)` | Composable | Visual Editor bridge event subscription, returns a `Ref` |
 | `useLocalessRichText(doc)` | Composable | Tiptap JSON → HTML, returns a `ComputedRef<string>` |
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |
+| `localessClient(options)` | Function | Re-exported from `@localess/client` — raw client factory for server-only SSR use, outside the `Localess` plugin's singleton lifecycle |
 | `@localess/vue/vite`'s `localess(options)` | Vite plugin factory | Component auto-registration |
 
 See `packages/vue/SKILL.md` for the full usage guide (also shipped inside the npm package).

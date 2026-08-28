@@ -1,5 +1,6 @@
 export { default as LocalessComponent } from './components/localess-component.vue';
 export { default as LocalessDocument } from './components/localess-document.vue';
+export { localessClient } from './client';
 export * from './composables/use-localess';
 export * from './composables/use-localess-rich-text';
 export * from './composables/use-localess-sync';

@@ -1,6 +1,8 @@
 import { localessClient } from '@localess/client';
 import type { Component } from 'vue';
 
+export { localessClient };
+
 import { type EventToAppOf, type EventToAppType, type LocalessClient, type LocalessClientOptions } from './models';
 import { isBrowser, isIframe, loadLocalessSync } from './utils';
 

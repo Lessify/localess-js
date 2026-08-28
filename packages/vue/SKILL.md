@@ -15,7 +15,7 @@
 
 **Peer dependency:** Vue `>=3.4`.
 
-**Rendering-only package.** `@localess/vue` does not fetch data for you. For CSR, call `useLocaless().getContentBySlug(...)` yourself (or any client method). For SSR (e.g. Nuxt), fetch with `@localess/client` directly in your own server route/`useAsyncData`, using a **secret** token — never in a file that reaches the browser bundle. See "SSR with Nuxt" below.
+**Rendering-only package.** `@localess/vue` does not fetch data for you. For CSR, call `useLocaless().getContentBySlug(...)` yourself (or any client method). For SSR (e.g. Nuxt), fetch with `localessClient` (re-exported from `@localess/vue`, never `@localess/client` directly) in your own server route/`useAsyncData`, using a **secret** token — never in a file that reaches the browser bundle. See "SSR with Nuxt" below.
 
 ---
 
@@ -207,17 +207,17 @@ import { localessComponents } from 'virtual:localess-vue-components';
 app.use(Localess, { origin, spaceId, token, components: localessComponents });
 ```
 
-> This plugin only ever handles a **public**, client-graph-only registration flow — it does not do SSR data-fetching, and unlike `@localess/react/vite` it never sees or emits a secret token. For SSR, fetch with `@localess/client` directly server-side (see below).
+> This plugin only ever handles a **public**, client-graph-only registration flow — it does not do SSR data-fetching, and unlike `@localess/react/vite` it never sees or emits a secret token. For SSR, fetch with `localessClient` (re-exported from `@localess/vue`) server-side (see below).
 
 ---
 
 ## SSR with Nuxt
 
-`@localess/vue` doesn't own data-fetching, so SSR looks like any other Nuxt data flow: fetch with `@localess/client` directly in a server-only file (secret token), render the result with `@localess/vue`'s components (public token, only needed if client-side sync is also enabled).
+`@localess/vue` doesn't own data-fetching, so SSR looks like any other Nuxt data flow: fetch with `localessClient` in a server-only file (secret token), render the result with `@localess/vue`'s components (public token, only needed if client-side sync is also enabled). Always import `localessClient` from `@localess/vue` — never `@localess/client` directly.
 
 ```typescript
 // server/api/content.ts — server-only, secret token never reaches the client bundle
-import { localessClient } from '@localess/client';
+import { localessClient } from '@localess/vue';
 
 export default defineEventHandler(async event => {
   const client = localessClient({
@@ -266,6 +266,9 @@ export { useLocalessRichText }      // Tiptap JSON -> HTML
 
 // Error handling (re-exported from @localess/client)
 export { LocalessApiError }
+
+// Raw client factory (re-exported from @localess/client, for server-only SSR use — see "SSR with Nuxt")
+export { localessClient }
 
 // Types (re-exported from @localess/client + local)
 export type { LocalessClient, LocalessClientOptions }

@@ -1,4 +1,4 @@
-import { LocalessApiError, localessClient } from '@localess/client';
+import { LocalessApiError, localessClient } from '@localess/vue';
 import { resolveLocaleAndSlug } from '#shared/utils/route';
 
 export default defineEventHandler(async event => {
