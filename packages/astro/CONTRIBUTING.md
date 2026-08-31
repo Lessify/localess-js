@@ -4,6 +4,8 @@ Astro integration layer. Depends on `@localess/client`. Components never fetch d
 
 `@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples) must only ever import from `@localess/astro` — never `@localess/client` directly. If a consumer needs something from `@localess/client` that isn't re-exported yet, add it to `src/index.ts`'s re-exports rather than telling consumers to import `@localess/client` themselves.
 
+For `@localess/richtext` (ADR 007), **`src/richtext.ts` is the only file allowed to import it** (a documented pass-through re-export; `LocalessRichText.astro` imports through `../richtext`), with the richtext model **types** re-exported from `src/models/index.ts`.
+
 ## Adding a New Component
 
 **1. Create `src/components/<Name>.astro`:**

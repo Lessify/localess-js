@@ -2,26 +2,34 @@
 
 @AGENTS.md
 
-This is a monorepo containing the official JavaScript/TypeScript SDKs for the Localess headless CMS. Four packages:
+This is a monorepo containing the official JavaScript/TypeScript SDKs for the Localess headless CMS. Eight packages:
 
 - `@localess/client` — Core server-side-only SDK. Zero production dependencies.
-- `@localess/react` — React integration (components, hooks, Visual Editor sync). Depends on `@localess/client`.
-- `@localess/angular` — Angular integration (components, directives, pipes, Visual Editor sync). Depends on `@localess/client`.
+- `@localess/richtext` — Framework-neutral rich text model and renderer. Zero dependencies (not even `@localess/client`).
+- `@localess/react` — React integration (components, hooks, rich text, Visual Editor sync).
+- `@localess/angular` — Angular integration (components, directives, pipes, Visual Editor sync).
+- `@localess/vue` — Vue integration (components, composables, Vite plugin).
+- `@localess/svelte` — Svelte integration (components, actions, context).
+- `@localess/astro` — Astro integration (integration, components, live preview).
 - `@localess/cli` — CLI for translations and type generation. Depends on `@localess/client`.
 
-Dependency graph: `@localess/client` ← `@localess/react`, `@localess/angular`, and `@localess/cli`. The three dependents never depend on each other.
+Dependency graph: two roots, `@localess/client` and `@localess/richtext`, which depend on nothing (see ADR 007). `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, and `@localess/astro` depend on both roots; `@localess/cli` depends on `@localess/client` only. Dependent packages never depend on each other.
 
 ## Quick Reference
 
 ```bash
-# Build all packages (client, react, cli, angular)
+# Build all packages (richtext, client, react, vue, svelte, cli, angular, astro)
 npm run build
 
 # Build individual packages
+npm run build:richtext   # must be built before running framework package tests
 npm run build:client
 npm run build:react
+npm run build:vue
+npm run build:svelte
 npm run build:cli
 npm run build:angular
+npm run build:astro
 
 # Run angular-ssr playground (requires build:angular first)
 npm run start:angular-ssr
@@ -44,15 +52,15 @@ Requirements: Node.js >= 24.0.0, npm >= 10.
 
 2. **`@localess/client` is server-side only, with one exception.** Never suggest using it in browser/client-side code, and a secret token must never be exposed client-side. The one exception: Localess now also issues **public tokens** (read-only, published content and translations only) that are safe to use client-side — currently supported in `@localess/react` (its `LocalessClientDocument` client-side registration path) and `@localess/angular` (its unified `provideLocaless({ token, ... })`, where the token's type is determined by the app's rendering mode). `@localess/cli` and `@localess/astro` have not been reworked for this yet — treat their token as secret-only until they are. See `docs/decisions/001-server-side-only.md`.
 
-3. **`@localess/client` has zero production dependencies.** Never add entries to `dependencies` in `packages/client/package.json`. `devDependencies` are fine. See `docs/decisions/002-zero-production-deps.md`.
+3. **`@localess/client` and `@localess/richtext` have zero production dependencies.** Never add entries to `dependencies` in `packages/client/package.json`; `packages/richtext/package.json` has no `dependencies` key at all and must stay that way (TipTap there is devDependencies-only, for the parity test). `devDependencies` are fine. See `docs/decisions/002-zero-production-deps.md` and `docs/decisions/007-shared-richtext-package.md`.
 
-4. **Package boundaries.** `@localess/react`, `@localess/angular`, and `@localess/cli` depend on `@localess/client`. They never depend on each other. See `docs/decisions/005-package-boundary-discipline.md`.
+4. **Package boundaries.** `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, and `@localess/astro` depend on `@localess/client` and `@localess/richtext`; `@localess/cli` depends on `@localess/client` only. Dependent packages never depend on each other, and the two root packages never depend on anything. See `docs/decisions/005-package-boundary-discipline.md` and `docs/decisions/007-shared-richtext-package.md`.
 
 5. **Upstream check.** When changing `@localess/client`'s public API (adding/removing/renaming methods or types), check whether `@localess/react`, `@localess/angular`, and `@localess/cli` consume the changed surface and update them.
 
 6. **SKILL.md sync.** When changing a package's public API, options, or behavior, update the corresponding `packages/<name>/SKILL.md`. These files ship inside the npm packages for downstream AI agents.
 
-7. **Internal-reference-only imports.** Within a package's `src/`, only three roles may import from `@localess/client` directly — a **models** module (every client type the package needs, plus `LocalessApiError`), a **utils** module (every plain client function the package needs — not `localessClient`), and a **client** file (the one place that calls `localessClient(...)` and wraps it in the framework's idiom — a singleton in `core/client.ts` for svelte/vue/react, an injectable `services/client.service.ts` for angular, top-level `client.ts` for cli). Every other internal file — including the public entry point (`index.ts` / `public-api.ts`) — imports through those three instead (e.g. `from '../models'`, `from '../utils'`, `from '../core/client'`, never `from '@localess/client'`). This keeps the client-package boundary at a small, fixed set of files per package, so it can be audited or changed in one place. A package's public entry point may itself be a sanctioned exception when it deliberately re-exports client surface to consumers (e.g. `@localess/angular`'s `public-api.ts` re-exporting all of `@localess/client`, `@localess/react`'s `src/ssr/index.ts` re-exporting `localessClient` for standalone build scripts) — that's a documented pass-through, not a bypass. Currently enforced in `@localess/svelte`, `@localess/react`, `@localess/angular`, `@localess/vue`, and `@localess/cli`; each package's `CONTRIBUTING.md` names its exact three files. `@localess/astro` still needs this convention applied — bring it into compliance when next touching its client imports, rather than as a standalone sweep. `@localess/cli` also has one known pre-existing gap (`src/models/space.ts` imports `Locale` directly) noted in its `CONTRIBUTING.md`.
+7. **Internal-reference-only imports.** Within a package's `src/`, only three roles may import from `@localess/client` directly — a **models** module (every client type the package needs, plus `LocalessApiError`), a **utils** module (every plain client function the package needs — not `localessClient`), and a **client** file (the one place that calls `localessClient(...)` and wraps it in the framework's idiom — a singleton in `core/client.ts` for svelte/vue/react, an injectable `services/client.service.ts` for angular, top-level `client.ts` for cli). Every other internal file — including the public entry point (`index.ts` / `public-api.ts`) — imports through those three instead (e.g. `from '../models'`, `from '../utils'`, `from '../core/client'`, never `from '@localess/client'`). This keeps the client-package boundary at a small, fixed set of files per package, so it can be audited or changed in one place. A package's public entry point may itself be a sanctioned exception when it deliberately re-exports client surface to consumers (e.g. `@localess/angular`'s `public-api.ts` re-exporting all of `@localess/client`, `@localess/react`'s `src/ssr/index.ts` re-exporting `localessClient` for standalone build scripts) — that's a documented pass-through, not a bypass. Currently enforced in `@localess/svelte`, `@localess/react`, `@localess/angular`, `@localess/vue`, and `@localess/cli`; each package's `CONTRIBUTING.md` names its exact three files. `@localess/astro` still needs this convention applied — bring it into compliance when next touching its client imports, rather than as a standalone sweep. `@localess/cli` also has one known pre-existing gap (`src/models/space.ts` imports `Locale` directly) noted in its `CONTRIBUTING.md`. The same discipline applies to `@localess/richtext` imports: each framework package imports it only from its designated richtext file(s) — react `src/core/richtext.ts` (+ a type-only import in `src/core/components/localess-rich-text.tsx`), vue `src/richtext.ts`, svelte `src/lib/components/LocalessRichText.svelte`, astro `src/richtext.ts`, angular `src/pipes/rich-text.pipe.ts` and `src/components/localess-rich-text.component.ts` — with model types re-exported through each package's models barrel.
 
 ## Code Style
 

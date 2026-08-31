@@ -88,17 +88,24 @@ const latest = useLocalessSync(['input', 'change']);
 
 ## Rich Text Rendering
 
+Built on `@localess/richtext` (see [docs/richtext.md](richtext.md)) — no TipTap at runtime. The `<LocalessRichText>` component renders native VNodes:
+
 ```vue
 <script setup lang="ts">
-import { useLocalessRichText } from '@localess/vue';
+import { LocalessRichText } from '@localess/vue';
 
 const props = defineProps<{ data: { body?: unknown } }>();
-const html = useLocalessRichText(() => props.data.body);
 </script>
 
 <template>
-  <div v-html="html" />
+  <LocalessRichText :content="props.data.body" />
 </template>
+```
+
+Composables: `useLocalessRichText(doc, options?)` returns a reactive `ComputedRef<VNodeChild>`; `useLocalessRichTextHtml(doc, options?)` returns `ComputedRef<string>` for `v-html` bindings. Per-node overrides are Vue components receiving children as the default slot (declare the props you consume, or set `inheritAttrs: false`, to avoid attribute fallthrough):
+
+```vue
+<LocalessRichText :content="data.body" :renderers="{ link: AppLink }" />
 ```
 
 ## SSR with Nuxt
@@ -146,7 +153,10 @@ Nuxt's own payload transfer hydrates the server-fetched result to the client —
 | `localessEditableField(name)` | Function | Applies `data-ll-field`, bound onto an element |
 | `useLocaless()` | Composable | Returns the injected `LocalessClient` |
 | `useLocalessSync(event)` | Composable | Visual Editor bridge event subscription, returns a `Ref` |
-| `useLocalessRichText(doc)` | Composable | Tiptap JSON → HTML, returns a `ComputedRef<string>` |
+| `LocalessRichText` | Component | Renders a rich text field to native VNodes (`content`, `renderers?` props) |
+| `useLocalessRichText(doc, options?)` | Composable | Tiptap JSON → VNodes, returns a reactive `ComputedRef<VNodeChild>` |
+| `useLocalessRichTextHtml(doc, options?)` | Composable | Tiptap JSON → HTML string for `v-html`, returns `ComputedRef<string>` |
+| `renderRichText(content, options?)` | Function | One-shot Tiptap JSON → VNodes |
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |
 | `localessClient(options)` | Function | Re-exported from `@localess/client` — raw client factory for server-only SSR use, outside the `Localess` plugin's singleton lifecycle |
 | `@localess/vue/vite`'s `localess(options)` | Vite plugin factory | Component auto-registration |

@@ -9,7 +9,7 @@
 - `<LocalessDocument>` — wraps `<LocalessComponent>` with automatic Visual Editor live sync
 - `localessEditable` — a Svelte action applying Visual Editor editable attributes
 - **Visual Editor sync** support via the `localessSync` store
-- **Rich text** rendering from Tiptap JSON via `localessRichText`
+- **Rich text** rendering from Tiptap JSON via `<LocalessRichText>` (built on `@localess/richtext`, no TipTap at runtime)
 
 **Peer dependency:** Svelte `^5.0.0`.
 
@@ -152,19 +152,24 @@ Subscribes to Visual Editor bridge events (`input`, `change`, etc.) and exposes 
 
 ---
 
-## `localessRichText` store
+## `<LocalessRichText>` component
 
-Renders a Tiptap JSON rich-text document to HTML.
+Renders a Tiptap JSON rich-text document — built on `@localess/richtext`, reactive via `$derived` (updates when `content` changes, e.g. Visual Editor live sync).
 
 ```svelte
 <script lang="ts">
-  import { localessRichText } from '@localess/svelte';
+  import { LocalessRichText } from '@localess/svelte';
 
   let { data }: { data: { body?: unknown } } = $props();
-  const html = localessRichText(data.body as any);
 </script>
 
-{@html $html}
+<LocalessRichText content={data.body} />
+```
+
+Per-node overrides are string-based renderers:
+
+```svelte
+<LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<p class="prose">${children}</p>` }} />
 ```
 
 ---
@@ -221,7 +226,7 @@ export { localessEditableField }    // Field-level data-ll-field attribute, spre
 
 // Reactivity
 export { localessSync }             // Visual Editor bridge event subscription, returns a Readable
-export { localessRichText }         // Tiptap JSON -> HTML, returns a Readable<string>
+export { LocalessRichText }         // Rich text component (content, renderers?), reactive via $derived
 
 // Error handling (re-exported from @localess/client)
 export { LocalessApiError }

@@ -11,6 +11,8 @@ Vue 3 integration layer. Depends on `@localess/client`. Components never fetch d
 
 Every other file in this package — including `index.ts` — imports what it needs from `./models`/`../models`, `./utils`/`../utils`, or `./client`/`../client` (relative path per file depth) instead. When a new file needs something from `@localess/client` that none of the three re-exports yet, add it to whichever matches. This keeps the client-package boundary auditable at three well-known files instead of scattered across every component/composable/directive.
 
+The same discipline applies to `@localess/richtext` (ADR 007): **`src/richtext.ts` is the only file allowed to import `@localess/richtext` values** — it hosts the VNode walker and re-exports what the component/composables need; `src/models/index.ts` re-exports the richtext model **types** (`LocalessRichTextNode` etc.). Everything else imports through `./richtext`/`../richtext` or the models barrel.
+
 `@localess/vue`'s `client.ts` (client/registry/sync state) is a hand-ported near-duplicate of `@localess/svelte`'s equivalent module — same function names and behavior, `vue`'s `Component` type swapped for Svelte's. ADR 005 forbids extracting this into a shared package, so keep this a manual-sync discipline: when fixing a bug here, check `packages/svelte/src/lib/client.ts` for the same bug. `src/models/` and `src/utils/` should likewise stay structurally parallel to `packages/svelte/src/lib/models/` and `packages/svelte/src/lib/utils/` — same shape, so a re-export added on one side is easy to mirror on the other.
 
 ## Adding a New Composable

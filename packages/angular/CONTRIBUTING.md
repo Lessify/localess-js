@@ -13,6 +13,8 @@ Every other file — components, directives, pipes, providers, other services �
 
 The one sanctioned exception is `src/public-api.ts`'s `export * from '@localess/client'` — this package's unified-entry-point design intentionally re-exports the full `@localess/client` surface to consumers, so leave that pass-through as-is; it is not subject to the rule above.
 
+The same discipline applies to `@localess/richtext` (ADR 007): **`src/pipes/rich-text.pipe.ts` and `src/components/localess-rich-text.component.ts` are the only files allowed to import `@localess/richtext` values**; `src/models/index.ts` re-exports the richtext model **types** (`LocalessRichTextNode` etc.) for everything else.
+
 ## Build
 
 ```bash

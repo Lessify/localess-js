@@ -32,9 +32,10 @@
  */
 
 export { getComponent, getFallbackComponent, getLocalessClient, localessInit, resolveAsset } from '../core/client';
+export { LocalessRichText, type LocalessRichTextProps } from '../core/components/localess-rich-text';
 export type * from '../core/models';
 export { LocalessApiError } from '../core/models';
-export { renderRichTextToReact } from '../core/richtext';
+export { type LocalessReactRichTextOptions, type LocalessReactRichTextRenderers, renderRichText } from '../core/richtext';
 export * from '../core/utils';
 export * from './localess-component';
 export * from './localess-document';

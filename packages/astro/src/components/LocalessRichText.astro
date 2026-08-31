@@ -1,13 +1,17 @@
 ---
-import { renderLocalessRichTextToHtml } from '../';
-import type { ContentRichText } from '../models';
+import {
+  type LocalessRichTextInput,
+  type LocalessRichTextRenderers,
+  renderRichTextToHtml,
+} from '../richtext';
 
 export interface Props {
-  content: ContentRichText;
+  content: LocalessRichTextInput;
+  renderers?: LocalessRichTextRenderers<string>;
 }
 
-const { content } = Astro.props;
-const html = renderLocalessRichTextToHtml(content);
+const { content, renderers } = Astro.props;
+const html = renderRichTextToHtml(content, { renderers });
 ---
 
 <Fragment set:html={html} />

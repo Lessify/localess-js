@@ -541,16 +541,27 @@ const thumb    = resolveAsset(data.video, { w: 400, thumbnail: true });
 
 See `AssetTransformParams` table in [docs/client.md](client.md#asset-transform-parameters).
 
-### `renderRichTextToReact(content)`
+### Rich Text — `<LocalessRichText>` and `renderRichText(content, options?)`
 
-Converts Localess `ContentRichText` (Tiptap JSON) to a React node tree.
+Renders Localess `ContentRichText` (Tiptap JSON) to a native React node tree — no TipTap at runtime, safe in SPA, SSR, and RSC. Built on `@localess/richtext` (see [docs/richtext.md](richtext.md)).
 
 ```tsx
-import { renderRichTextToReact } from "@localess/react";
-<div>{renderRichTextToReact(data.body)}</div>
+import { LocalessRichText, renderRichText } from "@localess/react";
+
+<LocalessRichText content={data.body} />
+<article>{renderRichText(data.body)}</article>
 ```
 
-Supported elements: headings (h1–h6), paragraphs, bold, italic, strikethrough, underline, ordered/unordered lists, code, code blocks, links.
+Per-node/per-mark overrides are React components receiving the node's fields plus `children`:
+
+```tsx
+<LocalessRichText
+  content={data.body}
+  renderers={{ link: ({ attrs, children }) => <Link href={attrs.href}>{children}</Link> }}
+/>
+```
+
+Supported elements: headings (h1–h6), paragraphs, bold, italic, strikethrough, underline, ordered/unordered lists, code, code blocks, links. Link `href`s pass a protocol allowlist (`javascript:`/`data:` are stripped). Unknown node types are skipped with a dev-only warning unless a renderer for that type is provided.
 
 ## Accessing the Client
 
@@ -565,8 +576,8 @@ const client = getLocalessClient(); // throws if localessInit() not called
 // Default export (@localess/react)
 export { localessInit, getLocalessClient }
 export { getComponent, getFallbackComponent, isSyncEnabled }
-export { LocalessComponent, LocalessDocument }
-export { renderRichTextToReact, resolveAsset }
+export { LocalessComponent, LocalessDocument, LocalessRichText }
+export { renderRichText, resolveAsset }
 export { useLocaless }
 export { findLink }
 export { localessEditable, localessEditableField }  // re-exported from @localess/client

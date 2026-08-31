@@ -1,43 +1,22 @@
+import { richTextFixtures } from '@localess/richtext/test-utils';
 import { describe, expect, it } from 'vitest';
 
 import { renderLocalessRichTextToHtml } from './richtext';
 
-describe('renderLocalessRichTextToHtml', () => {
-  it('renders a paragraph with bold text to HTML', () => {
-    const content = {
-      type: 'doc',
-      content: [
-        {
-          type: 'paragraph',
-          content: [
-            { type: 'text', text: 'Hello ' },
-            { type: 'text', marks: [{ type: 'bold' }], text: 'world' },
-          ],
-        },
-      ],
-    } as any;
+describe('renderLocalessRichTextToHtml fixture parity', () => {
+  for (const fixture of richTextFixtures) {
+    it(fixture.title, () => {
+      expect(renderLocalessRichTextToHtml(fixture.input as any)).toBe(fixture.expected);
+    });
+  }
+});
 
-    const html = renderLocalessRichTextToHtml(content);
-
-    expect(html).toContain('Hello');
-    expect(html).toContain('<strong>world</strong>');
-  });
-
-  it('renders headings and lists', () => {
-    const content = {
-      type: 'doc',
-      content: [
-        { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Title' }] },
-        {
-          type: 'bulletList',
-          content: [{ type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Item 1' }] }] }],
-        },
-      ],
-    } as any;
-
-    const html = renderLocalessRichTextToHtml(content);
-
-    expect(html).toContain('<h2>Title</h2>');
-    expect(html).toContain('Item 1');
+describe('renderLocalessRichTextToHtml overrides', () => {
+  it('applies custom renderers', () => {
+    const input: any = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hi' }] }] };
+    const html = renderLocalessRichTextToHtml(input, {
+      renderers: { paragraph: ({ children }) => `<div class="rt-p">${children}</div>` },
+    });
+    expect(html).toBe('<div class="rt-p">Hi</div>');
   });
 });

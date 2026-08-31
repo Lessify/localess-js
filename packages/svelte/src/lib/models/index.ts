@@ -19,3 +19,4 @@ export type {
   References,
 } from '@localess/client';
 export { LocalessApiError } from '@localess/client';
+export type { LocalessRichTextDocument, LocalessRichTextInput, LocalessRichTextMark, LocalessRichTextNode } from '@localess/richtext';

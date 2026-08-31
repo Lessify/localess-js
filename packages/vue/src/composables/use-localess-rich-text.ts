@@ -1,42 +1,28 @@
-import type { JSONContent } from '@tiptap/core';
-import Bold from '@tiptap/extension-bold';
-import BulletList from '@tiptap/extension-bullet-list';
-import Code from '@tiptap/extension-code';
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import Document from '@tiptap/extension-document';
-import Heading from '@tiptap/extension-heading';
-import Italic from '@tiptap/extension-italic';
-import Link from '@tiptap/extension-link';
-import ListItem from '@tiptap/extension-list-item';
-import OrderedList from '@tiptap/extension-ordered-list';
-import Paragraph from '@tiptap/extension-paragraph';
-import Strike from '@tiptap/extension-strike';
-import Text from '@tiptap/extension-text';
-import Underline from '@tiptap/extension-underline';
-import { generateHTML } from '@tiptap/html';
-import { computed, type ComputedRef, type MaybeRefOrGetter, toValue } from 'vue';
+import { computed, type ComputedRef, type MaybeRefOrGetter, toValue, type VNodeChild } from 'vue';
 
-const EXTENSIONS = [
-  Document,
-  Paragraph,
-  Text,
-  Bold,
-  Italic,
-  Underline,
-  Strike,
-  Code,
-  CodeBlockLowlight,
-  Heading,
-  BulletList,
-  OrderedList,
-  ListItem,
-  Link,
-];
+import {
+  type LocalessRichTextInput,
+  type LocalessRichTextRenderers,
+  type LocalessVueRichTextOptions,
+  renderRichText,
+  renderRichTextToHtml,
+} from '../richtext';
 
-export function useLocalessRichText(doc: MaybeRefOrGetter<JSONContent | undefined>): ComputedRef<string> {
-  return computed(() => {
-    const value = toValue(doc);
-    if (!value) return '';
-    return generateHTML(value, EXTENSIONS);
-  });
+/**
+ * Reactive rich text → VNodes. Re-renders when the doc (or a ref/getter it
+ * derives from) changes — Visual Editor live-sync safe.
+ */
+export function useLocalessRichText(
+  doc: MaybeRefOrGetter<LocalessRichTextInput>,
+  options: LocalessVueRichTextOptions = {}
+): ComputedRef<VNodeChild> {
+  return computed(() => renderRichText(toValue(doc), options));
+}
+
+/** Reactive rich text → HTML string, for `v-html` bindings. */
+export function useLocalessRichTextHtml(
+  doc: MaybeRefOrGetter<LocalessRichTextInput>,
+  options: { renderers?: LocalessRichTextRenderers<string> } = {}
+): ComputedRef<string> {
+  return computed(() => renderRichTextToHtml(toValue(doc), options));
 }

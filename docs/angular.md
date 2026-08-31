@@ -151,13 +151,19 @@ Marks an element as a Localess content block for Visual Editor targeting.
 |---|---|---|---|
 | `llAsset` | `ContentAsset` | `string` | Resolves asset to full URL |
 | `llLink` | `ContentLink` | `string` | Resolves link to URL string |
-| `llRtToHtml` | `ContentRichText` | `Promise<string>` | Converts Tiptap JSON to an HTML string, lazy-loading `@tiptap/*` on first use — use with `| async` |
+| `llRichText` | `ContentRichText` | `SafeHtml` | Converts Tiptap JSON to sanitizer-trusted HTML, synchronously (built on `@localess/richtext`; optional renderers argument for per-node overrides) |
 | `llSafeHtml` | `string \| null \| undefined` | `SafeHtml` | Marks HTML as safe for Angular |
 
 ```html
 <img [src]="data.image | llAsset" />
 <a [href]="data.link | llLink">{{ data.label }}</a>
-<div [innerHTML]="data.body | llRtToHtml | async | llSafeHtml"></div>
+<div [innerHTML]="data.body | llRichText"></div>
+```
+
+For rich text there is also a component — `<ll-rich-text>` renders the field into its host element and re-renders on signal changes:
+
+```html
+<ll-rich-text [content]="data.body" />
 ```
 
 ## Asset Transform Parameters
@@ -203,5 +209,5 @@ npm run build:angular   # from monorepo root
 
 - **Not building before running the playground.** `playgrounds/angular-ssr` reads from `packages/angular/dist/`. Run `npm run build:angular` first.
 - **Enabling sync in production.** `enableSync: !environment.production` — the sync script is only useful inside the Localess editor iframe.
-- **Forgetting `| async` on `llRtToHtml`.** It returns `Promise<string>` (to lazy-load `@tiptap/*`), so bind it as `data.body | llRtToHtml | async | llSafeHtml`, not directly to `[innerHTML]`.
+- **Piping `llRichText` through `| async` or `| llSafeHtml`.** It is synchronous and already returns `SafeHtml` — bind `data.body | llRichText` directly to `[innerHTML]`.
 - **Using a secret token in `app.config.ts`.** That configuration ships to the browser bundle — only use a public (read-only) token there. Keep the secret token in `app.config.server.ts`.

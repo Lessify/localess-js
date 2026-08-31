@@ -1,0 +1,75 @@
+{
+  "name": "@localess/richtext",
+  "version": "3.4.1",
+  "description": "Framework-neutral rich text model and renderer for Localess's TipTap JSON content.",
+  "keywords": [
+    "localess",
+    "sdk",
+    "richtext",
+    "tiptap",
+    "javascript",
+    "typescript"
+  ],
+  "author": "Lessify",
+  "homepage": "https://github.com/Lessify/localess-js",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "SKILL.md"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./test-utils": {
+      "types": "./dist/test-utils/index.d.ts",
+      "import": "./dist/test-utils/index.mjs",
+      "require": "./dist/test-utils/index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lessify/localess-js.git",
+    "directory": "packages/richtext"
+  },
+  "bugs": {
+    "url": "https://github.com/Lessify/localess-js/issues"
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@tiptap/extension-bold": "^3.22.5",
+    "@tiptap/extension-bullet-list": "^3.22.5",
+    "@tiptap/extension-code": "^3.22.5",
+    "@tiptap/extension-code-block-lowlight": "^3.22.5",
+    "@tiptap/extension-document": "^3.22.5",
+    "@tiptap/extension-heading": "^3.22.5",
+    "@tiptap/extension-history": "^3.22.5",
+    "@tiptap/extension-italic": "^3.22.5",
+    "@tiptap/extension-link": "^3.22.5",
+    "@tiptap/extension-list-item": "^3.22.5",
+    "@tiptap/extension-ordered-list": "^3.22.5",
+    "@tiptap/extension-paragraph": "^3.22.5",
+    "@tiptap/extension-strike": "^3.22.5",
+    "@tiptap/extension-text": "^3.22.5",
+    "@tiptap/extension-underline": "^3.22.5",
+    "@tiptap/html": "^3.22.5",
+    "@types/node": "^24",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.16",
+    "vite-plugin-dts": "^5.0.0"
+  },
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

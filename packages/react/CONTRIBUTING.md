@@ -13,6 +13,8 @@ Every other file in this package — including the public entry points (`index.t
 
 **One documented exception:** `src/ssr/index.ts` re-exports `localessClient` directly from `@localess/client` (not through `core/client`) for standalone build-time scripts (e.g. a `vite.config.ts` enumerating prerender paths) that need a client instance outside the `localessInit()`/`getLocalessClient()` singleton lifecycle — see the comment above that re-export. This is a public-entry-point pass-through, the same kind of sanctioned exception `@localess/angular`'s `public-api.ts` has for the whole client surface — it isn't a second "wrap the client" file.
 
+The same discipline applies to `@localess/richtext` (ADR 007): **`src/core/richtext.ts` is the only file allowed to import `@localess/richtext` values** — it hosts the ReactNode walker; `src/core/models/index.ts` re-exports the richtext model **types** (`LocalessRichTextNode` etc.), and `src/core/components/localess-rich-text.tsx` may take a type-only import. Everything else imports through `../richtext` or the models barrel.
+
 ## Adding a New Component
 
 **1. Create `src/core/components/<name>.tsx`:**

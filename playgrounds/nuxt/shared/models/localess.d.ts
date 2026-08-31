@@ -64,8 +64,9 @@ export interface Page {
   /** Unique identifier for the Schema object. */
   _schema: 'Page';
   buttons?: Button[];
+  /** Rich Text example */
+  content?: ContentRichText;
   description?: string;
-  options?: ButtonType[];
   title?: string;
 }
 

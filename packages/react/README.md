@@ -192,19 +192,24 @@ const Hero = ({ data }: { data: HeroBlock }) => (
 
 ## Rich Text Rendering
 
-### `renderRichTextToReact(content)`
+### `<LocalessRichText>` and `renderRichText(content, options?)`
 
-Converts a Localess `ContentRichText` object to a React node tree. Supports the full range of rich text formatting produced by the Localess editor.
+Converts a Localess `ContentRichText` object to a native React node tree — built on `@localess/richtext`, no TipTap at runtime. Supports the full range of rich text formatting produced by the Localess editor, with per-node/per-mark overrides via the `renderers` option (React components receiving the node's fields plus `children`).
 
 ```tsx
-import { renderRichTextToReact } from "@localess/react";
+import { LocalessRichText, renderRichText } from "@localess/react";
 
 const Article = ({ data }) => (
   <article>
     <h1>{data.title}</h1>
-    <div>{renderRichTextToReact(data.body)}</div>
+    <LocalessRichText content={data.body} />
   </article>
 );
+
+// function form, with a custom link renderer:
+renderRichText(data.body, {
+  renderers: { link: ({ attrs, children }) => <a className="app-link" href={attrs.href}>{children}</a> },
+});
 ```
 
 **Supported rich text elements:**
@@ -711,7 +716,7 @@ The table below shows which symbols are available in each export.
 | `resolveAsset`                                         |         ✅         |           ✅           |           ✅           |
 | `LocalessComponent`                                    |         ✅         |           ❌           |           ✅           |
 | `LocalessServerComponent` / `LocalessServerDocument`   |         ❌         |           ✅           |           ✅           |
-| `renderRichTextToReact`                                |         ✅         |           ✅           |           ✅           |
+| `LocalessRichText` / `renderRichText`                  |         ✅         |           ✅           |           ✅           |
 | `findLink`                                             |         ✅         |           ✅           |           ✅           |
 | `isServer`                                             |         ✅         |           ✅           |           ✅           |
 | All content types                                      |         ✅         |           ✅           |           ✅           |

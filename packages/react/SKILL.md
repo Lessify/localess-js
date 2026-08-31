@@ -518,20 +518,31 @@ const NavLink = ({ data, links }) => (
 
 ## Rich Text Rendering
 
-Converts Localess `ContentRichText` (Tiptap JSON) to a React node tree.
+Converts Localess `ContentRichText` (Tiptap JSON) to a native React node tree — built on `@localess/richtext`, no TipTap at runtime, safe in SPA/SSR/RSC.
 
 ```tsx
-import { renderRichTextToReact } from "@localess/react";
+import { LocalessRichText, renderRichText } from "@localess/react";
 
 const Article = ({ data }) => (
   <article>
     <h1>{data.title}</h1>
-    <div>{renderRichTextToReact(data.body)}</div>
+    <LocalessRichText content={data.body} />
   </article>
 );
 ```
 
-**Supported elements:** headings (h1–h6), paragraphs, bold, italic, strikethrough, underline, ordered/unordered lists, code, code blocks, links.
+Per-node/per-mark overrides are React components receiving the node's fields plus `children`:
+
+```tsx
+<LocalessRichText
+  content={data.body}
+  renderers={{ link: ({ attrs, children }) => <Link href={attrs.href}>{children}</Link> }}
+/>
+```
+
+`renderRichText(content, options?)` is the function form returning `ReactNode`.
+
+**Supported elements:** headings (h1–h6), paragraphs, bold, italic, strikethrough, underline, ordered/unordered lists, code, code blocks, links. Link `href`s pass a protocol allowlist (`javascript:`/`data:` stripped). Unknown node types are skipped with a dev-only warning unless a renderer for that type string is provided.
 
 ---
 
@@ -689,7 +700,8 @@ export { getComponent, getFallbackComponent, isSyncEnabled, localessSyncOn, loca
 // Rendering
 export { LocalessComponent }        // Dynamic schema-to-component renderer
 export { LocalessDocument }         // Schema renderer + built-in Visual Editor sync ('use client')
-export { renderRichTextToReact }    // Rich text → React nodes
+export { LocalessRichText }         // Rich text component (content, renderers?)
+export { renderRichText }           // Rich text → React nodes
 export { resolveAsset }             // ContentAsset → full URL
 
 // Hooks
@@ -725,7 +737,7 @@ export { localessInit, getLocalessClient }
 export { getComponent, getFallbackComponent }
 export { LocalessServerComponent }  // Dynamic schema-to-component renderer, server-safe
 export { LocalessServerDocument }   // Schema renderer, no sync — server-safe
-export { renderRichTextToReact, resolveAsset, findLink }
+export { LocalessRichText, renderRichText, resolveAsset, findLink }
 export { localessEditable, localessEditableField, isBrowser, isServer, isIframe }
 export { LocalessApiError }
 // Same shared types as the default export, minus anything sync-specific being meaningful

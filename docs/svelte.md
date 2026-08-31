@@ -100,16 +100,19 @@ There's no Vite plugin auto-discovering these from a folder. That was tried and 
 
 ## Rich Text Rendering
 
+Built on `@localess/richtext` (see [docs/richtext.md](richtext.md)) — no TipTap at runtime, reactive via `$derived` (updates on Visual Editor live-sync):
+
 ```svelte
 <script lang="ts">
-  import { localessRichText } from '@localess/svelte';
+  import { LocalessRichText } from '@localess/svelte';
 
   let { data }: { data: { body?: unknown } } = $props();
-  const html = localessRichText(data.body as any);
 </script>
 
-{@html $html}
+<LocalessRichText content={data.body} />
 ```
+
+String-based per-node overrides: `<LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<div class="prose">${children}</div>` }} />`.
 
 ## SSR with SvelteKit
 
@@ -157,7 +160,7 @@ SvelteKit's own `data`-prop serialization hydrates the server-fetched result to 
 | `localessEditable` | Action | Applies `data-ll-id`/`data-ll-schema` |
 | `localessEditableField(name)` | Function | Applies `data-ll-field`, spread onto an element |
 | `localessSync(event)` | Function | Visual Editor bridge event subscription, returns a `Readable` |
-| `localessRichText(doc)` | Function | Tiptap JSON → HTML, returns a `Readable<string>` |
+| `LocalessRichText` | Component | Renders a rich text field (`content`, `renderers?` props), reactive via `$derived` |
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |
 
 See `packages/svelte/SKILL.md` for the full usage guide (also shipped inside the npm package).

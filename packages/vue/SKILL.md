@@ -10,7 +10,7 @@
 - `localessEditable()` — block-level editable attributes (`data-ll-id`/`data-ll-schema`), bound onto an element
 - `localessEditableField()` — field-level editable attribute, bound onto an element
 - **Visual Editor sync** support via `useLocalessSync`
-- **Rich text** rendering from Tiptap JSON via `useLocalessRichText`
+- **Rich text** rendering from Tiptap JSON via `<LocalessRichText>` / `useLocalessRichText` (built on `@localess/richtext`, no TipTap at runtime)
 - `@localess/vue/vite` — Vite plugin for component auto-registration
 
 **Peer dependency:** Vue `>=3.4`.
@@ -161,22 +161,25 @@ const latestChange = useLocalessSync(['input', 'change']);
 </script>
 ```
 
-### `useLocalessRichText(doc)`
+### Rich text — `<LocalessRichText>`, `useLocalessRichText`, `useLocalessRichTextHtml`
 
-Renders a Tiptap JSON rich-text document to HTML. Accepts a plain value, a `Ref`, or a getter function.
+Built on `@localess/richtext` — no TipTap at runtime. The component renders native VNodes:
 
 ```vue
 <script setup lang="ts">
-import { useLocalessRichText } from '@localess/vue';
+import { LocalessRichText } from '@localess/vue';
 
 const props = defineProps<{ data: { body?: unknown } }>();
-const html = useLocalessRichText(() => props.data.body);
 </script>
 
 <template>
-  <div v-html="html" />
+  <LocalessRichText :content="props.data.body" />
 </template>
 ```
+
+- `useLocalessRichText(doc, options?)` → reactive `ComputedRef<VNodeChild>`. Accepts a plain value, a `Ref`, or a getter.
+- `useLocalessRichTextHtml(doc, options?)` → `ComputedRef<string>` for `v-html` bindings.
+- Per-node overrides: `renderers` maps type names to Vue components; children arrive as the default slot. Override components should declare the props they consume (or set `inheritAttrs: false`) to avoid attribute fallthrough.
 
 ---
 
@@ -262,7 +265,13 @@ export { localessEditableField }    // Field-level data-ll-field attribute
 // Composables
 export { useLocaless }              // Returns the injected LocalessClient
 export { useLocalessSync }          // Visual Editor bridge event subscription
-export { useLocalessRichText }      // Tiptap JSON -> HTML
+export { useLocalessRichText }      // Tiptap JSON -> VNodes (reactive)
+export { useLocalessRichTextHtml }  // Tiptap JSON -> HTML string (reactive, for v-html)
+
+// Rich text
+export { LocalessRichText }         // Rich text component (content, renderers?)
+export { renderRichText }           // One-shot Tiptap JSON -> VNodes
+export { renderRichTextToHtml }     // One-shot Tiptap JSON -> HTML string (re-exported from @localess/richtext)
 
 // Error handling (re-exported from @localess/client)
 export { LocalessApiError }

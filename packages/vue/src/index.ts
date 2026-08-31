@@ -1,6 +1,7 @@
 export { localessClient } from './client';
 export { default as LocalessComponent } from './components/localess-component.vue';
 export { default as LocalessDocument } from './components/localess-document.vue';
+export { LocalessRichText } from './components/localess-rich-text';
 export * from './composables/use-localess';
 export * from './composables/use-localess-rich-text';
 export * from './composables/use-localess-sync';
@@ -22,4 +23,5 @@ export type {
 export { LocalessApiError } from './models';
 export * from './plugin/localess-plugin';
 export * from './plugin/localess-symbol';
+export { type LocalessVueRichTextOptions, type LocalessVueRichTextRenderers, renderRichText, renderRichTextToHtml } from './richtext';
 export { localessEditable, localessEditableField } from './utils';

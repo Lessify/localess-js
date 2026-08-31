@@ -104,7 +104,13 @@ import LocalessRichText from '@localess/astro/LocalessRichText.astro';
 <LocalessRichText content={data.body} />
 ```
 
-Same fixed TipTap extension set as `@localess/react`'s `renderRichTextToReact` (Document, Text, Paragraph, Heading 1–6, Bold, Italic, Strike, Underline, History, ListItem, OrderedList, BulletList, Code, CodeBlockLowlight, Link) — no per-node customization.
+Built on `@localess/richtext` (see [docs/richtext.md](richtext.md)) — no TipTap at runtime. Supported elements: headings 1–6, paragraphs, bold/italic/strike/underline/code, ordered/unordered lists, code blocks, links. Per-node customization via the string-based `renderers` prop:
+
+```astro
+<LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<p class="prose">${children}</p>` }} />
+```
+
+`renderLocalessRichTextToHtml(content, options?)` (alias of `renderRichTextToHtml`) remains available from `@localess/astro` for standalone rendering.
 
 ## Assets
 

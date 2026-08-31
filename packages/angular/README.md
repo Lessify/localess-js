@@ -403,28 +403,42 @@ import { LinkPipe } from '@localess/angular';
 | `"content"` | Looks up `link.uri` in the `links` map and returns `/<fullSlug>` |
 | `"url"` | Returns `link.uri` as-is |
 
-### `llRtToHtml` — Rich Text to HTML
+### `llRichText` — Rich Text to SafeHtml
 
-Converts a Localess RichText field (Tiptap JSON) to an HTML string. **Returns `Promise<string>`** — `@tiptap/*` is lazy-loaded on first use, so bind with `| async`:
+Converts a Localess RichText field (Tiptap JSON) to sanitizer-trusted HTML, **synchronously** — built on `@localess/richtext`, no TipTap at runtime, no `| async`, no `| llSafeHtml`:
 
 ```ts
-import { RichTextToHtmlPipe, SafeHtmlPipe } from '@localess/angular';
+import { LocalessRichTextPipe } from '@localess/angular';
 
-@Component({ imports: [RichTextToHtmlPipe, SafeHtmlPipe] })
+@Component({ imports: [LocalessRichTextPipe] })
 ```
 
 ```html
-<div [innerHTML]="data.body | llRtToHtml | async | llSafeHtml"></div>
+<div [innerHTML]="data.body | llRichText"></div>
 ```
 
-The pipe accepts `JSONContent | ContentRichText | string | null | undefined`. A plain string is returned unchanged; `null`/`undefined` resolve to an empty string. Supports headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links.
+The pipe accepts `LocalessRichTextInput` (a doc, node, node array, `ContentRichText`, or `null`/`undefined` → empty). An optional argument passes per-node string renderers: `data.body | llRichText:renderers`. Supports headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links; link `href`s pass a protocol allowlist (`javascript:`/`data:` stripped).
+
+### `<ll-rich-text>` — Rich Text component
+
+Renders the field into its host element; re-renders on signal changes:
+
+```ts
+import { LocalessRichText } from '@localess/angular';
+
+@Component({ imports: [LocalessRichText] })
+```
+
+```html
+<ll-rich-text [content]="data.body" />
+```
 
 ### `llSafeHtml` — Safe HTML
 
-Bypasses Angular's `DomSanitizer` for a trusted HTML string. Accepts `string | null | undefined` — the latter two (as emitted transiently by `| async` before the promise resolves) are treated as empty HTML.
+Bypasses Angular's `DomSanitizer` for a trusted HTML string. Accepts `string | null | undefined` (treated as empty HTML).
 
 ```html
-<div [innerHTML]="data.body | llRtToHtml | async | llSafeHtml"></div>
+<div [innerHTML]="trustedHtmlString | llSafeHtml"></div>
 ```
 
 > **Security:** `llSafeHtml` calls `DomSanitizer.bypassSecurityTrustHtml()`. Only use it with HTML that comes directly from your trusted Localess space.

@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head><title>VE Harness</title></head>
+<body>
+<iframe id="app" src="http://localhost:3000/" style="width:100%;height:600px;border:1px solid red;"></iframe>
+<script>
+  window.sendChange = function() {
+    const frame = document.getElementById('app');
+    frame.contentWindow.postMessage({
+      owner: 'LOCALESS',
+      type: 'change',
+      data: {
+        _id: '9cf406ab-939b-4855-a700-eba3dd77ccd6',
+        _schema: 'Page',
+        schema: 'Page',
+        title: 'CHANGED BY TEST',
+        description: 'Changed description via simulated Visual Editor event.'
+      }
+    }, '*');
+  };
+</script>
+</body>
+</html>

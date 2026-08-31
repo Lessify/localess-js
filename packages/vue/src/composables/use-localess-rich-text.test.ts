@@ -1,33 +1,28 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import { defineComponent, h } from 'vue';
+import { h, ref } from 'vue';
 
-import { useLocalessRichText } from './use-localess-rich-text';
+import { useLocalessRichText, useLocalessRichTextHtml } from './use-localess-rich-text';
+
+const docOf = (text: string): any => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] });
+
+describe('useLocalessRichTextHtml', () => {
+  it('returns HTML and reacts to doc changes', () => {
+    const doc = ref<any>(docOf('One'));
+    const html = useLocalessRichTextHtml(doc);
+    expect(html.value).toBe('<p>One</p>');
+    doc.value = docOf('Two');
+    expect(html.value).toBe('<p>Two</p>');
+  });
+  it('returns empty string for undefined', () => {
+    expect(useLocalessRichTextHtml(() => undefined).value).toBe('');
+  });
+});
 
 describe('useLocalessRichText', () => {
-  it('renders a Tiptap JSON doc to HTML', () => {
-    const doc = {
-      type: 'doc',
-      content: [{ type: 'paragraph', content: [{ type: 'text', text: 'hello' }] }],
-    };
-    const Comp = defineComponent({
-      setup() {
-        const html = useLocalessRichText(() => doc);
-        return () => h('div', { innerHTML: html.value });
-      },
-    });
-    const wrapper = mount(Comp);
-    expect(wrapper.html()).toContain('hello');
-  });
-
-  it('returns an empty string when doc is undefined', () => {
-    const Comp = defineComponent({
-      setup() {
-        const html = useLocalessRichText(() => undefined);
-        return () => h('div', html.value);
-      },
-    });
-    const wrapper = mount(Comp);
-    expect(wrapper.text()).toBe('');
+  it('returns VNodes that render the content', () => {
+    const nodes = useLocalessRichText(() => docOf('Hi'));
+    const wrapper = mount({ render: () => h('div', null, [nodes.value]) });
+    expect((wrapper.element as HTMLElement).innerHTML).toBe('<p>Hi</p>');
   });
 });

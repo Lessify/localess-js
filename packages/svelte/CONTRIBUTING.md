@@ -11,6 +11,8 @@ Svelte 5 integration layer. Depends on `@localess/client`. Components never fetc
 
 Every other file in this package — including `index.ts` — imports what it needs from `./models`/`../models`, `./utils`/`../utils`, or `./client`/`../client` instead (adjust relative depth as needed). When a new file needs something from `@localess/client` that none of the three re-exports yet, add it to whichever matches. This keeps the client-package boundary auditable at three well-known files instead of scattered across every component/store/action.
 
+The same discipline applies to `@localess/richtext` (ADR 007): **`src/lib/components/LocalessRichText.svelte` is the only file allowed to import `@localess/richtext` values**; `src/lib/models/index.ts` re-exports the richtext model **types** (`LocalessRichTextNode` etc.) for everything else.
+
 `@localess/svelte`'s `client.ts` (client/registry/sync state) is a hand-ported near-duplicate of `@localess/vue`'s equivalent module — same function names and behavior, Vue's `Component` type swapped for Svelte's. ADR 005 forbids extracting this into a shared package, so keep this a manual-sync discipline: when fixing a bug here, check `packages/vue/src/client.ts` for the same bug.
 
 ## Package Layout
