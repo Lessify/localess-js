@@ -1,10 +1,10 @@
 ---
 import { localessEditable, localessEditableField } from '@localess/astro';
-import type { LocalessComponentProps } from '@localess/astro';
+import type { LocalessSchemaProps } from '@localess/astro';
 import type { Button as ButtonModel } from '../../shared/models/localess';
 import { Button } from '@/components/ui/button.tsx';
 
-export type Props = LocalessComponentProps<ButtonModel>;
+export type Props = LocalessSchemaProps<ButtonModel>;
 
 const { data } = Astro.props;
 ---

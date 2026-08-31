@@ -1,10 +1,10 @@
 ---
 import {localessEditable, localessEditableField} from '@localess/astro';
-import type { LocalessComponentProps } from '@localess/astro';
+import type { LocalessSchemaProps } from '@localess/astro';
 import type { Page } from '../../shared/models/localess';
 import LocalessComponent from '@localess/astro/LocalessComponent.astro';
 
-export type Props = LocalessComponentProps<Page>;
+export type Props = LocalessSchemaProps<Page>;
 
 const { data, links, references, assets } = Astro.props;
 ---

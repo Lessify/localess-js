@@ -57,12 +57,12 @@ app.mount('#app');
 
 ## `<LocalessComponent>`
 
-Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Always applies `localessEditable(data)`'s `data-ll-id`/`data-ll-schema` attributes to the rendered component's root. Accepts `assets`, `links`, and `references` alongside `data` and forwards all four to the resolved component (or `fallbackComponent`) — registered components should declare the same four props and pass `assets`/`links`/`references` through when rendering nested `<LocalessComponent>`s.
+Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Always applies `localessEditable(data)`'s `data-ll-id`/`data-ll-schema` attributes to the rendered component's root. Accepts `assets`, `links`, and `references` alongside `data` and forwards all four to the resolved component (or `fallbackComponent`) — registered components should declare the same four props (typed with `LocalessSchemaProps<T>`) and pass `assets`/`links`/`references` through when rendering nested `<LocalessComponent>`s. `LocalessComponentProps` is the renderer's own props type; use `LocalessSchemaProps` for your registered components.
 
 ```vue
 <script setup lang="ts">
-import { LocalessComponent, type LocalessComponentProps } from '@localess/vue';
-defineProps<LocalessComponentProps>();
+import { LocalessComponent, type LocalessSchemaProps } from '@localess/vue';
+defineProps<LocalessSchemaProps>();
 </script>
 
 <template>
@@ -272,7 +272,7 @@ export { localessClient }
 
 // Types (re-exported from @localess/client + local)
 export type { LocalessClient, LocalessClientOptions }
-export type { LocalessComponentProps, LocalessDocumentProps }
+export type { LocalessComponentProps, LocalessDocumentProps, LocalessSchemaProps }
 export type { Content, ContentData, ContentDataSchema, EventToAppOf, EventToAppType }
 export type { Assets, Links, References }
 ```

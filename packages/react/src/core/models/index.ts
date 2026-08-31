@@ -1,4 +1,5 @@
 export * from './component';
+export * from './localess-schema-props';
 export * from './options';
 export * from './sync';
 export type {

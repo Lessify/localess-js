@@ -158,10 +158,10 @@ Components receive `data`, `links`, and `references` as props. Always spread edi
 
 ```tsx
 import { localessEditable, localessEditableField, resolveAsset, LocalessComponent } from "@localess/react";
-import type { LocalessComponentProps } from "@localess/react";
+import type { LocalessSchemaProps } from "@localess/react";
 import type { HeroSection } from "./.localess/localess";
 
-const HeroSection = ({ data, links, references }: LocalessComponentProps<HeroSection>) => (
+const HeroSection = ({ data, links, references }: LocalessSchemaProps<HeroSection>) => (
   <section {...localessEditable(data)}>
     <h1 {...localessEditableField<HeroSection>('title')}>{data.title}</h1>
     {data.image && <img src={resolveAsset(data.image)} alt={data.imageAlt} />}
@@ -572,7 +572,7 @@ export { findLink }
 export { localessEditable, localessEditableField }  // re-exported from @localess/client
 export { isBrowser, isServer, isIframe }             // re-exported from @localess/client
 export { LocalessApiError }                          // re-exported from @localess/client; thrown by getContentBySlug/getContentById on a non-2xx response
-export type { LocalessClient, LocalessOptions, LocalessComponentProps }
+export type { LocalessClient, LocalessOptions, LocalessComponentProps, LocalessSchemaProps }
 export type { AssetTransformParams }
 export type { Content, ContentData, ContentMetadata, ContentDataSchema, ContentDataField }
 export type { ContentAsset, ContentRichText, ContentLink, ContentReference }

@@ -153,9 +153,10 @@ Each component receives `data`, `links`, and `references` as props. Always sprea
 
 ```tsx
 import { localessEditable, localessEditableField, resolveAsset } from "@localess/react";
+import type { LocalessSchemaProps } from "@localess/react";
 import type { HeroSection } from "./.localess/localess";
 
-type Props = LocalessComponentProps<HeroSection>;
+type Props = LocalessSchemaProps<HeroSection>;
 
 const HeroSection = ({ data, links, references }: Props) => (
   <section {...localessEditable(data)}>
@@ -709,6 +710,7 @@ export { LocalessApiError }         // Thrown by getContentBySlug/getContentById
 // Types (re-exported from @localess/client + local)
 export type { AssetTransformParams }            // Image transform params for resolveAsset
 export type { LocalessClient, LocalessOptions }
+export type { LocalessSchemaProps }             // Props contract for registered schema components
 export type { LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType }
 export type {
   Content, ContentData, ContentMetadata, ContentDataSchema, ContentDataField,

@@ -4,7 +4,7 @@
  * `./models` or `../models`) instead of importing `@localess/client` directly — see
  * `packages/vue/CONTRIBUTING.md`.
  */
-export type { LocalessComponentProps, LocalessDocumentProps } from './components';
+export type { LocalessComponentProps, LocalessDocumentProps, LocalessSchemaProps } from './components';
 export type {
   Assets,
   Content,

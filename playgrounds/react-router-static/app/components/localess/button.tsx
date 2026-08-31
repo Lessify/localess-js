@@ -1,9 +1,9 @@
 import {localessEditable, localessEditableField} from "@localess/react";
-import type {LocalessComponentProps} from "@localess/react";
+import type {LocalessSchemaProps} from "@localess/react";
 import type {Button as ButtonModel} from "~/shared/models/localess";
 import {Button} from "~/components/ui/button";
 
-export type ButtonLocalessProps = LocalessComponentProps<ButtonModel>
+export type ButtonLocalessProps = LocalessSchemaProps<ButtonModel>
 
 export default function ButtonLocaless({data}: ButtonLocalessProps) {
   return (

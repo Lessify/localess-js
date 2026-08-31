@@ -11,10 +11,10 @@ Astro integration layer. Depends on `@localess/client`. Components never fetch d
 ```astro
 ---
 import { localessEditable } from '../';
-import type { LocalessComponentProps } from '../models';
+import type { LocalessSchemaProps } from '../models';
 import type { HeroSection } from '../models/localess'; // your generated content type
 
-export type Props = LocalessComponentProps<HeroSection>;
+export type Props = LocalessSchemaProps<HeroSection>;
 
 const { data, links, references, assets, ...restProps } = Astro.props;
 ---
@@ -29,7 +29,7 @@ Rules:
 - Always spread `{...restProps}` on the root element so `class`, etc. pass through.
 - Accept `links`, `references`, and `assets` as optional props and forward them to any nested `LocalessComponent` instances.
 - Never call `getLocalessClient()` or fetch data inside a component.
-- Type props with `LocalessComponentProps<T>` from `../models` (same generic shape `@localess/react` uses), passing your own content type as `T` — never `unknown` or an ad hoc inline shape. A component's props are the contract for what data it expects; typing them loosely just pushes the "what shape is this?" question onto every caller.
+- Type props with `LocalessSchemaProps<T>` from `../models` (same generic shape `@localess/react` uses), passing your own content type as `T` — never `unknown` or an ad hoc inline shape. Reserve `LocalessComponentProps` for the built-in `LocalessComponent` renderer itself. A component's props are the contract for what data it expects; typing them loosely just pushes the "what shape is this?" question onto every caller.
 
 **2. Import path:** any new `.astro` component that's part of this package's *public* API needs its own subpath export in `package.json` (`"./<Name>.astro": "./dist/components/<Name>.astro"`) and a matching `vite-plugin-static-copy` target in `vite.config.ts` — `.astro` files cannot be re-exported through `index.ts`. `.astro` files export their component as the **default** export, so consumers import with `import <Name> from '@localess/astro/<Name>.astro'`, not a named import.
 

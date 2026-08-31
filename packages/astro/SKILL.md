@@ -69,15 +69,15 @@ Both the registry key and `_schema` are compared through `toCamelCase()` — a f
 
 ## Writing components
 
-Type a registered component's `Props` with `LocalessComponentProps<T>` — the same generic shape `@localess/react`'s `LocalessComponentProps<T>` uses, so `data`/`links`/`references`/`assets` stay typed against your own content type:
+Type a registered component's `Props` with `LocalessSchemaProps<T>` — the same generic shape `@localess/react`'s `LocalessSchemaProps<T>` uses, so `data`/`links`/`references`/`assets` stay typed against your own content type (`LocalessComponentProps` is the built-in renderer's own props type, not the schema-component contract):
 
 ```astro
 ---
 import { localessEditable, localessEditableField } from '@localess/astro';
-import type { LocalessComponentProps } from '@localess/astro';
+import type { LocalessSchemaProps } from '@localess/astro';
 import type { HeroSection } from './.localess/localess'; // your generated content type
 
-export type Props = LocalessComponentProps<HeroSection>;
+export type Props = LocalessSchemaProps<HeroSection>;
 
 const { data } = Astro.props;
 ---

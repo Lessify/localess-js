@@ -1,16 +1,25 @@
 import type { Assets, ContentData, Links, References } from '@localess/client';
 
 /**
- * Props for the built-in {@link LocalessComponent} renderer.
+ * Props every schema component registered in the {@link LocalessComponent} registry must accept
+ * (via `components`/`componentsDir`, or as `customFallbackComponent`).
  *
- * Kept independent from {@link LocalessSchemaProps} (the contract schema components registered
- * via `components`/`componentsDir` or `customFallbackComponent` must accept) so the renderer's
- * props can evolve without changing the schema-component contract. Type your own registered
- * components with `LocalessSchemaProps<T>`.
+ * Deliberately independent from {@link LocalessComponentProps} (the built-in renderer's own
+ * props) so the schema-component contract can be restricted or extended without affecting
+ * the renderer, and vice versa.
  *
  * @template T - The content data shape. Defaults to the base {@link ContentData} type.
+ *
+ * @example
+ * ```astro
+ * ---
+ * import type { LocalessSchemaProps } from '@localess/astro';
+ *
+ * export type Props = LocalessSchemaProps<HeroSection>;
+ * ---
+ * ```
  */
-export type LocalessComponentProps<T extends ContentData = ContentData> = {
+export type LocalessSchemaProps<T extends ContentData = ContentData> = {
   /**
    * The content data object to render. Must have a `_schema` field that matches a key
    * in the component registry configured via `localess()`.

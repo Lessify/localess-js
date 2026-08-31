@@ -16,6 +16,7 @@ export type {
   LocalessClientOptions,
   LocalessComponentProps,
   LocalessDocumentProps,
+  LocalessSchemaProps,
   References,
 } from './models';
 export { LocalessApiError } from './models';

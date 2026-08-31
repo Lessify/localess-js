@@ -6,7 +6,11 @@ import { Assets, ContentData, Links, References } from '../models';
 import { localessEditable } from '../utils';
 
 /**
- * Props every component registered in the Localess component registry must accept.
+ * Props for the built-in {@link LocalessComponent} renderer.
+ *
+ * Kept independent from `LocalessSchemaProps` (the contract schema components registered
+ * via `localessInit` must accept) so the renderer's props can evolve without changing the
+ * schema-component contract. Type your own registered components with `LocalessSchemaProps<T>`.
  *
  * @template T - The content data shape. Defaults to the base {@link ContentData} type.
  */

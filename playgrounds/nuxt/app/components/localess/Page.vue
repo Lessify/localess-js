@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import {LocalessComponent, type LocalessComponentProps, localessEditable, localessEditableField} from '@localess/vue';
+import {LocalessComponent, type LocalessSchemaProps, localessEditable, localessEditableField} from '@localess/vue';
 
 import type { Page } from '#shared/models/localess';
 
-const props = defineProps<LocalessComponentProps<Page>>();
+const props = defineProps<LocalessSchemaProps<Page>>();
 </script>
 
 <template>

@@ -1,7 +1,7 @@
-import {LocalessComponent, LocalessComponentProps, localessEditable, localessEditableField} from "@localess/react";
+import {LocalessComponent, LocalessSchemaProps, localessEditable, localessEditableField} from "@localess/react";
 import {Page} from "@/shared/models/localess";
 
-export type PageLocalessProps = LocalessComponentProps<Page>
+export type PageLocalessProps = LocalessSchemaProps<Page>
 
 export function PageLocaless({data}:PageLocalessProps) {
   return <main {...localessEditable(data)} className="flex flex-col gap-4">

@@ -4,7 +4,7 @@
  * `./models` or `../models`) instead of importing `@localess/client` directly — see
  * `packages/svelte/CONTRIBUTING.md`.
  */
-export type { LocalessComponentProps, LocalessDocumentProps } from './components';
+export type { LocalessComponentProps, LocalessDocumentProps, LocalessSchemaProps } from './components';
 export type { LocalessSvelteInitOptions } from './options';
 export type {
   Assets,
