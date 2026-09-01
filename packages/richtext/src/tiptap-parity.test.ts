@@ -17,7 +17,7 @@ import { generateHTML } from '@tiptap/html';
 import { describe, expect, it } from 'vitest';
 
 import { renderRichTextToHtml } from './render-html';
-import { richTextFixtures } from './test-utils/fixtures';
+import { richTextFixtures } from './test-utils';
 
 /** Mirrors the Localess Studio editor's extension list exactly. */
 const CMS_EXTENSIONS = [

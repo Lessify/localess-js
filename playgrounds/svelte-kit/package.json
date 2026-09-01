@@ -15,6 +15,7 @@
     "@sveltejs/adapter-auto": "^7.0.1",
     "@sveltejs/kit": "^2.70.3",
     "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.2.2",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "svelte": "^5.56.10",

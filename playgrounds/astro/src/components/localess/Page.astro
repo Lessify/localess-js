@@ -3,6 +3,7 @@ import { localessEditable, localessEditableField } from '@localess/astro';
 import type { LocalessSchemaProps } from '@localess/astro';
 import type { Page } from '@/shared/models/localess';
 import LocalessComponent from '@localess/astro/LocalessComponent.astro';
+import LocalessRichText from '@localess/astro/LocalessRichText.astro';
 
 export type Props = LocalessSchemaProps<Page>;
 
@@ -19,4 +20,9 @@ const { data, links, references, assets } = Astro.props;
   <div class="flex justify-center gap-2">
     {data.buttons?.map(button => <LocalessComponent data={button} links={links} references={references} assets={assets} />)}
   </div>
+  {data.content && (
+    <div {...localessEditableField('content')} class="prose dark:prose-invert mx-auto">
+      <LocalessRichText content={data.content} />
+    </div>
+  )}
 </main>

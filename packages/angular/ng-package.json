@@ -5,7 +5,6 @@
   },
   "dest": "dist",
   "allowedNonPeerDependencies": [
-    "@localess/*",
-    "@tiptap/*"
+    "@localess/*"
   ]
 }

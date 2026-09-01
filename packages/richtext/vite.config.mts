@@ -10,6 +10,7 @@ export default defineConfig({
     }),
   ],
   build: {
+    minify: false,
     lib: {
       entry: {
         index: resolve(import.meta.dirname, 'src/index.ts'),

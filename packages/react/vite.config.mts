@@ -27,7 +27,7 @@ export default defineConfig({
         'react-dom',
         'react/jsx-runtime',
         '@localess/client',
-        /^@tiptap\/.*/,
+        '@localess/richtext',
         'next/cache',
         'vite',
       ],

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { LocalessComponent, localessEditable, localessEditableField } from '@localess/svelte';
+  import { LocalessComponent, LocalessRichText, localessEditable, localessEditableField } from '@localess/svelte';
 
   import type { Page } from '../../../shared/models/localess';
 
@@ -16,6 +16,11 @@
       {#each data.buttons as button (button._id)}
         <LocalessComponent data={button} />
       {/each}
+    </div>
+  {/if}
+  {#if data.content}
+    <div {...localessEditableField<Page>('content')} class="prose dark:prose-invert mx-auto">
+      <LocalessRichText content={data.content} />
     </div>
   {/if}
 </main>

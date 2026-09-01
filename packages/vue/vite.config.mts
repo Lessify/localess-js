@@ -18,7 +18,7 @@ export default defineConfig({
       },
     },
     rollupOptions: {
-      external: ['vue', '@localess/client', /^@tiptap\/.*/, 'vite'],
+      external: ['vue', '@localess/client', '@localess/richtext', 'vite'],
       output: [
         {
           format: 'es',

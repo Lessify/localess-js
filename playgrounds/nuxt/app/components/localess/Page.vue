@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {LocalessComponent, type LocalessSchemaProps, localessEditable, localessEditableField} from '@localess/vue';
+import {LocalessComponent, LocalessRichText, type LocalessSchemaProps, localessEditable, localessEditableField} from '@localess/vue';
 
 import type { Page } from '#shared/models/localess';
 
@@ -14,6 +14,9 @@ const props = defineProps<LocalessSchemaProps<Page>>();
     </p>
     <div v-if="props.data.buttons?.length" class="flex justify-center gap-2">
       <LocalessComponent v-for="button in props.data.buttons" :key="button._id" :data="button" />
+    </div>
+    <div v-if="props.data.content" v-bind="localessEditableField<Page>('content')" class="prose dark:prose-invert mx-auto">
+      <LocalessRichText :content="props.data.content" />
     </div>
   </main>
 </template>

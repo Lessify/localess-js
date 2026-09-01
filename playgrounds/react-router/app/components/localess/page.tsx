@@ -1,4 +1,4 @@
-import {LocalessComponent, localessEditable, localessEditableField} from "@localess/react";
+import {LocalessComponent, LocalessRichText, localessEditable, localessEditableField} from "@localess/react";
 import type {LocalessSchemaProps} from "@localess/react";
 import type {Page} from "~/shared/models/localess";
 
@@ -17,5 +17,10 @@ export default function PageLocaless({data}:PageLocalessProps) {
         <LocalessComponent key={button._id} data={button} />
       ))}
     </div>
+    {data.content && (
+      <div {...localessEditableField('content')} className="prose dark:prose-invert mx-auto">
+        <LocalessRichText content={data.content} />
+      </div>
+    )}
   </main>
 }

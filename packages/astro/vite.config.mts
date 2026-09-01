@@ -21,7 +21,14 @@ export default defineConfig({
       },
     },
     rollupOptions: {
-      external: ['@localess/client', 'astro/runtime/server/index.js', 'astro/toolbar', 'astro/middleware', 'virtual:localess-options'],
+      external: [
+        '@localess/client',
+        '@localess/richtext',
+        'astro/runtime/server/index.js',
+        'astro/toolbar',
+        'astro/middleware',
+        'virtual:localess-options',
+      ],
       output: [
         {
           format: 'es',

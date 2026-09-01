@@ -1,4 +1,4 @@
-import {LocalessServerComponent, LocalessServerComponentProps, localessEditable, localessEditableField} from "@localess/react/ssr";
+import {LocalessRichText, LocalessServerComponent, LocalessServerComponentProps, localessEditable, localessEditableField} from "@localess/react/ssr";
 import {Page} from "@/shared/models/localess";
 
 export type PageLocalessProps = LocalessServerComponentProps<Page>
@@ -16,5 +16,10 @@ export function PageLocaless({data}:PageLocalessProps) {
         <LocalessServerComponent key={button._id} data={button} />
       ))}
     </div>
+    {data?.content && (
+      <div {...localessEditableField('content')} className="prose dark:prose-invert mx-auto">
+        <LocalessRichText content={data.content} />
+      </div>
+    )}
   </main>
 }

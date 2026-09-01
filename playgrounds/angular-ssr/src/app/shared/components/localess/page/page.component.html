@@ -7,6 +7,11 @@
         <ng-container [llComponent]="button" [links]="links()" [references]="references()" [assets]="assets()" />
       }
     </div>
+    @if (data.content) {
+      <div data-ll-field="content" class="prose dark:prose-invert mx-auto">
+        <ll-rich-text [content]="data.content" />
+      </div>
+    }
   </main>
 }
 
