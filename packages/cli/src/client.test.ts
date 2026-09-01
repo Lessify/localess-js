@@ -1,7 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { localessCliClient } from './client';
+import { localessCliClient, normalizeSchemasResponse } from './client';
 import { LocalessApiError } from './models';
+
+describe('normalizeSchemasResponse', () => {
+  it('passes arrays through', () => {
+    const arr = [{ id: 'Button', type: 'NODE' }];
+    expect(normalizeSchemasResponse(arr)).toEqual(arr);
+  });
+
+  it('folds legacy map responses and drops timestamps', () => {
+    const legacy = { Button: { type: 'NODE', createdAt: { _seconds: 1 }, updatedAt: { _seconds: 2 }, fields: [] } };
+    expect(normalizeSchemasResponse(legacy)).toEqual([{ id: 'Button', type: 'NODE', fields: [] }]);
+  });
+
+  it('folds an empty legacy map to an empty array', () => {
+    expect(normalizeSchemasResponse({})).toEqual([]);
+  });
+});
 
 function jsonResponse(body: unknown, init?: { status?: number; ok?: boolean }): Response {
   return {
@@ -51,13 +67,22 @@ describe('localessCliClient', () => {
   it('getSchemas retries on a 5xx response and succeeds once the server recovers', async () => {
     vi.mocked(fetch)
       .mockImplementationOnce(() => Promise.resolve(jsonResponse({}, { ok: false, status: 503 })))
-      .mockImplementationOnce(() => Promise.resolve(jsonResponse({ schemas: [] })));
+      .mockImplementationOnce(() => Promise.resolve(jsonResponse([{ id: 'Button', type: 'NODE' }])));
     const client = localessCliClient({ ...baseOptions, retryCount: 2 });
 
     const schemas = await client.getSchemas();
 
-    expect(schemas).toEqual({ schemas: [] });
+    expect(schemas).toEqual([{ id: 'Button', type: 'NODE' }]);
     expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('getSchemas normalizes a legacy Record<id, Schema> response into an array', async () => {
+    vi.mocked(fetch).mockImplementation(() => Promise.resolve(jsonResponse({ Button: { type: 'NODE', fields: [] } })));
+    const client = localessCliClient(baseOptions);
+
+    const schemas = await client.getSchemas();
+
+    expect(schemas).toEqual([{ id: 'Button', type: 'NODE', fields: [] }]);
   });
 
   it('getSchemas throws when the server keeps returning 5xx', async () => {
@@ -145,6 +170,35 @@ describe('localessCliClient', () => {
     const client = localessCliClient({ ...baseOptions, retryCount: 0 });
 
     await expect(client.updateTranslations('en', 'add-missing' as never, {})).rejects.toThrow('network down');
+  });
+
+  it('pushSchemas sends a POST request with the X-API-KEY header and body', async () => {
+    const okResponse = {
+      message: 'ok',
+      counts: { created: 1, updated: 0, deleted: 0, unchanged: 0 },
+      ids: { created: ['Button'], updated: [], deleted: [] },
+    };
+    vi.mocked(fetch).mockImplementation(() => Promise.resolve(jsonResponse(okResponse)));
+    const client = localessCliClient(baseOptions);
+
+    const response = await client.pushSchemas({ type: 'upsert', schemas: [{ id: 'Button', type: 'NODE' }] });
+
+    expect(response).toEqual(okResponse);
+    expect(fetch).toHaveBeenCalledWith(
+      'https://cms.example.com/api/v1/spaces/space-1/schemas',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({ 'X-API-KEY': 'token-123' }),
+        body: JSON.stringify({ type: 'upsert', schemas: [{ id: 'Button', type: 'NODE' }] }),
+      })
+    );
+  });
+
+  it('pushSchemas throws when the request ultimately fails', async () => {
+    vi.mocked(fetch).mockImplementation(() => Promise.reject(new Error('network down')));
+    const client = localessCliClient({ ...baseOptions, retryCount: 0 });
+
+    await expect(client.pushSchemas({ type: 'upsert', schemas: [] })).rejects.toThrow('network down');
   });
 
   it('logs debug information for requests and responses when debug is enabled', async () => {

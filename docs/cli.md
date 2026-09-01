@@ -175,6 +175,52 @@ import type { Page } from './.localess/localess';
 const content = await client.getContentBySlug<Page>('home');
 ```
 
+## Schema Commands
+
+Define schemas in TypeScript with `@localess/schema` (`defineSchema`/`defineEnum`/`defineConfig`) and sync them with a space. See [docs/schema.md](schema.md) for the authoring API.
+
+Entry file: a TS/JS file exporting the result of `defineConfig()` (convention: `schemas/index.ts`).
+
+> **Prerequisite:** The token needs the **Development Tools** permission (`DEV_TOOLS`) — same as `types generate`. No dedicated schema permission exists.
+
+### `localess schema validate <entry>`
+
+Offline — no login, no network. Prints each `validate()` issue; exits `1` on any error-severity issue.
+
+```bash
+localess schema validate ./schemas/index.ts
+localess schema validate ./schemas/index.ts --format json
+```
+
+### `localess schema pull [--path <dir>]`
+
+(Re)generates one TS definition file per schema plus `index.ts` from the space, into `--path` (default `schemas`). Repeatable: only overwrites/deletes files it previously generated (marked with a header comment); hand-written files without that marker are left alone.
+
+```bash
+localess schema pull
+localess schema pull --path src/schemas
+```
+
+### `localess schema diff <entry>`
+
+Read-only: prints `create`/`update`/`unchanged`/`stale` per schema. Exits `1` on any drift — use as a CI gate.
+
+```bash
+localess schema diff ./schemas/index.ts
+```
+
+### `localess schema push <entry> [--dry-run] [--delete] [-y]`
+
+Validates, diffs, then pushes.
+
+```bash
+localess schema push ./schemas/index.ts --dry-run   # preview
+localess schema push ./schemas/index.ts             # upsert: create/update only
+localess schema push ./schemas/index.ts --delete    # sync: also delete schemas absent from code (confirms unless -y)
+```
+
+Aborts without pushing if validation fails. Prints the server's `created`/`updated`/`deleted`/`unchanged` counts.
+
 ## CI/CD Integration
 
 Use environment variables — no `localess login` step required.
@@ -203,6 +249,16 @@ jobs:
 Generate types in CI:
 ```yaml
       - run: localess types generate --path src/types/localess.d.ts
+        env:
+          LOCALESS_ORIGIN: ${{ secrets.LOCALESS_ORIGIN }}
+          LOCALESS_SPACE: ${{ secrets.LOCALESS_SPACE_ID }}
+          LOCALESS_TOKEN: ${{ secrets.LOCALESS_TOKEN }}
+```
+
+Gate merges on schema drift:
+```yaml
+      - run: localess schema validate ./schemas/index.ts
+      - run: localess schema diff ./schemas/index.ts
         env:
           LOCALESS_ORIGIN: ${{ secrets.LOCALESS_ORIGIN }}
           LOCALESS_SPACE: ${{ secrets.LOCALESS_SPACE_ID }}

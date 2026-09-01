@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import { version } from '../package.json';
 import { loginCommand } from './commands/login';
 import { logoutCommand } from './commands/logout';
+import { schemaCommand } from './commands/schema';
 import { translationsCommand } from './commands/translations';
 import { typesCommand } from './commands/types';
 import { checkForUpdate } from './version-check';
@@ -24,5 +25,6 @@ program.hook('postAction', async () => {
 
 program.addCommand(loginCommand);
 program.addCommand(logoutCommand);
+program.addCommand(schemaCommand);
 program.addCommand(translationsCommand);
 program.addCommand(typesCommand);

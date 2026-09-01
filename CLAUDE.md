@@ -2,28 +2,30 @@
 
 @AGENTS.md
 
-This is a monorepo containing the official JavaScript/TypeScript SDKs for the Localess headless CMS. Eight packages:
+This is a monorepo containing the official JavaScript/TypeScript SDKs for the Localess headless CMS. Nine packages:
 
 - `@localess/client` — Core server-side-only SDK. Zero production dependencies.
 - `@localess/richtext` — Framework-neutral rich text model and renderer. Zero dependencies (not even `@localess/client`).
+- `@localess/schema` — Programmatic schema definitions with TypeScript content type inference. Zero dependencies (not even `@localess/client`).
 - `@localess/react` — React integration (components, hooks, rich text, Visual Editor sync).
 - `@localess/angular` — Angular integration (components, directives, pipes, Visual Editor sync).
 - `@localess/vue` — Vue integration (components, composables, Vite plugin).
 - `@localess/svelte` — Svelte integration (components, actions, context).
 - `@localess/astro` — Astro integration (integration, components, live preview).
-- `@localess/cli` — CLI for translations and type generation. Depends on `@localess/client`.
+- `@localess/cli` — CLI for translations, type generation, and schema pull/push. Depends on `@localess/client` and `@localess/schema`.
 
-Dependency graph: two roots, `@localess/client` and `@localess/richtext`, which depend on nothing (see ADR 007). `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, and `@localess/astro` depend on both roots; `@localess/cli` depends on `@localess/client` only. Dependent packages never depend on each other.
+Dependency graph: three roots, `@localess/client`, `@localess/richtext`, and `@localess/schema`, which depend on nothing (see ADR 007, ADR 008). `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, and `@localess/astro` depend on `@localess/client` and `@localess/richtext`; `@localess/cli` depends on `@localess/client` and `@localess/schema`. Dependent packages never depend on each other.
 
 ## Quick Reference
 
 ```bash
-# Build all packages (richtext, client, react, vue, svelte, cli, angular, astro)
+# Build all packages (richtext, client, schema, react, vue, svelte, cli, angular, astro)
 npm run build
 
 # Build individual packages
 npm run build:richtext   # must be built before running framework package tests
 npm run build:client
+npm run build:schema     # must be built before running @localess/cli tests
 npm run build:react
 npm run build:vue
 npm run build:svelte
@@ -52,9 +54,9 @@ Requirements: Node.js >= 24.0.0, npm >= 10.
 
 2. **`@localess/client` is server-side only, with one exception.** Never suggest using it in browser/client-side code, and a secret token must never be exposed client-side. The one exception: Localess now also issues **public tokens** (read-only, published content and translations only) that are safe to use client-side — currently supported in `@localess/react` (its `LocalessClientDocument` client-side registration path) and `@localess/angular` (its unified `provideLocaless({ token, ... })`, where the token's type is determined by the app's rendering mode). `@localess/cli` and `@localess/astro` have not been reworked for this yet — treat their token as secret-only until they are. See `docs/decisions/001-server-side-only.md`.
 
-3. **`@localess/client` and `@localess/richtext` have zero production dependencies.** Never add entries to `dependencies` in `packages/client/package.json`; `packages/richtext/package.json` has no `dependencies` key at all and must stay that way (TipTap there is devDependencies-only, for the parity test). `devDependencies` are fine. See `docs/decisions/002-zero-production-deps.md` and `docs/decisions/007-shared-richtext-package.md`.
+3. **`@localess/client`, `@localess/richtext`, and `@localess/schema` have zero production dependencies.** Never add entries to `dependencies` in `packages/client/package.json`; `packages/richtext/package.json` and `packages/schema/package.json` have no `dependencies` key at all and must stay that way (TipTap in richtext, and `@localess/client` in schema, are devDependencies-only — for the parity test and the structural-parity type test respectively). `devDependencies` are fine. See `docs/decisions/002-zero-production-deps.md`, `docs/decisions/007-shared-richtext-package.md`, and `docs/decisions/008-schema-package.md`.
 
-4. **Package boundaries.** `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, and `@localess/astro` depend on `@localess/client` and `@localess/richtext`; `@localess/cli` depends on `@localess/client` only. Dependent packages never depend on each other, and the two root packages never depend on anything. See `docs/decisions/005-package-boundary-discipline.md` and `docs/decisions/007-shared-richtext-package.md`.
+4. **Package boundaries.** `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, and `@localess/astro` depend on `@localess/client` and `@localess/richtext`; `@localess/cli` depends on `@localess/client` and `@localess/schema`. Dependent packages never depend on each other, and root packages never depend on anything. See `docs/decisions/005-package-boundary-discipline.md`, `docs/decisions/007-shared-richtext-package.md`, and `docs/decisions/008-schema-package.md`.
 
 5. **Upstream check.** When changing `@localess/client`'s public API (adding/removing/renaming methods or types), check whether `@localess/react`, `@localess/angular`, and `@localess/cli` consume the changed surface and update them.
 
@@ -65,7 +67,7 @@ Requirements: Node.js >= 24.0.0, npm >= 10.
 ## Code Style
 
 - TypeScript strict mode with `noImplicitAny: false`. See `tsconfig.json` in each package.
-- `@localess/client`, `@localess/react`, `@localess/cli` build with **Vite in library mode** (`vite.config.ts`). Entry point `src/index.ts` → `dist/`.
+- `@localess/client`, `@localess/schema`, `@localess/react`, `@localess/cli` build with **Vite in library mode** (`vite.config.ts`). Entry point `src/index.ts` → `dist/`.
 - `@localess/angular` builds with **ng-packagr via Angular CLI** (`ng-package.json`, `angular.json`). Entry point `src/public-api.ts` → `dist/`. Single unified entry point — no `/browser` or `/server` split.
 - Dual CJS + ESM output for JS packages: `dist/index.js` (CJS), `dist/index.mjs` (ESM), `dist/index.d.ts` (types).
 - No barrel re-exports except in `index.ts` / `public-api.ts` files.
@@ -77,11 +79,12 @@ Requirements: Node.js >= 24.0.0, npm >= 10.
 See each package's CONTRIBUTING.md for step-by-step patterns:
 
 - `packages/client/CONTRIBUTING.md` — adding API methods, models, types
+- `packages/schema/CONTRIBUTING.md` — adding field kinds, extending inference/validation
 - `packages/react/CONTRIBUTING.md` — adding components, hooks, utilities
 - `packages/angular/CONTRIBUTING.md` — adding components, directives, pipes
 - `packages/cli/CONTRIBUTING.md` — adding commands and subcommands
 
 ## Deeper Context
 
-- `docs/` — full project reference (index, client, react, angular, cli, decisions)
+- `docs/` — full project reference (index, client, schema, react, angular, cli, decisions)
 - `docs/decisions/` — architectural decision records explaining WHY hard constraints exist

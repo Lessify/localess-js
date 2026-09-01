@@ -4,7 +4,9 @@ import { OpenAPIObject } from 'openapi3-ts/oas30';
 import { version } from '../package.json';
 import type {
   LocalessClientOptions,
-  Schemas,
+  SchemaExport,
+  SchemaPushRequest,
+  SchemaPushResponse,
   Space,
   Translations,
   TranslationUpdate,
@@ -218,6 +220,23 @@ async function parseJsonOrThrow<T>(response: Response, url: string, methodLabel:
   return response.json();
 }
 
+/**
+ * Normalize a `GET /schemas` response into `SchemaExport[]`. Newer backends return the array
+ * directly; older backends return `Record<schemaId, Schema>` with raw Firestore timestamps —
+ * fold the map key into `id` and drop the timestamps, so a new CLI works against both.
+ */
+export function normalizeSchemasResponse(data: unknown): SchemaExport[] {
+  if (Array.isArray(data)) {
+    return data as SchemaExport[];
+  }
+  return Object.entries(data as Record<string, Record<string, unknown>>).map(([id, schema]) => {
+    const { createdAt, updatedAt, ...rest } = schema;
+    void createdAt;
+    void updatedAt;
+    return { id, ...rest } as SchemaExport;
+  });
+}
+
 export function localessCliClient(options: LocalessCliClientOptions) {
   if (options.debug) {
     console.log(LOG_GROUP, 'Client Options : ', options);
@@ -249,7 +268,7 @@ export function localessCliClient(options: LocalessCliClientOptions) {
     return parseJsonOrThrow<Space>(response, url, 'getSpace', tokensSettingsUrl(normalizedOrigin, options.spaceId));
   }
 
-  async function getSchemas(): Promise<Schemas> {
+  async function getSchemas(): Promise<SchemaExport[]> {
     if (options.debug) {
       console.log(LOG_GROUP, 'getSchemas()');
     }
@@ -261,7 +280,8 @@ export function localessCliClient(options: LocalessCliClientOptions) {
     if (options.debug) {
       console.log(LOG_GROUP, 'getSchemas status : ', response.status);
     }
-    return parseJsonOrThrow<Schemas>(response, url, 'getSchemas', tokensSettingsUrl(normalizedOrigin, options.spaceId));
+    const data = await parseJsonOrThrow<unknown>(response, url, 'getSchemas', tokensSettingsUrl(normalizedOrigin, options.spaceId));
+    return normalizeSchemasResponse(data);
   }
 
   async function getOpenApi(): Promise<OpenAPIObject> {
@@ -320,7 +340,35 @@ export function localessCliClient(options: LocalessCliClientOptions) {
     );
   }
 
-  return { ...cdn, getSpace, getSchemas, getOpenApi, updateTranslations };
+  async function pushSchemas(request: SchemaPushRequest): Promise<SchemaPushResponse> {
+    if (options.debug) {
+      console.log(LOG_GROUP, 'pushSchemas() type : ', request.type, ' schemas : ', request.schemas.length);
+    }
+    const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/schemas`;
+    if (options.debug) {
+      console.log(LOG_GROUP, 'pushSchemas fetch url : ', url);
+    }
+    const response = await fetchWithRetry(
+      url,
+      {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': options.token,
+          ...fetchOptions.headers,
+        },
+        body: JSON.stringify(request),
+      },
+      options.retryCount,
+      options.retryDelay,
+      options.debug
+    );
+    if (options.debug) {
+      console.log(LOG_GROUP, 'pushSchemas status : ', response.status);
+    }
+    return parseJsonOrThrow<SchemaPushResponse>(response, url, 'pushSchemas', tokensSettingsUrl(normalizedOrigin, options.spaceId));
+  }
+
+  return { ...cdn, getSpace, getSchemas, getOpenApi, updateTranslations, pushSchemas };
 }
 
 export type LocalessCliClient = ReturnType<typeof localessCliClient>;

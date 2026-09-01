@@ -8,7 +8,7 @@
     "playgrounds/*"
   ],
   "scripts": {
-    "build": "npm run build:richtext && npm run build:client && npm run build:react && npm run build:vue && npm run build:svelte && npm run build:cli && npm run build:angular && npm run build:astro",
+    "build": "npm run build:richtext && npm run build:client && npm run build:schema && npm run build:react && npm run build:vue && npm run build:svelte && npm run build:cli && npm run build:angular && npm run build:astro",
     "build:angular": "npm run build --workspace=@localess/angular",
     "build:astro": "npm run build --workspace=@localess/astro",
     "build:cli": "npm run build --workspace=@localess/cli",
@@ -23,7 +23,7 @@
     "version:major": "node scripts/bump-version.mjs major",
     "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"packages/*/src/**/*.{ts,tsx}\" --fix",
-    "test": "npm test --workspace=@localess/client --workspace=@localess/richtext --workspace=@localess/react --workspace=@localess/vue --workspace=@localess/svelte --workspace=@localess/cli --workspace=@localess/angular --workspace=@localess/astro --if-present",
+    "test": "npm test --workspace=@localess/client --workspace=@localess/richtext --workspace=@localess/schema --workspace=@localess/react --workspace=@localess/vue --workspace=@localess/svelte --workspace=@localess/cli --workspace=@localess/angular --workspace=@localess/astro --if-present",
     "test:client": "npm test --workspace=@localess/client --if-present",
     "test:richtext": "npm test --workspace=@localess/richtext --if-present",
     "test:react": "npm test --workspace=@localess/react --if-present",
@@ -32,7 +32,7 @@
     "test:cli": "npm test --workspace=@localess/cli --if-present",
     "test:angular": "npm test --workspace=@localess/angular --if-present",
     "test:astro": "npm test --workspace=@localess/astro --if-present",
-    "test:coverage": "npm run test:coverage --workspace=@localess/client --workspace=@localess/richtext --workspace=@localess/react --workspace=@localess/vue --workspace=@localess/svelte --workspace=@localess/cli --workspace=@localess/angular --workspace=@localess/astro --if-present",
+    "test:coverage": "npm run test:coverage --workspace=@localess/client --workspace=@localess/richtext --workspace=@localess/schema --workspace=@localess/react --workspace=@localess/vue --workspace=@localess/svelte --workspace=@localess/cli --workspace=@localess/angular --workspace=@localess/astro --if-present",
     "test:coverage:richtext": "npm run test:coverage --workspace=@localess/richtext --if-present",
     "test:coverage:angular": "npm run test:coverage --workspace=@localess/angular --if-present",
     "test:coverage:react": "npm run test:coverage --workspace=@localess/react --if-present",
@@ -40,7 +40,10 @@
     "test:coverage:svelte": "npm run test:coverage --workspace=@localess/svelte --if-present",
     "test:coverage:cli": "npm run test:coverage --workspace=@localess/cli --if-present",
     "test:coverage:client": "npm run test:coverage --workspace=@localess/client --if-present",
-    "test:coverage:astro": "npm run test:coverage --workspace=@localess/astro --if-present"
+    "test:coverage:astro": "npm run test:coverage --workspace=@localess/astro --if-present",
+    "build:schema": "npm run build --workspace=@localess/schema",
+    "test:schema": "npm test --workspace=@localess/schema --if-present",
+    "test:coverage:schema": "npm run test:coverage --workspace=@localess/schema --if-present"
   },
   "repository": {
     "type": "git",

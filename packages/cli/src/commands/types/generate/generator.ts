@@ -1,4 +1,4 @@
-import { SchemaComponent, SchemaEnum, SchemaField, SchemaFieldKind, Schemas, SchemaType } from '../../../models';
+import { SchemaComponentExport, SchemaEnumExport, SchemaExport, SchemaField } from '../../../models';
 
 function getPreamble(prefix: string): string {
   return `/**
@@ -58,40 +58,40 @@ export function toPascalCase(str: string): string {
 
 function fieldToTsType(field: SchemaField, prefix: string): string {
   switch (field.kind) {
-    case SchemaFieldKind.TEXT:
-    case SchemaFieldKind.TEXTAREA:
-    case SchemaFieldKind.MARKDOWN:
-    case SchemaFieldKind.COLOR:
-    case SchemaFieldKind.DATE:
-    case SchemaFieldKind.DATETIME:
+    case 'TEXT':
+    case 'TEXTAREA':
+    case 'MARKDOWN':
+    case 'COLOR':
+    case 'DATE':
+    case 'DATETIME':
       return 'string';
-    case SchemaFieldKind.NUMBER:
+    case 'NUMBER':
       return 'number';
-    case SchemaFieldKind.BOOLEAN:
+    case 'BOOLEAN':
       return 'boolean';
-    case SchemaFieldKind.RICH_TEXT:
+    case 'RICH_TEXT':
       return `${prefix}ContentRichText`;
-    case SchemaFieldKind.LINK:
+    case 'LINK':
       return `${prefix}ContentLink`;
-    case SchemaFieldKind.ASSET:
+    case 'ASSET':
       return `${prefix}ContentAsset`;
-    case SchemaFieldKind.ASSETS:
+    case 'ASSETS':
       return `${prefix}ContentAsset[]`;
-    case SchemaFieldKind.REFERENCE:
+    case 'REFERENCE':
       return `${prefix}ContentReference`;
-    case SchemaFieldKind.REFERENCES:
+    case 'REFERENCES':
       return `${prefix}ContentReference[]`;
-    case SchemaFieldKind.OPTION:
+    case 'OPTION':
       return field.source ? prefix + toPascalCase(field.source) : 'string';
-    case SchemaFieldKind.OPTIONS:
+    case 'OPTIONS':
       return field.source ? `${prefix + toPascalCase(field.source)}[]` : 'string[]';
-    case SchemaFieldKind.SCHEMA: {
+    case 'SCHEMA': {
       const refs = field.schemas;
       if (!refs || refs.length === 0) return 'unknown';
       const types = refs.map(s => prefix + toPascalCase(s));
       return types.length === 1 ? types[0] : types.join(' | ');
     }
-    case SchemaFieldKind.SCHEMAS: {
+    case 'SCHEMAS': {
       const refs = field.schemas;
       if (!refs || refs.length === 0) return 'unknown[]';
       const types = refs.map(s => prefix + toPascalCase(s));
@@ -105,16 +105,16 @@ function toJsDoc(description: string, indent = ''): string {
   return `${indent}/**\n${indent} * ${description}\n${indent} */`;
 }
 
-export function generateTypes(schemas: Schemas, prefix = ''): string {
+export function generateTypes(schemas: SchemaExport[], prefix = ''): string {
   const parts: string[] = [getPreamble(prefix)];
   const rootTypeNames: string[] = [];
 
-  for (const [key, schema] of Object.entries(schemas)) {
-    const typeName = prefix + toPascalCase(key);
+  for (const schema of schemas) {
+    const typeName = prefix + toPascalCase(schema.id);
     const typeDoc = schema.description ? `${toJsDoc(schema.description)}\n` : '';
 
-    if (schema.type === SchemaType.ENUM) {
-      const enumSchema = schema as SchemaEnum;
+    if (schema.type === 'ENUM') {
+      const enumSchema = schema as SchemaEnumExport;
       const values = enumSchema.values ?? [];
       if (values.length === 0) {
         parts.push(`${typeDoc}export type ${typeName} = string;\n`);
@@ -123,8 +123,8 @@ export function generateTypes(schemas: Schemas, prefix = ''): string {
         parts.push(`${typeDoc}export type ${typeName} = ${union};\n`);
       }
     } else {
-      const component = schema as SchemaComponent;
-      if (schema.type === SchemaType.ROOT) {
+      const component = schema as SchemaComponentExport;
+      if (schema.type === 'ROOT') {
         rootTypeNames.push(typeName);
       }
 
@@ -132,7 +132,7 @@ export function generateTypes(schemas: Schemas, prefix = ''): string {
         `  /** Unique identifier of a component in a content. */`,
         `  _id: string;`,
         `  /** Unique identifier for the Schema object. */`,
-        `  _schema: '${key}';`,
+        `  _schema: '${schema.id}';`,
         ...(component.fields ?? [])
           .slice()
           .sort((a, b) => a.name.localeCompare(b.name))

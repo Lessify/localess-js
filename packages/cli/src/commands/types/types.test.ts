@@ -48,7 +48,7 @@ describe('types command', () => {
       space: 'space-1',
       token: 'token-123',
     });
-    const getSchemas = vi.fn().mockResolvedValue({ schemas: [] });
+    const getSchemas = vi.fn().mockResolvedValue([]);
     vi.mocked(localessCliClient).mockReturnValue({ getSchemas } as unknown as ReturnType<typeof localessCliClient>);
 
     await typesCommand.parseAsync(['generate', '--verbose'], { from: 'user' });
@@ -89,7 +89,7 @@ describe('types command', () => {
       space: 'space-1',
       token: 'token-123',
     });
-    const getSchemas = vi.fn().mockResolvedValue({ schemas: [] });
+    const getSchemas = vi.fn().mockResolvedValue([]);
     vi.mocked(localessCliClient).mockReturnValue({ getSchemas } as unknown as ReturnType<typeof localessCliClient>);
 
     await typesCommand.parseAsync(['generate', '-p', 'generated/localess.ts'], { from: 'user' });
@@ -106,7 +106,7 @@ describe('types command', () => {
       space: 'space-1',
       token: 'token-123',
     });
-    const getSchemas = vi.fn().mockResolvedValue({ schemas: [] });
+    const getSchemas = vi.fn().mockResolvedValue([]);
     vi.mocked(localessCliClient).mockReturnValue({ getSchemas } as unknown as ReturnType<typeof localessCliClient>);
 
     await typesCommand.parseAsync(['generate'], { from: 'user' });

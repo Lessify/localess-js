@@ -8,6 +8,44 @@ CLI tool built with Commander.js. Entry point: `src/index.ts`. All commands live
 
 Known gap: `src/models/space.ts` currently imports `Locale` from `@localess/client` directly instead of going through `models/index.ts` — bring it into compliance next time that file is touched, rather than as a standalone fix.
 
+## Importing from `@localess/schema`
+
+**`src/commands/schema/schema-lib.ts` is the only file allowed to import runtime functions from `@localess/schema` directly.** It re-exports `toSchemaExport`/`validate` and the types every schema command needs. Type-only re-exports (`SchemaExport`, `SchemaField`, …) flow through `src/models/schema.ts` instead, alongside the CLI's own push-specific types in `src/models/schema-push.ts`. Every other file under `src/commands/schema/` imports from `./schema-lib` or `../../models`, never from `@localess/schema` directly.
+
+### Schema command module map
+
+| File | Responsibility |
+|---|---|
+| `schema-lib.ts` | the one `@localess/schema` runtime import point |
+| `loader.ts` | `isSchemaConfig` (structural check), `loadSchemaConfig` (jiti-loads a TS/JS entry file, finds the `defineConfig()` export) |
+| `diff-schemas.ts` | `stableStringify` (sorted-key JSON, matches the server's change detection), `diffSchemas` (create/update/unchanged/stale classification) |
+| `validate/index.ts` | `schema validate` — offline |
+| `pull/emitter.ts` | `emitSchemaFiles` — deterministic TS-file generation from `SchemaExport[]` |
+| `pull/index.ts` | `schema pull` — fetch, emit, marker-owned overwrite/delete |
+| `diff/index.ts` | `schema diff` — read-only, exit 1 on drift |
+| `push/index.ts` | `schema push` — validate → diff → confirm (if `--delete`) → `pushSchemas()` |
+| `index.ts` | `schemaCommand` — the parent `Command`, registers all four subcommands |
+
+### Adding a schema subcommand
+
+Follow "Adding a Subcommand" below, but register on `schemaCommand` in `src/commands/schema/index.ts` instead of a translations-style parent. Reuse `loadSchemaConfig`/`schema-lib`'s `validate`/`toSchemaExport` and `diffSchemas` rather than re-implementing config loading or diffing.
+
+### Commander gotcha: testing a subcommand directly vs. through its parent
+
+`Command.parseAsync(argv, { from: 'user' })` expects `argv` to be exactly the arguments **that command instance itself** consumes — it does **not** expect its own name first, unless you're calling `parseAsync` on the **parent** that routes to it by name. Concretely:
+
+```typescript
+// WRONG — schemaValidateCommand is the leaf; 'validate' becomes an unexpected extra
+// positional argument, corrupting `<entry>` and producing a confusing "Cannot find
+// module" error from deep inside jiti (the actual entry path was silently discarded).
+await schemaValidateCommand.parseAsync(['validate', entry], { from: 'user' });
+
+// RIGHT — drive the parent, exactly like `types.test.ts` does with `typesCommand`.
+await schemaCommand.parseAsync(['validate', entry], { from: 'user' });
+```
+
+All of this package's own subcommand tests (`schema/validate/validate.test.ts`, `schema/push/push.test.ts`, `schema/diff/diff.test.ts`, `schema/pull/pull.test.ts`) drive the parent command. Do the same for any new subcommand test.
+
 ## Session / Credentials
 
 Commands that need to talk to the Localess API must read the session first:

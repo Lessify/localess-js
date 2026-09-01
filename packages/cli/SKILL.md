@@ -276,6 +276,76 @@ const content = await client.getContentBySlug<Page>('home');
 
 ---
 
+## Schema Commands
+
+Define Localess schemas in TypeScript with `@localess/schema` and sync them bidirectionally with a Localess space. See [@localess/schema](../schema/SKILL.md) for the authoring API (`defineSchema`, `defineEnum`, `defineConfig`).
+
+Entry-file convention: a TS/JS file exporting the result of `defineConfig()` — by convention `schemas/index.ts`, but any path works.
+
+> **Prerequisite:** The API token must have the **Development Tools** permission (`DEV_TOOLS`) — the same permission `types generate` and translation writes use. No dedicated schema permission exists.
+
+> **Backend version:** `schema pull`/`push` require a Localess backend that serves `GET /schemas` as a `SchemaExport[]` array and exposes `POST /schemas`. Older backends return a `Record<schemaId, Schema>` map instead — this CLI's `getSchemas()` normalizes both shapes automatically, so pulling still works against an older backend, but `push` requires the newer `POST /schemas` endpoint.
+
+### `schema validate <entry>`
+
+Offline — no login, no network call. Runs `@localess/schema`'s `validate()` against the entry's config and prints each issue (`ERROR`/`WARNING`, code, path, message).
+
+```bash
+localess schema validate ./schemas/index.ts
+localess schema validate ./schemas/index.ts --format json   # machine-readable, for CI
+```
+
+Exit code `1` when any error-severity issue is present; `0` otherwise (warnings alone don't fail).
+
+### `schema pull [--path <dir>]`
+
+Fetches the space's schemas and (re)generates one TypeScript definition file per schema plus `index.ts` (a `defineConfig()` call) into `--path` (default `schemas`).
+
+```bash
+localess schema pull
+localess schema pull --path src/schemas
+```
+
+- **Repeatable and safe to re-run.** Every file pull generates starts with a marker comment; pull only ever overwrites or deletes files carrying that marker. A file it previously generated but whose schema no longer exists on the server is deleted; anything without the marker (your own hand-written files) is left untouched and reported.
+- Cross-schema references (`OPTION`/`OPTIONS` `source`, `SCHEMA`/`SCHEMAS` `schemas`) are emitted as imports between the generated files, so pulled definitions read naturally and stay type-checked against each other.
+
+### `schema diff <entry>`
+
+Read-only comparison between the entry's code-defined schemas and the space — prints a `create`/`update`/`unchanged`/`stale` line per schema. Exits `1` if anything differs (CI drift gate), `0` when everything is `unchanged`.
+
+```bash
+localess schema diff ./schemas/index.ts
+```
+
+### `schema push <entry> [--dry-run] [--delete] [-y|--yes]`
+
+Validates, diffs, then pushes the entry's schemas to the space.
+
+```bash
+localess schema push ./schemas/index.ts --dry-run   # preview only
+localess schema push ./schemas/index.ts             # upsert: create/update, never delete
+localess schema push ./schemas/index.ts --delete    # sync: also delete schemas absent from code
+localess schema push ./schemas/index.ts --delete -y # sync, skip the deletion confirmation prompt
+```
+
+- Aborts (exit `1`) without pushing if `validate()` reports any error.
+- Default mode is **upsert** — creates and updates, never deletes. Schemas on the server but absent from code are reported as `stale` and left alone.
+- `--delete` switches to **sync** mode, which also deletes stale schemas. Without `--yes`, you're asked to confirm the exact list before anything is deleted; `--dry-run` skips the prompt (nothing is written either way).
+- Prints the server's final counts: `created`, `updated`, `deleted`, `unchanged`.
+
+### CI recipe
+
+```yaml
+- run: localess schema validate ./schemas/index.ts
+- run: localess schema diff ./schemas/index.ts     # fails the build on drift
+  env:
+    LOCALESS_ORIGIN: ${{ secrets.LOCALESS_ORIGIN }}
+    LOCALESS_SPACE: ${{ secrets.LOCALESS_SPACE_ID }}
+    LOCALESS_TOKEN: ${{ secrets.LOCALESS_TOKEN }}
+```
+
+---
+
 ## CI/CD Integration
 
 ### GitHub Actions Example

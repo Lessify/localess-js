@@ -1,14 +1,12 @@
 {
-  "name": "@localess/cli",
+  "name": "@localess/schema",
   "version": "3.4.1",
-  "description": "Localess Command Line.",
-  "publishConfig": {
-    "access": "public"
-  },
+  "description": "Programmatic schema definitions for Localess with TypeScript content type inference.",
   "keywords": [
     "localess",
-    "cli",
-    "node",
+    "sdk",
+    "schema",
+    "cms",
     "javascript",
     "typescript"
   ],
@@ -19,48 +17,37 @@
     "dist",
     "SKILL.md"
   ],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     }
-  },
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "bin": {
-    "localess": "./dist/index.mjs"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Lessify/localess-js.git",
-    "directory": "packages/cli"
+    "directory": "packages/schema"
   },
   "bugs": {
     "url": "https://github.com/Lessify/localess-js/issues"
   },
   "scripts": {
     "build": "vite build",
-    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "license": "MIT",
-  "dependencies": {
-    "@inquirer/prompts": "^8.5.2",
-    "@localess/client": "*",
-    "@localess/schema": "*",
-    "chalk": "^5.6.2",
-    "commander": "^15.0.0",
-    "jiti": "^2.4.2",
-    "zod": "^4.4.3"
-  },
   "devDependencies": {
+    "@localess/client": "*",
     "@types/node": "^24",
-    "openapi3-ts": "^4.6.0",
-    "typescript": "^5.0.0",
+    "typescript": "^5.9.3",
     "vite": "^8.0.16",
-    "vite-plugin-dts": "^5.0.2"
+    "vite-plugin-dts": "^5.0.0"
   },
   "engines": {
     "node": ">= 24.0.0"
