@@ -206,6 +206,44 @@ localess translations pull en --path ./locales/en.json --draft
 
 ---
 
+### Diff Translations
+
+Read-only comparison between a local translations file and the space — prints a `create`/`update`/`unchanged`/`stale` line per key. Exits `1` if anything differs (CI drift gate), `0` when everything is `unchanged`. Does not modify `push`'s behavior; use `push` to apply changes.
+
+```bash
+localess translations diff <locale> --path <file> [options]
+```
+
+**Arguments:**
+
+| Argument   | Description                        |
+|------------|------------------------------------|
+| `<locale>` | ISO 639-1 locale code: `en`, `de`… |
+
+**Options:**
+
+| Flag                    | Default  | Description                             |
+|-------------------------|----------|------------------------------------------|
+| `-p, --path <path>`     | required | Path to the local translations file       |
+| `-f, --format <format>` | `flat`   | File format: `flat` or `nested`           |
+| `--draft`                | `false`  | Compare against the draft version         |
+| `-v, --verbose`          | `false`  | Print verbose debug output                |
+
+**Examples:**
+
+```bash
+# Compare a local file against the space (exits 1 on drift)
+localess translations diff en --path ./locales/en.json
+
+# Compare against draft translations
+localess translations diff en --path ./locales/en.json --draft
+
+# CI drift gate
+- run: localess translations diff en --path ./locales/en.json
+```
+
+---
+
 ## Type Generation
 
 Generate TypeScript type definitions from your Localess space's schemas.
