@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import type { LocalessRichTextNode } from './model';
 import { normalizeInput } from './normalize';
 
-const para = { type: 'paragraph', content: [{ type: 'text', text: 'Hi' }] } as const;
+const para: LocalessRichTextNode = { type: 'paragraph', content: [{ type: 'text', text: 'Hi' }] };
 
 describe('normalizeInput', () => {
   it('returns [] for null, undefined, and shapeless objects', () => {
