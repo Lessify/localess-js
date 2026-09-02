@@ -1,6 +1,6 @@
 {
   "name": "@localess/model",
-  "version": "3.4.1",
+  "version": "4.0.0",
   "description": "Shared domain model types for the Localess headless CMS — content, asset, link, and translation shapes used across the SDK.",
   "keywords": [
     "localess",

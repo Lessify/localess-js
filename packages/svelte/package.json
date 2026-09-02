@@ -1,8 +1,16 @@
 {
   "name": "@localess/svelte",
-  "version": "3.4.1",
+  "version": "4.0.0",
   "description": "Svelte JavaScript/TypeScript SDK for Localess's API.",
-  "keywords": ["localess", "sdk", "api", "client", "svelte", "javascript", "typescript"],
+  "keywords": [
+    "localess",
+    "sdk",
+    "api",
+    "client",
+    "svelte",
+    "javascript",
+    "typescript"
+  ],
   "author": "Lessify",
   "homepage": "https://github.com/Lessify/localess-js",
   "sideEffects": false,
@@ -14,7 +22,12 @@
   "bugs": {
     "url": "https://github.com/Lessify/localess-js/issues"
   },
-  "files": ["dist", "!dist/**/*.test.*", "!dist/__fixtures__", "SKILL.md"],
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/__fixtures__",
+    "SKILL.md"
+  ],
   "type": "module",
   "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",

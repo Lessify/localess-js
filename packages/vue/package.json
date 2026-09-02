@@ -1,6 +1,6 @@
 {
   "name": "@localess/vue",
-  "version": "3.4.1",
+  "version": "4.0.0",
   "description": "Vue JavaScript/TypeScript SDK for Localess's API.",
   "keywords": [
     "localess",
@@ -22,7 +22,10 @@
   "bugs": {
     "url": "https://github.com/Lessify/localess-js/issues"
   },
-  "files": ["dist", "SKILL.md"],
+  "files": [
+    "dist",
+    "SKILL.md"
+  ],
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
