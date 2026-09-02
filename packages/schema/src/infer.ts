@@ -1,4 +1,5 @@
-import type { SchemaContentAsset, SchemaContentLink, SchemaContentReference, SchemaContentRichText } from './content-types';
+import type { ContentAsset, ContentLink, ContentReference, ContentRichText } from '@localess/model';
+
 import type { SchemaEnumValue } from './models';
 
 type Prettify<T> = { [K in keyof T]: T[K] } & {};
@@ -33,17 +34,17 @@ type FieldValue<F, C> = F extends { kind: 'TEXT' | 'TEXTAREA' | 'MARKDOWN' | 'CO
     : F extends { kind: 'BOOLEAN' }
       ? boolean
       : F extends { kind: 'RICH_TEXT' }
-        ? SchemaContentRichText
+        ? ContentRichText
         : F extends { kind: 'LINK' }
-          ? SchemaContentLink
+          ? ContentLink
           : F extends { kind: 'ASSET' }
-            ? SchemaContentAsset
+            ? ContentAsset
             : F extends { kind: 'ASSETS' }
-              ? SchemaContentAsset[]
+              ? ContentAsset[]
               : F extends { kind: 'REFERENCE' }
-                ? SchemaContentReference
+                ? ContentReference
                 : F extends { kind: 'REFERENCES' }
-                  ? SchemaContentReference[]
+                  ? ContentReference[]
                   : F extends { kind: 'OPTION'; source: infer S extends string }
                     ? ResolveEnum<S, C>
                     : F extends { kind: 'OPTIONS'; source: infer S extends string }

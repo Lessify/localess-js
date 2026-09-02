@@ -1,5 +1,8 @@
-import { Locale } from '@localess/client';
+import { Locale } from './locale';
 
+/**
+ * A Localess space — the top-level container for content, schemas, and translations.
+ */
 export interface Space {
   /**
    * Unique identifier for the object.

@@ -1,6 +1,6 @@
 # Contributing to @localess/client
 
-Core SDK. Server-side only. Zero production dependencies. Node.js >= 24.0.0.
+Core SDK. Server-side only. Zero external dependencies (depends only on the shared, itself-zero-dependency `@localess/model` package for data-model types). Node.js >= 24.0.0.
 
 ## Adding a New API Method
 
@@ -41,19 +41,15 @@ async getAssets(params?: AssetsFetchParams): Promise<Assets> {
 },
 ```
 
-**4. If returning a new type, create it in `src/models/`:**
+**4. If returning a new type, add it to `@localess/model` instead of this package:**
 
-Create `src/models/assets.ts`:
-```typescript
-export type Assets = {
-  // fields matching the API response
-};
-```
-
-Export it from `src/models/index.ts`:
-```typescript
-export * from './assets';
-```
+Data-model types (anything shaping an API response) live in
+`packages/model/src/`, not here — see `packages/model/CONTRIBUTING.md` for
+how to add one. `packages/client/src/models/index.ts` is just
+`export * from '@localess/model';`; it re-exports whatever you add there
+automatically. Only add a file directly under `packages/client/src/models/`
+for a type that is genuinely client-package-specific and not a shared
+domain shape (rare — check with the maintainer before doing this).
 
 **5. Export the new fetch params type from `src/index.ts` if it's part of the public API.**
 
@@ -65,7 +61,7 @@ export * from './assets';
 
 - **No React imports.** No `react` in any import.
 - **No CLI logic.** No `commander`, `inquirer`, or filesystem imports.
-- **No `dependencies`.** Never add to `dependencies` in `package.json`. Use `devDependencies` for build tools only.
+- **No `dependencies` beyond `@localess/model`.** Never add anything else to `dependencies` in `package.json`. Use `devDependencies` for build tools only.
 - **Server-side only.** Never use `window`, `document`, or browser globals.
 
 ## Build

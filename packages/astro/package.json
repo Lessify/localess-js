@@ -63,6 +63,7 @@
   },
   "dependencies": {
     "@localess/client": "*",
+    "@localess/model": "*",
     "@localess/richtext": "*",
     "camelcase": "^8.0.0",
     "morphdom": "^2.7.8"

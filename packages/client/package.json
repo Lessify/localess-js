@@ -42,6 +42,9 @@
     "test:coverage": "vitest run --coverage"
   },
   "license": "MIT",
+  "dependencies": {
+    "@localess/model": "*"
+  },
   "devDependencies": {
     "@types/node": "^24",
     "typescript": "^5.0.0",

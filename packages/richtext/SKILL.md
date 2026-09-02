@@ -1,6 +1,6 @@
 ---
 name: localess-richtext
-description: Framework-neutral rich text model and renderer for Localess TipTap JSON content. Zero dependencies. Use when rendering Localess RICH_TEXT fields to HTML or building a framework-specific rich text walker.
+description: Framework-neutral rich text model and renderer for Localess TipTap JSON content. Zero dependencies beyond the shared @localess/model types package. Use when rendering Localess RICH_TEXT fields to HTML or building a framework-specific rich text walker.
 ---
 
 # @localess/richtext

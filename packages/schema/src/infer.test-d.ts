@@ -1,6 +1,6 @@
+import type { ContentAsset, ContentRichText } from '@localess/model';
 import { describe, expectTypeOf, it } from 'vitest';
 
-import type { SchemaContentAsset, SchemaContentRichText } from './content-types';
 import { defineConfig, defineEnum, defineSchema } from './define';
 import type { InferContent, InferContentData, InferEnum } from './infer';
 
@@ -69,9 +69,9 @@ describe('InferContent', () => {
   });
 
   it('maps structural content types', () => {
-    expectTypeOf<ButtonContent['icon']>().toEqualTypeOf<SchemaContentAsset | undefined>();
+    expectTypeOf<ButtonContent['icon']>().toEqualTypeOf<ContentAsset | undefined>();
     type SectionContent = InferContent<typeof Section, typeof config>;
-    expectTypeOf<SectionContent['body']>().toEqualTypeOf<SchemaContentRichText | undefined>();
+    expectTypeOf<SectionContent['body']>().toEqualTypeOf<ContentRichText | undefined>();
   });
 
   it('SCHEMAS resolves to the allowed schemas content array; unrestricted SCHEMA to all NODE content', () => {

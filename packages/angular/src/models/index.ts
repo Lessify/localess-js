@@ -1,3 +1,4 @@
+export type { ContentFetchParams, EventToAppOf, EventToAppType, LinksFetchParams, TranslationFetchParams } from '@localess/client';
 export type {
   Assets,
   AssetTransformParams,
@@ -6,17 +7,12 @@ export type {
   ContentData,
   ContentDataField,
   ContentDataSchema,
-  ContentFetchParams,
   ContentLink,
   ContentMetadata,
   ContentReference,
   ContentRichText,
-  EventToAppOf,
-  EventToAppType,
   Links,
-  LinksFetchParams,
   References,
-  TranslationFetchParams,
   Translations,
-} from '@localess/client';
+} from '@localess/model';
 export type { LocalessRichTextDocument, LocalessRichTextInput, LocalessRichTextMark, LocalessRichTextNode } from '@localess/richtext';

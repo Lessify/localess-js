@@ -43,18 +43,14 @@ export interface LocalessRichTextDocument {
 }
 
 /**
- * Structural stand-in for `@localess/client`'s `ContentRichText` so client
- * values pass without casting. Deliberately not imported — this package has
- * zero dependencies.
+ * Re-exported from `@localess/model` so `LocalessRichTextInput` accepts
+ * `ContentRichText` values without casting.
  */
-export interface ContentRichTextLike {
-  type?: string;
-  content?: ContentRichTextLike[];
-}
+export type { ContentRichText } from '@localess/model';
 
 /** Anything a render function accepts. */
 export type LocalessRichTextInput =
-  LocalessRichTextDocument | LocalessRichTextNode | LocalessRichTextNode[] | ContentRichTextLike | null | undefined;
+  LocalessRichTextDocument | LocalessRichTextNode | LocalessRichTextNode[] | ContentRichText | null | undefined;
 
 /** Union of every known node and mark type name. */
 export type LocalessRichTextElement = LocalessRichTextNode['type'] | LocalessRichTextMark['type'] | 'doc';

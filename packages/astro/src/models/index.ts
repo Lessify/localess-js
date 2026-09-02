@@ -1,6 +1,7 @@
 export type { LocalessOptions } from './client';
 export type { LocalessComponentProps } from './localess-component-props';
 export type { LocalessSchemaProps } from './localess-schema-props';
+export type { EventToApp, LocalessClient } from '@localess/client';
 export type {
   AssetMetadata,
   Assets,
@@ -14,9 +15,7 @@ export type {
   ContentMetadata,
   ContentReference,
   ContentRichText,
-  EventToApp,
   Links,
-  LocalessClient,
   References,
-} from '@localess/client';
+} from '@localess/model';
 export type { LocalessRichTextDocument, LocalessRichTextInput, LocalessRichTextMark, LocalessRichTextNode } from '@localess/richtext';

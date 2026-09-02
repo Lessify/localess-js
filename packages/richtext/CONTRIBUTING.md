@@ -1,8 +1,11 @@
 # Contributing to @localess/richtext
 
-Framework-neutral rich text core. **Zero dependencies** — `package.json` has
-no `dependencies` key at all, and that is load-bearing (ADR 007). TipTap
-appears only in `devDependencies`, used exclusively by the parity test.
+Framework-neutral rich text core. **Zero dependencies beyond `@localess/model`**
+— `package.json`'s only `dependencies` entry is `@localess/model`, itself
+zero-dependency (ADR 007, extended by ADR 009). TipTap appears only in
+`devDependencies`, used exclusively by the parity test. `ContentRichText`
+(used in `src/model.ts`'s `LocalessRichTextInput`) is re-exported from
+`@localess/model`, not declared locally — see ADR 009.
 
 ## Module map
 

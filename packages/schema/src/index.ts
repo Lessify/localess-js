@@ -1,4 +1,3 @@
-export type { SchemaContentAsset, SchemaContentLink, SchemaContentReference, SchemaContentRichText } from './content-types';
 export type {
   ComponentDefinition,
   ComponentDefinitionInput,
@@ -42,3 +41,4 @@ export type {
 } from './models';
 export type { ValidationIssue, ValidationResult } from './validate';
 export { validate } from './validate';
+export type { ContentAsset, ContentLink, ContentReference, ContentRichText } from '@localess/model';

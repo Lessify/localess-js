@@ -1,17 +1,15 @@
 # Contributing to @localess/schema
 
 Programmatic Localess schema definitions with pure type inference. **Zero
-production dependencies** — `package.json` has no `dependencies` key at all,
-and that is load-bearing (ADR 007, extended by ADR 008). `@localess/client`
-appears only in `devDependencies`, used exclusively by the structural-parity
-type test (`content-types.test-d.ts`).
+dependencies beyond `@localess/model`** — `package.json`'s only
+`dependencies` entry is `@localess/model`, itself zero-dependency (ADR 007,
+extended by ADR 008 and ADR 009).
 
 ## Module map
 
 | File | Responsibility |
 |---|---|
 | `src/models.ts` | wire model: `SchemaType`, `SchemaFieldKind`, the 18-member `SchemaField` union, `SchemaExport` |
-| `src/content-types.ts` | `SchemaContentAsset`/`Link`/`Reference`/`RichText` — structural copies of `@localess/client`'s content types |
 | `src/define.ts` | `defineEnum`, `defineSchema`, `defineConfig` — identity functions with by-value ref normalization |
 | `src/infer.ts` | `InferContentData`, `InferContent`, `InferEnum` — the type-level content inference machinery |
 | `src/validate.ts` | `validate()` — non-throwing authoring-rule checks (patterns, reserved names, length limits, reference resolution) |
@@ -21,13 +19,14 @@ type test (`content-types.test-d.ts`).
 
 ## The zero-dependency rule
 
-Never add an entry to `dependencies` in `packages/schema/package.json`. If a
-compelling external library is ever needed, raise it for discussion first —
-the bar is high (ADR 002). `devDependencies` are fine. This package must
-never import from `@localess/client` or `@localess/cli` in `src/` — the one
-exception is the type-only, test-only import in
-`content-types.test-d.ts`, which exists solely to assert structural parity
-and never ships in `dist/`.
+Never add an entry to `dependencies` beyond `@localess/model` in
+`packages/schema/package.json`. If a compelling external library is ever
+needed, raise it for discussion first — the bar is high (ADR 002).
+`devDependencies` are fine. This package must never import from
+`@localess/client` or `@localess/cli` in `src/`. Content value types
+(`ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText`) come
+from `@localess/model`, a separate zero-dependency package — importing from
+it is expected and not a boundary violation.
 
 ## Wire format fidelity
 

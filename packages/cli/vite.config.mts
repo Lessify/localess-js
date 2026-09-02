@@ -39,6 +39,7 @@ export default defineConfig({
         ...builtinModules,
         ...builtinModules.map((m) => `node:${m}`),
         '@localess/client',
+        '@localess/model',
         '@localess/schema',
         '@inquirer/prompts',
         'commander',

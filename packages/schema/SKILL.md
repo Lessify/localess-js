@@ -90,24 +90,23 @@ everything else is optional.
 
 | Kind | Extra properties | Inferred type |
 |---|---|---|
-| `TEXT`, `TEXTAREA`, `RICH_TEXT`\*, `MARKDOWN` | `minLength?`, `maxLength?` | `string` (`RICH_TEXT` → `SchemaContentRichText`) |
+| `TEXT`, `TEXTAREA`, `RICH_TEXT`\*, `MARKDOWN` | `minLength?`, `maxLength?` | `string` (`RICH_TEXT` → `ContentRichText`) |
 | `NUMBER` | `minValue?`, `maxValue?` | `number` |
 | `COLOR`, `DATE`, `DATETIME` | — | `string` |
 | `BOOLEAN` | — | `boolean` |
 | `OPTION` | `source` (required) | literal union of the referenced enum's values |
 | `OPTIONS` | `source` (required), `minValues?`, `maxValues?` | that union, as an array |
-| `LINK` | — | `SchemaContentLink` |
-| `REFERENCE` / `REFERENCES` | `path?` | `SchemaContentReference` / `[]` |
-| `ASSET` / `ASSETS` | `fileTypes?`, `fileType?` | `SchemaContentAsset` / `[]` |
+| `LINK` | — | `ContentLink` |
+| `REFERENCE` / `REFERENCES` | `path?` | `ContentReference` / `[]` |
+| `ASSET` / `ASSETS` | `fileTypes?`, `fileType?` | `ContentAsset` / `[]` |
 | `SCHEMA` / `SCHEMAS` | `schemas?` (allowed ids/definitions) | allowed schemas' content type(s), or `[]` |
 
 \* `RICH_TEXT` also accepts `minLength?`/`maxLength?` on the wire model, but
 they don't affect the inferred type.
 
-`SchemaContentAsset`, `SchemaContentLink`, `SchemaContentReference`, and
-`SchemaContentRichText` are structurally identical to `@localess/client`'s
-`ContentAsset`/`ContentLink`/`ContentReference`/`ContentRichText` — declared
-locally so this package stays dependency-free (see ADR 008).
+`ContentAsset`, `ContentLink`, `ContentReference`, and `ContentRichText` are
+re-exported from `@localess/model`, the shared domain-model package (see
+ADR 009).
 
 ## Known limitation
 
