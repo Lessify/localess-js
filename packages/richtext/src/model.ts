@@ -1,3 +1,5 @@
+import type { ContentRichText } from '@localess/model';
+
 /**
  * Attributes of a `link` mark as stored by the Localess Studio editor
  * (TipTap Link extension JSON).
@@ -46,7 +48,7 @@ export interface LocalessRichTextDocument {
  * Re-exported from `@localess/model` so `LocalessRichTextInput` accepts
  * `ContentRichText` values without casting.
  */
-export type { ContentRichText } from '@localess/model';
+export type { ContentRichText };
 
 /** Anything a render function accepts. */
 export type LocalessRichTextInput =
