@@ -84,4 +84,33 @@ describe('translations diff', () => {
     expect(console.error).toHaveBeenCalledWith('Failed to diff translations:', expect.any(Error));
     expect(process.exit).toHaveBeenCalledWith(1);
   });
+
+  it('groups output by status and omits unchanged keys by default', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'new.key': 'New', 'changed.key': 'Changed', 'same.key': 'Same' }));
+    getTranslations.mockResolvedValue({ 'changed.key': 'Old', 'same.key': 'Same', 'stale.key': 'Stale' });
+
+    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
+
+    const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
+    expect(logs.some(line => line.includes('Create (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('new.key'))).toBe(true);
+    expect(logs.some(line => line.includes('Update (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('changed.key'))).toBe(true);
+    expect(logs.some(line => line.includes('Stale (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('stale.key'))).toBe(true);
+    expect(logs.some(line => line.includes('Unchanged'))).toBe(false);
+    expect(logs.some(line => line.includes('same.key'))).toBe(false);
+    expect(logs.some(line => line.includes('1 unchanged (use --all to show)'))).toBe(true);
+  });
+
+  it('also prints unchanged keys with --all', async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'same.key': 'Same' }));
+    getTranslations.mockResolvedValue({ 'same.key': 'Same' });
+
+    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json', '--all'], { from: 'user' });
+
+    const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
+    expect(logs.some(line => line.includes('Unchanged (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('same.key'))).toBe(true);
+  });
 });

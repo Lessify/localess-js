@@ -208,7 +208,7 @@ localess translations pull en --path ./locales/en.json --draft
 
 ### Diff Translations
 
-Read-only comparison between a local translations file and the space — prints a `create`/`update`/`unchanged`/`stale` line per key. Exits `1` if anything differs (CI drift gate), `0` when everything is `unchanged`. Does not modify `push`'s behavior; use `push` to apply changes.
+Read-only comparison between a local translations file and the space — groups keys into `Create`/`Update`/`Stale` sections (color-coded, git-diff style `+`/`~`/`-` symbols). `unchanged` keys are collapsed into a single count by default (`--all` to list them) so drift stays visible even with thousands of translations. Exits `1` if anything differs (CI drift gate), `0` when everything is `unchanged`. Does not modify `push`'s behavior; use `push` to apply changes.
 
 ```bash
 localess translations diff <locale> --path <file> [options]
@@ -227,6 +227,7 @@ localess translations diff <locale> --path <file> [options]
 | `-p, --path <path>`     | required | Path to the local translations file       |
 | `-f, --format <format>` | `flat`   | File format: `flat` or `nested`           |
 | `--draft`                | `false`  | Compare against the draft version         |
+| `-a, --all`              | `false`  | Also print unchanged keys                 |
 | `-v, --verbose`          | `false`  | Print verbose debug output                |
 
 **Examples:**
@@ -238,8 +239,31 @@ localess translations diff en --path ./locales/en.json
 # Compare against draft translations
 localess translations diff en --path ./locales/en.json --draft
 
+# Also list unchanged keys
+localess translations diff en --path ./locales/en.json --all
+
 # CI drift gate
 - run: localess translations diff en --path ./locales/en.json
+```
+
+**Sample output** (2000 translations, 11 changed):
+
+```
+Create (2)
+  + new.key
+  + another.new.key
+
+Update (5)
+  ~ changed.key
+  ~ nested.other.key
+
+Stale (4)
+  - removed.key
+  - old.unused.key
+
+1989 unchanged (use --all to show)
+
+11 translation(s) differ: 2 created, 5 updated, 4 stale.
 ```
 
 ---

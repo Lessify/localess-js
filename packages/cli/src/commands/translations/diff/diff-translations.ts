@@ -1,4 +1,4 @@
-import type { Translations } from '../../models';
+import type { Translations } from '../../../models';
 
 export type TranslationDiffStatus = 'create' | 'update' | 'unchanged' | 'stale';
 

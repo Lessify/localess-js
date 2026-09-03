@@ -6,11 +6,23 @@ CLI tool built with Commander.js. Entry point: `src/index.ts`. All commands live
 
 **`src/models/index.ts` and `src/client.ts` are the only files allowed to import from `@localess/client` or `@localess/model` directly.** `models/index.ts` re-exports every `@localess/client`/`@localess/model` type the package needs plus `LocalessApiError` (a class, but consumed in type position via `catch`/`instanceof`, so it lives with the domain model). `client.ts` is the one place that calls `localessClient(...)` and wraps it in `localessCliClient` (the CLI-specific client with retry/error-formatting behavior) — `localessClient` is a callable factory, not a type, so it's imported there directly rather than re-exported through `models`. Every other file in this package imports what it needs from `./models` (or the correct relative path) instead. When a new file needs something from `@localess/client`/`@localess/model` that neither re-exports yet, add it to whichever matches.
 
+## Utility Placement
+
+Command-specific business-logic utilities (diffing, loading, emitting — not the client/model/schema import boundary above) are placed by consumer count, checked at the point a new subcommand needs one:
+
+1. **Subcommand-local** — used by exactly one subcommand: lives inside that subcommand's own folder, `commands/<group>/<subcommand>/<name>.ts` (+ co-located `<name>.test.ts`). E.g. `commands/schema/pull/emitter.ts`, `commands/types/generate/generator.ts`, `commands/translations/diff/diff-translations.ts`.
+2. **Group-shared** — used by 2+ subcommands within the same command group: lives directly in the group folder, sibling to the subcommand folders, `commands/<group>/<name>.ts`. E.g. `commands/schema/diff-schemas.ts`, `loader.ts`, `schema-lib.ts` (shared by `diff/`, `push/`, and/or `validate/`).
+3. **Package-shared** — used across 2+ command groups, or cross-cutting infra: stays at `src/` root (`utils.ts`, `file.ts`, `session.ts`, `client.ts`, `models/`). This tier is also where the `@localess/client`/`@localess/model`/`@localess/schema` import-boundary files live (see above) — no change to that rule.
+
+Don't import a sibling subcommand's local utility across folders — promote it to the group folder first. If a group-shared utility later gains a consumer in another group, promote it again to `src/` root.
+
 ## Importing from `@localess/schema`
 
 **`src/commands/schema/schema-lib.ts` is the only file allowed to import runtime functions from `@localess/schema` directly.** It re-exports `toSchemaExport`/`validate` and the types every schema command needs. Type-only re-exports (`SchemaExport`, `SchemaField`, …) flow through `src/models/schema.ts` instead, alongside the CLI's own push-specific types in `src/models/schema-push.ts`. Every other file under `src/commands/schema/` imports from `./schema-lib` or `../../models`, never from `@localess/schema` directly.
 
 ### Schema command module map
+
+`schema-lib.ts`, `loader.ts`, and `diff-schemas.ts` sit at the group level (not inside a subcommand folder) because 3 subcommands share them — see "Utility Placement" above.
 
 | File | Responsibility |
 |---|---|
@@ -97,9 +109,9 @@ program.addCommand(myCommand);
 
 ## Adding a Subcommand
 
-Group related operations under a parent command (e.g. `translations push`, `translations pull`).
+Group related operations under a parent command (e.g. `translations push`, `translations pull`). Subcommand-only helper functions go inside the subcommand's own folder alongside `index.ts`; see "Utility Placement" above before reaching into a sibling subcommand's file.
 
-**1. Create the subcommand file, e.g. `src/commands/translations/my-sub.ts`:**
+**1. Create the subcommand folder, e.g. `src/commands/translations/my-sub/index.ts`:**
 
 ```typescript
 import { Command } from 'commander';
