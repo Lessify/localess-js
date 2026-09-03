@@ -588,7 +588,7 @@ export type { AssetTransformParams }
 export type { Content, ContentData, ContentMetadata, ContentDataSchema, ContentDataField }
 export type { ContentAsset, ContentRichText, ContentLink, ContentReference }
 export type { Links, References, Translations }
-export type { LocalessSync, EventToApp, EventCallback, EventToAppType }
+export type { LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType }
 
 // @localess/react/ssr — excludes sync/hooks (see Export Variants section)
 // @localess/react/rsc — extends /ssr with a server-safe LocalessDocument, useLocaless, and isSyncEnabled

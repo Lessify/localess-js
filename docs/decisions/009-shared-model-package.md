@@ -48,12 +48,12 @@ the duplication.
 
 ## Consequences
 
-- `@localess/client` is no longer zero-*internal*-dependency (it depends on
-  `@localess/model`), though it remains zero-*external*-dependency — no
-  npm package outside this monorepo. CLAUDE.md's zero-production-dependency
-  rule (ADR 002) is updated to track this distinction: `@localess/model`,
-  `@localess/richtext`, and `@localess/schema` have zero dependencies of any
-  kind; `@localess/client` has zero *external* dependencies.
+- `@localess/client`, `@localess/richtext`, and `@localess/schema` are no
+  longer zero-*internal*-dependency (each now depends on `@localess/model`),
+  though all three remain zero-*external*-dependency — no npm package outside
+  this monorepo. Only `@localess/model` itself has zero dependencies of any
+  kind (no `dependencies` key at all). CLAUDE.md's zero-production-dependency
+  rule (ADR 002) is updated to track this distinction.
 - `@localess/richtext`'s public API loses `ContentRichTextLike` and gains
   `ContentRichText` (re-exported from `@localess/model`) in its place — a
   rename, consistent with this repo's pre-1.0 clean-break migration

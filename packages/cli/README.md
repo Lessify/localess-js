@@ -8,7 +8,7 @@
 
 # Localess CLI
 
-The `@localess/cli` package is the official command-line interface for the [Localess](https://github.com/Lessify/localess) headless CMS platform. It provides commands to authenticate with your Localess instance, synchronize translations, and generate TypeScript type definitions from your content schemas.
+The `@localess/cli` package is the official command-line interface for the [Localess](https://github.com/Lessify/localess) headless CMS platform. It provides commands to authenticate with your Localess instance, synchronize translations, generate TypeScript type definitions, and sync code-defined schemas with your space.
 
 ## Requirements
 
@@ -29,8 +29,9 @@ npm install @localess/cli -g
 ## Features
 
 - 🔐 **Authentication** — Secure credential storage for CLI and CI/CD environments
-- 🌐 **Translations** — Push and pull translation files to/from your Localess space
+- 🌐 **Translations** — Push, pull, and diff translation files against your Localess space
 - 🛡️ **Type Generation** — Generate TypeScript type definitions from your Localess content schemas for end-to-end type safety
+- 🧬 **Schema Sync** — Define schemas in code and pull, diff, and push them against your Localess space
 
 ---
 
@@ -210,6 +211,45 @@ localess translation pull en --path ./locales/en.json --draft
 
 ---
 
+### `localess translation diff <locale>`
+
+Read-only comparison between a local translations file and your Localess space. Groups keys into `Create`/`Update`/`Stale` sections (color-coded, git-diff style `+`/`~`/`-` symbols); unchanged keys collapse into a single count by default so drift stays visible even with thousands of translations. Exits `1` if anything differs (useful as a CI drift gate), `0` when everything is unchanged. Does not modify anything — use `push` to apply changes.
+
+```bash
+localess translation diff <locale> --path <file> [options]
+```
+
+**Arguments:**
+
+| Argument   | Description                                    |
+|------------|------------------------------------------------|
+| `<locale>` | ISO 639-1 locale code (e.g., `en`, `de`, `fr`) |
+
+**Options:**
+
+| Flag                    | Default      | Description                          |
+|-------------------------|--------------|---------------------------------------|
+| `-p, --path <path>`     | *(required)* | Path to the local translations file  |
+| `-f, --format <format>` | `flat`       | File format: `flat` or `nested`      |
+| `--draft`               | `false`      | Compare against the draft version    |
+| `-a, --all`             | `false`      | Also print unchanged keys            |
+| `-v, --verbose`         | `false`      | Print verbose debug output           |
+
+**Examples:**
+
+```bash
+# Compare a local file against the space (exits 1 on drift)
+localess translation diff en --path ./locales/en.json
+
+# Also list unchanged keys
+localess translation diff en --path ./locales/en.json --all
+
+# CI drift gate
+- run: localess translation diff en --path ./locales/en.json
+```
+
+---
+
 ## TypeScript Type Generation
 
 ### `localess type generate`
@@ -254,6 +294,57 @@ const client = getLocalessClient();
 const content = await client.getContentBySlug<Page>('home', { locale: 'en' });
 // content.data is now fully typed as Page
 ```
+
+---
+
+## Schema Commands
+
+Define Localess schemas in TypeScript with [`@localess/schema`](../schema/SKILL.md) (`defineSchema`/`defineEnum`/`defineConfig`) and sync them bidirectionally with your Localess space. Entry-file convention: a TS/JS file exporting the result of `defineConfig()` — by convention `schemas/index.ts`, but any path works.
+
+> **Prerequisite:** Your API token must have the **Development Tools** permission (`DEV_TOOLS`) — same as `type generate`. No dedicated schema permission exists.
+
+### `localess schema validate <entry>`
+
+Offline — no login, no network call. Runs `@localess/schema`'s `validate()` against the entry's config and prints each issue (`ERROR`/`WARNING`, code, path, message). Exits `1` when any error-severity issue is present; `0` otherwise (warnings alone don't fail).
+
+```bash
+localess schema validate ./schemas/index.ts
+localess schema validate ./schemas/index.ts --format json   # machine-readable, for CI
+```
+
+### `localess schema pull [--path <dir>]`
+
+Fetches the space's schemas and (re)generates one TypeScript definition file per schema plus `index.ts` (a `defineConfig()` call) into `--path` (default `schemas`). Repeatable and safe to re-run — only ever overwrites/deletes files it previously generated (marked with a header comment); hand-written files without that marker are left untouched.
+
+```bash
+localess schema pull
+localess schema pull --path src/schemas
+```
+
+### `localess schema diff <entry>`
+
+Read-only comparison between the entry's code-defined schemas and the space — same grouped/colored report format as `translation diff` (`Create`/`Update`/`Stale` sections, unchanged schemas collapsed into a count by default). Exits `1` if anything differs (CI drift gate), `0` when everything is unchanged.
+
+```bash
+localess schema diff ./schemas/index.ts
+localess schema diff ./schemas/index.ts --all   # also list unchanged schemas
+```
+
+### `localess schema push <entry> [--dry-run] [--delete] [-y|--yes]`
+
+Validates, diffs, then pushes the entry's schemas to the space.
+
+```bash
+localess schema push ./schemas/index.ts --dry-run   # preview only
+localess schema push ./schemas/index.ts             # upsert: create/update, never delete
+localess schema push ./schemas/index.ts --delete    # sync: also delete schemas absent from code
+localess schema push ./schemas/index.ts --delete -y # sync, skip the deletion confirmation prompt
+```
+
+- Aborts (exit `1`) without pushing if `validate()` reports any error.
+- Default mode is **upsert** — creates and updates, never deletes. Schemas on the server but absent from code are reported as `stale` and left alone.
+- `--delete` switches to **sync** mode, which also deletes stale schemas. Without `--yes`, you're asked to confirm the exact list before anything is deleted.
+- Prints the server's final counts: `created`, `updated`, `deleted`, `unchanged`.
 
 ---
 

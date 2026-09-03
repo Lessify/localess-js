@@ -39,6 +39,22 @@ they need through their own public API.
 | `AssetTransformParams` | Optional image-transform query parameters for asset URLs |
 | `Translations` | Key-value map of translation id → translated string |
 
+### Schema wire model
+
+Moved here from `@localess/schema` (ADR 009) — the wire-format types every `SchemaExport` round-trips through.
+
+| Type | Purpose |
+|---|---|
+| `SchemaType` | Schema kind — `'ROOT'` (content type), `'NODE'` (nested component), `'ENUM'` (fixed option set) |
+| `SchemaFieldKind` | Field kind discriminator — the 18 exact backend enum values (`'TEXT'`, `'NUMBER'`, `'ASSET'`, `'SCHEMAS'`, …) |
+| `AssetFileType` | Restriction for `ASSET`/`ASSETS` fields — `'ANY' \| 'IMAGE' \| 'VIDEO' \| 'TEXT' \| 'AUDIO' \| 'APPLICATION'` |
+| `SchemaEnumValue` | A single named value of an `ENUM` schema — `{ name, value }` |
+| `SchemaFieldBase` | Properties every field kind shares — `{ name, kind, displayName?, required?, description?, defaultValue?, translatable? }` |
+| `SchemaField` | Discriminated union of all 18 field-kind interfaces (`SchemaFieldText`, `SchemaFieldNumber`, `SchemaFieldAsset`, `SchemaFieldSchemas`, …), each extending `SchemaFieldBase` — see `@localess/schema`'s field-kind table for per-kind behavior |
+| `SchemaComponentExport` | Wire shape of a `ROOT`/`NODE` schema — `{ id, type, displayName?, description?, labels?, previewField?, fields? }` |
+| `SchemaEnumExport` | Wire shape of an `ENUM` schema — `{ id, type: 'ENUM', displayName?, description?, labels?, values? }` |
+| `SchemaExport` | `SchemaComponentExport \| SchemaEnumExport` — what `@localess/cli`'s `schema pull`/`push` and `@localess/schema`'s `toSchemaExport()` produce/consume |
+
 ## Adding a new shared model
 
 See `packages/model/CONTRIBUTING.md`.

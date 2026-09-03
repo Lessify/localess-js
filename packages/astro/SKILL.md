@@ -48,7 +48,7 @@ To render a nested block directly (e.g. inside a custom component), use `Locales
 
 ```astro
 ---
-import { LocalessComponent } from '@localess/astro';
+import LocalessComponent from '@localess/astro/LocalessComponent.astro';
 ---
 
 {data.body.map(item => <LocalessComponent data={item} links={content.links} references={content.references} />)}

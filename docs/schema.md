@@ -2,7 +2,7 @@
 
 Programmatic schema definitions for the Localess headless CMS, with pure TypeScript type inference of content types — no codegen step.
 
-**Zero production dependencies** — third root package alongside `@localess/client` and `@localess/richtext`. → [ADR 008](decisions/008-schema-package.md)
+**Zero production dependencies beyond `@localess/model`** — one of three root packages (`@localess/model`, `@localess/richtext`, `@localess/schema`) that depend on nothing else; `@localess/client` is a dependent, not a root. → [ADR 008](decisions/008-schema-package.md), [ADR 009](decisions/009-shared-model-package.md)
 
 Defines, validates, infers, and exports schema definitions only — no HTTP client, no CLI knowledge. `@localess/cli`'s `schema pull|push|diff|validate` commands sync definitions written with this package to and from a Localess space; see [docs/cli.md](cli.md).
 
@@ -73,17 +73,17 @@ export type Content = InferContentData<typeof config>;
 | Kind | Extra properties | Inferred type |
 |---|---|---|
 | `TEXT`, `TEXTAREA`, `MARKDOWN`, `COLOR`, `DATE`, `DATETIME` | `minLength?`, `maxLength?` (text kinds only) | `string` |
-| `RICH_TEXT` | `minLength?`, `maxLength?` | `SchemaContentRichText` |
+| `RICH_TEXT` | `minLength?`, `maxLength?` | `ContentRichText` |
 | `NUMBER` | `minValue?`, `maxValue?` | `number` |
 | `BOOLEAN` | — | `boolean` |
 | `OPTION` | `source` (required) | literal union of the referenced enum's values |
 | `OPTIONS` | `source` (required), `minValues?`, `maxValues?` | that union, as an array |
-| `LINK` | — | `SchemaContentLink` |
-| `REFERENCE` / `REFERENCES` | `path?` | `SchemaContentReference` / `[]` |
-| `ASSET` / `ASSETS` | `fileTypes?`, `fileType?` | `SchemaContentAsset` / `[]` |
+| `LINK` | — | `ContentLink` |
+| `REFERENCE` / `REFERENCES` | `path?` | `ContentReference` / `[]` |
+| `ASSET` / `ASSETS` | `fileTypes?`, `fileType?` | `ContentAsset` / `[]` |
 | `SCHEMA` / `SCHEMAS` | `schemas?` (allowed ids/definitions) | allowed schemas' content type(s), or `[]` |
 
-`SchemaContentAsset`, `SchemaContentLink`, `SchemaContentReference`, and `SchemaContentRichText` are structurally identical to `@localess/client`'s equivalents — declared locally so this package stays dependency-free.
+`ContentAsset`, `ContentLink`, `ContentReference`, and `ContentRichText` are re-exported from `@localess/model`, the shared domain-model package (see ADR 009).
 
 ## `validate(config)`
 

@@ -244,10 +244,13 @@ interface Translations { [key: string]: string }
 ```typescript
 export { localessClient }
 export { LocalessApiError }
+export { LocalessNetworkError }
 export { localessEditable, localessEditableField }
 export { loadLocalessSync }
 export { isBrowser, isServer, isIframe }
 export { buildAssetQueryString }
+export { findLink }
+export { Cache, NoCache, TTLCache }
 export type {
   LocalessClient, LocalessClientOptions,
   ContentFetchParams, LinksFetchParams, TranslationFetchParams,
@@ -255,8 +258,8 @@ export type {
   ContentMetadata, ContentAsset, ContentLink,
   ContentRichText, ContentReference,
   Links, References, Translations,
-  LocalessSync, EventToApp, EventCallback, EventToAppType,
-  AssetTransformParams,
+  LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType,
+  AssetTransformParams, ICache,
 }
 ```
 

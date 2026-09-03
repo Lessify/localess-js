@@ -1,6 +1,6 @@
 # @localess/cli Reference
 
-Command-line interface for the Localess headless CMS. Handles authentication, translation sync, and TypeScript type generation.
+Command-line interface for the Localess headless CMS. Handles authentication, translation sync, TypeScript type generation, and schema pull/diff/push.
 
 **Requires:** Node.js >= 24.0.0.
 
@@ -137,6 +137,26 @@ localess translation pull en --path ./locales/en.json
 localess translation pull de --path ./locales/de.json --format nested
 ```
 
+## `localess translation diff`
+
+Read-only comparison between a local translations file and the space — groups keys into `Create`/`Update`/`Stale` sections (color-coded, git-diff style `+`/`~`/`-` symbols); unchanged keys collapse into a count by default. Exits `1` on any drift — use as a CI gate.
+
+```bash
+localess translation diff <locale> --path <file> [options]
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `-p, --path <path>` | required | Path to the local translations file |
+| `-f, --format <format>` | `flat` | File format: `flat` or `nested` |
+| `--draft` | `false` | Compare against the draft version |
+| `-a, --all` | `false` | Also print unchanged keys |
+
+```bash
+localess translation diff en --path ./locales/en.json
+localess translation diff en --path ./locales/en.json --all
+```
+
 ## `localess type generate`
 
 Generate TypeScript type definitions from your Localess space's schemas.
@@ -205,10 +225,11 @@ localess schema pull --path src/schemas
 
 ### `localess schema diff <entry>`
 
-Read-only: prints `create`/`update`/`unchanged`/`stale` per schema. Exits `1` on any drift — use as a CI gate.
+Read-only comparison, same grouped/colored report format as `translation diff` — `Create`/`Update`/`Stale` sections, unchanged schemas collapsed into a count by default. Exits `1` on any drift — use as a CI gate.
 
 ```bash
 localess schema diff ./schemas/index.ts
+localess schema diff ./schemas/index.ts --all   # also list unchanged schemas
 ```
 
 ### `localess schema push <entry> [--dry-run] [--delete] [-y]`
@@ -239,7 +260,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: '24' }
       - run: npm install -g @localess/cli
       - run: localess translation push en --path ./locales/en.json
         env:

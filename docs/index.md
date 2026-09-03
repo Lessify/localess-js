@@ -63,9 +63,9 @@ npx vitest run packages/cli/src/commands/login/login.test.ts  # single file
 ```
 
 Build tools per package:
-- `@localess/model`, `@localess/client`, `@localess/richtext`, `@localess/schema`, `@localess/react`, `@localess/vue`, `@localess/cli`: **Vite library mode** (`vite.config.ts`) → CJS + ESM + types
+- `@localess/model`, `@localess/client`, `@localess/richtext`, `@localess/schema`, `@localess/react`, `@localess/vue`, `@localess/astro`, `@localess/cli`: **Vite library mode** (`vite.config.ts`) → CJS + ESM + types
 - `@localess/svelte`: **`svelte-package`** (ESM-only) for the library surface, gated by a `svelte-check` typecheck step
-- `@localess/angular`: **ng-packagr via Angular CLI** (`ng-package.json`) → `dist/` with main, `browser/`, `server/` sub-entries
+- `@localess/angular`: **ng-packagr via Angular CLI** (`ng-package.json`, single `entryFile: src/public-api.ts`) → `dist/` with a unified entry (`fesm2022/`, `types/`) — no `/browser` or `/server` split
 
 Tests use **vitest** everywhere, including `@localess/angular` (via the Angular CLI's `@angular/build:unit-test` builder with `runner: "vitest"`).
 

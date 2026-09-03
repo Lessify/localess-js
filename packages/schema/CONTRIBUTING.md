@@ -9,7 +9,7 @@ extended by ADR 008 and ADR 009).
 
 | File | Responsibility |
 |---|---|
-| `src/models.ts` | wire model: `SchemaType`, `SchemaFieldKind`, the 18-member `SchemaField` union, `SchemaExport` |
+| `src/models.ts` | `export * from '@localess/model'` — re-export point for the wire model (`SchemaType`, `SchemaFieldKind`, the 18-member `SchemaField` union, `SchemaExport`), which now lives in `@localess/model` (ADR 009), not this package |
 | `src/define.ts` | `defineEnum`, `defineSchema`, `defineConfig` — identity functions with by-value ref normalization |
 | `src/infer.ts` | `InferContentData`, `InferContent`, `InferEnum` — the type-level content inference machinery |
 | `src/validate.ts` | `validate()` — non-throwing authoring-rule checks (patterns, reserved names, length limits, reference resolution) |
@@ -30,17 +30,19 @@ it is expected and not a boundary violation.
 
 ## Wire format fidelity
 
-Every string literal in `models.ts` (`SchemaType`, `SchemaFieldKind`,
-`AssetFileType`) must match the Localess backend's enum values exactly
-(`functions/src/models/schema.model.ts` in the Localess repo) — `defineSchema`
-output is meant to be near-identical to the backend's `SchemaExport`, modulo
-by-value refs. Don't rename or reshape these without checking the backend
-contract and `docs/decisions/008-schema-package.md`.
+Every string literal in `@localess/model`'s `src/schema.ts` (`SchemaType`,
+`SchemaFieldKind`, `AssetFileType`) must match the Localess backend's enum
+values exactly (`functions/src/models/schema.model.ts` in the Localess repo)
+— `defineSchema` output is meant to be near-identical to the backend's
+`SchemaExport`, modulo by-value refs. Don't rename or reshape these without
+checking the backend contract and `docs/decisions/008-schema-package.md`.
 
 ## Adding a field kind
 
-1. Add the interface to `src/models.ts` (extend `SchemaFieldBase`, add to the
-   `SchemaField` union and `SchemaFieldKind` literal union).
+1. Add the interface to `@localess/model`'s `src/schema.ts` (extend
+   `SchemaFieldBase`, add to the `SchemaField` union and `SchemaFieldKind`
+   literal union) — see `packages/model/CONTRIBUTING.md`. This package's own
+   `src/models.ts` only re-exports `@localess/model`; it defines nothing.
 2. If the field has a by-value-ref-capable property (like `source` or
    `schemas`), extend `FieldInputOf` in `src/define.ts`.
 3. Add the `FieldValue` branch in `src/infer.ts` mapping the kind to its

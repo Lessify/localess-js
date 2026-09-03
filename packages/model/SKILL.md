@@ -32,3 +32,17 @@ See `docs/model.md` in the repo (or the type table below) for the full list.
 | `AssetMetadata` | `{ id, name, extension, type, alt? }` |
 | `AssetTransformParams` | `{ w?, h?, q?, f?: 'webp' \| 'jpeg' \| 'png' \| 'avif', download?, thumbnail? }` |
 | `Translations` | `Record<string, string>` |
+
+### Schema wire model (moved from `@localess/schema` — ADR 009)
+
+| Type | Shape |
+|---|---|
+| `SchemaType` | `'ROOT' \| 'NODE' \| 'ENUM'` |
+| `SchemaFieldKind` | `'TEXT' \| 'TEXTAREA' \| 'RICH_TEXT' \| 'MARKDOWN' \| 'NUMBER' \| 'COLOR' \| 'DATE' \| 'DATETIME' \| 'BOOLEAN' \| 'OPTION' \| 'OPTIONS' \| 'LINK' \| 'REFERENCE' \| 'REFERENCES' \| 'ASSET' \| 'ASSETS' \| 'SCHEMA' \| 'SCHEMAS'` |
+| `AssetFileType` | `'ANY' \| 'IMAGE' \| 'VIDEO' \| 'TEXT' \| 'AUDIO' \| 'APPLICATION'` |
+| `SchemaEnumValue` | `{ name: string; value: string }` |
+| `SchemaFieldBase` | `{ name, kind, displayName?, required?, description?, defaultValue?, translatable? }` |
+| `SchemaField` | Union of `SchemaFieldText \| SchemaFieldTextarea \| SchemaFieldRichText \| SchemaFieldMarkdown \| SchemaFieldNumber \| SchemaFieldColor \| SchemaFieldDate \| SchemaFieldDateTime \| SchemaFieldBoolean \| SchemaFieldSchema \| SchemaFieldSchemas \| SchemaFieldOption \| SchemaFieldOptions \| SchemaFieldLink \| SchemaFieldReference \| SchemaFieldReferences \| SchemaFieldAsset \| SchemaFieldAssets` (each extends `SchemaFieldBase`) |
+| `SchemaComponentExport` | `{ id, type: 'ROOT' \| 'NODE', displayName?, description?, labels?, previewField?, fields?: SchemaField[] }` |
+| `SchemaEnumExport` | `{ id, type: 'ENUM', displayName?, description?, labels?, values?: SchemaEnumValue[] }` |
+| `SchemaExport` | `SchemaComponentExport \| SchemaEnumExport` |

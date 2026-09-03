@@ -279,11 +279,14 @@ export { LocalessApiError }
 // Raw client factory (re-exported from @localess/client, for server-only SSR use — see "SSR with Nuxt")
 export { localessClient }
 
-// Types (re-exported from @localess/client + local)
-export type { LocalessClient, LocalessClientOptions }
+// Types (re-exported from @localess/client)
+export type { LocalessClient, LocalessClientOptions, EventToAppOf, EventToAppType }
+
+// Types (local)
 export type { LocalessComponentProps, LocalessDocumentProps, LocalessSchemaProps }
-export type { Content, ContentData, ContentDataSchema, EventToAppOf, EventToAppType }
-export type { Assets, Links, References }
+
+// Types (re-exported from @localess/model)
+export type { Content, ContentData, ContentDataSchema, Assets, Links, References }
 ```
 
 ```typescript

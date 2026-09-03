@@ -23,7 +23,7 @@ const html = renderRichTextToHtml(data.body);
 ```
 
 - Input: `LocalessRichTextInput` — a `doc`, a node, a node array, `null`, or
-  `@localess/client`'s `ContentRichText` (structurally compatible, no cast).
+  `ContentRichText` (re-exported from `@localess/model`, no cast).
 - Output is byte-identical to TipTap's `generateHTML` for the Studio's
   extension set, except link `href`s pass a protocol allowlist
   (`http:`/`https:`/`mailto:`/`tel:`/scheme-less); `javascript:`/`data:`

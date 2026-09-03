@@ -231,6 +231,15 @@ export { LocalessRichText }         // Rich text component (content, renderers?)
 // Error handling (re-exported from @localess/client)
 export { LocalessApiError }
 
-// Types (re-exported from @localess/client)
+// Component prop types (local)
+export type { LocalessComponentProps, LocalessDocumentProps, LocalessSchemaProps, LocalessSvelteInitOptions }
+
+// Client types (re-exported from @localess/client)
+export type { EventToAppOf, EventToAppType, LocalessClient, LocalessClientOptions }
+
+// Domain types (re-exported from @localess/model)
 export type { Assets, Content, ContentData, ContentDataSchema, Links, References }
+
+// Rich text types (re-exported from @localess/richtext)
+export type { LocalessRichTextDocument, LocalessRichTextInput, LocalessRichTextMark, LocalessRichTextNode }
 ```

@@ -1,8 +1,8 @@
 # `@localess/richtext` — Rich Text Model and Renderer
 
 Framework-neutral rich text rendering for Localess's TipTap JSON content.
-**Zero dependencies** — not even `@localess/client`. Browser- and server-safe.
-See `docs/decisions/007-shared-richtext-package.md` for the WHY.
+**Zero dependencies beyond `@localess/model`** — never `@localess/client`. Browser- and server-safe.
+See `docs/decisions/007-shared-richtext-package.md` and [ADR 009](decisions/009-shared-model-package.md) for the WHY.
 
 ## The model
 
@@ -16,8 +16,8 @@ produce today:
 
 Exported types: `LocalessRichTextDocument`, `LocalessRichTextNode`,
 `LocalessRichTextMark`, `LocalessRichTextElement`, and
-`LocalessRichTextInput` — the permissive input union that also structurally
-accepts `@localess/client`'s loose `ContentRichText`, so field values pass
+`LocalessRichTextInput` — the permissive input union that also accepts
+`ContentRichText` (re-exported from `@localess/model`), so field values pass
 without casting.
 
 Unknown node/mark types are **skipped** with a dev-only `console.warn`

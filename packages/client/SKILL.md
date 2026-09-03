@@ -364,6 +364,8 @@ export { localessEditable, localessEditableField } // Visual editor helpers
 export { loadLocalessSync }                        // Sync script injector
 export { isBrowser, isServer, isIframe }           // Environment utilities
 export { buildAssetQueryString }                   // Asset query string serialiser
+export { findLink }                                // Resolves a ContentLink against a Links map
+export { Cache, NoCache, TTLCache }                 // Cache implementations (ICache) backing `cacheTTL`
 export type {
   LocalessClient, LocalessClientOptions,
   ContentFetchParams, LinksFetchParams, TranslationFetchParams,
@@ -372,6 +374,6 @@ export type {
   ContentRichText, ContentReference,
   Links, References, Translations,
   LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType,
-  AssetTransformParams,
+  AssetTransformParams, ICache,
 }
 ```
