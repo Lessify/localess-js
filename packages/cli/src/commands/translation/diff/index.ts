@@ -7,7 +7,7 @@ import { LocalessApiError, TranslationFileFormat, Translations } from '../../../
 import { zLocaleTranslationsSchema } from '../../../models';
 import { getSession } from '../../../session';
 import { nestedObjectToFlat } from '../../../utils';
-import { diffTranslations } from './diff-translations';
+import { diffTranslations } from '../diff-translations';
 
 export type TranslationsDiffOptions = {
   path: string;

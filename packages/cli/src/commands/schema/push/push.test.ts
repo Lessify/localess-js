@@ -86,6 +86,14 @@ describe('schema push', () => {
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
+  it('prints unchanged schemas with --all', async () => {
+    getSchemas.mockResolvedValue([{ id: 'Button', type: 'NODE', fields: [{ name: 'label', kind: 'TEXT' }] }]);
+    await schemaCommand.parseAsync(['push', writeEntry(), '--all'], { from: 'user' });
+
+    const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
+    expect(logs.some(line => line.includes('Unchanged (1)'))).toBe(true);
+  });
+
   it('aborts without pushing when validation fails', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'localess-push-'));
     const entry = join(dir, 'schemas.ts');

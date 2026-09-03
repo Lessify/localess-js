@@ -76,7 +76,7 @@ export LOCALESS_TOKEN=YOUR_API_TOKEN
 
 ## `localess translation push`
 
-Upload a local JSON translation file to Localess.
+Upload a local JSON translation file to Localess. Before applying anything, fetches the remote translations and prints the same grouped/colored diff report as `translation diff`, plus a note on what `--type` will do. `update-existing`/`delete-missing` prompt for confirmation (skippable with `-y`/`--dry-run`, or auto-skipped when there's nothing to do); `add-missing` never prompts.
 
 ```bash
 localess translation push <locale> --path <file> [options]
@@ -87,15 +87,17 @@ localess translation push <locale> --path <file> [options]
 | `-p, --path <path>` | required | Path to the translations JSON file |
 | `-f, --format <format>` | `flat` | File format: `flat` or `nested` |
 | `-t, --type <type>` | `add-missing` | Update strategy (see below) |
-| `--dry-run` | `false` | Preview changes without applying |
+| `--dry-run` | `false` | Preview changes without applying (also skips confirmation) |
+| `-a, --all` | `false` | Also print unchanged keys in the preview |
+| `-y, --yes` | `false` | Skip the confirmation prompt |
 
 ### Update strategies
 
-| Strategy | Behaviour |
-|---|---|
-| `add-missing` | Only adds keys absent from Localess |
-| `update-existing` | Only updates keys already in Localess |
-| `delete-missing` | Deletes Localess keys absent from the local file |
+| Strategy | Behaviour | Confirmation |
+|---|---|---|
+| `add-missing` | Only adds keys absent from Localess | Never |
+| `update-existing` | Only updates keys already in Localess — overwrites edits made in Localess since your last pull | Prompted |
+| `delete-missing` | Deletes Localess keys absent from the local file | Prompted |
 
 ### File formats
 
@@ -232,9 +234,9 @@ localess schema diff ./schemas/index.ts
 localess schema diff ./schemas/index.ts --all   # also list unchanged schemas
 ```
 
-### `localess schema push <entry> [--dry-run] [--delete] [-y]`
+### `localess schema push <entry> [--dry-run] [--delete] [-a] [-y]`
 
-Validates, diffs, then pushes.
+Validates, diffs, then pushes. The pre-push diff uses the same grouped/colored report as `schema diff` (`-a, --all` to also list unchanged schemas).
 
 ```bash
 localess schema push ./schemas/index.ts --dry-run   # preview

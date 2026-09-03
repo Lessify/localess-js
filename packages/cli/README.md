@@ -104,7 +104,7 @@ localess logout
 
 ### `localess translation push <locale>`
 
-Push a local JSON translation file to your Localess space. Only keys present in the file are affected, based on the selected update type.
+Push a local JSON translation file to your Localess space. Only keys present in the file are affected, based on the selected update type. Before applying anything, fetches the remote translations and prints the same grouped/colored diff report as `translation diff`, plus a note on what the selected `--type` will do. `update-existing` and `delete-missing` prompt for confirmation first (skippable with `-y`/`--yes`, or auto-skipped under `--dry-run` or when there's nothing to do); `add-missing` never prompts.
 
 ```bash
 localess translation push <locale> --path <file> [options]
@@ -118,21 +118,23 @@ localess translation push <locale> --path <file> [options]
 
 **Options:**
 
-| Flag                    | Default       | Description                                                            |
-|-------------------------|---------------|------------------------------------------------------------------------|
-| `-p, --path <path>`     | *(required)*  | Path to the JSON translations file                                     |
-| `-f, --format <format>` | `flat`        | File format: `flat` or `nested`                                        |
-| `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing`, `update-existing`, or `delete-missing` |
-| `--dry-run`             | `false`       | Preview changes without applying them                                  |
-| `-v, --verbose`         | `false`       | Print verbose debug output                                             |
+| Flag                    | Default       | Description                                                              |
+|-------------------------|---------------|-----------------------------------------------------------------------------|
+| `-p, --path <path>`     | *(required)*  | Path to the JSON translations file                                        |
+| `-f, --format <format>` | `flat`        | File format: `flat` or `nested`                                           |
+| `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing`, `update-existing`, or `delete-missing`    |
+| `--dry-run`             | `false`       | Preview changes without applying them (also skips the confirmation prompt) |
+| `-a, --all`             | `false`       | Also print unchanged keys in the preview                                  |
+| `-y, --yes`             | `false`       | Skip the confirmation prompt for `update-existing`/`delete-missing`       |
+| `-v, --verbose`         | `false`       | Print verbose debug output                                                |
 
 **Update Strategies:**
 
-| Type              | Description                                                                   |
-|-------------------|-------------------------------------------------------------------------------|
-| `add-missing`     | Adds translations for keys that do not yet exist in Localess                  |
-| `update-existing` | Updates translations for keys that already exist in Localess                  |
-| `delete-missing`  | Deletes translations in Localess for keys that are absent from the local file |
+| Type              | Description                                                                   | Confirmation                                            |
+|-------------------|--------------------------------------------------------------------------------|----------------------------------------------------------|
+| `add-missing`     | Adds translations for keys that do not yet exist in Localess                  | Never — safe for unattended CI                            |
+| `update-existing` | Updates translations for keys that already exist in Localess — **overwrites any edits made in Localess since your last pull** | Prompted (unless `-y`/`--dry-run`, or nothing differs)    |
+| `delete-missing`  | Deletes translations in Localess for keys that are absent from the local file | Prompted (unless `-y`/`--dry-run`, or nothing is stale)   |
 
 **File Formats:**
 
@@ -158,10 +160,13 @@ localess translation push <locale> --path <file> [options]
 # Push English translations (add missing keys only)
 localess translation push en --path ./locales/en.json
 
-# Push with update-existing strategy
+# Push with update-existing strategy (prompts for confirmation)
 localess translation push en --path ./locales/en.json --type update-existing
 
-# Delete keys in Localess absent from the local file
+# Same, but skip the confirmation prompt (e.g. scripted/CI use)
+localess translation push en --path ./locales/en.json --type update-existing --yes
+
+# Delete keys in Localess absent from the local file (prompts for confirmation)
 localess translation push en --path ./locales/en.json --type delete-missing
 
 # Preview changes without applying (dry run)
@@ -330,9 +335,9 @@ localess schema diff ./schemas/index.ts
 localess schema diff ./schemas/index.ts --all   # also list unchanged schemas
 ```
 
-### `localess schema push <entry> [--dry-run] [--delete] [-y|--yes]`
+### `localess schema push <entry> [--dry-run] [--delete] [-a|--all] [-y|--yes]`
 
-Validates, diffs, then pushes the entry's schemas to the space.
+Validates, diffs, then pushes the entry's schemas to the space. The pre-push diff uses the same grouped/colored report as `schema diff` (`-a, --all` to also list unchanged schemas).
 
 ```bash
 localess schema push ./schemas/index.ts --dry-run   # preview only
