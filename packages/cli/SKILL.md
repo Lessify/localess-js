@@ -96,12 +96,14 @@ Recommended for **CI/CD pipelines** — no `localess login` step needed.
 
 ## Translations
 
+> `localess translation` was previously named `localess translations` (and `localess type` was `localess types`). The old plural names still work as aliases, but new scripts should use the singular form.
+
 ### Push Translations
 
 Upload a local JSON translation file to Localess.
 
 ```bash
-localess translations push <locale> --path <file> [options]
+localess translation push <locale> --path <file> [options]
 ```
 
 **Arguments:**
@@ -151,19 +153,19 @@ localess translations push <locale> --path <file> [options]
 
 ```bash
 # Basic push — add missing translations only
-localess translations push en --path ./locales/en.json
+localess translation push en --path ./locales/en.json
 
 # Update existing translations (don't add new)
-localess translations push de --path ./locales/de.json --type update-existing
+localess translation push de --path ./locales/de.json --type update-existing
 
 # Delete keys in Localess absent from the local file
-localess translations push de --path ./locales/de.json --type delete-missing
+localess translation push de --path ./locales/de.json --type delete-missing
 
 # Preview changes without applying
-localess translations push fr --path ./locales/fr.json --dry-run
+localess translation push fr --path ./locales/fr.json --dry-run
 
 # Push nested-format translations
-localess translations push de --path ./locales/de.json --format nested
+localess translation push de --path ./locales/de.json --format nested
 ```
 
 ---
@@ -173,7 +175,7 @@ localess translations push de --path ./locales/de.json --format nested
 Download translations from Localess to a local JSON file.
 
 ```bash
-localess translations pull <locale> --path <file> [options]
+localess translation pull <locale> --path <file> [options]
 ```
 
 **Arguments:**
@@ -195,13 +197,13 @@ localess translations pull <locale> --path <file> [options]
 
 ```bash
 # Pull as flat JSON
-localess translations pull en --path ./locales/en.json
+localess translation pull en --path ./locales/en.json
 
 # Pull as nested JSON
-localess translations pull de --path ./locales/de.json --format nested
+localess translation pull de --path ./locales/de.json --format nested
 
 # Pull draft (unpublished) translations
-localess translations pull en --path ./locales/en.json --draft
+localess translation pull en --path ./locales/en.json --draft
 ```
 
 ---
@@ -211,7 +213,7 @@ localess translations pull en --path ./locales/en.json --draft
 Read-only comparison between a local translations file and the space — groups keys into `Create`/`Update`/`Stale` sections (color-coded, git-diff style `+`/`~`/`-` symbols). `unchanged` keys are collapsed into a single count by default (`--all` to list them) so drift stays visible even with thousands of translations. Exits `1` if anything differs (CI drift gate), `0` when everything is `unchanged`. Does not modify `push`'s behavior; use `push` to apply changes.
 
 ```bash
-localess translations diff <locale> --path <file> [options]
+localess translation diff <locale> --path <file> [options]
 ```
 
 **Arguments:**
@@ -234,16 +236,16 @@ localess translations diff <locale> --path <file> [options]
 
 ```bash
 # Compare a local file against the space (exits 1 on drift)
-localess translations diff en --path ./locales/en.json
+localess translation diff en --path ./locales/en.json
 
 # Compare against draft translations
-localess translations diff en --path ./locales/en.json --draft
+localess translation diff en --path ./locales/en.json --draft
 
 # Also list unchanged keys
-localess translations diff en --path ./locales/en.json --all
+localess translation diff en --path ./locales/en.json --all
 
 # CI drift gate
-- run: localess translations diff en --path ./locales/en.json
+- run: localess translation diff en --path ./locales/en.json
 ```
 
 **Sample output** (2000 translations, 11 changed):
@@ -273,7 +275,7 @@ Stale (4)
 Generate TypeScript type definitions from your Localess space's schemas.
 
 ```bash
-localess types generate [--path <output>] [--prefix <prefix>]
+localess type generate [--path <output>] [--prefix <prefix>]
 ```
 
 **Options:**
@@ -294,13 +296,13 @@ localess types generate [--path <output>] [--prefix <prefix>]
 
 ```bash
 # Default output to .localess/localess.d.ts
-localess types generate
+localess type generate
 
 # Custom output path
-localess types generate --path src/types/localess.d.ts
+localess type generate --path src/types/localess.d.ts
 
 # Prefix all generated type names to avoid collisions with other type names
-localess types generate --prefix Localess
+localess type generate --prefix Localess
 ```
 
 **Generated output:**
@@ -431,7 +433,7 @@ jobs:
         with:
           node-version: '24'
       - run: npm install -g @localess/cli
-      - run: localess translations push en --path ./locales/en.json
+      - run: localess translation push en --path ./locales/en.json
         env:
           LOCALESS_ORIGIN: ${{ secrets.LOCALESS_ORIGIN }}
           LOCALESS_SPACE: ${{ secrets.LOCALESS_SPACE_ID }}
@@ -441,7 +443,7 @@ jobs:
 ### Pull Translations in CI
 
 ```yaml
-      - run: localess translations pull en --path ./locales/en.json
+      - run: localess translation pull en --path ./locales/en.json
         env:
           LOCALESS_ORIGIN: ${{ secrets.LOCALESS_ORIGIN }}
           LOCALESS_SPACE: ${{ secrets.LOCALESS_SPACE_ID }}
@@ -452,7 +454,7 @@ jobs:
 ### Generate Types in CI
 
 ```yaml
-      - run: localess types generate --path src/types/localess.d.ts
+      - run: localess type generate --path src/types/localess.d.ts
         env:
           LOCALESS_ORIGIN: ${{ secrets.LOCALESS_ORIGIN }}
           LOCALESS_SPACE: ${{ secrets.LOCALESS_SPACE_ID }}
@@ -468,16 +470,16 @@ jobs:
 localess login
 
 # 2. Pull latest translations
-localess translations pull en --path ./locales/en.json
+localess translation pull en --path ./locales/en.json
 
 # 3. Edit translations locally...
 
 # 4. Push back (dry-run first)
-localess translations push en --path ./locales/en.json --dry-run
-localess translations push en --path ./locales/en.json
+localess translation push en --path ./locales/en.json --dry-run
+localess translation push en --path ./locales/en.json
 
 # 5. Generate types after schema changes in Localess
-localess types generate
+localess type generate
 ```
 
 ---
@@ -504,7 +506,7 @@ If you want to commit generated types while still ignoring credentials, you can 
 | File                         | Created by                | Permissions          | Purpose                    |
 |------------------------------|---------------------------|----------------------|----------------------------|
 | `.localess/credentials.json` | `localess login`          | `0o600` (owner only) | Persisted auth credentials |
-| `.localess/localess.d.ts`    | `localess types generate` | Standard             | Generated TypeScript types |
+| `.localess/localess.d.ts`    | `localess type generate` | Standard             | Generated TypeScript types |
 
 ---
 

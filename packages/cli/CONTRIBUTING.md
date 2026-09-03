@@ -10,9 +10,9 @@ CLI tool built with Commander.js. Entry point: `src/index.ts`. All commands live
 
 Command-specific business-logic utilities (diffing, loading, emitting — not the client/model/schema import boundary above) are placed by consumer count, checked at the point a new subcommand needs one:
 
-1. **Subcommand-local** — used by exactly one subcommand: lives inside that subcommand's own folder, `commands/<group>/<subcommand>/<name>.ts` (+ co-located `<name>.test.ts`). E.g. `commands/schema/pull/emitter.ts`, `commands/types/generate/generator.ts`, `commands/translations/diff/diff-translations.ts`.
+1. **Subcommand-local** — used by exactly one subcommand: lives inside that subcommand's own folder, `commands/<group>/<subcommand>/<name>.ts` (+ co-located `<name>.test.ts`). E.g. `commands/schema/pull/emitter.ts`, `commands/type/generate/generator.ts`, `commands/translation/diff/diff-translations.ts`.
 2. **Group-shared** — used by 2+ subcommands within the same command group: lives directly in the group folder, sibling to the subcommand folders, `commands/<group>/<name>.ts`. E.g. `commands/schema/diff-schemas.ts`, `loader.ts`, `schema-lib.ts` (shared by `diff/`, `push/`, and/or `validate/`).
-3. **Package-shared** — used across 2+ command groups, or cross-cutting infra: stays at `src/` root (`utils.ts`, `file.ts`, `session.ts`, `client.ts`, `models/`). This tier is also where the `@localess/client`/`@localess/model`/`@localess/schema` import-boundary files live (see above) — no change to that rule. E.g. `diff-report.ts` (the grouped/colored diff printer shared by `translations diff` and `schema diff`).
+3. **Package-shared** — used across 2+ command groups, or cross-cutting infra: stays at `src/` root (`utils.ts`, `file.ts`, `session.ts`, `client.ts`, `models/`). This tier is also where the `@localess/client`/`@localess/model`/`@localess/schema` import-boundary files live (see above) — no change to that rule. E.g. `diff-report.ts` (the grouped/colored diff printer shared by `translation diff` and `schema diff`).
 
 Don't import a sibling subcommand's local utility across folders — promote it to the group folder first. If a group-shared utility later gains a consumer in another group, promote it again to `src/` root.
 
@@ -38,7 +38,7 @@ Don't import a sibling subcommand's local utility across folders — promote it 
 
 ### Adding a schema subcommand
 
-Follow "Adding a Subcommand" below, but register on `schemaCommand` in `src/commands/schema/index.ts` instead of a translations-style parent. Reuse `loadSchemaConfig`/`schema-lib`'s `validate`/`toSchemaExport` and `diffSchemas` rather than re-implementing config loading or diffing.
+Follow "Adding a Subcommand" below, but register on `schemaCommand` in `src/commands/schema/index.ts` instead of a translation-style parent. Reuse `loadSchemaConfig`/`schema-lib`'s `validate`/`toSchemaExport` and `diffSchemas` rather than re-implementing config loading or diffing.
 
 ### Commander gotcha: testing a subcommand directly vs. through its parent
 
@@ -50,7 +50,7 @@ Follow "Adding a Subcommand" below, but register on `schemaCommand` in `src/comm
 // module" error from deep inside jiti (the actual entry path was silently discarded).
 await schemaValidateCommand.parseAsync(['validate', entry], { from: 'user' });
 
-// RIGHT — drive the parent, exactly like `types.test.ts` does with `typesCommand`.
+// RIGHT — drive the parent, exactly like `type.test.ts` does with `typeCommand`.
 await schemaCommand.parseAsync(['validate', entry], { from: 'user' });
 ```
 
@@ -109,9 +109,9 @@ program.addCommand(myCommand);
 
 ## Adding a Subcommand
 
-Group related operations under a parent command (e.g. `translations push`, `translations pull`). Subcommand-only helper functions go inside the subcommand's own folder alongside `index.ts`; see "Utility Placement" above before reaching into a sibling subcommand's file.
+Group related operations under a parent command (e.g. `translation push`, `translation pull`). Subcommand-only helper functions go inside the subcommand's own folder alongside `index.ts`; see "Utility Placement" above before reaching into a sibling subcommand's file.
 
-**1. Create the subcommand folder, e.g. `src/commands/translations/my-sub/index.ts`:**
+**1. Create the subcommand folder, e.g. `src/commands/translation/my-sub/index.ts`:**
 
 ```typescript
 import { Command } from 'commander';
@@ -121,7 +121,7 @@ type MySubOptions = {
   path: string;
 };
 
-export const translationsMySubCommand = new Command('my-sub')
+export const translationMySubCommand = new Command('my-sub')
   .description('Short description')
   .requiredOption('-p, --path <path>', 'Path to the file')
   .action(async (options: MySubOptions) => {
@@ -134,17 +134,20 @@ export const translationsMySubCommand = new Command('my-sub')
   });
 ```
 
-**2. Register on the parent command in `src/commands/translations/index.ts`:**
+**2. Register on the parent command in `src/commands/translation/index.ts`:**
 
 ```typescript
-import { translationsMySubCommand } from './my-sub';
+import { translationMySubCommand } from './my-sub';
 
-export const translationsCommand = new Command('translations')
+export const translationCommand = new Command('translation')
+  .alias('translations')
   .description('Manage translations')
-  .addCommand(translationsPushCommand)
-  .addCommand(translationsPullCommand)
-  .addCommand(translationsMySubCommand); // add here
+  .addCommand(translationPushCommand)
+  .addCommand(translationPullCommand)
+  .addCommand(translationMySubCommand); // add here
 ```
+
+New top-level command groups (parent commands with no existing collection to join) should use a singular noun, matching `schema`/`translation`/`type` — see "Adding a New Top-Level Command" above.
 
 ## Testing
 

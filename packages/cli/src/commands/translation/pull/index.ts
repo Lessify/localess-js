@@ -13,7 +13,7 @@ export type TranslationsPullOptions = {
   verbose?: boolean;
 };
 
-export const translationsPullCommand = new Command('pull')
+export const translationPullCommand = new Command('pull')
   .argument('<locale>', 'Locale to pull')
   .description('Pull locale translations from Localess')
   .requiredOption('-p, --path <path>', 'Path where the translations file will be saved')

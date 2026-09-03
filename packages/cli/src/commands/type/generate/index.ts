@@ -17,7 +17,7 @@ type TypesOptions = {
   verbose?: boolean;
 };
 
-export const typesGenerateCommand = new Command('generate')
+export const typeGenerateCommand = new Command('generate')
   .description('Generate types for your schemas')
   .option('-p, --path <path>', 'Path to the file where to save the generated types. Default is .localess/localess.d.ts', TYPES_PATH)
   .option('--prefix <prefix>', 'Prefix to prepend to all generated type names', '')

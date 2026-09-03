@@ -17,7 +17,7 @@ export type TranslationsDiffOptions = {
   verbose?: boolean;
 };
 
-export const translationsDiffCommand = new Command('diff')
+export const translationDiffCommand = new Command('diff')
   .argument('<locale>', 'Locale to diff')
   .description('Compare a local translations file with your Localess space (exit 1 on drift)')
   .requiredOption('-p, --path <path>', 'Path to the translations file to compare')

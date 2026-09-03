@@ -19,7 +19,7 @@ vi.mock('../../session', () => ({
 import { localessCliClient } from '../../client';
 import { writeFile } from '../../file';
 import { getSession } from '../../session';
-import { typesCommand } from './index';
+import { typeCommand } from './index';
 
 describe('types command', () => {
   beforeEach(() => {
@@ -33,7 +33,7 @@ describe('types command', () => {
       throw new Error('exit');
     });
 
-    await expect(typesCommand.parseAsync(['generate'], { from: 'user' })).rejects.toThrow('exit');
+    await expect(typeCommand.parseAsync(['generate'], { from: 'user' })).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Not logged in');
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -51,7 +51,7 @@ describe('types command', () => {
     const getSchemas = vi.fn().mockResolvedValue([]);
     vi.mocked(localessCliClient).mockReturnValue({ getSchemas } as unknown as ReturnType<typeof localessCliClient>);
 
-    await typesCommand.parseAsync(['generate', '--verbose'], { from: 'user' });
+    await typeCommand.parseAsync(['generate', '--verbose'], { from: 'user' });
 
     expect(localessCliClient).toHaveBeenCalledWith({
       origin: 'https://cms.example.com',
@@ -75,7 +75,7 @@ describe('types command', () => {
       throw new Error('exit');
     });
 
-    await expect(typesCommand.parseAsync(['generate'], { from: 'user' })).rejects.toThrow('exit');
+    await expect(typeCommand.parseAsync(['generate'], { from: 'user' })).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Failed to generate types:', expect.any(Error));
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -92,7 +92,7 @@ describe('types command', () => {
     const getSchemas = vi.fn().mockResolvedValue([]);
     vi.mocked(localessCliClient).mockReturnValue({ getSchemas } as unknown as ReturnType<typeof localessCliClient>);
 
-    await typesCommand.parseAsync(['generate', '-p', 'generated/localess.ts'], { from: 'user' });
+    await typeCommand.parseAsync(['generate', '-p', 'generated/localess.ts'], { from: 'user' });
 
     expect(localessCliClient).toHaveBeenCalledWith({ origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' });
     expect(getSchemas).toHaveBeenCalled();
@@ -109,7 +109,7 @@ describe('types command', () => {
     const getSchemas = vi.fn().mockResolvedValue([]);
     vi.mocked(localessCliClient).mockReturnValue({ getSchemas } as unknown as ReturnType<typeof localessCliClient>);
 
-    await typesCommand.parseAsync(['generate'], { from: 'user' });
+    await typeCommand.parseAsync(['generate'], { from: 'user' });
 
     expect(writeFile).toHaveBeenCalledWith(expect.stringContaining(join('.localess', 'localess.d.ts')), expect.any(String));
   });

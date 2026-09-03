@@ -15,7 +15,7 @@ export type TranslationsPushOptions = {
   verbose?: boolean;
 };
 
-export const translationsPushCommand = new Command('push')
+export const translationPushCommand = new Command('push')
   .argument('<locale>', 'Locale to push')
   .description('Push locale translations to Localess')
   .requiredOption('-p, --path <path>', 'Path to the translations file to push')

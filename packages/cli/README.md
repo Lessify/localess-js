@@ -74,7 +74,7 @@ export LOCALESS_ORIGIN=https://my-localess.web.app
 export LOCALESS_SPACE=MY_SPACE_ID
 export LOCALESS_TOKEN=MY_API_TOKEN
 
-localess translations pull en --path ./public/locales/en.json
+localess translation pull en --path ./public/locales/en.json
 ```
 
 | Variable          | Description           |
@@ -99,12 +99,14 @@ localess logout
 
 ## Translations Management
 
-### `localess translations push <locale>`
+> `localess translation` was previously `localess translations`, and `localess type` was `localess types`. The old plural names still work as aliases for backward compatibility.
+
+### `localess translation push <locale>`
 
 Push a local JSON translation file to your Localess space. Only keys present in the file are affected, based on the selected update type.
 
 ```bash
-localess translations push <locale> --path <file> [options]
+localess translation push <locale> --path <file> [options]
 ```
 
 **Arguments:**
@@ -153,29 +155,29 @@ localess translations push <locale> --path <file> [options]
 
 ```bash
 # Push English translations (add missing keys only)
-localess translations push en --path ./locales/en.json
+localess translation push en --path ./locales/en.json
 
 # Push with update-existing strategy
-localess translations push en --path ./locales/en.json --type update-existing
+localess translation push en --path ./locales/en.json --type update-existing
 
 # Delete keys in Localess absent from the local file
-localess translations push en --path ./locales/en.json --type delete-missing
+localess translation push en --path ./locales/en.json --type delete-missing
 
 # Preview changes without applying (dry run)
-localess translations push en --path ./locales/en.json --dry-run
+localess translation push en --path ./locales/en.json --dry-run
 
 # Push nested-format translations
-localess translations push de --path ./locales/de.json --format nested
+localess translation push de --path ./locales/de.json --format nested
 ```
 
 ---
 
-### `localess translations pull <locale>`
+### `localess translation pull <locale>`
 
 Pull translations from your Localess space and save them to a local file.
 
 ```bash
-localess translations pull <locale> --path <file> [options]
+localess translation pull <locale> --path <file> [options]
 ```
 
 **Arguments:**
@@ -197,25 +199,25 @@ localess translations pull <locale> --path <file> [options]
 
 ```bash
 # Pull English translations as flat JSON
-localess translations pull en --path ./locales/en.json
+localess translation pull en --path ./locales/en.json
 
 # Pull German translations as nested JSON
-localess translations pull de --path ./locales/de.json --format nested
+localess translation pull de --path ./locales/de.json --format nested
 
 # Pull draft (unpublished) translations
-localess translations pull en --path ./locales/en.json --draft
+localess translation pull en --path ./locales/en.json --draft
 ```
 
 ---
 
 ## TypeScript Type Generation
 
-### `localess types generate`
+### `localess type generate`
 
 Fetch your space's schema definitions from Localess and generate TypeScript type definitions. The output file provides full type safety when working with Localess content in your TypeScript projects.
 
 ```bash
-localess types generate [--path <output_path>]
+localess type generate [--path <output_path>]
 ```
 
 **Options:**
@@ -232,13 +234,13 @@ localess types generate [--path <output_path>]
 
 ```bash
 # Generate types to the default location
-localess types generate
+localess type generate
 
 # Generate types to a custom path
-localess types generate --path src/types/localess.d.ts
+localess type generate --path src/types/localess.d.ts
 
 # Prefix all generated type names (e.g. PascalCase namespacing to avoid collisions)
-localess types generate --prefix Localess
+localess type generate --prefix Localess
 # produces `LocalessPage`, `LocalessHeroBlock`, `LocalessContentAsset`, etc.
 ```
 
@@ -260,7 +262,7 @@ const content = await client.getContentBySlug<Page>('home', { locale: 'en' });
 | File                         | Description                                                             |
 |------------------------------|-------------------------------------------------------------------------|
 | `.localess/credentials.json` | Stored login credentials (created by `localess login`)                  |
-| `.localess/localess.d.ts`    | Generated TypeScript definitions (created by `localess types generate`) |
+| `.localess/localess.d.ts`    | Generated TypeScript definitions (created by `localess type generate`) |
 
 > It is recommended to add `.localess/credentials.json` to your `.gitignore` to avoid committing sensitive credentials.
 

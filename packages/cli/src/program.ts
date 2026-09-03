@@ -4,8 +4,8 @@ import { version } from '../package.json';
 import { loginCommand } from './commands/login';
 import { logoutCommand } from './commands/logout';
 import { schemaCommand } from './commands/schema';
-import { translationsCommand } from './commands/translations';
-import { typesCommand } from './commands/types';
+import { translationCommand } from './commands/translation';
+import { typeCommand } from './commands/type';
 import { checkForUpdate } from './version-check';
 
 export const program = new Command();
@@ -26,5 +26,5 @@ program.hook('postAction', async () => {
 program.addCommand(loginCommand);
 program.addCommand(logoutCommand);
 program.addCommand(schemaCommand);
-program.addCommand(translationsCommand);
-program.addCommand(typesCommand);
+program.addCommand(translationCommand);
+program.addCommand(typeCommand);

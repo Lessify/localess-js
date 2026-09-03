@@ -57,7 +57,7 @@ generated file to go stale. This is the Storyblok `@storyblok/schema` model
 (and explicitly not Sanity's, whose `defineType` never infers document shapes
 — content typing requires their separate `sanity typegen` GROQ-query
 pipeline, which has no Localess equivalent since content types here are
-solely schema-shaped). The existing `localess types generate` codegen command
+solely schema-shaped). The existing `localess type generate` codegen command
 is **retained unchanged** for consumers who don't adopt code-first schemas;
 both paths agree on the field-kind → TS-type mapping table.
 

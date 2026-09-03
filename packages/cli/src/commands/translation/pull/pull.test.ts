@@ -13,9 +13,9 @@ vi.mock('../../../session', () => ({
 import { localessCliClient } from '../../../client';
 import { writeFile } from '../../../file';
 import { getSession } from '../../../session';
-import { translationsPullCommand } from './index';
+import { translationPullCommand } from './index';
 
-describe('translationsPullCommand', () => {
+describe('translationPullCommand', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -27,7 +27,7 @@ describe('translationsPullCommand', () => {
     });
 
     await expect(
-      translationsPullCommand.parseAsync(['en', '-p', 'translations.json', '-f', 'not-a-real-format'], { from: 'user' })
+      translationPullCommand.parseAsync(['en', '-p', 'translations.json', '-f', 'not-a-real-format'], { from: 'user' })
     ).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Invalid format provided. Possible values are :', expect.any(Array));
@@ -42,7 +42,7 @@ describe('translationsPullCommand', () => {
       throw new Error('exit');
     });
 
-    await expect(translationsPullCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
+    await expect(translationPullCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Not logged in');
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -63,7 +63,7 @@ describe('translationsPullCommand', () => {
       throw new Error('exit');
     });
 
-    await expect(translationsPullCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
+    await expect(translationPullCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Failed to pull translations from Localess:', expect.any(Error));
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -80,7 +80,7 @@ describe('translationsPullCommand', () => {
     const getTranslations = vi.fn().mockResolvedValue({ 'nav.home': 'Home', 'nav.about': 'About' });
     vi.mocked(localessCliClient).mockReturnValue({ getTranslations } as unknown as ReturnType<typeof localessCliClient>);
 
-    await translationsPullCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' });
+    await translationPullCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' });
 
     expect(localessCliClient).toHaveBeenCalledWith({ origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' });
     expect(getTranslations).toHaveBeenCalledWith('en', { version: undefined });
@@ -97,7 +97,7 @@ describe('translationsPullCommand', () => {
     const getTranslations = vi.fn().mockResolvedValue({ 'nav.home': 'Home' });
     vi.mocked(localessCliClient).mockReturnValue({ getTranslations } as unknown as ReturnType<typeof localessCliClient>);
 
-    await translationsPullCommand.parseAsync(['en', '-p', 'translations.json', '-f', 'nested'], { from: 'user' });
+    await translationPullCommand.parseAsync(['en', '-p', 'translations.json', '-f', 'nested'], { from: 'user' });
 
     expect(writeFile).toHaveBeenCalledWith('translations.json', JSON.stringify({ nav: { home: 'Home' } }, null, 2));
   });
@@ -112,7 +112,7 @@ describe('translationsPullCommand', () => {
     const getTranslations = vi.fn().mockResolvedValue({});
     vi.mocked(localessCliClient).mockReturnValue({ getTranslations } as unknown as ReturnType<typeof localessCliClient>);
 
-    await translationsPullCommand.parseAsync(['en', '-p', 'translations.json', '--verbose'], { from: 'user' });
+    await translationPullCommand.parseAsync(['en', '-p', 'translations.json', '--verbose'], { from: 'user' });
 
     expect(localessCliClient).toHaveBeenCalledWith({
       origin: 'https://cms.example.com',
@@ -132,7 +132,7 @@ describe('translationsPullCommand', () => {
     const getTranslations = vi.fn().mockResolvedValue({});
     vi.mocked(localessCliClient).mockReturnValue({ getTranslations } as unknown as ReturnType<typeof localessCliClient>);
 
-    await translationsPullCommand.parseAsync(['en', '-p', 'translations.json', '--draft'], { from: 'user' });
+    await translationPullCommand.parseAsync(['en', '-p', 'translations.json', '--draft'], { from: 'user' });
 
     expect(getTranslations).toHaveBeenCalledWith('en', { version: 'draft' });
   });

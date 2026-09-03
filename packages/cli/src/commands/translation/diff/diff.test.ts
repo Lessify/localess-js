@@ -8,7 +8,7 @@ vi.mock('../../../session', () => ({
 }));
 
 import { readFile } from '../../../file';
-import { translationsCommand } from '../index';
+import { translationCommand } from '../index';
 
 describe('translations diff', () => {
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('translations diff', () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
     getTranslations.mockResolvedValue({ 'nav.home': 'Home' });
 
-    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
+    await translationCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
 
     expect(process.exit).not.toHaveBeenCalledWith(1);
   });
@@ -33,7 +33,7 @@ describe('translations diff', () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home page' }));
     getTranslations.mockResolvedValue({ 'nav.home': 'Home' });
 
-    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
+    await translationCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
 
     expect(process.exit).toHaveBeenCalledWith(1);
   });
@@ -42,7 +42,7 @@ describe('translations diff', () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
     getTranslations.mockResolvedValue({ 'nav.home': 'Home', 'nav.stale': 'Stale' });
 
-    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
+    await translationCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
 
     expect(process.exit).toHaveBeenCalledWith(1);
   });
@@ -51,7 +51,7 @@ describe('translations diff', () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ nav: { home: 'Home' } }));
     getTranslations.mockResolvedValue({ 'nav.home': 'Home' });
 
-    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json', '-f', 'nested'], { from: 'user' });
+    await translationCommand.parseAsync(['diff', 'en', '-p', 'translations.json', '-f', 'nested'], { from: 'user' });
 
     expect(process.exit).not.toHaveBeenCalledWith(1);
   });
@@ -60,7 +60,7 @@ describe('translations diff', () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 123 }));
     getTranslations.mockResolvedValue({});
 
-    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
+    await translationCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
 
     expect(console.error).toHaveBeenCalledWith('Invalid translations file format:', expect.anything());
     expect(process.exit).toHaveBeenCalledWith(1);
@@ -70,7 +70,7 @@ describe('translations diff', () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
     getTranslations.mockResolvedValue({ 'nav.home': 'Home' });
 
-    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json', '--draft'], { from: 'user' });
+    await translationCommand.parseAsync(['diff', 'en', '-p', 'translations.json', '--draft'], { from: 'user' });
 
     expect(getTranslations).toHaveBeenCalledWith('en', { version: 'draft' });
   });
@@ -79,7 +79,7 @@ describe('translations diff', () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
     getTranslations.mockRejectedValue(new Error('network down'));
 
-    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
+    await translationCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
 
     expect(console.error).toHaveBeenCalledWith('Failed to diff translations:', expect.any(Error));
     expect(process.exit).toHaveBeenCalledWith(1);
@@ -89,7 +89,7 @@ describe('translations diff', () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'new.key': 'New', 'changed.key': 'Changed', 'same.key': 'Same' }));
     getTranslations.mockResolvedValue({ 'changed.key': 'Old', 'same.key': 'Same', 'stale.key': 'Stale' });
 
-    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
+    await translationCommand.parseAsync(['diff', 'en', '-p', 'translations.json'], { from: 'user' });
 
     const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
     expect(logs.some(line => line.includes('Create (1)'))).toBe(true);
@@ -107,7 +107,7 @@ describe('translations diff', () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'same.key': 'Same' }));
     getTranslations.mockResolvedValue({ 'same.key': 'Same' });
 
-    await translationsCommand.parseAsync(['diff', 'en', '-p', 'translations.json', '--all'], { from: 'user' });
+    await translationCommand.parseAsync(['diff', 'en', '-p', 'translations.json', '--all'], { from: 'user' });
 
     const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
     expect(logs.some(line => line.includes('Unchanged (1)'))).toBe(true);

@@ -13,9 +13,9 @@ vi.mock('../../../session', () => ({
 import { localessCliClient } from '../../../client';
 import { readFile } from '../../../file';
 import { getSession } from '../../../session';
-import { translationsPushCommand } from './index';
+import { translationPushCommand } from './index';
 
-describe('translationsPushCommand', () => {
+describe('translationPushCommand', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -27,7 +27,7 @@ describe('translationsPushCommand', () => {
     });
 
     await expect(
-      translationsPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'not-a-real-type'], { from: 'user' })
+      translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'not-a-real-type'], { from: 'user' })
     ).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Invalid type provided. Possible values are :', expect.any(Array));
@@ -42,7 +42,7 @@ describe('translationsPushCommand', () => {
       throw new Error('exit');
     });
 
-    await expect(translationsPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
+    await expect(translationPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Not logged in');
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -60,7 +60,7 @@ describe('translationsPushCommand', () => {
     const updateTranslations = vi.fn().mockResolvedValue({ message: 'Updated 1 translation', ids: ['1'] });
     vi.mocked(localessCliClient).mockReturnValue({ updateTranslations } as unknown as ReturnType<typeof localessCliClient>);
 
-    await translationsPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' });
+    await translationPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' });
 
     expect(localessCliClient).toHaveBeenCalledWith({ origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' });
     expect(updateTranslations).toHaveBeenCalledWith('en', 'add-missing', { 'nav.home': 'Home' }, undefined);
@@ -77,7 +77,7 @@ describe('translationsPushCommand', () => {
     const updateTranslations = vi.fn().mockResolvedValue({ message: 'Updated 1 translation' });
     vi.mocked(localessCliClient).mockReturnValue({ updateTranslations } as unknown as ReturnType<typeof localessCliClient>);
 
-    await translationsPushCommand.parseAsync(['en', '-p', 'translations.json', '-f', 'nested'], { from: 'user' });
+    await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-f', 'nested'], { from: 'user' });
 
     expect(updateTranslations).toHaveBeenCalledWith('en', 'add-missing', { 'nav.home': 'Home' }, undefined);
   });
@@ -93,7 +93,7 @@ describe('translationsPushCommand', () => {
     const updateTranslations = vi.fn().mockResolvedValue({ message: 'Preview', dryRun: true });
     vi.mocked(localessCliClient).mockReturnValue({ updateTranslations } as unknown as ReturnType<typeof localessCliClient>);
 
-    await translationsPushCommand.parseAsync(['en', '-p', 'translations.json', '--dry-run'], { from: 'user' });
+    await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '--dry-run'], { from: 'user' });
 
     expect(updateTranslations).toHaveBeenCalledWith('en', 'add-missing', { 'nav.home': 'Home' }, true);
   });
@@ -109,7 +109,7 @@ describe('translationsPushCommand', () => {
     const updateTranslations = vi.fn().mockResolvedValue({ message: 'Updated 1 translation' });
     vi.mocked(localessCliClient).mockReturnValue({ updateTranslations } as unknown as ReturnType<typeof localessCliClient>);
 
-    await translationsPushCommand.parseAsync(['en', '-p', 'translations.json', '--verbose'], { from: 'user' });
+    await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '--verbose'], { from: 'user' });
 
     expect(localessCliClient).toHaveBeenCalledWith({
       origin: 'https://cms.example.com',
@@ -132,7 +132,7 @@ describe('translationsPushCommand', () => {
       throw new Error('exit');
     });
 
-    await expect(translationsPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
+    await expect(translationPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Invalid translations file format:', expect.anything());
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -153,7 +153,7 @@ describe('translationsPushCommand', () => {
       throw new Error('exit');
     });
 
-    await expect(translationsPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
+    await expect(translationPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' })).rejects.toThrow('exit');
 
     expect(errorSpy).toHaveBeenCalledWith('Failed to push translations to Localess:', expect.any(Error));
     expect(exitSpy).toHaveBeenCalledWith(1);
