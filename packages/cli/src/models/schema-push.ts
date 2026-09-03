@@ -1,4 +1,4 @@
-import type { SchemaExport } from './schema';
+import type { SchemaExport } from './';
 
 /** Push mode: upsert never deletes; sync additionally deletes schemas absent from the payload. */
 export type SchemaPushType = 'upsert' | 'sync';
