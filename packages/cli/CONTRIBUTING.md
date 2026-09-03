@@ -12,7 +12,7 @@ Command-specific business-logic utilities (diffing, loading, emitting — not th
 
 1. **Subcommand-local** — used by exactly one subcommand: lives inside that subcommand's own folder, `commands/<group>/<subcommand>/<name>.ts` (+ co-located `<name>.test.ts`). E.g. `commands/schema/pull/emitter.ts`, `commands/types/generate/generator.ts`, `commands/translations/diff/diff-translations.ts`.
 2. **Group-shared** — used by 2+ subcommands within the same command group: lives directly in the group folder, sibling to the subcommand folders, `commands/<group>/<name>.ts`. E.g. `commands/schema/diff-schemas.ts`, `loader.ts`, `schema-lib.ts` (shared by `diff/`, `push/`, and/or `validate/`).
-3. **Package-shared** — used across 2+ command groups, or cross-cutting infra: stays at `src/` root (`utils.ts`, `file.ts`, `session.ts`, `client.ts`, `models/`). This tier is also where the `@localess/client`/`@localess/model`/`@localess/schema` import-boundary files live (see above) — no change to that rule.
+3. **Package-shared** — used across 2+ command groups, or cross-cutting infra: stays at `src/` root (`utils.ts`, `file.ts`, `session.ts`, `client.ts`, `models/`). This tier is also where the `@localess/client`/`@localess/model`/`@localess/schema` import-boundary files live (see above) — no change to that rule. E.g. `diff-report.ts` (the grouped/colored diff printer shared by `translations diff` and `schema diff`).
 
 Don't import a sibling subcommand's local utility across folders — promote it to the group folder first. If a group-shared utility later gains a consumer in another group, promote it again to `src/` root.
 

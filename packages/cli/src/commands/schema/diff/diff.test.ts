@@ -51,4 +51,27 @@ describe('schema diff', () => {
     await schemaCommand.parseAsync(['diff', writeEntry()], { from: 'user' });
     expect(process.exit).toHaveBeenCalledWith(1);
   });
+
+  it('groups output by status and omits unchanged schemas by default', async () => {
+    getSchemas.mockResolvedValue([
+      { id: 'Button', type: 'NODE', fields: [{ name: 'label', kind: 'TEXT', required: true }] },
+      { id: 'Stale', type: 'NODE' },
+    ]);
+    await schemaCommand.parseAsync(['diff', writeEntry()], { from: 'user' });
+
+    const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
+    expect(logs.some(line => line.includes('Update (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('Button'))).toBe(true);
+    expect(logs.some(line => line.includes('Stale (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('Unchanged'))).toBe(false);
+  });
+
+  it('also prints unchanged schemas with --all', async () => {
+    getSchemas.mockResolvedValue([{ id: 'Button', type: 'NODE', fields: [{ name: 'label', kind: 'TEXT' }] }]);
+    await schemaCommand.parseAsync(['diff', writeEntry(), '--all'], { from: 'user' });
+
+    const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
+    expect(logs.some(line => line.includes('Unchanged (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('Button'))).toBe(true);
+  });
 });

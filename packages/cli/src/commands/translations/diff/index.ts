@@ -1,13 +1,13 @@
-import chalk from 'chalk';
 import { Command } from 'commander';
 
 import { localessCliClient } from '../../../client';
+import { printDiffReport } from '../../../diff-report';
 import { readFile } from '../../../file';
 import { LocalessApiError, TranslationFileFormat, Translations } from '../../../models';
 import { zLocaleTranslationsSchema } from '../../../models';
 import { getSession } from '../../../session';
 import { nestedObjectToFlat } from '../../../utils';
-import { diffTranslations, TranslationDiffEntry, TranslationDiffStatus } from './diff-translations';
+import { diffTranslations } from './diff-translations';
 
 export type TranslationsDiffOptions = {
   path: string;
@@ -16,40 +16,6 @@ export type TranslationsDiffOptions = {
   all?: boolean;
   verbose?: boolean;
 };
-
-const STATUS_ORDER: TranslationDiffStatus[] = ['create', 'update', 'stale', 'unchanged'];
-
-const STATUS_STYLE: Record<TranslationDiffStatus, { symbol: string; label: string; color: typeof chalk.green }> = {
-  create: { symbol: '+', label: 'Create', color: chalk.green },
-  update: { symbol: '~', label: 'Update', color: chalk.yellow },
-  stale: { symbol: '-', label: 'Stale', color: chalk.red },
-  unchanged: { symbol: '=', label: 'Unchanged', color: chalk.dim },
-};
-
-function printGroups(entries: TranslationDiffEntry[], { all }: { all?: boolean }): void {
-  const byStatus = new Map<TranslationDiffStatus, TranslationDiffEntry[]>();
-  for (const entry of entries) {
-    const group = byStatus.get(entry.status) ?? [];
-    group.push(entry);
-    byStatus.set(entry.status, group);
-  }
-
-  for (const status of STATUS_ORDER) {
-    if (status === 'unchanged' && !all) continue;
-    const group = byStatus.get(status);
-    if (!group || group.length === 0) continue;
-    const style = STATUS_STYLE[status];
-    console.log(style.color.bold(`\n${style.label} (${group.length})`));
-    for (const item of group) {
-      console.log(style.color(`  ${style.symbol} ${item.key}`));
-    }
-  }
-
-  const unchangedCount = byStatus.get('unchanged')?.length ?? 0;
-  if (!all && unchangedCount > 0) {
-    console.log(chalk.dim(`\n${unchangedCount} unchanged (use --all to show)`));
-  }
-}
 
 export const translationsDiffCommand = new Command('diff')
   .argument('<locale>', 'Locale to diff')
@@ -98,19 +64,12 @@ export const translationsDiffCommand = new Command('diff')
     try {
       const remote = await client.getTranslations(locale, { version: options.draft ? 'draft' : undefined });
       const entries = diffTranslations(local, remote);
-      printGroups(entries, { all: options.all });
-
-      const created = entries.filter(item => item.status === 'create').length;
-      const updated = entries.filter(item => item.status === 'update').length;
-      const stale = entries.filter(item => item.status === 'stale').length;
-      const drift = created + updated + stale;
+      const { drift } = printDiffReport(
+        entries.map(item => ({ label: item.key, status: item.status })),
+        { all: options.all, noun: 'translation' }
+      );
       if (drift > 0) {
-        console.log(
-          `\n${drift} translation(s) differ: ${chalk.green(`${created} created`)}, ${chalk.yellow(`${updated} updated`)}, ${chalk.red(`${stale} stale`)}.`
-        );
         process.exit(1);
-      } else {
-        console.log(chalk.green('\nIn sync.'));
       }
     } catch (error) {
       if (!(error instanceof LocalessApiError)) {

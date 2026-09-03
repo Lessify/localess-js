@@ -3,6 +3,7 @@ import process from 'node:process';
 import { Command } from 'commander';
 
 import { localessCliClient } from '../../../client';
+import { printDiffReport } from '../../../diff-report';
 import { LocalessApiError } from '../../../models';
 import { getSession } from '../../../session';
 import { diffSchemas } from '../diff-schemas';
@@ -10,12 +11,14 @@ import { loadSchemaConfig } from '../loader';
 import { toSchemaExport } from '../schema-lib';
 
 type DiffOptions = {
+  all?: boolean;
   verbose?: boolean;
 };
 
 export const schemaDiffCommand = new Command('diff')
   .description('Compare code-defined schemas with your Localess space (exit 1 on drift)')
   .argument('<entry>', 'Path to the entry file exporting defineConfig()')
+  .option('-a, --all', 'Also print unchanged schemas')
   .option('-v, --verbose', 'Print verbose debug output')
   .action(async (entry: string, options: DiffOptions) => {
     const session = await getSession();
@@ -36,15 +39,12 @@ export const schemaDiffCommand = new Command('diff')
       const local = toSchemaExport(config);
       const remote = await client.getSchemas();
       const entries = diffSchemas(local, remote);
-      for (const item of entries) {
-        console.log(`  ${item.status.padEnd(9)} ${item.id}`);
-      }
-      const drift = entries.filter(item => item.status !== 'unchanged');
-      if (drift.length > 0) {
-        console.log(`${drift.length} schema(s) differ.`);
+      const { drift } = printDiffReport(
+        entries.map(item => ({ label: item.id, status: item.status })),
+        { all: options.all, noun: 'schema' }
+      );
+      if (drift > 0) {
         process.exit(1);
-      } else {
-        console.log('In sync.');
       }
     } catch (error) {
       if (!(error instanceof LocalessApiError)) {

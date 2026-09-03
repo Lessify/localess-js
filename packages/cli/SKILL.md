@@ -373,10 +373,11 @@ localess schema pull --path src/schemas
 
 ### `schema diff <entry>`
 
-Read-only comparison between the entry's code-defined schemas and the space — prints a `create`/`update`/`unchanged`/`stale` line per schema. Exits `1` if anything differs (CI drift gate), `0` when everything is `unchanged`.
+Read-only comparison between the entry's code-defined schemas and the space — groups schemas into `Create`/`Update`/`Stale` sections (color-coded, git-diff style `+`/`~`/`-` symbols), same report format as `translations diff`. Unchanged schemas are collapsed into a count by default (`-a, --all` to list them). Exits `1` if anything differs (CI drift gate), `0` when everything is `unchanged`.
 
 ```bash
 localess schema diff ./schemas/index.ts
+localess schema diff ./schemas/index.ts --all   # also list unchanged schemas
 ```
 
 ### `schema push <entry> [--dry-run] [--delete] [-y|--yes]`
