@@ -7,7 +7,7 @@ export type {
   SchemaDefinition,
   SchemaFieldInput,
 } from './define';
-export { defineConfig, defineEnum, defineSchema } from './define';
+export { defineConfig, defineEnum, defineField, defineSchema } from './define';
 export { toSchemaExport } from './export';
 export type { InferContent, InferContentData, InferEnum } from './infer';
 export type {

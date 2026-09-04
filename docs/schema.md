@@ -58,6 +58,21 @@ export type Content = InferContentData<typeof config>;
 - `defineConfig` registers the full schema list — the unit `@localess/cli` loads and inference resolves against. Throws on duplicate schema/field ids (programming errors, not validation concerns).
 - Wire enum values (`'ROOT' | 'NODE' | 'ENUM'`, `'TEXT' | 'NUMBER' | ...`) match the Localess backend exactly, so `defineSchema` output is near-identical to the server's `SchemaExport`.
 
+### Optional: `defineField` for stricter per-field type-checking
+
+A field written as a bare object literal inside `fields: [...]` can't be checked for excess properties from the wrong kind — TypeScript's excess-property check doesn't apply to object literals nested inside a `const`-inferred generic array parameter. Wrap a field in `defineField(...)` to get that check at the call site, while keeping the same literal-type preservation:
+
+```typescript
+import { defineField } from "@localess/schema";
+
+defineField({ name: 'amount', kind: 'NUMBER', maxLength: 5 });
+// ^ compile error: maxLength is not valid on a NUMBER field
+
+defineField({ name: 'amount', kind: 'NUMBER', minValue: 0 }); // OK
+```
+
+`defineField` is optional and purely additive — `defineSchema`'s `fields` array accepts raw literals and `defineField(...)` results interchangeably, and by-value ref normalization (`source`, `schemas`) still happens in `defineSchema` either way.
+
 ## Type Inference
 
 | Export | Purpose |
@@ -97,4 +112,4 @@ Pure mapping from a config to `SchemaExport[]` — the wire format the Localess 
 
 ## Known Limitation
 
-`defineSchema`'s `fields` array does not reject a stray property from the wrong field kind (e.g. `maxLength` on a `NUMBER` field) at the call site — a TypeScript limitation on object literals inside a `const`-inferred generic array parameter. Missing required properties (e.g. omitting `source` on `OPTION`) are still caught. See [ADR 008](decisions/008-schema-package.md) for the full explanation and why a per-field wrapper function was deliberately not adopted as a workaround.
+A bare field literal inside `defineSchema`'s `fields` array does not reject a stray property from the wrong field kind (e.g. `maxLength` on a `NUMBER` field) at the call site — a TypeScript limitation on object literals inside a `const`-inferred generic array parameter. Wrap the field in `defineField(...)` (see "Optional: `defineField`" above) to get that check. Missing required properties (e.g. omitting `source` on `OPTION`) are still caught either way. See [ADR 008](decisions/008-schema-package.md) for the full explanation.

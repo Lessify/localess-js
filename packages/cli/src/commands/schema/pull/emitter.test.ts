@@ -43,6 +43,21 @@ describe('emitSchemaFiles', () => {
     expect(page).toContain('schemas: [Button]');
   });
 
+  it('wraps each field in defineField instead of a bare object literal', () => {
+    const files = emitSchemaFiles(schemas);
+    const button = files.get('button.ts')!;
+    expect(button).toContain(`import { defineField, defineSchema } from '@localess/schema';`);
+    expect(button).toContain(`defineField({ name: 'label', kind: 'TEXT', required: true, maxLength: 50 }),`);
+    expect(button).toContain(`defineField({ name: 'kind', kind: 'OPTION', source: ButtonType }),`);
+  });
+
+  it('does not import defineField for a schema with no fields', () => {
+    const files = emitSchemaFiles([{ id: 'Empty', type: 'NODE' }]);
+    const empty = files.get('empty.ts')!;
+    expect(empty).toContain(`import { defineSchema } from '@localess/schema';`);
+    expect(empty).not.toContain('defineField');
+  });
+
   it('keeps unresolvable refs as strings', () => {
     const files = emitSchemaFiles([{ id: 'Lone', type: 'NODE', fields: [{ name: 'blocks', kind: 'SCHEMAS', schemas: ['Ghost'] }] }]);
     expect(files.get('lone.ts')).toContain(`schemas: ['Ghost']`);

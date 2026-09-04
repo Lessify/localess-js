@@ -379,6 +379,7 @@ localess schema pull --path src/schemas
 
 - **Repeatable and safe to re-run.** Every file pull generates starts with a marker comment; pull only ever overwrites or deletes files carrying that marker. A file it previously generated but whose schema no longer exists on the server is deleted; anything without the marker (your own hand-written files) is left untouched and reported.
 - Cross-schema references (`OPTION`/`OPTIONS` `source`, `SCHEMA`/`SCHEMAS` `schemas`) are emitted as imports between the generated files, so pulled definitions read naturally and stay type-checked against each other.
+- Each field is emitted wrapped in `defineField(...)`, not as a bare object literal — so a pulled file that's then hand-edited still gets `defineField`'s excess-property checking on the fields you touch.
 
 ### `schema diff <entry>`
 

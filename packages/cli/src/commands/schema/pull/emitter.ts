@@ -36,15 +36,17 @@ function printFields(fields: SchemaField[], byId: Set<string>): string {
         }
         return `${key}: ${printValue(val)}`;
       });
-    return `    { ${entries.join(', ')} },`;
+    return `    defineField({ ${entries.join(', ')} }),`;
   });
   return lines.join('\n');
 }
 
 /**
- * Emit one TypeScript definition file per schema plus an index.ts with defineConfig.
- * Cross-schema references become imports; ids not present in the pulled set stay strings.
- * Deterministic: same input, byte-identical output.
+ * Emit one TypeScript definition file per schema plus an index.ts with defineConfig. Each field
+ * is wrapped in defineField(...) rather than emitted as a bare object literal, so a hand-edited
+ * pulled file still gets defineField's excess-property checking. Cross-schema references become
+ * imports; ids not present in the pulled set stay strings. Deterministic: same input, byte-identical
+ * output.
  */
 export function emitSchemaFiles(schemas: SchemaExport[]): Map<string, string> {
   const byId = new Set(schemas.map(schema => schema.id));
@@ -72,11 +74,13 @@ export function emitSchemaFiles(schemas: SchemaExport[]): Map<string, string> {
     const headProps = Object.entries(schema)
       .filter(([key, val]) => key !== 'id' && key !== 'fields' && val !== undefined)
       .map(([key, val]) => `  ${key}: ${printValue(val)},`);
+    const hasFields = (schema.fields?.length ?? 0) > 0;
     const fieldsBlock = schema.fields ? `  fields: [\n${printFields(schema.fields, byId)}\n  ],` : '';
     const body = `export const ${schema.id} = defineSchema({\n  id: ${quote(schema.id)},\n${[...headProps, fieldsBlock].filter(Boolean).join('\n')}\n});\n`;
+    const schemaImport = hasFields ? 'defineField, defineSchema' : 'defineSchema';
     files.set(
       `${toKebabCase(schema.id)}.ts`,
-      [PULL_MARKER, `import { defineSchema } from '@localess/schema';`, ...importLines, '', body].join('\n')
+      [PULL_MARKER, `import { ${schemaImport} } from '@localess/schema';`, ...importLines, '', body].join('\n')
     );
   }
 

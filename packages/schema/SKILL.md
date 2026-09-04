@@ -63,12 +63,32 @@ export type Content = InferContentData<typeof config>;
 |---|---|
 | `defineEnum(definition)` | Define an ENUM schema. Identity function; injects `type: 'ENUM'`. |
 | `defineSchema(definition)` | Define a ROOT or NODE schema. Normalizes by-value refs (`source`, `schemas`) to id strings. Throws on duplicate field names. |
+| `defineField(field)` | Define a single field, narrowed by `kind`. Optional; catches a stray property from the wrong kind at the call site, unlike a bare field literal. Identity function. |
 | `defineConfig({ schemas })` | Register the full schema list — the unit the CLI loads and inference resolves against. Throws on duplicate schema ids. |
 | `validate(config)` | Non-throwing `{ ok, issues }` — ID/name patterns, reserved names, length limits, reference resolution. |
 | `toSchemaExport(config)` | Pure mapping to the wire format (`SchemaExport[]`) the Localess API accepts/returns. |
 | `InferContentData<C>` | Union of every ROOT schema's content type in config `C`. |
 | `InferContent<S, C>` | Content type of one schema definition `S`, resolved against config `C`. |
 | `InferEnum<E>` | Literal union of an enum definition's values. |
+
+## `defineField`
+
+Optional. Wraps a single field so TypeScript catches a stray property from
+the wrong `kind` at the call site — something a bare field literal inside
+`defineSchema({ fields: [...] })` cannot do:
+
+```ts
+import { defineField } from '@localess/schema';
+
+defineField({ name: 'amount', kind: 'NUMBER', maxLength: 5 });
+// ^ compile error: maxLength is not valid on a NUMBER field
+
+defineField({ name: 'amount', kind: 'NUMBER', minValue: 0 }); // OK
+```
+
+`defineSchema`'s `fields` array accepts raw literals and `defineField(...)`
+results interchangeably — by-value ref normalization (`source`, `schemas`)
+still happens exclusively in `defineSchema`, regardless of a field's origin.
 
 ## By-value references
 
@@ -108,15 +128,15 @@ they don't affect the inferred type.
 re-exported from `@localess/model`, the shared domain-model package (see
 ADR 009).
 
-## Known limitation
+## Known limitation (mitigated by `defineField`)
 
 TypeScript's excess-property check doesn't apply to object literals inside
 an array passed through a `const`-inferred generic parameter (only to
 literals checked directly against a declared type). A stray property from
-the wrong field kind — e.g. `maxLength` on a `NUMBER` field — inside
-`defineSchema({ fields: [...] })` is therefore not flagged at the call site.
-Missing required properties (e.g. omitting `source` on `OPTION`) are still
-caught. `validate()` and the Localess backend's schema validation don't check
-for this either today. Sanity documents the same limitation for their
-unwrapped array fields; the alternative is a per-field wrapper function,
-which this package deliberately avoids.
+the wrong field kind — e.g. `maxLength` on a `NUMBER` field — inside a bare
+field literal in `defineSchema({ fields: [...] })` is therefore not flagged
+at the call site. Wrap the field in `defineField(...)` instead to get that
+check while keeping full literal-type preservation (see "`defineField`"
+above). Missing required properties (e.g. omitting `source` on `OPTION`) are
+still caught either way. `validate()` and the Localess backend's schema
+validation don't check for this either today.

@@ -220,7 +220,7 @@ localess schema validate ./schemas/index.ts --format json
 
 ### `localess schema pull [--path <dir>]`
 
-(Re)generates one TS definition file per schema plus `index.ts` from the space, into `--path` (default `schemas`). Repeatable: only overwrites/deletes files it previously generated (marked with a header comment); hand-written files without that marker are left alone.
+(Re)generates one TS definition file per schema plus `index.ts` from the space, into `--path` (default `schemas`). Repeatable: only overwrites/deletes files it previously generated (marked with a header comment); hand-written files without that marker are left alone. Each field is emitted wrapped in `defineField(...)` rather than as a bare object literal.
 
 ```bash
 localess schema pull

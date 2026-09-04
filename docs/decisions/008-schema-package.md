@@ -72,26 +72,38 @@ same shape as `@localess/client`'s `ContentAsset`/`ContentLink`/
 client types; `@localess/client` is a `devDependency` for that test only and
 never ships in `dist/`.
 
-## Known TypeScript limitation: field-kind excess properties
+## Known TypeScript limitation: field-kind excess properties (mitigated by `defineField`)
 
-`defineSchema`'s `fields` array does not reject a stray property from the
-wrong field kind (e.g. `maxLength` on a `NUMBER` field) at the call site.
-This is a fundamental TypeScript limitation, not a bug: excess-property
-("object literal freshness") checks don't apply to object literals inside an
-array passed through a `const`-inferred generic parameter — only to literals
-checked directly against a declared type. Every alternative that preserves
-this check (tested empirically: wrapping the whole `fields` array or each
-element in a deferred-conditional intersection, mirroring Sanity's
-`InferSchemaDefinition` trick) broke literal preservation of `name`/`kind`/
-`source`, which `InferContentData` depends on entirely. Missing required
-properties (e.g. omitting `source` on `OPTION`) are still caught, since that
-is ordinary structural assignability, not a freshness check. Sanity documents
-the identical limitation for their own unwrapped array fields, and resolves
-it only by requiring a per-field wrapper function (`defineField`) — which
-this package deliberately avoids, since per-field wrapping is exactly the
-authoring-ergonomics cost this design set out to avoid (see "Why the DSL
-mirrors the wire format" above). `validate()` and the Localess backend's own
-schema validation don't check for this class of mistake either today.
+A bare field literal inside `defineSchema`'s `fields` array does not reject a
+stray property from the wrong field kind (e.g. `maxLength` on a `NUMBER`
+field) at the call site. This is a fundamental TypeScript limitation, not a
+bug: excess-property ("object literal freshness") checks don't apply to
+object literals inside an array passed through a `const`-inferred generic
+parameter — only to literals checked directly against a declared type.
+Missing required properties (e.g. omitting `source` on `OPTION`) are still
+caught either way, since that is ordinary structural assignability, not a
+freshness check.
+
+`defineField` (added 2026-09) closes this gap for fields that opt in to it,
+using a technique verified against both this package's own types and
+Sanity's current `defineField` implementation (reworked by their commit
+`38002e4432`, Aug 2026 — after this ADR's original "every alternative broke
+literal preservation" finding was written): infer the field's `kind` first,
+narrowing the 18-member field union down to one concrete member via
+`Extract<SchemaFieldInput, { kind: TKind }>`, then constrain a *separate*
+`const` generic for the remaining properties against that single narrowed
+shape. Because TypeScript's excess-property check against a union target is
+lenient (a property is only "excess" if it belongs to none of the union's
+members) but strict against a single member, this catches the mistake while
+still preserving literal types — including by-value refs (`source`,
+`schemas`), which `InferContentData` depends on entirely. Full design and
+verification: `docs/superpowers/specs/2026-09-04-schema-define-field-design.md`.
+
+`defineField` is optional, matching Sanity's own framing — `defineSchema`
+accepts raw field literals and `defineField(...)` results interchangeably in
+the same `fields` array. Fields authored as bare literals keep the original,
+unmitigated limitation. `validate()` and the Localess backend's own schema
+validation don't check for this class of mistake either.
 
 ## Backend contract
 

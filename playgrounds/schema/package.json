@@ -1,0 +1,24 @@
+{
+  "name": "schema-playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "extract:example": "tsx src/extract-example.ts",
+    "localess:login": "localess login",
+    "localess:types": "localess type generate --path ./src/localess.types.ts",
+    "schema:validate": "localess schema validate ./src/schemas/index.ts",
+    "schema:diff": "localess schema diff ./src/schemas/index.ts",
+    "schema:push": "localess schema push ./src/schemas/index.ts",
+    "schema:pull": "localess schema pull --path ./src/schemas/pulled"
+  },
+  "dependencies": {
+    "@localess/schema": "*"
+  },
+  "devDependencies": {
+    "@localess/cli": "*",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3"
+  }
+}

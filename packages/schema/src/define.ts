@@ -1,4 +1,4 @@
-import type { SchemaComponentExport, SchemaEnumExport, SchemaEnumValue, SchemaField } from './models';
+import type { SchemaComponentExport, SchemaEnumExport, SchemaEnumValue, SchemaField, SchemaFieldKind } from './models';
 
 type Prettify<T> = { [K in keyof T]: T[K] } & {};
 
@@ -109,6 +109,29 @@ export function defineEnum<const TId extends string, const TValues extends reado
   values?: TValues;
 }): DefinedEnum<TId, TValues> {
   return { ...definition, type: 'ENUM' } as DefinedEnum<TId, TValues>;
+}
+
+/**
+ * Define a single field, narrowing it to the extras valid for its `kind` and catching a stray
+ * property from the wrong kind at the call site (e.g. `maxLength` on a `NUMBER` field) — something
+ * a bare field literal inside `defineSchema({ fields: [...] })` cannot do. Optional: `defineSchema`
+ * accepts raw field literals and `defineField(...)` results interchangeably in the same `fields`
+ * array. A near-identity function like `defineEnum`/`defineSchema` — by-value ref normalization
+ * (`source`, `schemas`) still happens exclusively in `defineSchema`, applied uniformly regardless
+ * of a field's origin. See `docs/decisions/008-schema-package.md`.
+ *
+ * @param field the field definition; `kind` selects which extra properties are allowed
+ * @returns the field unchanged, with `name`/`kind`/extras narrowed to their literal types
+ */
+export function defineField<
+  const TKind extends SchemaFieldKind,
+  const TName extends string,
+  const TField extends Omit<Extract<SchemaFieldInput, { kind: TKind }>, 'name' | 'kind'> = Omit<
+    Extract<SchemaFieldInput, { kind: TKind }>,
+    'name' | 'kind'
+  >,
+>(field: { kind: TKind; name: TName } & TField): Prettify<{ name: TName; kind: TKind } & TField> {
+  return field as Prettify<{ name: TName; kind: TKind } & TField>;
 }
 
 /**
