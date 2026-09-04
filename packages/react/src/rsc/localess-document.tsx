@@ -19,7 +19,8 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
  * client-side component registry is ever needed for this path.
  *
  * Requires a live server at request time to run its Server Action against — **not**
- * usable under Next.js `output: 'export'`. Use `LocalessClientDocument` instead there.
+ * usable under Next.js `output: 'export'`. Use the root entry point's client-side
+ * `LocalessDocument` (`import { LocalessDocument } from '@localess/react'`) instead there.
  *
  * @example
  * ```tsx

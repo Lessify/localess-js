@@ -16,11 +16,12 @@
  * driven by a Server Action (no client-side component registry, ever). It requires a
  * live server at request time and does **not** work under Next.js `output: 'export'`.
  *
- * `LocalessClientDocument` is the `output: 'export'` fallback — a Client Component that
- * re-renders client-side on sync events. It requires registering your component map a
- * second time from a Client Component boundary (see `docs/react.md`'s "Client-Side
- * Fallback for Static Export" section) — use it only when `LocalessDocument` isn't an
- * option.
+ * The root entry point's `LocalessDocument` (`import { LocalessDocument } from '@localess/react'`)
+ * is the `output: 'export'` fallback — a client-side component that re-renders on sync
+ * events. It is deliberately not re-exported here. It requires registering your component
+ * map a second time from a Client Component boundary with a public token (see
+ * `docs/react.md`'s "Client-Side Fallback for Static Export" section) — use it only when
+ * this entry point's `LocalessDocument` isn't an option.
  *
  * @example
  * ```ts

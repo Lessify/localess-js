@@ -50,10 +50,19 @@ Moved here from `@localess/schema` (ADR 009) — the wire-format types every `Sc
 | `AssetFileType` | Restriction for `ASSET`/`ASSETS` fields — `'ANY' \| 'IMAGE' \| 'VIDEO' \| 'TEXT' \| 'AUDIO' \| 'APPLICATION'` |
 | `SchemaEnumValue` | A single named value of an `ENUM` schema — `{ name, value }` |
 | `SchemaFieldBase` | Properties every field kind shares — `{ name, kind, displayName?, required?, description?, defaultValue?, translatable? }` |
-| `SchemaField` | Discriminated union of all 18 field-kind interfaces (`SchemaFieldText`, `SchemaFieldNumber`, `SchemaFieldAsset`, `SchemaFieldSchemas`, …), each extending `SchemaFieldBase` — see `@localess/schema`'s field-kind table for per-kind behavior |
+| `SchemaField` | Discriminated union of all 18 field-kind interfaces below, each extending `SchemaFieldBase` — see `@localess/schema`'s field-kind table for inferred content types |
+| `SchemaFieldText`, `SchemaFieldTextarea`, `SchemaFieldRichText`, `SchemaFieldMarkdown` | Text-like kinds — `minLength?`, `maxLength?` |
+| `SchemaFieldNumber` | `NUMBER` — `minValue?`, `maxValue?` |
+| `SchemaFieldColor`, `SchemaFieldDate`, `SchemaFieldDateTime`, `SchemaFieldBoolean`, `SchemaFieldLink` | `COLOR`/`DATE`/`DATETIME`/`BOOLEAN`/`LINK` — no extra properties |
+| `SchemaFieldOption`, `SchemaFieldOptions` | `OPTION`/`OPTIONS` — required `source` (ENUM schema id); `OPTIONS` adds `minValues?`, `maxValues?` |
+| `SchemaFieldReference`, `SchemaFieldReferences` | `REFERENCE`/`REFERENCES` — `path?` |
+| `SchemaFieldAsset`, `SchemaFieldAssets` | `ASSET`/`ASSETS` — `fileTypes?: AssetFileType[]`, `fileType?: AssetFileType` |
+| `SchemaFieldSchema`, `SchemaFieldSchemas` | `SCHEMA`/`SCHEMAS` — `schemas?: string[]` (allowed schema ids; unrestricted when absent) |
 | `SchemaComponentExport` | Wire shape of a `ROOT`/`NODE` schema — `{ id, type, displayName?, description?, labels?, previewField?, fields? }` |
 | `SchemaEnumExport` | Wire shape of an `ENUM` schema — `{ id, type: 'ENUM', displayName?, description?, labels?, values? }` |
 | `SchemaExport` | `SchemaComponentExport \| SchemaEnumExport` — what `@localess/cli`'s `schema pull`/`push` and `@localess/schema`'s `toSchemaExport()` produce/consume |
+
+`@localess/schema` re-exports every type in this table unchanged (`packages/schema/src/models.ts` is `export * from '@localess/model'`), so consumers of that package never need to import `@localess/model` directly. All string literals mirror the Localess backend enums exactly; see `packages/model/CONTRIBUTING.md` before changing them.
 
 ## Adding a new shared model
 

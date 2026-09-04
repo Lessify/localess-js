@@ -15,21 +15,29 @@ this discussion is that exception, and it doesn't add a fourth *shared*
 package: `@localess/schema` is consumed only by `@localess/cli`, not by any
 framework package).
 
+*Update (ADR 009, 2026-09-02):* the root tier is now `@localess/model`,
+`@localess/richtext`, `@localess/schema`; `@localess/client` moved to the
+dependent tier, and `@localess/schema` gained `@localess/model` as its single
+(internal, dependency-free) dependency — still zero *external* dependencies.
+
 The package exports `defineEnum`/`defineSchema`/`defineConfig` (near-identity
-functions preserving literal types via `const` generics), a non-throwing
+functions preserving literal types via `const` generics), the optional
+per-field `defineField` (added 2026-09-04, see below), a non-throwing
 `validate()`, a pure `toSchemaExport()` mapper, and the `InferContentData`/
 `InferContent`/`InferEnum` type-inference family — no codegen step for
 content types derived from code-first definitions.
 
 `@localess/cli` gains `schema pull|push|diff|validate` commands that
 sync definitions bidirectionally with a Localess space, described in the
-implementation plan `docs/superpowers/plans/2026-09-01-cli-schema-commands.md`.
+implementation plan `docs/superpowers/plans/2026-09-01-cli-schema-commands.md`
+(a working document that was not checked into the repo).
 
 ## Why a thin, HTTP-free package (not a fat one)
 
 Two prior-art SDKs were studied before this design: Storyblok's
 `@storyblok/schema` and Sanity's `defineType` family (full comparison in
-`docs/superpowers/specs/2026-09-01-schema-package-design.md`). Both put
+`docs/superpowers/specs/2026-09-01-schema-package-design.md`, a working
+document not checked into the repo). Both put
 diffing/wire-mapping/push logic in the CLI and keep the definition package
 thin; this repo follows the same layering. `@localess/schema` never imports
 `@localess/client` or `@localess/cli` at runtime — CLAUDE.md rule 7's
@@ -62,6 +70,16 @@ is **retained unchanged** for consumers who don't adopt code-first schemas;
 both paths agree on the field-kind → TS-type mapping table.
 
 ## Structural content types instead of a client dependency
+
+**Superseded by ADR 009 (2026-09-02).** The locally declared
+`SchemaContent*` types, the `content-types.test-d.ts` parity test, and the
+`@localess/client` devDependency described below were all removed;
+`@localess/schema` now imports `ContentAsset`/`ContentLink`/
+`ContentReference`/`ContentRichText` from `@localess/model` and re-exports
+them under those canonical names. The schema wire model itself
+(`SchemaField`, `SchemaExport`, …) also moved to `packages/model/src/schema.ts`
+in a follow-up; `packages/schema/src/models.ts` is now just
+`export * from '@localess/model'`. The original rationale is kept for history:
 
 `SchemaContentAsset`/`SchemaContentLink`/`SchemaContentReference`/
 `SchemaContentRichText` are declared locally in `@localess/schema`, with the
@@ -101,14 +119,19 @@ verification: `docs/superpowers/specs/2026-09-04-schema-define-field-design.md`.
 
 `defineField` is optional, matching Sanity's own framing — `defineSchema`
 accepts raw field literals and `defineField(...)` results interchangeably in
-the same `fields` array. Fields authored as bare literals keep the original,
+the same `fields` array. At runtime it is an identity function; by-value ref
+normalization (`source`, `schemas`) is deliberately left in `defineSchema`
+alone, so a field behaves identically whether or not it was wrapped (the
+CLI's `schema pull` emitter emits `defineField(...)` calls carrying by-value
+refs and relies on this). Fields authored as bare literals keep the original,
 unmitigated limitation. `validate()` and the Localess backend's own schema
 validation don't check for this class of mistake either.
 
 ## Backend contract
 
 Implemented in the Localess backend repo per
-`docs/superpowers/plans/2026-09-01-schema-push-pull-api.md`:
+`docs/superpowers/plans/2026-09-01-schema-push-pull-api.md` (a working
+document not checked into the repo):
 
 - `GET /api/v1/spaces/:spaceId/schemas` changes in place to return
   `SchemaExport[]` (each item carries its own `id`, no timestamps) instead of

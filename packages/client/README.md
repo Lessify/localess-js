@@ -11,9 +11,11 @@
 The `@localess/client` package is the core JavaScript/TypeScript SDK for the [Localess](https://github.com/Lessify/localess) headless CMS platform. It provides a type-safe API client for fetching content, translations, and assets, along with Visual Editor integration utilities.
 
 > **⚠️ Security Notice:**
-> This SDK is designed for **server-side use only**. It requires a Localess API Token that must be kept secret.
-> Never use this package in browser/client-side code, as it would expose your API token to the public.
+> This SDK is designed for **server-side use only**. Never import this package in browser/client-side code.
+> A **secret** API token must never be exposed client-side. Localess also issues **public tokens** (read-only, published content and translations only) that are safe to use in the browser — but only through a framework package's client-side primitives (currently `@localess/react`, `@localess/angular`, `@localess/vue`, and `@localess/svelte`), never by importing `@localess/client` directly in the browser. See [ADR 001](../../docs/decisions/001-server-side-only.md).
 > In React applications, always fetch data server-side (e.g., Next.js Server Components, API routes, or server-side rendering).
+
+The data-model types this package returns (`Content`, `ContentAsset`, `ContentLink`, `Locale`, `Space`, `Translations`, …) are defined in [`@localess/model`](../model) and re-exported here, so `import type { Content } from '@localess/client'` keeps working.
 
 ## Requirements
 
@@ -133,14 +135,21 @@ const legalLinks = await client.getLinks({
 
 ## Fetching Translations
 
-### `getTranslations(locale)`
+### `getTranslations(locale, params?)`
 
 Fetch all translations for a given locale. Returns a flat key-value map.
 
 ```ts
 const translations = await client.getTranslations('en');
 // { "common.submit": "Submit", "nav.home": "Home", ... }
+
+// Draft translations (overrides the client-level version for this call)
+const draft = await client.getTranslations('en', { version: 'draft' });
 ```
+
+| Parameter | Type      | Default        | Description                                       |
+|-----------|-----------|----------------|---------------------------------------------------|
+| `version` | `'draft'` | Client default | Override the client's default translation version |
 
 ---
 
@@ -148,8 +157,9 @@ const translations = await client.getTranslations('en');
 
 `getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` reject instead of returning empty data when the request fails.
 
-- A non-2xx HTTP response rejects with a `LocalessApiError`, which exposes `status`, `statusText`, `url` (with the token redacted), `body` (the API's parsed response body, if any — object, string, or `undefined`), and `hint` (a status-specific explanation, e.g. for 401/403/404/429/5xx).
+- A non-2xx HTTP response rejects with a `LocalessApiError`, which exposes `status`, `statusText`, `url` (with the token redacted), `body` (the API's parsed response body, if any — object, string, or `undefined`), and `hint` (a status-specific explanation, e.g. for 401/403/404/429/5xx; on 401/403 it links to the space's token settings page, and any `message`/`status`/`code`/`details` fields in the response body are folded in).
 - A request that never reached the API (DNS failure, connection refused, etc.) rejects with a `LocalessNetworkError`, exposing `origin`, `url` (redacted), `hint`, and `cause` (the underlying error).
+- Both are also logged via `console.error` as a boxed, human-readable summary before being thrown.
 
 ```ts
 import { LocalessApiError, LocalessNetworkError, localessClient } from "@localess/client";
@@ -171,9 +181,9 @@ try {
 
 ## Assets
 
-### `assetLink(asset)`
+### `assetLink(asset, params?)`
 
-Generate a fully qualified URL for a content asset.
+Generate a fully qualified URL for a content asset: `{origin}/api/v1/spaces/{spaceId}/assets/{uri}`, with optional image transform parameters appended as a query string.
 
 ```ts
 import { localessClient } from "@localess/client";
@@ -184,8 +194,29 @@ const client = localessClient({ origin, spaceId, token });
 const url = client.assetLink(content.data.image);
 
 // From a URI string
-const url = client.assetLink('/spaces/abc/assets/photo.jpg');
+const url = client.assetLink('my-image.png');
+
+// With transform params
+const thumb = client.assetLink(content.data.image, { w: 800, h: 600, f: 'webp', q: 90 });
+// .../assets/{uri}?w=800&h=600&q=90&f=webp
+
+// Force download
+const file = client.assetLink(content.data.file, { download: true });
+// .../assets/{uri}?download
 ```
+
+#### `AssetTransformParams`
+
+| Param       | Type                                  | Description                                                                                   |
+|-------------|---------------------------------------|-----------------------------------------------------------------------------------------------|
+| `w`         | `number`                              | Target width in pixels. With `h` → cover crop; without → scale proportionally                 |
+| `h`         | `number`                              | Target height in pixels. With `w` → cover crop; without → scale proportionally                |
+| `q`         | `number` (1–100)                      | Output quality. Applies to JPEG, WebP, AVIF; ignored for PNG. Default: 85                    |
+| `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Convert to this output format                                                                 |
+| `download`  | `boolean`                             | Force a browser download (`Content-Disposition: form-data`)                                   |
+| `thumbnail` | `boolean`                             | Extract the first frame of animated WebP/GIF, or a video frame via FFmpeg, before resizing    |
+
+The standalone `buildAssetQueryString(params)` helper that produces this query string is also exported.
 
 ---
 
@@ -193,12 +224,14 @@ const url = client.assetLink('/spaces/abc/assets/photo.jpg');
 
 ### `loadLocalessSync(origin)`
 
-Injects the Localess Visual Editor sync script into the document `<head>`. This enables live-editing capabilities when your site is opened inside the Localess Visual Editor.
+Injects the Localess Visual Editor sync script (`{origin}/scripts/sync-v1.js`) into the document `<head>`. This enables live-editing capabilities when your site is opened inside the Localess Visual Editor.
+
+Returns a `Promise<void>` that resolves once the script has loaded (or rejects if it fails to load). It resolves immediately, without injecting anything, on the server, when the page is not inside an iframe (with a `console.warn`), or when `window.localess` already exists. Concurrent calls share a single promise.
 
 ```ts
 import { loadLocalessSync } from "@localess/client";
 
-loadLocalessSync('https://my-localess.web.app');
+await loadLocalessSync('https://my-localess.web.app');
 ```
 
 ### `syncScriptUrl()`
@@ -252,8 +285,15 @@ if (window.localess) {
   window.localess.on(['input', 'change'], (event) => {
     setPageData(event.data);
   });
+
+  // Shorthand for on(['input', 'change'], ...)
+  window.localess.onChange((event) => {
+    setPageData(event.data);
+  });
 }
 ```
+
+The `LocalessSync` interface (`on`, `onChange`) and the event types (`EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) are exported, and `Window.localess` is declared globally by this package. There is no `off()` method — subscribe once.
 
 ### Available Event Types
 
@@ -286,11 +326,15 @@ const client = localessClient({ origin, spaceId, token, cacheTTL: 600 });
 const client = localessClient({ origin, spaceId, token, cacheTTL: false });
 ```
 
+The cache key is the full request URL (including all query parameters). The cache implementations backing this option — `TTLCache` (default), `NoCache` (used for `cacheTTL: false`), and a plain `Cache` — plus the `ICache` interface are exported.
+
 > **Note:** The cache is in-memory and instance-bound. In multi-process deployments (e.g. Next.js parallel build workers), each process has its own independent cache. → [ADR 003](../../docs/decisions/003-ttl-cache-design.md)
 
 ---
 
 ## Type Reference
+
+All types below are defined in `@localess/model` and re-exported unchanged by `@localess/client`.
 
 ### `Content<T>`
 
@@ -380,19 +424,55 @@ A key-value map of content IDs to `ContentMetadata` objects.
 
 A key-value map of reference IDs to `Content` objects.
 
+### `Assets` / `AssetMetadata`
+
+A key-value map of asset IDs to `AssetMetadata` objects (populated when `resolveAsset: true`).
+
+```ts
+interface AssetMetadata {
+  id: string;
+  name: string;
+  extension: string;
+  type: string;
+  alt?: string;
+}
+```
+
 ### `Translations`
 
 A key-value map of translation keys to translated string values.
+
+### `Locale` / `Space`
+
+```ts
+interface Locale {
+  id: string;
+  name: string;
+}
+
+interface Space {
+  id: string;
+  name: string;
+  locales: Locale[];
+  localeFallback: Locale;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+`@localess/model`'s schema wire types (`SchemaExport`, `SchemaField`, `SchemaFieldKind`, …) are re-exported too; see [`docs/model.md`](../../docs/model.md).
 
 ---
 
 ## Utility Functions
 
-| Function      | Returns   | Description                                                       |
-|---------------|-----------|-------------------------------------------------------------------|
-| `isBrowser()` | `boolean` | Returns `true` if code is running in a browser environment        |
-| `isServer()`  | `boolean` | Returns `true` if code is running in a server/Node.js environment |
-| `isIframe()`  | `boolean` | Returns `true` if the page is rendered inside an iframe           |
+| Function                          | Returns   | Description                                                                                                                                    |
+|-----------------------------------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| `isBrowser()`                     | `boolean` | Returns `true` if code is running in a browser environment                                                                                     |
+| `isServer()`                      | `boolean` | Returns `true` if code is running in a server/Node.js environment                                                                              |
+| `isIframe()`                      | `boolean` | Returns `true` if the page is rendered inside an iframe                                                                                        |
+| `findLink(links, link)`           | `string`  | Resolves a `ContentLink` to an href: `'/' + fullSlug` looked up in a `Links` map for `type: 'content'` (`'/not-found'` if absent), the raw `uri` for `type: 'url'` |
+| `buildAssetQueryString(params?)`  | `string`  | Serialises `AssetTransformParams` into the query string used by `assetLink` (`''` when no params)                                              |
 
 ---
 

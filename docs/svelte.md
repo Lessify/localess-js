@@ -104,15 +104,16 @@ Built on `@localess/richtext` (see [docs/richtext.md](richtext.md)) — no TipTa
 
 ```svelte
 <script lang="ts">
-  import { LocalessRichText } from '@localess/svelte';
+  import { LocalessRichText, type LocalessSchemaProps } from '@localess/svelte';
+  import type { Article } from '../shared/models/localess'; // your content types — `body` is a `ContentRichText` field
 
-  let { data }: { data: { body?: unknown } } = $props();
+  let { data }: LocalessSchemaProps<Article> = $props();
 </script>
 
 <LocalessRichText content={data.body} />
 ```
 
-String-based per-node overrides: `<LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<div class="prose">${children}</div>` }} />`.
+The `content` prop is a `LocalessRichTextInput` (a `ContentRichText` field value, a rich text document/node/node array, or `null`/`undefined`); output is an HTML string rendered via `{@html}`. String-based per-node overrides: `<LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<div class="prose">${children}</div>` }} />`.
 
 ## SSR with SvelteKit
 
@@ -162,5 +163,9 @@ SvelteKit's own `data`-prop serialization hydrates the server-fetched result to 
 | `localessSync(event)` | Function | Visual Editor bridge event subscription, returns a `Readable` |
 | `LocalessRichText` | Component | Renders a rich text field (`content`, `renderers?` props), reactive via `$derived` |
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |
+| `LocalessComponentProps`, `LocalessDocumentProps`, `LocalessSchemaProps`, `LocalessSvelteInitOptions` | Types | Local prop/option types |
+| `LocalessClient`, `LocalessClientOptions`, `EventToAppOf`, `EventToAppType` | Types | Re-exported from `@localess/client` |
+| `Content`, `ContentData`, `ContentDataSchema`, `Assets`, `Links`, `References` | Types | Re-exported from `@localess/model` |
+| `LocalessRichTextDocument`, `LocalessRichTextInput`, `LocalessRichTextMark`, `LocalessRichTextNode` | Types | Re-exported from `@localess/richtext` |
 
 See `packages/svelte/SKILL.md` for the full usage guide (also shipped inside the npm package).

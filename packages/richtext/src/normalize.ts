@@ -7,7 +7,7 @@ export interface NormalizeInputOptions {
 
 /**
  * Flattens any accepted rich text input (document, node, node array, or the
- * loose `ContentRichText` shape from `@localess/client`) into a node list.
+ * loose `ContentRichText` shape from `@localess/model`) into a node list.
  * Never throws; malformed input yields `[]`.
  */
 export function normalizeInput(input: LocalessRichTextInput, options: NormalizeInputOptions = {}): LocalessRichTextNodeWithKey[] {

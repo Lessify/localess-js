@@ -1,12 +1,47 @@
 # Changelog
 
-All notable changes to the Localess JavaScript/TypeScript SDKs (`@localess/client`, `@localess/react`, `@localess/angular`, `@localess/cli`) are documented in this file.
+All notable changes to the Localess JavaScript/TypeScript SDKs (`@localess/model`, `@localess/client`, `@localess/richtext`, `@localess/schema`, `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, `@localess/astro`, `@localess/cli`) are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project follows lockstep [Semantic Versioning](https://semver.org/) — all four packages share the same version number.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project follows lockstep [Semantic Versioning](https://semver.org/) — all packages share the same version number.
 
 > This file was reconstructed from git history on 2026-08-09, the first time a changelog was introduced into the project. Entries are grouped by the version-bump commits already present in history; purely internal commits (CI tweaks, formatting, the Next.js example app under `apps/`) are generally omitted unless they affect consumers.
 
 ## [Unreleased]
+
+## [4.0.0] - 2026-09-04
+
+> Major release: the SDK grows from four packages to ten, and shared types move into a dedicated `@localess/model` root package. Package boundaries are documented in [ADR 005](docs/decisions/005-package-boundary-discipline.md), [ADR 007](docs/decisions/007-shared-richtext-package.md), [ADR 008](docs/decisions/008-schema-package.md), and [ADR 009](docs/decisions/009-shared-model-package.md).
+
+### Added
+
+- **`@localess/model`** — new zero-dependency root package holding the shared domain-model types (`Content`, `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText`, `Locale`, `Space`, `Translations`, and the schema shapes `SchemaExport`, `SchemaField`, `SchemaFieldKind`, …). `@localess/client`, `@localess/richtext`, and `@localess/schema` depend on it and re-export what they need.
+- **`@localess/richtext`** — new framework-neutral rich text model and HTML renderer for Localess's TipTap JSON, with node/mark renderer overrides and shared fixtures. All framework packages render rich text through it.
+- **`@localess/schema`** — new schema-as-code package: `defineEnum`, `defineSchema`, `defineConfig`, `toSchemaExport`, non-throwing `validate()`, and pure TypeScript content-type inference (`InferContent`, `InferContentData`, `InferEnum`). `OPTIONS` fields infer arrays of enum values and `SCHEMAS` fields accept by-value component references, both with matching validation rules. `defineField` is an optional per-field wrapper that catches a stray property from the wrong field kind at the call site.
+- **`@localess/vue`** — new Vue 3 integration: `Localess` plugin, `LocalessComponent`, `LocalessDocument`, `LocalessRichText`, `useLocaless`/`useLocalessSync`/`useLocalessRichText` composables, `localessEditable`/`localessEditableField` helpers, a `@localess/vue/vite` plugin for component auto-registration, and a Nuxt playground.
+- **`@localess/svelte`** — new Svelte 5 integration: `localessInit`/`getLocaless` context, `LocalessComponent`, `LocalessDocument`, `LocalessRichText`, `localessEditable` action, sync stores, and a SvelteKit playground. Built with `svelte-package` (ESM-only).
+- **`@localess/astro`** — new Astro integration (Astro 6 and 7): `localess()` integration entry, native `.astro` components, component auto-registration from a `componentsDir`, `getLocalessClient`/`resolveAsset`/`getLivePayload` helpers, and Visual Editor live preview via reload. See [ADR 006](docs/decisions/006-astro-integration-architecture.md).
+- `@localess/react`: `@localess/react/vite` and `@localess/react/vite/virtual-modules` entry points — a Vite plugin that automates Localess SSR integrations; `LocalessRichText` component; `AnyLocalessComponent` type; React Router and TanStack Start playgrounds (dynamic and static variants).
+- `@localess/angular`: `[llComponent]` directive for non-wrapping dynamic component rendering, `LocalessDocument`, `LocalessRichText` component and rich text pipe, `SchemaComponent` base class (with `AnySchemaComponent`) for registered components, and `TransferState` hydration in `LocalessContentService` so the secret token never reaches browser network requests.
+- `@localess/cli`: `schema pull|push|diff|validate` commands for syncing `@localess/schema` definitions with a Localess space; `translation diff` command; grouped diff output by status with an option to include unchanged entries (translations and schemas); pre-push previews that include unchanged keys; the pre-push diff is reconciled against the server's result and mismatches are reported as warnings.
+- `playgrounds/schema` — minimal schema-as-code playground exercising `@localess/schema` and the CLI `schema` commands.
+
+### Changed
+
+- **Breaking — `@localess/angular`:** single unified entry point. The `@localess/angular/browser` and `@localess/angular/server` entry points and their duplicated services are removed; configure everything through `provideLocaless({ origin, spaceId, token, ... })`, where the token type (public vs secret) follows the app's rendering mode. `LocalessContentService` methods now return Promises. The `LocalessComponent` wrapper component is replaced by the `[llComponent]` directive.
+- **Breaking — `@localess/react`:** component-registration helper functions are replaced by a single `localessInit({ components, ... })`; `LocalessComponentProps` is renamed `LocalessSchemaProps`; the standalone `LocalessSync` helper is replaced by a live-edit cache with explicit output modes (`/rsc`, `/ssr`); the `enableSync` flag is removed from the locales configuration.
+- **Breaking — `@localess/cli`:** command groups are now singular — `translation pull|push|diff` and `type generate` — with `translations` and `types` kept as aliases.
+- **Breaking — shared types:** domain-model types formerly declared in `@localess/client` now live in `@localess/model` and are re-exported by `@localess/client` and every framework package's models barrel.
+- `@localess/react`, `@localess/vue`, `@localess/svelte`: SSR documentation and playgrounds import `localessClient` from the framework package (`@localess/react/ssr`, `@localess/vue`, `@localess/svelte`) instead of `@localess/client` directly.
+- `@localess/vue`: the `vLocalessEditable` directive is replaced by the `localessEditable` function.
+- Every framework package routes its `@localess/client` imports through exactly three files (a models module, a utils module, and one client file) and its `@localess/richtext` imports through a designated richtext file — see each package's `CONTRIBUTING.md`. `@localess/astro` is not yet converted.
+- Vite configs migrated to `.mts` and `import.meta.dirname`; `LocalessApiError` re-exported consistently across packages.
+- Project documentation restructured under `docs/` (per-package references plus ADRs 005–009); `AGENTS.md` is now a redirect stub.
+
+### Removed
+
+- `@localess/react`: the Vite plugin for component auto-registration (the `/vite` entry point now serves SSR integration only).
+- `@localess/angular`: `/browser` and `/server` entry points (see Changed).
+- Unused OpenAPI specifications and a committed credentials file removed from playgrounds.
 
 ## [3.4.0] - 2026-08-09
 

@@ -6,26 +6,26 @@ This monorepo contains the official JavaScript/TypeScript SDKs for the Localess 
 
 | Package | Purpose | Depends on |
 |---|---|---|
-| `@localess/model` | Shared domain-model types, zero dependencies | — |
-| `@localess/richtext` | Framework-neutral rich text model + renderer, zero dependencies | — |
-| `@localess/schema` | Programmatic schema definitions with TypeScript content type inference, zero dependencies | — |
+| `@localess/model` | Shared domain-model types, zero dependencies of any kind | — |
+| `@localess/richtext` | Framework-neutral rich text model + renderer, zero external dependencies | `@localess/model` |
+| `@localess/schema` | Programmatic schema definitions with TypeScript content type inference, zero external dependencies | `@localess/model` |
 | `@localess/client` | Core server-side SDK | `@localess/model` |
 | `@localess/react` | React integration: components, hooks, rich text, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext` |
 | `@localess/angular` | Angular integration: components, directives, pipes, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext` |
-| `@localess/astro` | Astro integration: native components, Visual Editor sync via reload | `@localess/client`, `@localess/model`, `@localess/richtext` |
-| `@localess/vue` | Vue integration: plugin, component, directive, composables, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext` |
-| `@localess/svelte` | Svelte integration: context init, component, action, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext` |
+| `@localess/astro` | Astro integration: native components, Visual Editor sync via reload or in-place live preview, dev toolbar | `@localess/client`, `@localess/model`, `@localess/richtext` |
+| `@localess/vue` | Vue integration: plugin, components, composables, Vite plugin, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext` |
+| `@localess/svelte` | Svelte integration: context init, components, action, stores, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext` |
 | `@localess/cli` | CLI for translations, type generation, and schema pull/push | `@localess/client`, `@localess/model`, `@localess/schema` |
 
-`@localess/client`, `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, `@localess/svelte`, and `@localess/cli` never depend on each other; `@localess/model`, `@localess/richtext`, and `@localess/schema` depend on nothing.
+`@localess/client`, `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, `@localess/svelte`, and `@localess/cli` never depend on each other. `@localess/model` depends on nothing; `@localess/richtext` and `@localess/schema` depend only on `@localess/model`, so the three form a root tier with no dependencies outside it.
 
 **Requirements:** Node.js >= 24.0.0, npm >= 10.
 
 ## Hard Rules — Never Violate
 
-1. **`@localess/client` is server-side only.** It requires an API token that must stay secret. Never import it in browser bundles, React Client Components, Angular browser code, or any client-side code. → [ADR 001](decisions/001-server-side-only.md)
+1. **`@localess/client` is server-side only, with one exception.** It requires an API token; a *secret* token must never reach browser bundles, React Client Components, Angular browser code, or any client-side code. The exception is Localess's *public* tokens (read-only, published content and translations only), which are safe client-side and are used by `@localess/react`'s client-side `LocalessDocument` fallback for static export, `@localess/angular`'s `provideLocaless` (token type follows the rendering mode), `@localess/vue`, and `@localess/svelte`. `@localess/cli` and `@localess/astro` still treat their token as secret-only. → [ADR 001](decisions/001-server-side-only.md)
 
-2. **`@localess/model`, `@localess/richtext`, and `@localess/schema` have zero dependencies of any kind.** `@localess/client` has zero *external* dependencies but depends on `@localess/model` internally. Never add to `dependencies` in `packages/client/package.json` beyond `@localess/model`; `packages/model/package.json`, `packages/richtext/package.json`, and `packages/schema/package.json` have no `dependencies` key at all. `devDependencies` are fine. → [ADR 002](decisions/002-zero-production-deps.md), [ADR 007](decisions/007-shared-richtext-package.md), [ADR 008](decisions/008-schema-package.md), [ADR 009](decisions/009-shared-model-package.md)
+2. **`@localess/model` has zero dependencies of any kind; `@localess/client`, `@localess/richtext`, and `@localess/schema` depend on `@localess/model` alone.** `packages/model/package.json` has no `dependencies` key at all. `packages/client/package.json`, `packages/richtext/package.json`, and `packages/schema/package.json` each have exactly one `dependencies` entry, `@localess/model` — never add anything else. All four stay zero-*external*-dependency (no npm package outside this monorepo). `devDependencies` are fine. → [ADR 002](decisions/002-zero-production-deps.md), [ADR 007](decisions/007-shared-richtext-package.md), [ADR 008](decisions/008-schema-package.md), [ADR 009](decisions/009-shared-model-package.md)
 
 3. **Package boundaries.** `@localess/client` depends on `@localess/model`. `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, and `@localess/svelte` depend on `@localess/client`, `@localess/model`, and `@localess/richtext`; `@localess/cli` depends on `@localess/client`, `@localess/model`, and `@localess/schema`. They never depend on each other. → [ADR 005](decisions/005-package-boundary-discipline.md), [ADR 007](decisions/007-shared-richtext-package.md), [ADR 008](decisions/008-schema-package.md), [ADR 009](decisions/009-shared-model-package.md)
 
@@ -63,7 +63,7 @@ npx vitest run packages/cli/src/commands/login/login.test.ts  # single file
 ```
 
 Build tools per package:
-- `@localess/model`, `@localess/client`, `@localess/richtext`, `@localess/schema`, `@localess/react`, `@localess/vue`, `@localess/astro`, `@localess/cli`: **Vite library mode** (`vite.config.ts`) → CJS + ESM + types
+- `@localess/model`, `@localess/client`, `@localess/richtext`, `@localess/schema`, `@localess/react`, `@localess/vue`, `@localess/astro`, `@localess/cli`: **Vite library mode** (`vite.config.mts`) → CJS + ESM + types
 - `@localess/svelte`: **`svelte-package`** (ESM-only) for the library surface, gated by a `svelte-check` typecheck step
 - `@localess/angular`: **ng-packagr via Angular CLI** (`ng-package.json`, single `entryFile: src/public-api.ts`) → `dist/` with a unified entry (`fesm2022/`, `types/`) — no `/browser` or `/server` split
 
@@ -84,12 +84,13 @@ Tests use **vitest** everywhere, including `@localess/angular` (via the Angular 
 | [docs/client.md](client.md) | `@localess/client` — initialization, API methods, caching, types |
 | [docs/model.md](model.md) | `@localess/model` — shared domain-model types |
 | [docs/richtext.md](richtext.md) | `@localess/richtext` — model, HTML renderer, overrides, fixtures, per-framework usage |
-| [docs/schema.md](schema.md) | `@localess/schema` — defineSchema/defineEnum/defineConfig, type inference, validate, export |
-| [docs/react.md](react.md) | `@localess/react` — export variants, components, hooks, sync patterns |
-| [docs/angular.md](angular.md) | `@localess/angular` — entry points, components, directives, pipes, sync |
-| [docs/vue.md](vue.md) | `@localess/vue` — plugin, component, directive, composables, Vite plugin, SSR |
-| [docs/svelte.md](svelte.md) | `@localess/svelte` — context init, component, action, stores, SSR |
-| [docs/cli.md](cli.md) | `@localess/cli` — commands, credentials, CI/CD |
+| [docs/schema.md](schema.md) | `@localess/schema` — defineSchema/defineEnum/defineField/defineConfig, type inference, validate, export |
+| [docs/react.md](react.md) | `@localess/react` — export variants, components, hooks, Vite plugin, sync patterns |
+| [docs/angular.md](angular.md) | `@localess/angular` — providers, components, directives, pipes, services, sync |
+| [docs/vue.md](vue.md) | `@localess/vue` — plugin, components, composables, Vite plugin, SSR |
+| [docs/svelte.md](svelte.md) | `@localess/svelte` — context init, components, action, stores, SSR |
+| [docs/astro.md](astro.md) | `@localess/astro` — integration, components, live preview |
+| [docs/cli.md](cli.md) | `@localess/cli` — commands (`translation`, `type`, `schema`), credentials, CI/CD |
 | [docs/decisions/](decisions/) | ADRs — the WHY behind hard constraints |
 
 ## Contributor Guide

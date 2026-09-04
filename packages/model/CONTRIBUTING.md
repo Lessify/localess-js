@@ -8,9 +8,15 @@ must never depend on any of them (or on anything else).
 
 ## Module map
 
-One file per type (kebab-case, matching the type name), each with a single
-responsibility, plus `src/index.ts` as the only barrel. See `docs/model.md`
-for the full type list.
+One kebab-case file per model, each with a single responsibility, plus
+`src/index.ts` as the only barrel (`export *` from every file). Most files
+hold exactly one type named after the file; two group closely related
+shapes: `src/content-data.ts` (`ContentData`, `ContentDataSchema`,
+`ContentDataField`) and `src/schema.ts` (the whole schema wire model —
+`SchemaType`, `SchemaFieldKind`, `AssetFileType`, `SchemaEnumValue`,
+`SchemaFieldBase`, the 18 per-kind `SchemaField*` interfaces, `SchemaField`,
+`SchemaComponentExport`, `SchemaEnumExport`, `SchemaExport`). See
+`docs/model.md` for the full type list.
 
 ## Adding a new shared model
 
@@ -20,12 +26,23 @@ for the full type list.
 3. Add a construction smoke test to `src/index.test.ts` (one `it()` block
    constructing a valid value and asserting one field — these types have no
    runtime logic, so the test exists only as a regression trip-wire for the
-   shape itself).
-4. Add a row to the type table in `docs/model.md`.
+   shape itself). The schema wire model is the exception: its narrowing is
+   type-tested in `packages/schema/src/models.test-d.ts` instead.
+4. Add a row to the type tables in `docs/model.md` and `SKILL.md`.
 5. If the type is meant to replace a duplicate that exists elsewhere in the
    repo (the usual reason to add something here), update that package to
    import from `@localess/model` instead and delete its local copy — don't
    leave both.
+
+## Changing the schema wire model (`src/schema.ts`)
+
+Every string literal in `SchemaType`, `SchemaFieldKind`, and `AssetFileType`
+must match the Localess backend's enum values exactly — definitions
+round-trip through `@localess/cli`'s `schema pull`/`push` without any
+mapping layer. Adding a field kind is a cross-package change (new interface
+here, then inference/validation/normalization in `@localess/schema` and the
+CLI's type generator and pull emitter); follow the "Adding a field kind"
+checklist in `packages/schema/CONTRIBUTING.md`.
 
 ## What does NOT belong here
 

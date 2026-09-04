@@ -1,11 +1,11 @@
 # Contributing to @localess/svelte
 
-Svelte 5 integration layer. Depends on `@localess/client`. Components never fetch data — they accept content as props.
+Svelte 5 integration layer. Depends on `@localess/client`, `@localess/model`, and `@localess/richtext`. Components never fetch data — they accept content as props.
 
 `@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples) must only ever import from `@localess/svelte` — never `@localess/client` directly. If something from `@localess/client` isn't re-exported yet, add it to `src/lib/index.ts`'s re-exports rather than telling consumers to import `@localess/client` themselves.
 
 **`src/lib/models/index.ts`, `src/lib/utils/index.ts`, and `src/lib/client.ts` are the only files allowed to import from `@localess/client`.** Each has one job:
-- `models/index.ts` — every `@localess/client` **type** the package needs, plus `LocalessApiError` (a class, but consumed in type position via `catch`/`instanceof`, so it lives with the domain model). `models/options.ts` additionally defines `LocalessSvelteInitOptions` (extends `LocalessClientOptions` with `components`/`fallbackComponent`/`enableSync`) — it imports `LocalessClientOptions` from `@localess/client` directly since it's part of the `models/` boundary role, same as `@localess/react`'s `core/models/options.ts`. Other sibling files (e.g. `models/components.ts`) hold package-specific derived types built from what `models/index.ts` already re-exports, and import from `./index` instead.
+- `models/index.ts` — every `@localess/client` **type** the package needs, plus `LocalessApiError` (a class, but consumed in type position via `catch`/`instanceof`, so it lives with the domain model). It is also the only file importing `@localess/model` (domain types: `Content`, `ContentData`, `Assets`, `Links`, `References`, ...) and the richtext model types. `models/options.ts` additionally defines `LocalessSvelteInitOptions` (extends `LocalessClientOptions` with `components`/`fallbackComponent`/`enableSync`) — it imports `LocalessClientOptions` from `@localess/client` directly since it's part of the `models/` boundary role, same as `@localess/react`'s `core/models/options.ts`. Other sibling files (e.g. `models/components.ts`) hold package-specific derived types built from what `models/index.ts` already re-exports, and import from `./index` instead.
 - `utils/index.ts` — every `@localess/client` plain **function** the package needs (`isBrowser`, `isIframe`, `loadLocalessSync`, `localessEditable`, `localessEditableField`, `findLink`, `isServer`). Not `localessClient` — see below.
 - `client.ts` — the one place that calls `localessClient(...)` and wraps it in the singleton (client instance + component registry + Visual Editor sync state) that the rest of the package reads through `localessInit()`/`getLocalessClient()`. `localessClient` is a callable factory, not a type or a stateless helper, so it's imported here directly rather than re-exported through `models` or `utils`.
 
@@ -17,7 +17,7 @@ The same discipline applies to `@localess/richtext` (ADR 007): **`src/lib/compon
 
 ## Package Layout
 
-`@localess/svelte` has a single build root: `src/lib/**` — the library surface (components, actions, stores, context), built by `svelte-package` (ESM-only, ships `.svelte` files as-is).
+`@localess/svelte` has a single build root: `src/lib/**` — the library surface (components, actions, stores, context), built by `svelte-package` (ESM-only, ships `.svelte` files as-is). `src/routes/+page.svelte` and `src/app.html` are only the SvelteKit dev shell for `npm run dev` (`vite dev`); they are not part of the library, not shipped, and excluded from coverage (`src/routes/**` in `vitest.config.ts`). `src/lib/__fixtures__/` holds test-only harness components, excluded from the published package via `package.json` `files`.
 
 There is no Vite plugin in this package. Component registration and client initialization both go through `localessInit()` (see "Hard Constraints" below) — pass a `components` map directly rather than auto-discovering it via a Vite virtual module. This was tried (a `src/vite/`-based `localess()` plugin mirroring `@localess/react/vite`) and removed: `localessInit()`'s `setContext` call only works when invoked synchronously during a component's own initialization, and a Vite virtual module's top-level code always finishes evaluating *before* the importing component's function body runs (per the ES module spec) — so a generated module can never safely call it. Don't reintroduce a Vite plugin here without solving that constraint first (e.g. dropping `setContext` in favor of the plain singleton `client.ts` already uses).
 
@@ -60,7 +60,7 @@ Rules:
 ## Hard Constraints
 
 - **No data fetching in components.** `<LocalessComponent>`, `<LocalessDocument>`, and consumer components accept content (`data`, `assets`, `links`, `references`, or the full `document`) as props only.
-- **No dependency on `@localess/react`, `@localess/angular`, `@localess/vue`, or `@localess/cli`.** ADR 005 — depend only on `@localess/client`.
+- **No dependency on `@localess/react`, `@localess/angular`, `@localess/vue`, or `@localess/cli`.** ADR 005 — depend only on `@localess/client`, `@localess/model`, and `@localess/richtext`.
 - **No secret token anywhere in this package.** Only a public (read-only) token flows through `localessInit`.
 - **`localessInit()` must be called during component initialization**, not inside `onMount`, an event handler, or a `+layout.ts` — Svelte's `setContext` requires it.
 

@@ -7,12 +7,19 @@ This file is a redirect stub. The authoritative project reference has moved to `
 | Document | Contents |
 |---|---|
 | [docs/index.md](docs/index.md) | Overview, hard rules, build & test, code style |
-| [docs/client.md](docs/client.md) | `@localess/client` — initialization, API methods, caching, types |
 | [docs/model.md](docs/model.md) | `@localess/model` — shared domain-model types |
-| [docs/schema.md](docs/schema.md) | `@localess/schema` — defineSchema/defineEnum/defineConfig, type inference, validate, export |
+| [docs/client.md](docs/client.md) | `@localess/client` — initialization, API methods, caching, types |
+| [docs/richtext.md](docs/richtext.md) | `@localess/richtext` — model, HTML renderer, overrides, fixtures, per-framework usage |
+| [docs/schema.md](docs/schema.md) | `@localess/schema` — defineSchema/defineEnum/defineField/defineConfig, type inference, validate, export |
 | [docs/react.md](docs/react.md) | `@localess/react` — export variants, components, hooks, sync patterns |
+| [docs/angular.md](docs/angular.md) | `@localess/angular` — providers, components, directives, pipes, services, sync |
+| [docs/vue.md](docs/vue.md) | `@localess/vue` — plugin, components, composables, Vite plugin, SSR |
+| [docs/svelte.md](docs/svelte.md) | `@localess/svelte` — context init, components, action, stores, SSR |
+| [docs/astro.md](docs/astro.md) | `@localess/astro` — integration, components, live preview |
 | [docs/cli.md](docs/cli.md) | `@localess/cli` — commands, credentials, CI/CD |
 | [docs/decisions/](docs/decisions/) | ADRs — the WHY behind hard constraints |
+
+Each package also ships a `SKILL.md` (`packages/<name>/SKILL.md`) with its public API for downstream AI agents, and a `CONTRIBUTING.md` with extension patterns. Contributor rules live in `CLAUDE.md`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

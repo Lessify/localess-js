@@ -45,7 +45,7 @@ Authenticate with your Localess instance. Credentials are validated immediately 
 localess login --origin <origin> --space <space_id> --token <api_token>
 ```
 
-If any option is omitted, the CLI will interactively prompt for the missing values.
+If any option is omitted, the CLI will interactively prompt for the missing values. Credentials are validated with a `GET /spaces/{spaceId}` call before being saved, and `.localess` is appended to `.gitignore` automatically (the file is created if absent; the entry is skipped if already present). If a session already exists (env vars or file), `login` prints `Already logged in.` and exits without prompting — run `localess logout` first to switch credentials.
 
 **Options:**
 
@@ -68,7 +68,7 @@ localess login --origin https://my-localess.web.app --space MY_SPACE_ID --token 
 
 #### Authentication via Environment Variables
 
-For CI/CD pipelines, you can provide credentials through environment variables instead of running `localess login`. The CLI automatically reads these variables and skips the file-based credentials:
+For CI/CD pipelines, you can provide credentials through environment variables instead of running `localess login`. The CLI automatically reads these variables and skips the file-based credentials. All three must be set — if any is missing, the CLI falls back to `.localess/credentials.json` in the current working directory:
 
 ```bash
 export LOCALESS_ORIGIN=https://my-localess.web.app
@@ -88,7 +88,7 @@ localess translation pull en --path ./public/locales/en.json
 
 ### `localess logout`
 
-Clear stored credentials from `.localess/credentials.json`.
+Clear stored credentials from `.localess/credentials.json` (the file is overwritten with `{}`).
 
 ```bash
 localess logout
@@ -104,7 +104,9 @@ localess logout
 
 ### `localess translation push <locale>`
 
-Push a local JSON translation file to your Localess space. Only keys present in the file are affected, based on the selected update type. Before applying anything, fetches the remote translations and prints the same grouped/colored diff report as `translation diff`, plus a note on what the selected `--type` will do. `update-existing` and `delete-missing` prompt for confirmation first (skippable with `-y`/`--yes`, or auto-skipped under `--dry-run` or when there's nothing to do); `add-missing` never prompts.
+Push a local JSON translation file to your Localess space. Only keys present in the file are affected, based on the selected update type. Before applying anything, fetches the remote **draft** translations and prints the same grouped/colored diff report as `translation diff` (`Create`/`Update`/`Stale` sections; unchanged keys collapsed into a count unless `-a`/`--all`), plus a note on what the selected `--type` will do. `update-existing` and `delete-missing` prompt for confirmation first (skippable with `-y`/`--yes`, or auto-skipped under `--dry-run` or when there's nothing to do); `add-missing` never prompts.
+
+After the push, prints the server's summary `message` and (if present) the affected translation `ids`, then reconciles the pre-push diff against those ids and prints a `⚠ Prediction mismatch` warning (without failing) for any key whose predicted status doesn't match what the server actually did — e.g. a concurrent edit made in Localess between the preview and the push. Skipped when the response carries no `ids`.
 
 ```bash
 localess translation push <locale> --path <file> [options]
@@ -180,7 +182,7 @@ localess translation push de --path ./locales/de.json --format nested
 
 ### `localess translation pull <locale>`
 
-Pull translations from your Localess space and save them to a local file.
+Pull translations from your Localess space and save them to a local file. Keys are sorted alphabetically (recursively for `nested`) so the output is stable across runs and diff-friendly in git.
 
 ```bash
 localess translation pull <locale> --path <file> [options]
@@ -259,10 +261,10 @@ localess translation diff en --path ./locales/en.json --all
 
 ### `localess type generate`
 
-Fetch your space's schema definitions from Localess and generate TypeScript type definitions. The output file provides full type safety when working with Localess content in your TypeScript projects.
+Fetch your space's schema definitions from Localess and generate TypeScript type definitions. The output file provides full type safety when working with Localess content in your TypeScript projects: one `interface` per `ROOT`/`NODE` schema (with `_id` and a literal `_schema` discriminator), a string-literal union per `ENUM` schema, the `ContentAsset`/`ContentLink`/`ContentReference`/`ContentRichText` helper types, and a `ContentData` union of all `ROOT` schemas.
 
 ```bash
-localess type generate [--path <output_path>]
+localess type generate [--path <output_path>] [--prefix <prefix>]
 ```
 
 **Options:**
@@ -319,12 +321,16 @@ localess schema validate ./schemas/index.ts --format json   # machine-readable, 
 
 ### `localess schema pull [--path <dir>]`
 
-Fetches the space's schemas and (re)generates one TypeScript definition file per schema plus `index.ts` (a `defineConfig()` call) into `--path` (default `schemas`). Repeatable and safe to re-run — only ever overwrites/deletes files it previously generated (marked with a header comment); hand-written files without that marker are left untouched.
+Fetches the space's schemas and (re)generates one TypeScript definition file per schema (kebab-case file name, e.g. `HeroBlock` → `hero-block.ts`) plus `index.ts` (a `defineConfig()` call) into `--path` (default `schemas`). Repeatable and safe to re-run — only ever overwrites/deletes files it previously generated (marked with a header comment); a same-named hand-written file without that marker is skipped and reported, and never overwritten.
 
 ```bash
 localess schema pull
 localess schema pull --path src/schemas
 ```
+
+- Every field is emitted wrapped in `defineField(...)` (imported from `@localess/schema` alongside `defineSchema`), not as a bare object literal, so hand-edits to a pulled file still get `defineField`'s excess-property checking. Schemas with no fields import only `defineSchema`; `ENUM` schemas use `defineEnum`.
+- Cross-schema references (`OPTION`/`OPTIONS` `source`, `SCHEMA`/`SCHEMAS` `schemas`) that point at another pulled schema become `import { X } from './x'` statements and by-value refs; ids not present in the pulled set stay plain strings.
+- Output is deterministic — the same server state produces byte-identical files.
 
 ### `localess schema diff <entry>`
 
@@ -346,21 +352,33 @@ localess schema push ./schemas/index.ts --delete    # sync: also delete schemas 
 localess schema push ./schemas/index.ts --delete -y # sync, skip the deletion confirmation prompt
 ```
 
-- Aborts (exit `1`) without pushing if `validate()` reports any error.
+- Aborts (exit `1`) without pushing if `validate()` reports any error (warnings are printed but don't block).
 - Default mode is **upsert** — creates and updates, never deletes. Schemas on the server but absent from code are reported as `stale` and left alone.
-- `--delete` switches to **sync** mode, which also deletes stale schemas. Without `--yes`, you're asked to confirm the exact list before anything is deleted.
-- Prints the server's final counts: `created`, `updated`, `deleted`, `unchanged`.
+- `--delete` switches to **sync** mode, which also deletes stale schemas. Without `--yes`, you're asked to confirm the exact list before anything is deleted; `--dry-run` skips the prompt (nothing is written either way), and no prompt is shown when nothing is stale.
+- Prints the server's final counts: `created`, `updated`, `deleted`, `unchanged` (prefixed with `[DryRun]` under `--dry-run`).
+- Reconciles the pre-push diff against the server's returned ids and prints a `⚠ Prediction mismatch` warning (without failing) for any schema whose predicted status differs from the server's actual outcome — e.g. a concurrent change made between the preview and the push. `stale` entries are only checked in sync mode, since upsert never sends them.
 
 ---
 
 ## Stored Files
 
-| File                         | Description                                                             |
-|------------------------------|-------------------------------------------------------------------------|
-| `.localess/credentials.json` | Stored login credentials (created by `localess login`)                  |
-| `.localess/localess.d.ts`    | Generated TypeScript definitions (created by `localess type generate`) |
+| File                         | Description                                                                 |
+|------------------------------|-----------------------------------------------------------------------------|
+| `.localess/credentials.json` | Stored login credentials (created by `localess login`, mode `0600`)         |
+| `.localess/localess.d.ts`    | Generated TypeScript definitions (created by `localess type generate`)      |
+| `schemas/*.ts`, `schemas/index.ts` | Generated schema definitions (created by `localess schema pull`; path via `--path`) |
 
-> It is recommended to add `.localess/credentials.json` to your `.gitignore` to avoid committing sensitive credentials.
+> `localess login` appends `.localess` to `.gitignore` automatically. If you want to commit generated types, refine that entry to `.localess/credentials.json` afterwards.
+
+---
+
+## Update Notifications
+
+Every command checks the npm registry for a newer `@localess/cli` version (3-second timeout, failures ignored silently) and, after the command finishes, prints an "Update available" box with the `npm install --save-dev @localess/cli@<tag>` command when one exists. Pre-release (`-dev.*`) installs also check the `dev` dist-tag; a newer stable release always wins over a newer dev build.
+
+## API Errors
+
+Any non-OK response from the Localess API is rendered as a boxed error (`Status`, optional `Code`, redacted `URL`, and a `Hint`) and the command exits `1`. `401` and `403` hints link directly to your space's token settings page and, for `403`, list the permission(s) the token is missing. Network errors and `5xx` responses are retried 3 times with a 500 ms delay before failing.
 
 ---
 

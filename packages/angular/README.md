@@ -17,6 +17,7 @@ Angular SDK for the [Localess](https://github.com/Lessify/localess) headless CMS
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Setup](#setup)
+- [Component Registry & Dynamic Rendering](#component-registry--dynamic-rendering)
 - [Content Service](#content-service)
 - [Asset Service](#asset-service)
 - [Translation Service](#translation-service)
@@ -25,6 +26,7 @@ Angular SDK for the [Localess](https://github.com/Lessify/localess) headless CMS
 - [Pipes](#pipes)
 - [Visual Editor Integration](#visual-editor-integration)
 - [Angular Image Optimization](#angular-image-optimization)
+- [Other Exports](#other-exports)
 
 ---
 
@@ -41,7 +43,7 @@ yarn add @localess/angular@latest
 pnpm add @localess/angular@latest
 ```
 
-**Peer dependencies:** `@angular/core`, `@angular/common`, `@angular/compiler` — versions `>=21.0.0 <23.0.0`.
+**Peer dependencies:** `@angular/core`, `@angular/common`, `@angular/compiler`, `@angular/platform-browser` — versions `>=21.0.0 <23.0.0`. Requires Node.js >= 24.
 
 ---
 
@@ -103,7 +105,7 @@ On the server, the fetched content is written to `TransferState`; on the browser
 
 ## Setup
 
-`provideLocaless()` registers everything: `LocalessClientService`, `LocalessContentService`, `LocalessAssetService`, `LocalessTranslationService`, `LocalessSyncService`, and Angular's `IMAGE_LOADER`.
+`provideLocaless()` registers everything: `LocalessClientService`, `LocalessContentService`, `LocalessAssetService`, `LocalessTranslationService`, `LocalessSyncService`, `LocalessComponentResolver`, the `LOCALESS_CONFIG` and `LOCALESS_SYNC_READY` injection tokens, and Angular's `IMAGE_LOADER`. It throws at startup if `origin`, `spaceId`, or `token` is missing or empty.
 
 ```ts
 import { provideLocaless } from '@localess/angular';
@@ -130,6 +132,88 @@ provideLocaless({
 | `debug` | `boolean` | — | When `true`, logs internal activity to the console |
 
 `provideLocaless()` also registers Angular's built-in `IMAGE_LOADER` provider so that `NgOptimizedImage` automatically appends `?w=<width>` to Localess asset URLs for responsive image optimization.
+
+`provideLocaless()` accepts optional trailing **features**, the same pattern as `provideRouter()`/`provideHttpClient()`. Today there's one: [`withLocalessComponents()`](#component-registry--dynamic-rendering).
+
+---
+
+## Component Registry & Dynamic Rendering
+
+Register a map of content `_schema` keys to Angular components, then render content without writing a switch statement over schema types yourself.
+
+### `withLocalessComponents(components, fallback?)`
+
+Pass to `provideLocaless()` as a feature. Entries can be an eager component reference or a lazy loader (`LocalessComponentLoader`, i.e. `() => Promise<AnySchemaComponent>`) — mix both in the same map. Every entry, including the optional `fallback`, must be a class that extends `SchemaComponent` — `LocalessComponentsMap` values and the `fallback` parameter are typed `AnySchemaComponent` (`Type<SchemaComponent<any>>`), so anything else is a compile error:
+
+```ts
+import { provideLocaless, withLocalessComponents } from '@localess/angular';
+import { HeroSectionComponent } from './components/hero-section.component';
+import { UnknownBlockComponent } from './components/unknown-block.component';
+
+provideLocaless(
+  { origin: 'https://my-localess.web.app', spaceId: 'YOUR_SPACE_ID', token: 'YOUR_TOKEN' },
+  withLocalessComponents(
+    {
+      hero: HeroSectionComponent, // eager — bundled immediately
+      teaser: () => import('./components/teaser.component').then(m => m.TeaserComponent), // lazy — loaded on demand
+    },
+    UnknownBlockComponent // optional fallback, rendered when a `_schema` has no match — also a SchemaComponent
+  )
+);
+```
+
+The fallback commonly only reads `data()._schema` and ignores `links`/`references`/`assets`, but it still must extend `SchemaComponent`:
+
+```ts
+import { SchemaComponent } from '@localess/angular';
+
+@Component({ selector: 'app-unknown-block', template: `Unknown block: {{ data()._schema }}` })
+export class UnknownBlockComponent extends SchemaComponent {}
+```
+
+### `<ll-document>` — render a full `Content` response
+
+`LocalessDocument` is the top-level entry point for a fetched page. It renders `document().data` through `[llComponent]` (passing the document's `links`/`references`/`assets`) and subscribes to `LocalessSyncService.onChange` internally, so `input`/`change` events from the Visual Editor update the page without a full reload — no manual sync wiring needed. When `document().data` is missing it renders a placeholder message and logs a console error.
+
+```ts
+import { Component, input } from '@angular/core';
+import { Content, LocalessDocument } from '@localess/angular';
+
+@Component({
+  selector: 'app-slug',
+  imports: [LocalessDocument],
+  template: `<ll-document [document]="content()" />`,
+})
+export class SlugComponent {
+  content = input.required<Content>();
+}
+```
+
+### `[llComponent]` — render a single schema item
+
+`LocalessComponentDirective` is used by `<ll-document>` internally, and directly useful inside your own schema components to render a nested schema item. Apply it to a plain `ng-container`; inputs are `llComponent` (`ContentData | null | undefined`), `links`, `references`, and `assets`:
+
+```ts
+import { LocalessComponentDirective } from '@localess/angular';
+
+@Component({ imports: [LocalessComponentDirective] })
+```
+
+```html
+<!-- inside a schema component's own template -->
+<ng-container [llComponent]="data().hero" [links]="links()" [references]="references()" [assets]="assets()" />
+
+<!-- for an array field (e.g. a page's body), loop it with @for -->
+@for (item of data().body; track item._id) {
+  <ng-container [llComponent]="item" [links]="links()" [references]="references()" [assets]="assets()" />
+}
+```
+
+It resolves the item's `_schema` against the registry (via `LocalessComponentResolver`, which caches resolved components so a lazy loader runs once per key) and creates the matching component with `ViewContainerRef.createComponent`, directly at the `ng-container`'s position — no wrapper element. The rendered component is recreated only when `_schema` changes; otherwise the existing instance is reused and gets updated `data`/`links`/`references`/`assets` inputs. A `null`/`undefined` value clears the rendered component.
+
+### Unregistered schema keys
+
+When a `_schema` key has no match in the registry: the fallback component (if configured) is rendered, and a console error is logged either way. With no fallback configured, nothing is rendered for that item.
 
 ---
 
@@ -184,7 +268,7 @@ links = await contentService.links({ kind: 'DOCUMENT', parentSlug: 'blog', exclu
 
 | Parameter | Type | Description |
 |---|---|---|
-| `kind` | `string` | Filter links by content kind |
+| `kind` | `'DOCUMENT' \| 'FOLDER'` | Filter links by content kind; omit for all |
 | `parentSlug` | `string` | Return only links under this parent slug |
 | `excludeChildren` | `boolean` | Exclude descendant slugs |
 
@@ -311,8 +395,12 @@ export class HeroSectionComponent extends SchemaComponent<HeroSection> {}
 </section>
 ```
 
+Normally `<ll-document>` / `[llComponent]` instantiate schema components for you via the registry. To render one directly, bind its inputs yourself (`Content.data` is optional, so guard it — `data` is a required input):
+
 ```html
-<app-schema-hero-section [data]="content.value()?.data" [links]="links.value()" [references]="references" [assets]="assets" />
+@if (content().data; as data) {
+  <app-schema-hero-section [data]="data" [links]="content().links" [references]="content().references" [assets]="content().assets" />
+}
 ```
 
 ### Base class helpers
@@ -332,7 +420,7 @@ Use these directives when you have a component or element that is **not** a sche
 
 ### `[data-ll-id]` and `[data-ll-schema]`
 
-Marker directives. Apply both together to any element to make it recognizable in the Visual Editor:
+Marker directives (`ContentIdDirective`, `ContentSchemaDirective`) — empty classes; the Visual Editor reads the attributes themselves. Apply both together to any element to make it recognizable in the Visual Editor:
 
 ```html
 <div [attr.data-ll-id]="item._id" [attr.data-ll-schema]="item._schema">
@@ -342,7 +430,7 @@ Marker directives. Apply both together to any element to make it recognizable in
 
 ### `[data-ll-field]`
 
-Marks an individual field within a schema for field-level selection in the Visual Editor:
+Marker directive (`ContentFieldDirective`). Marks an individual field within a schema for field-level selection in the Visual Editor:
 
 ```html
 <p data-ll-field="subtitle">{{ data.subtitle }}</p>
@@ -398,9 +486,11 @@ import { LinkPipe } from '@localess/angular';
 <a [href]="links | llLink: data.ctaLink">Visit</a>
 ```
 
+The piped value is the `Links` map; the argument is the `ContentLink` to resolve.
+
 | `ContentLink.type` | Result |
 |---|---|
-| `"content"` | Looks up `link.uri` in the `links` map and returns `/<fullSlug>` |
+| `"content"` | Looks up `link.uri` in the `links` map and returns `/<fullSlug>` (`/not-found` if missing) |
 | `"url"` | Returns `link.uri` as-is |
 
 ### `llRichText` — Rich Text to SafeHtml
@@ -417,11 +507,11 @@ import { LocalessRichTextPipe } from '@localess/angular';
 <div [innerHTML]="data.body | llRichText"></div>
 ```
 
-The pipe accepts `LocalessRichTextInput` (a doc, node, node array, `ContentRichText`, or `null`/`undefined` → empty). An optional argument passes per-node string renderers: `data.body | llRichText:renderers`. Supports headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links; link `href`s pass a protocol allowlist (`javascript:`/`data:` stripped).
+The pipe accepts `LocalessRichTextInput` (a doc, node, node array, `ContentRichText`, or `null`/`undefined` → empty). An optional argument passes per-node string renderers (`LocalessRichTextRenderers<string>`): `data.body | llRichText:renderers`. Supports paragraphs, headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links; link `href`s are sanitized (`javascript:`/`data:` stripped).
 
 ### `<ll-rich-text>` — Rich Text component
 
-Renders the field into its host element; re-renders on signal changes:
+`LocalessRichText` renders the field into its host element via `[innerHTML]`; re-renders on signal changes. Inputs: `content` (required, `LocalessRichTextInput`) and `renderers` (optional, `LocalessRichTextRenderers<string>`):
 
 ```ts
 import { LocalessRichText } from '@localess/angular';
@@ -431,6 +521,7 @@ import { LocalessRichText } from '@localess/angular';
 
 ```html
 <ll-rich-text [content]="data.body" />
+<ll-rich-text [content]="data.body" [renderers]="myRenderers" />
 ```
 
 ### `llSafeHtml` — Safe HTML
@@ -472,13 +563,15 @@ export class SlugComponent implements OnInit {
 
 `onChange(callback)` is shorthand for `on(['input', 'change'], callback)`: the `input` event fires on every keystroke, `change` fires when the editor saves. Render `liveContent()` instead of the server-fetched data when it is set, to give authors a live preview.
 
-For other event types (`save`, `publish`, `pong`, `enterSchema`, `hoverSchema`), use `on(event, callback)`:
+For other event types (`save`, `publish`, `unpublish`, `pong`, `enterSchema`, `hoverSchema`, `leaveSchema`), use `on(event, callback)` — `event` is a single `EventToAppType` or an array, and the callback is narrowed to the matching variant(s) (`EventToAppOf<T>`):
 
 ```ts
 this.sync.on(['save', 'publish'], event => console.info(`Content ${event.type}d`));
 ```
 
-Both methods are no-ops if sync isn't enabled or usable in the current context — no need to check `enabled()` yourself.
+Both methods are no-ops if sync isn't enabled or usable in the current context — no need to check `enabled()` yourself. The service also exposes `enabled(): boolean` (`enableSync: true` + running in the browser + inside the Visual Editor iframe) and `ready(): Promise<void>` (resolves once the sync script has loaded and `window.localess` exists; resolves immediately when sync is disabled, and never rejects — a failed script load is logged instead). `ready()` returns the `LOCALESS_SYNC_READY` injection token's value, which `provideLocaless()` sets when `enableSync: true`.
+
+If you render with `<ll-document>`, none of this is needed — it subscribes to `onChange` for you.
 
 ---
 
@@ -496,4 +589,25 @@ Both methods are no-ops if sync isn't enabled or usable in the current context �
 <!-- Rendered src: https://my-localess.web.app/api/v1/spaces/.../assets/image.jpg?w=800 -->
 ```
 
-This works automatically — no additional configuration required.
+This works automatically — no additional configuration required. The loader only rewrites URLs under `<origin>/api/v1/spaces/<spaceId>/assets/`; other `src` values pass through unchanged.
+
+---
+
+## Other Exports
+
+Everything below is exported from `@localess/angular` alongside the APIs above.
+
+| Export | Kind | Description |
+|---|---|---|
+| `LocalessClientService` | service | Thin DI wrapper around `localessClient()` built from `LOCALESS_CONFIG`: `getLinks()`, `getContentBySlug()`, `getContentById()`, `getTranslations()`, `assetLink()`. No `TransferState` hydration — prefer `LocalessContentService` for content. |
+| `LocalessComponentResolver` | service | Resolves `_schema` keys against the registry: `has(key)`, `resolve(key): Promise<Type<SchemaComponent> \| null>` (cached; falls back to the fallback component). Used by `[llComponent]`. |
+| `LOCALESS_CONFIG`, `LocalessConfig` | token / type | The resolved provider configuration (same shape as `LocalessOptions`). |
+| `LocalessOptions` | type | The `provideLocaless()` options object. |
+| `LOCALESS_SYNC_READY` | token | `Promise<void>` that resolves when the sync script has loaded (already-resolved when sync is disabled). |
+| `LOCALESS_COMPONENTS`, `LOCALESS_FALLBACK_COMPONENT` | tokens | Registry and fallback tokens populated by `withLocalessComponents()`. |
+| `LocalessComponentsMap`, `LocalessComponentLoader`, `AnySchemaComponent` | types | Registry map, lazy loader, and `Type<SchemaComponent<any>>` component type. |
+| `isComponentLoader(entry)` | function | Type guard distinguishing a lazy loader from a component class. |
+| `findLink`, `buildAssetQueryString`, `isBrowser`, `isIframe`, `loadLocalessSync` | functions | Utilities re-exported from `@localess/client`. |
+| `Content`, `ContentData`, `ContentDataSchema`, `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText`, `Links`, `References`, `Assets`, `Translations`, `AssetTransformParams`, `ContentFetchParams`, `LinksFetchParams`, `TranslationFetchParams`, `EventToAppType`, `EventToAppOf`, `LocalessRichTextInput`, `LocalessRichTextDocument`, `LocalessRichTextNode`, `LocalessRichTextMark`, … | types | Domain-model types re-exported from `@localess/model`, `@localess/client`, and `@localess/richtext`. |
+
+The package also re-exports the full `@localess/client` surface (`export * from '@localess/client'`), so `LocalessApiError`, `localessClient`, and every client type are importable from `@localess/angular` without adding `@localess/client` as a direct dependency.

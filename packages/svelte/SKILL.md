@@ -13,7 +13,7 @@
 
 **Peer dependency:** Svelte `^5.0.0`.
 
-**Rendering-only package.** `@localess/svelte` does not fetch data for you. For CSR, call `getLocaless().getContentBySlug(...)` yourself. For SSR (e.g. SvelteKit), fetch with `@localess/client` directly in a `+page.server.ts` `load()` function, using a **secret** token — SvelteKit guarantees `.server.ts` files never reach the client bundle. See "SSR with SvelteKit" below.
+**Rendering-only package.** `@localess/svelte` does not fetch data for you. For CSR, call `getLocaless().getContentBySlug(...)` yourself. For SSR (e.g. SvelteKit), fetch with `localessClient` (re-exported from `@localess/svelte`, never `@localess/client` directly) in a `+page.server.ts` `load()` function, using a **secret** token — SvelteKit guarantees `.server.ts` files never reach the client bundle. See "SSR with SvelteKit" below.
 
 ---
 
@@ -51,11 +51,13 @@ Call `localessInit()` once, synchronously, during a root component's initializat
 
 > **Security:** only ever pass a **public** (read-only) token here — this runs in the browser. Never pass a secret token to `localessInit`.
 
+`localessInit` takes `LocalessSvelteInitOptions` — `LocalessClientOptions` plus `components` (schema key → component), `fallbackComponent` (rendered when a schema key is unregistered), and `enableSync` — and returns the `LocalessClient` it created.
+
 ---
 
 ## `<LocalessComponent>`
 
-Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Always applies `localessEditable(data)`'s `data-ll-id`/`data-ll-schema` attributes to the rendered component's root. Accepts `assets`, `links`, and `references` alongside `data` and forwards all four to the resolved component (or `fallbackComponent`) — registered components should declare the same four props (typed with `LocalessSchemaProps<T>`) and pass `assets`/`links`/`references` through when rendering nested `<LocalessComponent>`s. `LocalessComponentProps` is the renderer's own props type; use `LocalessSchemaProps` for your registered components.
+Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Spreads `data-ll-id`/`data-ll-schema` attributes onto the resolved registered component — not onto `fallbackComponent`. Accepts `assets`, `links`, and `references` alongside `data` and forwards all four to the resolved component (or `fallbackComponent`) — registered components should declare the same four props (typed with `LocalessSchemaProps<T>`) and pass `assets`/`links`/`references` through when rendering nested `<LocalessComponent>`s. `LocalessComponentProps` is the renderer's own props type; use `LocalessSchemaProps` for your registered components.
 
 ```svelte
 <script lang="ts">
@@ -111,8 +113,10 @@ A plain function (not an action — the field name is static, known at author ti
 
 ```svelte
 <script lang="ts">
-  import { localessEditableField } from '@localess/svelte';
+  import { localessEditableField, type LocalessSchemaProps } from '@localess/svelte';
   import type { Page } from '../shared/models/localess';
+
+  let { data }: LocalessSchemaProps<Page> = $props();
 </script>
 
 <h1 {...localessEditableField<Page>('title')}>{data.title}</h1>
@@ -154,19 +158,20 @@ Subscribes to Visual Editor bridge events (`input`, `change`, etc.) and exposes 
 
 ## `<LocalessRichText>` component
 
-Renders a Tiptap JSON rich-text document — built on `@localess/richtext`, reactive via `$derived` (updates when `content` changes, e.g. Visual Editor live sync).
+Renders a Tiptap JSON rich-text document to an HTML string (`renderRichTextToHtml` + `{@html}`) — built on `@localess/richtext`, reactive via `$derived` (updates when `content` changes, e.g. Visual Editor live sync). The `content` prop is a `LocalessRichTextInput`: a `ContentRichText` field value (as typed in your generated content types), a rich text document/node/node array, or `null`/`undefined`.
 
 ```svelte
 <script lang="ts">
-  import { LocalessRichText } from '@localess/svelte';
+  import { LocalessRichText, type LocalessSchemaProps } from '@localess/svelte';
+  import type { Article } from '../shared/models/localess'; // your content types — `body` is a `ContentRichText` field
 
-  let { data }: { data: { body?: unknown } } = $props();
+  let { data }: LocalessSchemaProps<Article> = $props();
 </script>
 
 <LocalessRichText content={data.body} />
 ```
 
-Per-node overrides are string-based renderers:
+Per-node overrides are string-based renderers (`renderers?: LocalessRichTextRenderers<string>`, receiving `{ type, attrs, text, marks, content, children, context }`):
 
 ```svelte
 <LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<p class="prose">${children}</p>` }} />
@@ -231,7 +236,7 @@ export { LocalessRichText }         // Rich text component (content, renderers?)
 // Error handling (re-exported from @localess/client)
 export { LocalessApiError }
 
-// Component prop types (local)
+// Local types (component props + localessInit options)
 export type { LocalessComponentProps, LocalessDocumentProps, LocalessSchemaProps, LocalessSvelteInitOptions }
 
 // Client types (re-exported from @localess/client)

@@ -18,7 +18,13 @@ zero-dependency (ADR 007, extended by ADR 009). TipTap appears only in
 | `src/attrs.ts` | `processAttrs` — single attribute-normalization point |
 | `src/escape.ts` | `escapeHtml`, `escapeAttr`, `sanitizeUrl` |
 | `src/render-html.ts` | reference HTML renderer with overrides + loop prevention |
-| `src/test-utils/fixtures.ts` | shared fixture corpus (subpath export `./test-utils`) |
+| `src/test-utils/fixtures.ts` | shared fixture corpus (`richTextFixtures`, `RichTextFixture`), published as the subpath export `./test-utils` via `src/test-utils/index.ts` |
+| `src/index.ts` | barrel — `export *` from every module above except `test-utils`, so new exports in those files are public automatically |
+
+Every module has a sibling `*.test.ts`; `src/fixtures.test.ts` runs the corpus
+against `renderRichTextToHtml` and `src/tiptap-parity.test.ts` runs the
+`parity: true` subset against TipTap. Build `@localess/model` first
+(`npm run build:model`) before running the tests.
 
 ## Parity is normative
 
@@ -43,11 +49,29 @@ attribute values escape `& " < >`.
    package's renderer.
 5. Update the native walkers: `packages/react/src/core/richtext.ts` and
    `packages/vue/src/richtext.ts` (usually no change — they read the render
-   map — but verify with the framework fixture tests).
-6. Update `SKILL.md` here and the framework docs (`docs/richtext.md`).
+   map — but verify with the framework fixture tests). Svelte, Astro, and
+   Angular call `renderRichTextToHtml` directly and need no change, but their
+   fixture tests still run the new fixtures.
+6. Update `SKILL.md` here (its Exports Reference and node-set section) and
+   the framework docs (`docs/richtext.md`).
 
 If the node set grows past ~15 types, revisit ADR 007's note about switching
 to TipTap-schema codegen for the render map.
+
+## Build
+
+```bash
+npm run build:richtext
+# or from packages/richtext/
+npm run build
+```
+
+`vite.config.mts` builds two library entries: `src/index.ts` →
+`dist/index.{js,mjs,d.ts}` and `src/test-utils/index.ts` →
+`dist/test-utils/index.{js,mjs,d.ts}`, wired to the `.` and `./test-utils`
+`exports` in `package.json`. Framework packages' tests import the fixtures
+from `@localess/richtext/test-utils`, so this package must be built before
+running theirs.
 
 ## Consumers' import boundary
 

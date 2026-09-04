@@ -51,13 +51,15 @@ app.use(Localess, {
 app.mount('#app');
 ```
 
-> **Security:** only ever pass a **public** (read-only) token here — this plugin runs in the browser. Never pass a secret token to `Localess`/`localessInit`.
+> **Security:** only ever pass a **public** (read-only) token here — this plugin runs in the browser. Never pass a secret token to `Localess`.
+
+Plugin options are `LocalessClientOptions` plus `components` (schema key → component), `fallbackComponent` (rendered when a schema key is unregistered), and `enableSync`.
 
 ---
 
 ## `<LocalessComponent>`
 
-Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Always applies `localessEditable(data)`'s `data-ll-id`/`data-ll-schema` attributes to the rendered component's root. Accepts `assets`, `links`, and `references` alongside `data` and forwards all four to the resolved component (or `fallbackComponent`) — registered components should declare the same four props (typed with `LocalessSchemaProps<T>`) and pass `assets`/`links`/`references` through when rendering nested `<LocalessComponent>`s. `LocalessComponentProps` is the renderer's own props type; use `LocalessSchemaProps` for your registered components.
+Dynamically renders a Localess content block by looking up its `_schema` in the component registry. Applies `localessEditable(data)`'s `data-ll-id`/`data-ll-schema` attributes (via `v-bind`) to the resolved registered component — not to `fallbackComponent`. Accepts `assets`, `links`, and `references` alongside `data` and forwards all four to the resolved component (or `fallbackComponent`) — registered components should declare the same four props (typed with `LocalessSchemaProps<T>`) and pass `assets`/`links`/`references` through when rendering nested `<LocalessComponent>`s. `LocalessComponentProps` is the renderer's own props type; use `LocalessSchemaProps` for your registered components.
 
 ```vue
 <script setup lang="ts">
@@ -102,8 +104,8 @@ Applies the same `data-ll-id`/`data-ll-schema` attributes directly to an element
 
 ```vue
 <script setup lang="ts">
-import { localessEditable } from '@localess/vue';
-defineProps<{ data: { _id: string; _schema: string } }>();
+import { type ContentDataSchema, localessEditable } from '@localess/vue';
+defineProps<{ data: ContentDataSchema }>();
 </script>
 
 <template>
@@ -130,7 +132,7 @@ defineProps<{ data: { title?: string } }>();
 </template>
 ```
 
-Use alongside `localessEditable()` on the block root, not instead of it.
+Type-safe when given your content type as the generic: `localessEditableField<Page>('title')` only accepts keys of `Page` (excluding `_id`/`_schema`). Use alongside `localessEditable()` on the block root, not instead of it.
 
 ---
 
@@ -163,13 +165,14 @@ const latestChange = useLocalessSync(['input', 'change']);
 
 ### Rich text — `<LocalessRichText>`, `useLocalessRichText`, `useLocalessRichTextHtml`
 
-Built on `@localess/richtext` — no TipTap at runtime. The component renders native VNodes:
+Built on `@localess/richtext` — no TipTap at runtime. The component renders native VNodes. Its `content` prop accepts a `ContentRichText` field value (as typed in your generated content types), a rich text document/node/node array, or `null`/`undefined`:
 
 ```vue
 <script setup lang="ts">
-import { LocalessRichText } from '@localess/vue';
+import { LocalessRichText, type LocalessSchemaProps } from '@localess/vue';
+import type { Article } from './models/localess'; // your content types — `body` is a `ContentRichText` field
 
-const props = defineProps<{ data: { body?: unknown } }>();
+const props = defineProps<LocalessSchemaProps<Article>>();
 </script>
 
 <template>
@@ -179,13 +182,13 @@ const props = defineProps<{ data: { body?: unknown } }>();
 
 - `useLocalessRichText(doc, options?)` → reactive `ComputedRef<VNodeChild>`. Accepts a plain value, a `Ref`, or a getter.
 - `useLocalessRichTextHtml(doc, options?)` → `ComputedRef<string>` for `v-html` bindings.
-- Per-node overrides: `renderers` maps type names to Vue components; children arrive as the default slot. Override components should declare the props they consume (or set `inheritAttrs: false`) to avoid attribute fallthrough.
+- Per-node overrides: `renderers` (`LocalessVueRichTextRenderers`) maps type names to Vue components; children arrive as the default slot, and the node/mark's own fields (`type`, `attrs`, `text`, `marks`, ...) plus `context.renderers` arrive as props. Override components should declare the props they consume (or set `inheritAttrs: false`) to avoid attribute fallthrough. `useLocalessRichTextHtml`/`renderRichTextToHtml` instead take string-returning renderers (`({ children, attrs }) => string`).
 
 ---
 
 ## `@localess/vue/vite` — Component Auto-Registration
 
-`localess(options)` returns a Vite plugin exposing `virtual:localess-vue-components`, a glob-based auto-registry of every `.vue` file under `componentsDir` (keyed by kebab-cased filename), merged with explicit `components` path overrides (suffix a path with `#ExportName` for a named export; a bare path assumes a default export — manual entries win on key collision).
+`localess(options)` returns a Vite plugin exposing `virtual:localess-vue-components`, a glob-based auto-registry of every `.vue` file under `componentsDir` (keyed by kebab-cased filename), merged with explicit `components` path overrides (paths are relative to `componentsDir`; suffix a path with `#ExportName` for a named export; a bare path assumes a default export — manual entries win on key collision).
 
 ```typescript
 // vite.config.ts
@@ -284,6 +287,7 @@ export type { LocalessClient, LocalessClientOptions, EventToAppOf, EventToAppTyp
 
 // Types (local)
 export type { LocalessComponentProps, LocalessDocumentProps, LocalessSchemaProps }
+export type { LocalessVueRichTextOptions, LocalessVueRichTextRenderers } // { renderers?: Record<type, Component> }
 
 // Types (re-exported from @localess/model)
 export type { Content, ContentData, ContentDataSchema, Assets, Links, References }

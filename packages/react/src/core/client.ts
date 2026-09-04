@@ -32,9 +32,9 @@ let _assetPathPrefix = '';
  * - When `enableSync` is `true` and the page is running inside the Visual Editor iframe,
  *   injects the Localess sync script into `<head>` to enable live editing events.
  *
- * **Exception — `@localess/react/rsc`'s `LocalessClientDocument` fallback** (used under
- * Next.js `output: 'export'`, which cannot run the primary `LocalessDocument`'s Server
- * Action): Next.js App Router bundles Server and Client Components into separate module
+ * **Exception — the root entry point's client-side `LocalessDocument` fallback** (used under
+ * Next.js `output: 'export'`, which cannot run `@localess/react/rsc`'s `LocalessDocument`
+ * Server Action): Next.js App Router bundles Server and Client Components into separate module
  * graphs, so a server-side `localessInit()` call never populates the registry or `enableSync`
  * state a Client Component sees. Call `localessInit()` a **second time**, from inside that
  * Client Component boundary, using a **public token** (read-only, published content and
@@ -218,7 +218,7 @@ export function localessSyncOn<T extends EventToAppType>(event: T | T[], callbac
  * have to.
  *
  * Equivalent to `localessSyncOn(['input', 'change'], callback)` (mirrors `window.localess.onChange`).
- * For other event types (`save`, `publish`, `pong`, `enterSchema`, `hoverSchema`), use {@link localessSyncOn}.
+ * For other event types (`save`, `publish`, `unpublish`, `pong`, `enterSchema`, `leaveSchema`, `hoverSchema`), use {@link localessSyncOn}.
  *
  * No-op if sync isn't enabled or usable in the current context (see {@link isSyncEnabled}).
  *

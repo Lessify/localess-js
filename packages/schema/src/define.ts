@@ -39,9 +39,9 @@ type FieldInputOf<F> = F extends { kind: 'OPTION' | 'OPTIONS' }
  * against a declared type), so a stray property from a different kind (e.g. `maxLength` on a
  * `NUMBER` field) inside `defineSchema({ fields: [...] })` will not be flagged at the call site.
  * Missing required properties (e.g. omitting `source` on `OPTION`) are still caught, since that is
- * ordinary structural assignability, not a freshness check. Sanity documents the same limitation
- * for their unwrapped array fields; the alternative is a per-field wrapper function, which this
- * package deliberately avoids (see ADR 008).
+ * ordinary structural assignability, not a freshness check. Wrap a field in `defineField(...)` to
+ * get the excess-property check at the call site; raw literals and `defineField` results are
+ * accepted interchangeably (see ADR 008).
  */
 export type SchemaFieldInput = FieldInputOf<SchemaField>;
 

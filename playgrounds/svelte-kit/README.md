@@ -4,7 +4,7 @@
 
 ## What this demonstrates
 
-- Server-side fetching with `@localess/client` directly in a `+page.server.ts` `load()` function (`src/routes/[...slug]/+page.server.ts`), using a **secret** token — SvelteKit guarantees `.server.ts` files never reach the client bundle
+- Server-side fetching with `localessClient` (re-exported from `@localess/svelte` — `@localess/client` is never imported directly) in a `+page.server.ts` `load()` function (`src/routes/[...slug]/+page.server.ts`), using a **secret** token — SvelteKit guarantees `.server.ts` files never reach the client bundle
 - `localessInit()` called once in the root `src/routes/+layout.svelte`, with a **public** token, to enable Visual Editor live sync on top of the server-fetched content
 - `<LocalessDocument>` picking up live `input`/`change` events automatically once `enableSync` is on
 - A catch-all route (`src/routes/[...slug]/+page.server.ts`) resolving any CMS slug, returning SvelteKit's built-in 404 (`src/routes/+error.svelte`) when the content doesn't exist

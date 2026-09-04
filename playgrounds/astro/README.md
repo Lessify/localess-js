@@ -6,8 +6,8 @@ An Astro app in `server` output mode, rendering [Localess](https://github.com/Le
 
 - The `localess({...})` integration registered in `astro.config.mjs`, with `componentsDir` auto-discovery and `enableFallbackComponent`
 - A `[...path]` catch-all route resolving any CMS slug per-request
-- Live Visual Editor preview (`livePreview: true`) via the integration's dev-toolbar app and middleware
-- Rich text rendering (`richtext-test.astro`)
+- Live Visual Editor preview (`livePreview: true`) via the integration's live-preview middleware, with the catch-all route calling `getLivePayload(Astro)` to prefer the draft payload over an API fetch (the integration's dev-toolbar "Localess" app is a links panel, unrelated to preview)
+- Rich text rendering and `resolveAsset()` (`richtext-test.astro`)
 - Locale-aware routing and a light/dark theme toggle wired up in `src/layouts/Layout.astro` — UX patterns on top of the integration, not part of its API
 
 ## Run it
@@ -28,9 +28,10 @@ Edit the `localess({...})` options in `astro.config.mjs` — replace `origin`, `
 | File | Shows |
 | --- | --- |
 | `astro.config.mjs` | `localess()` integration setup |
+| `src/pages/[...path]/index.astro` | `getLivePayload`, `getLocalessClient().getContentBySlug`, `LocalessApiError` 404 handling, `LocalessDocument` |
 | `src/shared/utils/route.ts` | `resolveLocaleAndSlug` |
 | `src/layouts/Layout.astro` | Theme toggle, locale nav links |
-| `src/pages/richtext-test.astro` | Rich text rendering |
+| `src/pages/richtext-test.astro` | `LocalessRichText` and `resolveAsset()` |
 | `src/components/localess/` | Registered schema components |
 
 Generate CMS-driven TypeScript types for your own schemas with:

@@ -3,6 +3,14 @@
 **Status:** Accepted (2026-08-31). Supersedes the "Simpler rich text / fixed
 extension set, no per-node customization" position in ADR 006.
 
+**Amended by [ADR 009](009-shared-model-package.md) (2026-09-02):**
+`@localess/richtext` now has exactly one dependency, the itself-zero-dependency
+`@localess/model` package, and re-exports its `ContentRichText` type instead of
+declaring a structural copy (`ContentRichTextLike` was removed). The root tier
+is now `@localess/model`, `@localess/richtext`, `@localess/schema` (ADR 008),
+and `@localess/cli` depends on `@localess/client`, `@localess/model`, and
+`@localess/schema`. The text below is preserved as written at the time.
+
 ## Decision
 
 Rich text rendering moves into a new root package, `@localess/richtext`, with

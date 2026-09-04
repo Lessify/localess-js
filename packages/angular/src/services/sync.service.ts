@@ -67,7 +67,7 @@ export class LocalessSyncService {
    * `enabled()` check and the {@link ready} wait internally so callers don't have to.
    *
    * Equivalent to `on(['input', 'change'], callback)` (mirrors `window.localess.onChange`).
-   * For other event types (`save`, `publish`, `pong`, `enterSchema`, `hoverSchema`), use {@link on}.
+   * For other event types (`save`, `publish`, `unpublish`, `pong`, `enterSchema`, `leaveSchema`, `hoverSchema`), use {@link on}.
    *
    * No-op if sync isn't enabled or usable in the current context (see {@link enabled}).
    *

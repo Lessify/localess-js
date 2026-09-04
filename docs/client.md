@@ -2,9 +2,9 @@
 
 Core JavaScript/TypeScript SDK for the Localess headless CMS.
 
-**Server-side only** — requires an API token that must never reach the browser. Use in Next.js Server Components, API routes, `getServerSideProps`, Remix loaders, etc. → [ADR 001](decisions/001-server-side-only.md)
+**Server-side only** — never import it in browser code. A **secret** API token must never reach the browser; use the client in Next.js Server Components, API routes, `getServerSideProps`, Remix loaders, etc. Localess also issues **public tokens** (read-only, published content and translations only) that are safe client-side, but only through a framework package's client-side primitives (currently `@localess/react`, `@localess/angular`, `@localess/vue`, and `@localess/svelte`) — never by importing `@localess/client` directly in the browser. `@localess/cli` and `@localess/astro` are still secret-token-only. → [ADR 001](decisions/001-server-side-only.md)
 
-**Zero production dependencies** — no runtime deps beyond Node.js >= 24.0.0. → [ADR 002](decisions/002-zero-production-deps.md)
+**Zero external dependencies** — its only dependency is the in-monorepo, itself-zero-dependency `@localess/model` package, whose data-model types it re-exports unchanged. Node.js >= 24.0.0. → [ADR 002](decisions/002-zero-production-deps.md), [ADR 009](decisions/009-shared-model-package.md)
 
 ## Installation
 
@@ -94,6 +94,23 @@ const url = client.assetLink(content.data.file, { download: true });
 const url = client.assetLink('my-image.png', { w: 400 });
 ```
 
+### `syncScriptUrl()`
+
+```typescript
+const url = client.syncScriptUrl();
+// https://my-localess.web.app/scripts/sync-v1.js — for manual <script> injection
+```
+
+### `findLink(links, link)`
+
+```typescript
+import { findLink } from "@localess/client";
+
+const href = findLink(content.links, data.cta);
+// type 'content' → '/' + links[uri].fullSlug ('/not-found' when missing or links is undefined)
+// type 'url'     → the raw uri
+```
+
 ## Content Fetch Parameters
 
 | Parameter          | Type                   | Default     | Description                               |
@@ -104,12 +121,21 @@ const url = client.assetLink('my-image.png', { w: 400 });
 | `resolveLink`      | `boolean`              | `false`     | Inline linked content metadata            |
 | `resolveAsset`     | `boolean`              | `false`     | Inline referenced asset metadata          |
 
+`getTranslations` takes `TranslationFetchParams` (`version` only). `getLinks` takes `LinksFetchParams`:
+
+| Parameter         | Type                     | Description                                                      |
+|-------------------|--------------------------|------------------------------------------------------------------|
+| `kind`            | `'DOCUMENT' \| 'FOLDER'` | Filter by content kind (all when omitted)                        |
+| `parentSlug`      | `string`                 | Filter to content under this parent slug (e.g. `'legal/policy'`) |
+| `excludeChildren` | `boolean`                | `true` → exclude nested sub-slugs                                |
+
 ## Error Handling
 
 `getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` throw instead of returning empty data on failure.
 
-- A non-2xx HTTP response rejects with a `LocalessApiError` — `status`, `statusText`, `url` (token redacted), `body` (the API's parsed response body, if any), and `hint` (a status-specific, human-readable explanation of the likely cause).
+- A non-2xx HTTP response rejects with a `LocalessApiError` — `status`, `statusText`, `url` (token redacted), `body` (the API's parsed response body, if any), and `hint` (a status-specific, human-readable explanation of the likely cause; 401/403 link to `{origin}/features/spaces/{spaceId}/settings/tokens`, and any `message`/`status`/`code`/`details` fields in the body are folded in).
 - A failure to reach the API at all (DNS, connection refused, TLS, etc.) rejects with a `LocalessNetworkError` — `origin`, `url` (token redacted), `hint`, and `cause` (the underlying error).
+- Both are also logged via `console.error` as a boxed summary before being thrown (ANSI colour only in a TTY, and never when `NO_COLOR` or `NEXT_RUNTIME` is set).
 
 ```typescript
 import { LocalessApiError, LocalessNetworkError } from "@localess/client";
@@ -129,7 +155,7 @@ try {
 
 ## Caching
 
-Default: in-memory TTL cache, **5 minutes** (300 seconds). Cache key = full request URL. → [ADR 003](decisions/003-ttl-cache-design.md)
+Default: in-memory TTL cache, **5 minutes** (300 seconds). Cache key = full request URL. Instance-bound — one cache per `localessClient()` call. The implementations (`TTLCache`, `NoCache`, `Cache`) and the `ICache` interface are exported. → [ADR 003](decisions/003-ttl-cache-design.md)
 
 ```typescript
 localessClient({ cacheTTL: 60 })    // 1 min — frequently updated content
@@ -141,11 +167,11 @@ localessClient({ cacheTTL: false }) // Disabled — always fresh (use in draft/p
 
 ### `loadLocalessSync(origin)`
 
-Injects the Localess Visual Editor sync script into `<head>`. No-op when not in an iframe.
+Injects the Localess Visual Editor sync script (`{origin}/scripts/sync-v1.js`) into `<head>`. Returns `Promise<void>` — resolves on load, rejects on load error. Resolves immediately without injecting on the server, when not inside an iframe (with a `console.warn`), or when `window.localess` already exists; concurrent calls share one promise.
 
 ```typescript
 import { loadLocalessSync } from "@localess/client";
-loadLocalessSync('https://my-localess.web.app');
+await loadLocalessSync('https://my-localess.web.app');
 ```
 
 ### `localessEditable(content)` and `localessEditableField<T>(fieldName)`
@@ -168,24 +194,27 @@ import { localessEditable, localessEditableField } from "@localess/client";
 
 ```typescript
 if (window.localess) {
+  // `event` is narrowed to the subscribed variant(s) via EventToAppOf<T> — no manual type check needed
   window.localess.on(['input', 'change'], (event) => {
-    if (event.type === 'input' || event.type === 'change') {
-      setPageData(event.data);
-    }
+    setPageData(event.data);
   });
+  // Shorthand for the same subscription
+  window.localess.onChange((event) => setPageData(event.data));
   // No .off() method — subscribe once
 }
 ```
 
-| Event         | When                                  |
-|---------------|---------------------------------------|
-| `input`       | User typing in a field (real-time)    |
-| `change`      | Field value confirmed                 |
-| `save`        | Content saved                         |
-| `publish`     | Content published                     |
-| `pong`        | Editor heartbeat response             |
-| `enterSchema` | Editor cursor enters a schema block   |
-| `hoverSchema` | Editor cursor hovers a schema block   |
+| Event         | Payload                                       | When                                  |
+|---------------|-----------------------------------------------|---------------------------------------|
+| `input`       | `{ type: 'input', data: any }`                | User typing in a field (real-time)    |
+| `change`      | `{ type: 'change', data: any }`               | Field value confirmed                 |
+| `save`        | `{ type: 'save' }`                            | Content saved                         |
+| `publish`     | `{ type: 'publish' }`                         | Content published                     |
+| `unpublish`   | `{ type: 'unpublish' }`                       | Content unpublished                   |
+| `pong`        | `{ type: 'pong' }`                            | Editor heartbeat response             |
+| `enterSchema` | `{ type: 'enterSchema', id, schema, field? }` | Editor cursor enters a schema block   |
+| `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }` | Editor cursor hovers a schema block   |
+| `leaveSchema` | `{ type: 'leaveSchema' }`                     | Editor cursor leaves a schema block   |
 
 ## Asset Transform Parameters
 
@@ -212,6 +241,8 @@ isIframe()   // true if running inside an iframe (browser only)
 
 ## Key Types
 
+All data-model types are defined in `@localess/model` and re-exported by `@localess/client`; the full list is in [docs/model.md](model.md).
+
 ```typescript
 // Content response wrapper
 interface Content<T extends ContentData> extends ContentMetadata {
@@ -221,10 +252,16 @@ interface Content<T extends ContentData> extends ContentMetadata {
   assets?: Assets; // Populated when resolveAsset: true
 }
 
+interface ContentMetadata {
+  id: string; name: string; kind: 'FOLDER' | 'DOCUMENT';
+  slug: string; fullSlug: string; parentSlug: string;
+  publishedAt?: string; createdAt: string; updatedAt: string;
+}
+
 interface Assets { [id: string]: AssetMetadata }
 interface AssetMetadata { id: string; name: string; extension: string; type: string; alt?: string }
 
-// Base fields every content object has
+// Base fields every content data object has
 interface ContentDataSchema {
   _id: string;
   _schema: string;
@@ -236,7 +273,11 @@ interface ContentRichText { type?: string; content?: ContentRichText[] }  // Tip
 interface ContentReference { kind: 'REFERENCE'; uri: string }
 
 interface Links        { [contentId: string]: ContentMetadata }
+interface References   { [contentId: string]: Content }
 interface Translations { [key: string]: string }
+
+interface Locale { id: string; name: string }
+interface Space  { id: string; name: string; locales: Locale[]; localeFallback: Locale; createdAt: string; updatedAt: string }
 ```
 
 ## Exports Reference
@@ -254,17 +295,26 @@ export { Cache, NoCache, TTLCache }
 export type {
   LocalessClient, LocalessClientOptions,
   ContentFetchParams, LinksFetchParams, TranslationFetchParams,
+  LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType,
+  ICache,
+}
+// Re-exported from @localess/model (everything it exports):
+export type {
   Content, ContentData, ContentDataSchema, ContentDataField,
   ContentMetadata, ContentAsset, ContentLink,
   ContentRichText, ContentReference,
-  Links, References, Translations,
-  LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType,
-  AssetTransformParams, ICache,
+  Links, References, Assets, AssetMetadata, AssetTransformParams,
+  Translations, Locale, Space,
+  SchemaType, SchemaFieldKind, AssetFileType, SchemaEnumValue,
+  SchemaFieldBase, SchemaField /* + the 18 SchemaField* interfaces */,
+  SchemaComponentExport, SchemaEnumExport, SchemaExport,
 }
 ```
 
+`window.localess?: LocalessSync` is also declared on the global `Window` interface.
+
 ## Common Mistakes
 
-- **Importing in browser code.** Any file that runs in the browser (React Client Component, `useEffect`, client-side bundle) must never import `@localess/client`. Use `@localess/react` hooks or RSC patterns instead.
-- **Adding production dependencies.** The package has zero prod deps by design. Never add to `dependencies` in `packages/client/package.json`.
+- **Importing in browser code.** Any file that runs in the browser (React Client Component, `useEffect`, client-side bundle) must never import `@localess/client`. Use `@localess/react` hooks or RSC patterns instead. The only browser-safe exports are the token-free helpers (`isBrowser`, `isServer`, `isIframe`, `loadLocalessSync`, `localessEditable`, `localessEditableField`) and the sync event types.
+- **Adding production dependencies.** The package has zero external deps by design. Never add anything beyond `@localess/model` to `dependencies` in `packages/client/package.json`.
 - **Using milliseconds for `cacheTTL`.** `cacheTTL` is in **seconds** (`300` = 5 minutes), not milliseconds.

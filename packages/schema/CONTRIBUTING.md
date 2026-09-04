@@ -10,7 +10,7 @@ extended by ADR 008 and ADR 009).
 | File | Responsibility |
 |---|---|
 | `src/models.ts` | `export * from '@localess/model'` — re-export point for the wire model (`SchemaType`, `SchemaFieldKind`, the 18-member `SchemaField` union, `SchemaExport`), which now lives in `@localess/model` (ADR 009), not this package |
-| `src/define.ts` | `defineEnum`, `defineSchema`, `defineConfig` — identity functions with by-value ref normalization |
+| `src/define.ts` | `defineEnum`, `defineSchema`, `defineField`, `defineConfig` — near-identity functions; `defineSchema` performs the by-value ref normalization. Also the authoring types `EnumDefinition`, `ComponentDefinition`, `SchemaDefinition`, `LocalessSchemaConfig`, `SchemaFieldInput`, `EnumDefinitionInput`, `ComponentDefinitionInput` |
 | `src/infer.ts` | `InferContentData`, `InferContent`, `InferEnum` — the type-level content inference machinery |
 | `src/validate.ts` | `validate()` — non-throwing authoring-rule checks (patterns, reserved names, length limits, reference resolution) |
 | `src/export.ts` | `toSchemaExport()` — pure mapping from a config to the `SchemaExport[]` wire format |
@@ -44,20 +44,27 @@ checking the backend contract and `docs/decisions/008-schema-package.md`.
    literal union) — see `packages/model/CONTRIBUTING.md`. This package's own
    `src/models.ts` only re-exports `@localess/model`; it defines nothing.
 2. If the field has a by-value-ref-capable property (like `source` or
-   `schemas`), extend `FieldInputOf` in `src/define.ts`.
+   `schemas`), extend `FieldInputOf` (authoring input) and `NormalizeField`
+   (result type) in `src/define.ts`, and the runtime normalization loop in
+   `defineSchema`. `defineField` needs no change — it derives its per-kind
+   shape from `SchemaFieldInput` via `Extract<..., { kind: TKind }>`.
 3. Add the `FieldValue` branch in `src/infer.ts` mapping the kind to its
    inferred TS type.
 4. Add any kind-specific rule to `src/validate.ts` if the kind has
-   authoring constraints beyond the base ones.
+   authoring constraints beyond the base ones (give it a `code` in the
+   existing `schema/`, `enum/`, `field/` namespaces and list it in the
+   `validate()` tables in `SKILL.md` and `docs/schema.md`).
 5. Add cases to the type tests (`models.test-d.ts`, `define.test-d.ts`,
-   `infer.test-d.ts`) and runtime tests (`define.test.ts`, `validate.test.ts`,
+   `define-field.test-d.ts`, `infer.test-d.ts`) and runtime tests
+   (`define.test.ts`, `define-field.test.ts`, `validate.test.ts`,
    `export.test.ts`).
-6. Update the field-kind table in `SKILL.md` and `docs/schema.md`.
-7. Update the CLI's `types generate` mapping
-   (`packages/cli/src/commands/types/generate/generator.ts`) so both
+6. Update the field-kind table in `SKILL.md` and `docs/schema.md`, and the
+   per-kind table in `packages/model/SKILL.md` / `docs/model.md`.
+7. Update the CLI's `type generate` mapping
+   (`packages/cli/src/commands/type/generate/generator.ts`) so both
    type-generation paths agree, and the CLI's pull emitter
-   (`packages/cli/src/commands/schema/pull/emitter.ts`, once it exists) so
-   pulled definitions round-trip.
+   (`packages/cli/src/commands/schema/pull/emitter.ts`) so pulled definitions
+   round-trip.
 
 ## Type-level testing
 
@@ -67,15 +74,30 @@ Type correctness is enforced with vitest's `typecheck` mode
 files are TypeScript-as-testrunner, not just documentation. Keep them
 alongside the corresponding runtime `*.test.ts` file for the same module.
 
-## Known excess-property-check limitation
+## Known excess-property-check limitation and `defineField`
 
-`defineSchema`'s `fields` array does not flag a stray property from the
-wrong field kind (e.g. `maxLength` on a `NUMBER` field) — a fundamental
-TypeScript limitation on object literals inside a `const`-inferred generic
-array parameter, not something fixable without a per-field wrapper function
-(which this package deliberately avoids; see the comment on
-`SchemaFieldInput` in `src/define.ts` and the "Known limitation" section in
-`SKILL.md`). Missing required properties are still caught. Do not attempt to
-"fix" this by switching to per-field wrapper functions without discussing —
-it was a deliberate design trade-off, and every attempted alternative broke
-literal preservation of `name`/`kind`/`source`, which `infer.ts` depends on.
+A bare field literal inside `defineSchema`'s `fields` array does not flag a
+stray property from the wrong field kind (e.g. `maxLength` on a `NUMBER`
+field) — a fundamental TypeScript limitation on object literals inside a
+`const`-inferred generic array parameter (see the "Known limitation" section
+in `SKILL.md` and ADR 008). Missing required properties are still caught.
+
+`defineField` (`src/define.ts`) is the opt-in mitigation: it infers `kind`
+first, narrows the 18-member union to one member via
+`Extract<SchemaFieldInput, { kind: TKind }>`, then constrains a *separate*
+`const` generic for the remaining properties against that single shape —
+strict excess-property checking against one member, while `name`/`kind`/
+`source`/`schemas` keep their literal types (which `infer.ts` depends on).
+Runtime it is an identity function; by-value ref normalization stays in
+`defineSchema` only, so a field behaves the same whether or not it was
+wrapped. Keep these invariants when touching it:
+
+- `defineSchema` must keep accepting raw literals and `defineField(...)`
+  results interchangeably in the same `fields` array — the wrapper is
+  optional, never required (`define-field.test.ts`,
+  `define-field.test-d.ts` pin both behaviors).
+- Don't move normalization into `defineField`; the CLI's pull emitter emits
+  `defineField(...)` calls with by-value refs and relies on `defineSchema`
+  normalizing them.
+- Any change to `SchemaFieldInput` flows into `defineField` automatically;
+  re-run the type tests rather than hand-editing its generics.

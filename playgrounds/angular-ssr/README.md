@@ -28,7 +28,9 @@ The `provideLocaless({...})` call in `src/app/app.config.ts` is pre-filled with 
 | --- | --- |
 | `src/app/app.config.ts` | `provideLocaless()`, `withLocalessComponents()` |
 | `src/app/app.component.ts` | Active-locale signal derived from `Router` events |
-| `src/app/app.component.html` | Active-locale nav link classes, `<ll-document>` usage |
+| `src/app/app.component.html` | Active-locale nav link classes |
+| `src/app/app.routes.ts` | Route resolver calling `LocalessContentService.contentBySlug()` and handling `LocalessApiError` 404s |
+| `src/app/slug/slug.component.html` | `<ll-document>` usage |
 | `src/app/shared/utils/route.ts` | `resolveLocaleAndSlug` |
 | `src/app/shared/services/theme.service.ts` | Dark-mode toggle (not an SDK feature) |
 | `src/app/shared/components/localess/page/page.component.ts` | A registered schema component |

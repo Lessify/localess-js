@@ -44,10 +44,10 @@ const content = await client.getContentBySlug('home');
 
 ## Component Registry
 
-Two ways to register components, usable together (manual entries win on key collision):
+Registration always goes through the `components: { schemaKey: Component }` option of `app.use(Localess, {...})`. Two ways to build that map:
 
-1. **Manual** — pass `components: { schemaKey: Component }` to `app.use(Localess, {...})`.
-2. **Vite plugin** — `@localess/vue/vite`'s `localess({ componentsDir, components })` auto-globs a folder's `.vue` files into `virtual:localess-vue-components`, keyed by kebab-cased filename.
+1. **Manual** — import your components and pass the map yourself.
+2. **Vite plugin** — `@localess/vue/vite`'s `localess({ componentsDir, components })` auto-globs a folder's `.vue` files into `virtual:localess-vue-components`, keyed by kebab-cased filename. Its `components` option adds explicit path overrides (relative to `componentsDir`, `#ExportName` suffix for a named export); those win over globbed entries on key collision.
 
 ```typescript
 // vite.config.ts
@@ -92,9 +92,10 @@ Built on `@localess/richtext` (see [docs/richtext.md](richtext.md)) — no TipTa
 
 ```vue
 <script setup lang="ts">
-import { LocalessRichText } from '@localess/vue';
+import { LocalessRichText, type LocalessSchemaProps } from '@localess/vue';
+import type { Article } from './models/localess'; // your content types — `body` is a `ContentRichText` field
 
-const props = defineProps<{ data: { body?: unknown } }>();
+const props = defineProps<LocalessSchemaProps<Article>>();
 </script>
 
 <template>
@@ -102,7 +103,7 @@ const props = defineProps<{ data: { body?: unknown } }>();
 </template>
 ```
 
-Composables: `useLocalessRichText(doc, options?)` returns a reactive `ComputedRef<VNodeChild>`; `useLocalessRichTextHtml(doc, options?)` returns `ComputedRef<string>` for `v-html` bindings. Per-node overrides are Vue components receiving children as the default slot (declare the props you consume, or set `inheritAttrs: false`, to avoid attribute fallthrough):
+The `content` prop accepts a `ContentRichText` field value, a rich text document/node/node array, or `null`/`undefined`. Composables: `useLocalessRichText(doc, options?)` returns a reactive `ComputedRef<VNodeChild>`; `useLocalessRichTextHtml(doc, options?)` returns `ComputedRef<string>` for `v-html` bindings. Per-node overrides are Vue components receiving children as the default slot (declare the props you consume, or set `inheritAttrs: false`, to avoid attribute fallthrough):
 
 ```vue
 <LocalessRichText :content="data.body" :renderers="{ link: AppLink }" />
@@ -139,7 +140,7 @@ const { data: content } = await useAsyncData('content', () => $fetch('/api/conte
 </template>
 ```
 
-Nuxt's own payload transfer hydrates the server-fetched result to the client — `@localess/vue` needs no hydration mechanism of its own. Register the `Localess` plugin client-side (in a `.client.ts` Nuxt plugin) with a **public** token only if you also want Visual Editor sync on top — `LocalessDocument` picks up live `input`/`change` events automatically; use `LocalessComponent` instead if you don't need sync.
+Nuxt's own payload transfer hydrates the server-fetched result to the client — `@localess/vue` needs no hydration mechanism of its own. Register the `Localess` plugin in a Nuxt plugin (e.g. `app/plugins/localess.ts`, via `nuxtApp.vueApp.use(Localess, {...})`) with a **public** token only if you also want Visual Editor sync on top — `LocalessDocument` picks up live `input`/`change` events automatically; use `LocalessComponent` instead if you don't need sync.
 
 ## API Reference
 
@@ -157,8 +158,13 @@ Nuxt's own payload transfer hydrates the server-fetched result to the client —
 | `useLocalessRichText(doc, options?)` | Composable | Tiptap JSON → VNodes, returns a reactive `ComputedRef<VNodeChild>` |
 | `useLocalessRichTextHtml(doc, options?)` | Composable | Tiptap JSON → HTML string for `v-html`, returns `ComputedRef<string>` |
 | `renderRichText(content, options?)` | Function | One-shot Tiptap JSON → VNodes |
+| `renderRichTextToHtml(content, options?)` | Function | One-shot Tiptap JSON → HTML string, re-exported from `@localess/richtext` |
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |
 | `localessClient(options)` | Function | Re-exported from `@localess/client` — raw client factory for server-only SSR use, outside the `Localess` plugin's singleton lifecycle |
+| `LocalessComponentProps`, `LocalessDocumentProps`, `LocalessSchemaProps`, `LocalessVueRichTextOptions`, `LocalessVueRichTextRenderers` | Types | Local prop/option types |
+| `LocalessClient`, `LocalessClientOptions`, `EventToAppOf`, `EventToAppType` | Types | Re-exported from `@localess/client` |
+| `Content`, `ContentData`, `ContentDataSchema`, `Assets`, `Links`, `References` | Types | Re-exported from `@localess/model` |
 | `@localess/vue/vite`'s `localess(options)` | Vite plugin factory | Component auto-registration |
+| `@localess/vue/vite`'s `VIRTUAL_LOCALESS_VUE_COMPONENTS_MODULE_ID` | Constant | `'virtual:localess-vue-components'` |
 
 See `packages/vue/SKILL.md` for the full usage guide (also shipped inside the npm package).

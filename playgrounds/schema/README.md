@@ -4,7 +4,7 @@ A backend-free look at `@localess/schema`, plus the CLI round-trip once you're r
 
 ## What this demonstrates
 
-- **Authoring schemas in code**: `src/schemas/index.ts` defines a `Status` enum, a `Button` NODE, and a `Page` ROOT with `defineEnum`/`defineSchema`/`defineConfig`. Every field uses `defineField` — optional, and the only way to get a compile error on a stray property from the wrong field kind (try adding `maxLength` to `label`).
+- **Authoring schemas in code**: `src/schemas/index.ts` defines a `Status` enum, a `Button` NODE, and a `Page` ROOT with `defineEnum`/`defineSchema`/`defineConfig`. Every field uses `defineField` — optional, and the only way to get a compile error on a stray property from the wrong field kind (try adding `maxLength` to the `link` field, or `minValue` to `label`; `maxLength` on `label` is fine because it is a `TEXT` field). `status` and `actions` use by-value refs (`source: Status`, `schemas: [Button]`), which `defineSchema` normalizes to id strings while inference keeps the literal ids.
 - **Extracting a real TypeScript type straight from the definition** — `src/extract-example.ts` uses `InferContent`/`InferContentData` to derive `PageContent`/`ButtonContent`/`ContentData`. This is checked by `tsc` alone; no Localess account or network call is needed to prove the types are correct.
 - **The CLI round-trip against a real space**: `schema validate`/`diff`/`push`/`pull`, and the CLI's own `type generate` — a *different*, server-driven way to get types (codegen from whatever's live on the server, for teams not using `@localess/schema`'s programmatic definitions). For the same schemas, both paths should produce equivalent shapes.
 
@@ -33,6 +33,7 @@ npm run localess:types   # generate src/localess.types.ts from the server's sche
 | ---------------------------- | ------------------------------------------------------------- |
 | `src/schemas/index.ts`       | `defineEnum`/`defineSchema`/`defineField`/`defineConfig`       |
 | `src/extract-example.ts`     | `InferContent`/`InferContentData` — compile-time type extraction |
+| `src/schemas/pulled/`        | Output of `npm run schema:pull` — one generated file per schema plus an `index.ts` `defineConfig`, all using `defineField`. Regenerated on every pull; excluded from `npm run check` (see `tsconfig.json`), as is the generated `src/localess.types.ts` |
 
 ## Learn more
 

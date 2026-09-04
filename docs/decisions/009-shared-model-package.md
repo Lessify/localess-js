@@ -18,7 +18,9 @@ triggering ADR 005's "no fourth shared package is created without explicit
 discussion" rule — this ADR is that discussion.
 
 Root tier after this change: `@localess/model`, `@localess/richtext`,
-`@localess/schema` — three packages depending on nothing.
+`@localess/schema` — three packages depending on nothing outside that tier
+(`@localess/model` on nothing at all; `@localess/richtext` and
+`@localess/schema` on `@localess/model` alone).
 `@localess/client` moves to the dependent tier, depending on
 `@localess/model` alone. Framework packages (`react`, `vue`, `svelte`,
 `angular`, `astro`) and `@localess/cli` depend on `@localess/model` directly
@@ -69,6 +71,21 @@ the duplication.
   `Space` now lives in `@localess/model` alongside `Locale`.
 - No runtime behavior changes anywhere. This is a type/interface relocation
   only.
+
+## Follow-up: schema wire model moved too (2026-09-03)
+
+In a follow-up to the original change, the schema wire model previously
+declared in `packages/schema/src/models.ts` — `SchemaType`,
+`SchemaFieldKind`, `AssetFileType`, `SchemaEnumValue`, `SchemaFieldBase`,
+the 18 per-kind `SchemaField*` interfaces, `SchemaField`,
+`SchemaComponentExport`, `SchemaEnumExport`, `SchemaExport` — moved to
+`packages/model/src/schema.ts` and is exported from `@localess/model`.
+`packages/schema/src/models.ts` became `export * from '@localess/model'`,
+and `@localess/schema`'s public API keeps re-exporting all of those names,
+so nothing changed for its consumers. The motivation is the same as above:
+`@localess/cli` consumes `SchemaExport` for its `schema pull`/`push`/`diff`
+HTTP payloads, and a wire shape used by more than one package belongs in the
+shared model package rather than in the authoring package.
 
 ## Future models
 

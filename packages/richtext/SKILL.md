@@ -6,8 +6,14 @@ description: Framework-neutral rich text model and renderer for Localess TipTap 
 # @localess/richtext
 
 Renders Localess rich text field values (TipTap/ProseMirror JSON produced by
-the Localess Studio editor) without TipTap at runtime. Zero production
-dependencies; safe in browsers, SSR, and edge runtimes.
+the Localess Studio editor) without TipTap at runtime. Zero external
+dependencies — its only dependency is the in-monorepo, itself-zero-dependency
+`@localess/model` types package; safe in browsers, SSR, and edge runtimes.
+Requires Node.js >= 24.0.0 when used server-side.
+
+```bash
+npm install @localess/richtext
+```
 
 Framework packages (`@localess/react`, `@localess/vue`, `@localess/svelte`,
 `@localess/astro`, `@localess/angular`) ship idiomatic wrappers — prefer those
@@ -32,13 +38,22 @@ const html = renderRichTextToHtml(data.body);
 
 ## Supported node set
 
-Nodes: `doc`, `paragraph`, `heading` (1–6), `bulletList`, `orderedList`
-(`start`), `listItem`, `codeBlock` (`language` → `class="language-x"` on
-`<code>`), `text`. Marks: `bold` → `<strong>`, `italic` → `<em>`,
-`strike` → `<s>`, `underline` → `<u>`, `code` → `<code>`, `link` → `<a>`.
+Nodes: `doc`, `paragraph` → `<p>`, `heading` (`level` 1–6 → `<h1>`…`<h6>`;
+any other level falls back to `<h1>`), `bulletList` → `<ul>`, `orderedList`
+→ `<ol>` (`start` emitted only when present and not `1`), `listItem` → `<li>`,
+`codeBlock` → `<pre><code>` (`language` → `class="language-x"` on `<code>`),
+`text`. Marks: `bold` → `<strong>`, `italic` → `<em>`, `strike` → `<s>`,
+`underline` → `<u>`, `code` → `<code>`, `link` → `<a>` (`target`, `rel`,
+sanitized `href`, `class`, in that order; `null`/empty attrs are dropped).
 
-Unknown types are skipped with a dev-only warning unless a custom renderer is
-provided for that type string.
+Adjacent `text` nodes sharing outer marks are merged into one wrapper
+(`<strong>a<em>b</em></strong>`, one `<a>` per link span), matching
+ProseMirror's serializer. Text is escaped `& < >`; attribute values `& " < >`.
+
+Unknown node/mark types are skipped (marks: their children are still emitted)
+with a `console.warn` once per type per render — suppressed when
+`process.env.NODE_ENV === 'production'` — unless a custom renderer is provided
+for that type string.
 
 ## Custom renderers
 
@@ -54,13 +69,25 @@ renderRichTextToHtml(data.body, {
 type unset — pass it to a nested `renderRichTextToHtml` call to re-render your
 own node without infinite recursion.
 
+Renderer props (`LocalessRichTextRendererProps<TOut>`): `type`, `attrs?`,
+`text?`, `marks?`, `content?`, `children`, `context: { renderers? }`, `_key?`.
+Options type: `LocalessRichTextHtmlOptions` (`{ renderers?:
+LocalessRichTextRenderers<string> }`). A custom `text` renderer receives the
+HTML-escaped text as `children` and disables adjacent-mark merging for that
+render; a custom mark renderer receives `context.renderers` unchanged (marks
+don't nest into themselves).
+
 ## Building a native walker
 
 The helpers encode the algorithms once so walkers are mechanical translations:
-`normalizeInput(input, { withKeys: true })` (keyed node list),
-`buildMarkTree(textRun)` (adjacent-mark merging), `processAttrs(type, attrs,
+`normalizeInput(input, { withKeys: true })` (keyed node list, `_key` =
+`paragraph-1`, `text-3`, …; never throws, malformed input → `[]`),
+`buildMarkTree(textRun)` → `MarkTreeSegment[]` (adjacent-mark merging;
+`marksEqual(a, b)` is the comparison it uses), `processAttrs(type, attrs,
 { attrMap })` (attribute normalization; React passes `{ class: 'className' }`),
-`NODE_RENDER_MAP` / `MARK_RENDER_MAP` / `resolveHeadingTag` (default table).
+`NODE_RENDER_MAP` / `MARK_RENDER_MAP` / `resolveHeadingTag` (default table;
+`null` entry = transparent, missing key = unknown), `escapeHtml` /
+`escapeAttr` / `sanitizeUrl` (escaping and URL allowlist).
 See `@localess/react`'s `src/core/richtext.ts` for the reference walker.
 
 ## Test fixtures
@@ -69,7 +96,29 @@ See `@localess/react`'s `src/core/richtext.ts` for the reference walker.
 import { richTextFixtures } from '@localess/richtext/test-utils';
 ```
 
-`{ title, input, expected, parity }` corpus asserted by every Localess
-renderer. `parity: true` fixtures are additionally byte-compared to TipTap's
-`generateHTML` — parity is normative; never weaken an assertion to
-`toContain`.
+`richTextFixtures: RichTextFixture[]` — a `{ title, input, expected, parity }`
+corpus asserted by every Localess renderer. `parity: true` fixtures are
+additionally byte-compared to TipTap's `generateHTML` — parity is normative;
+never weaken an assertion to `toContain`.
+
+## Exports Reference
+
+```typescript
+// @localess/richtext
+export { renderRichTextToHtml }                                        // HTML string renderer
+export { normalizeInput, buildMarkTree, marksEqual, processAttrs }     // walker helpers
+export { escapeHtml, escapeAttr, sanitizeUrl }                         // escaping / URL policy
+export { NODE_RENDER_MAP, MARK_RENDER_MAP, resolveHeadingTag }         // default render table
+export type {
+  LocalessRichTextDocument, LocalessRichTextNode, LocalessRichTextNodeWithKey,
+  LocalessRichTextMark, LocalessRichTextLinkAttrs, LocalessRichTextElement,
+  LocalessRichTextInput, ContentRichText /* re-exported from @localess/model */,
+  LocalessRichTextRenderer, LocalessRichTextRenderers, LocalessRichTextRendererProps,
+  LocalessRichTextHtmlOptions, NormalizeInputOptions, ProcessAttrsOptions,
+  RichTextRenderSpec, MarkTreeSegment, MarkTreeText, MarkTreeMark,
+}
+
+// @localess/richtext/test-utils
+export { richTextFixtures }
+export type { RichTextFixture }
+```
