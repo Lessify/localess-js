@@ -15,7 +15,7 @@ const RESERVED_SCHEMA_IDS = [
   'ContentAsset',
   'Content',
 ];
-const RESERVED_FIELD_NAMES = ['_id', '_schema', 'schema'];
+const RESERVED_FIELD_NAMES = ['_id', '_schema'];
 
 export interface ValidationIssue {
   severity: 'error' | 'warning';

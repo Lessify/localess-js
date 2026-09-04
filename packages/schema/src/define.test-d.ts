@@ -19,6 +19,32 @@ describe('define type-level behavior', () => {
     defineSchema({ id: 'Bad2', type: 'NODE', fields: [{ name: 'opt', kind: 'OPTION' }] });
   });
 
+  it('normalizes an OPTIONS by-value ref to its id literal', () => {
+    const StatusType = defineEnum({ id: 'StatusType', values: [{ name: 'D', value: 'draft' }] });
+    const Card = defineSchema({
+      id: 'Card',
+      type: 'NODE',
+      fields: [{ name: 'tags', kind: 'OPTIONS', source: StatusType }],
+    });
+    expectTypeOf(Card.fields[0].source).toEqualTypeOf<'StatusType'>();
+  });
+
+  it('narrows OPTIONS requiring source', () => {
+    // @ts-expect-error source is required on OPTIONS fields
+    defineSchema({ id: 'Bad3', type: 'NODE', fields: [{ name: 'tags', kind: 'OPTIONS' }] });
+  });
+
+  it('normalizes SCHEMAS by-value refs to id literals', () => {
+    const Leaf = defineSchema({ id: 'Leaf', type: 'NODE' });
+    const Twig = defineSchema({ id: 'Twig', type: 'NODE' });
+    const Branch = defineSchema({
+      id: 'Branch',
+      type: 'NODE',
+      fields: [{ name: 'children', kind: 'SCHEMAS', schemas: [Leaf, Twig] }],
+    });
+    expectTypeOf(Branch.fields[0].schemas).toEqualTypeOf<['Leaf', 'Twig']>();
+  });
+
   it('rejects a mismatched kind extra when the field is checked directly against SchemaFieldInput', () => {
     // Known TypeScript limitation (also documented by Sanity for their unwrapped array fields):
     // excess-property checks don't apply to object literals inside an array assigned through a
