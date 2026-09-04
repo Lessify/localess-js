@@ -402,6 +402,7 @@ localess schema push ./schemas/index.ts --delete -y # sync, skip the deletion co
 - Default mode is **upsert** — creates and updates, never deletes. Schemas on the server but absent from code are reported as `stale` and left alone.
 - `--delete` switches to **sync** mode, which also deletes stale schemas. Without `--yes`, you're asked to confirm the exact list before anything is deleted; `--dry-run` skips the prompt (nothing is written either way).
 - Prints the server's final counts: `created`, `updated`, `deleted`, `unchanged`.
+- Reconciles the pre-push diff against those results and warns (without failing) about any schema id whose predicted status didn't match the server's actual outcome — e.g. a concurrent change made between the preview and the push.
 
 ### CI recipe
 

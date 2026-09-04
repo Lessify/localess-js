@@ -244,7 +244,7 @@ localess schema push ./schemas/index.ts             # upsert: create/update only
 localess schema push ./schemas/index.ts --delete    # sync: also delete schemas absent from code (confirms unless -y)
 ```
 
-Aborts without pushing if validation fails. Prints the server's `created`/`updated`/`deleted`/`unchanged` counts.
+Aborts without pushing if validation fails. Prints the server's `created`/`updated`/`deleted`/`unchanged` counts, then reconciles the pre-push diff against those results and warns (without failing the command) about any schema id whose predicted status didn't match what the server actually did — e.g. a concurrent change made between the preview and the push.
 
 ## CI/CD Integration
 

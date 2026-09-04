@@ -7,7 +7,7 @@ import { localessCliClient } from '../../../client';
 import { printDiffReport } from '../../../diff-report';
 import { LocalessApiError } from '../../../models';
 import { getSession } from '../../../session';
-import { diffSchemas } from '../diff-schemas';
+import { diffSchemas, printSchemaDiffMismatches, reconcileSchemaDiff } from '../diff-schemas';
 import { loadSchemaConfig } from '../loader';
 import { toSchemaExport, validate } from '../schema-lib';
 
@@ -74,8 +74,9 @@ export const schemaPushCommand = new Command('push')
           return;
         }
       }
+      const type = options.delete ? 'sync' : 'upsert';
       const response = await client.pushSchemas({
-        type: options.delete ? 'sync' : 'upsert',
+        type,
         ...(options.dryRun ? { dryRun: true } : {}),
         schemas: local,
       });
@@ -83,6 +84,7 @@ export const schemaPushCommand = new Command('push')
       console.log(
         `${response.dryRun ? '[DryRun] ' : ''}created: ${counts.created}, updated: ${counts.updated}, deleted: ${counts.deleted}, unchanged: ${counts.unchanged}`
       );
+      printSchemaDiffMismatches(reconcileSchemaDiff(entries, type, response));
     } catch (error) {
       if (!(error instanceof LocalessApiError)) {
         console.error('Failed to push schemas:', error);

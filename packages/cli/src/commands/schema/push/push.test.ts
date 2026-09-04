@@ -94,6 +94,26 @@ describe('schema push', () => {
     expect(logs.some(line => line.includes('Unchanged (1)'))).toBe(true);
   });
 
+  it('warns when the server result does not match the local prediction', async () => {
+    pushSchemas.mockResolvedValue({
+      message: 'ok',
+      counts: { created: 0, updated: 0, deleted: 0, unchanged: 1 },
+      ids: { created: [], updated: [], deleted: [] },
+    });
+    await schemaCommand.parseAsync(['push', writeEntry()], { from: 'user' });
+
+    const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
+    expect(logs.some(line => line.includes('Prediction mismatch'))).toBe(true);
+    expect(logs.some(line => line.includes('Button: predicted "create", server reported "unchanged"'))).toBe(true);
+  });
+
+  it('does not warn when the server result matches the local prediction', async () => {
+    await schemaCommand.parseAsync(['push', writeEntry()], { from: 'user' });
+
+    const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
+    expect(logs.some(line => line.includes('Prediction mismatch'))).toBe(false);
+  });
+
   it('aborts without pushing when validation fails', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'localess-push-'));
     const entry = join(dir, 'schemas.ts');
