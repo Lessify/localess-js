@@ -172,6 +172,43 @@ describe('translationPushCommand', () => {
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
+  describe('prediction mismatch warning', () => {
+    it('warns when a predicted key is not reported by the server (add-missing)', async () => {
+      vi.mocked(getSession).mockResolvedValue({
+        isLoggedIn: true,
+        origin: 'https://cms.example.com',
+        space: 'space-1',
+        token: 'token-123',
+      });
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.fresh': 'Fresh' }));
+      mockClient({ updateTranslations: vi.fn().mockResolvedValue({ message: 'Added 0 translation(s)', ids: [] }) });
+      const logSpy = vi.spyOn(console, 'log');
+
+      await translationPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' });
+
+      const logs = logSpy.mock.calls.map(call => call.join(' '));
+      expect(logs.some(line => line.includes('Prediction mismatch'))).toBe(true);
+      expect(logs.some(line => line.includes('nav.fresh: predicted "create", server reported "unaffected"'))).toBe(true);
+    });
+
+    it('does not warn when the server result matches the local prediction', async () => {
+      vi.mocked(getSession).mockResolvedValue({
+        isLoggedIn: true,
+        origin: 'https://cms.example.com',
+        space: 'space-1',
+        token: 'token-123',
+      });
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.fresh': 'Fresh' }));
+      mockClient({ updateTranslations: vi.fn().mockResolvedValue({ message: 'Added 1 translation(s)', ids: ['nav.fresh'] }) });
+      const logSpy = vi.spyOn(console, 'log');
+
+      await translationPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' });
+
+      const logs = logSpy.mock.calls.map(call => call.join(' '));
+      expect(logs.some(line => line.includes('Prediction mismatch'))).toBe(false);
+    });
+  });
+
   describe('--type update-existing', () => {
     it('prompts for confirmation when keys differ, and proceeds when confirmed', async () => {
       vi.mocked(getSession).mockResolvedValue({

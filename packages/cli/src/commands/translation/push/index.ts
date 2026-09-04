@@ -9,7 +9,7 @@ import { LocalessApiError, TranslationFileFormat, Translations, TranslationUpdat
 import { zLocaleTranslationsSchema, zTranslationUpdateTypeSchema } from '../../../models';
 import { getSession } from '../../../session';
 import { nestedObjectToFlat } from '../../../utils';
-import { diffTranslations } from '../diff-translations';
+import { diffTranslations, printTranslationDiffMismatches, reconcileTranslationDiff } from '../diff-translations';
 
 export type TranslationsPushOptions = {
   path: string;
@@ -141,6 +141,7 @@ export const translationPushCommand = new Command('push')
       if (response.ids) {
         console.log('Updated translation IDs:', response.ids);
       }
+      printTranslationDiffMismatches(reconcileTranslationDiff(entries, options.type, response));
     } catch (error) {
       if (!(error instanceof LocalessApiError)) {
         console.error('Failed to push translations to Localess:', error);

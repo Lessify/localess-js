@@ -102,6 +102,8 @@ Recommended for **CI/CD pipelines** — no `localess login` step needed.
 
 Upload a local JSON translation file to Localess. Before pushing, fetches the remote translations and prints the same grouped/colored diff report as `translation diff` (`Create`/`Update`/`Stale` sections, unchanged collapsed by default), plus a one-line note on what the selected `--type` will actually do. `update-existing` and `delete-missing` prompt for confirmation before applying (skippable with `-y, --yes`, or automatically skipped under `--dry-run` or when there's nothing to do); `add-missing` never prompts since it's additive-only.
 
+After a successful push, prints the server's `message` and (if present) the affected `ids`, then reconciles the pre-push diff against those ids and warns (without failing) about any key whose predicted status didn't match what the server actually did — e.g. a concurrent change made between the preview and the push. Since each push type performs exactly one operation, a key is expected in the response only if its predicted status matches that type (`add-missing`→`create`, `update-existing`→`update`, `delete-missing`→`stale`); skipped entirely when the response carries no `ids`.
+
 ```bash
 localess translation push <locale> --path <file> [options]
 ```

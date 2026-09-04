@@ -78,6 +78,8 @@ export LOCALESS_TOKEN=YOUR_API_TOKEN
 
 Upload a local JSON translation file to Localess. Before applying anything, fetches the remote translations and prints the same grouped/colored diff report as `translation diff`, plus a note on what `--type` will do. `update-existing`/`delete-missing` prompt for confirmation (skippable with `-y`/`--dry-run`, or auto-skipped when there's nothing to do); `add-missing` never prompts.
 
+After pushing, prints the server's `message`/`ids`, then reconciles the pre-push diff against those ids and warns (without failing) about any key whose predicted status didn't match the server's actual outcome — e.g. a concurrent change made between the preview and the push.
+
 ```bash
 localess translation push <locale> --path <file> [options]
 ```
