@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { SchemaExport, SchemaPushResponse } from '../../models';
-import { diffSchemas, printSchemaDiffMismatches, reconcileSchemaDiff, stableStringify, type SchemaDiffEntry } from './diff-schemas';
+import { diffSchemas, printSchemaDiffMismatches, reconcileSchemaDiff, type SchemaDiffEntry, stableStringify } from './diff-schemas';
 
 describe('stableStringify', () => {
   it('sorts keys recursively, preserves array order', () => {
@@ -66,9 +66,7 @@ describe('reconcileSchemaDiff', () => {
 
   it('flags an id whose actual bucket differs from the prediction', () => {
     const diff: SchemaDiffEntry[] = [{ id: 'New', status: 'create' }];
-    expect(reconcileSchemaDiff(diff, 'upsert', response())).toEqual([
-      { id: 'New', predicted: 'create', actual: 'unchanged' },
-    ]);
+    expect(reconcileSchemaDiff(diff, 'upsert', response())).toEqual([{ id: 'New', predicted: 'create', actual: 'unchanged' }]);
   });
 
   it('skips stale entries under upsert, since they are never sent to the server', () => {
@@ -78,9 +76,7 @@ describe('reconcileSchemaDiff', () => {
 
   it('expects stale entries to be deleted under sync', () => {
     const diff: SchemaDiffEntry[] = [{ id: 'Old', status: 'stale' }];
-    expect(reconcileSchemaDiff(diff, 'sync', response())).toEqual([
-      { id: 'Old', predicted: 'stale', actual: 'unchanged' },
-    ]);
+    expect(reconcileSchemaDiff(diff, 'sync', response())).toEqual([{ id: 'Old', predicted: 'stale', actual: 'unchanged' }]);
   });
 });
 

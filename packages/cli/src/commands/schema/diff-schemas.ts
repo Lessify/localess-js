@@ -69,11 +69,7 @@ function actualStatus(id: string, ids: SchemaPushIds): SchemaActualStatus {
  * between preview and push). `stale` entries are only checked under `sync` pushes, since
  * `upsert` never sends them to the server.
  */
-export function reconcileSchemaDiff(
-  diff: SchemaDiffEntry[],
-  pushType: SchemaPushType,
-  response: SchemaPushResponse
-): SchemaDiffMismatch[] {
+export function reconcileSchemaDiff(diff: SchemaDiffEntry[], pushType: SchemaPushType, response: SchemaPushResponse): SchemaDiffMismatch[] {
   const mismatches: SchemaDiffMismatch[] = [];
   for (const entry of diff) {
     if (entry.status === 'stale' && pushType !== 'sync') continue;
