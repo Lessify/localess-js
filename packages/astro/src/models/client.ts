@@ -1,4 +1,4 @@
-import { LocalessClientOptions } from '@localess/client';
+import { ComponentNamingStrategy, LocalessClientOptions } from '@localess/client';
 import { AstroComponentFactory } from 'astro/runtime/server/index.js';
 
 /**
@@ -17,9 +17,24 @@ export type LocalessOptions = Omit<LocalessClientOptions, 'fetch' | 'cache'> & {
   /**
    * Map of schema keys to Astro components, merged with components auto-discovered from
    * `<componentsDir>/**\/*.astro`. Both this map's keys and `_schema` values are
-   * compared through `toCamelCase()`.
+   * compared through {@link LocalessOptions.componentNaming}.
    */
   components?: Record<string, AstroComponentFactory>;
+  /**
+   * How a content `_schema` key is matched to a registered component. Applied to both the
+   * registry keys (auto-discovered filenames and this map's keys) and the incoming `_schema`,
+   * so a schema named `hero-section` can resolve `HeroSection.astro`.
+   *
+   * Unlike the other framework packages this accepts the built-in strategy names only, not a
+   * custom function: these options are serialized with `JSON.stringify` into the generated
+   * virtual module, which a function cannot survive.
+   *
+   * **Changed in v4:** the default is now `'exact'`. Earlier versions always matched through
+   * camelCase; set `componentNaming: 'camelCase'` to keep that behaviour.
+   *
+   * @default 'exact'
+   */
+  componentNaming?: ComponentNamingStrategy;
   /**
    * The directory Astro components live under. Defaults to `"src"`.
    * Auto-discovery globs `<componentsDir>/**\/*.astro`.

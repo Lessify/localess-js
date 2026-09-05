@@ -1,9 +1,13 @@
-import camelCase from 'camelcase';
+import { normalizeComponentKey } from '../models';
 
 /**
- * Normalizes a schema key or filename-derived key to camelCase, so
- * `_schema: 'hero-section'` and a file named `HeroSection.astro` match.
+ * Normalizes a name to camelCase.
+ *
+ * @deprecated Component matching is now controlled by the integration's
+ * `componentNaming` option, which defaults to `'exact'`. This is retained
+ * because it is part of the public API; prefer `componentNaming: 'camelCase'`
+ * to restore the previous case-insensitive matching.
  */
 export function toCamelCase(str: string): string {
-  return camelCase(str);
+  return normalizeComponentKey(str, 'camelCase');
 }

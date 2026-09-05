@@ -18,7 +18,7 @@ describe('vite-plugin-import-localess-components', () => {
 
       expect(parts.importStatement).toBe(`import __hero_component__ from '/src/localess/Hero.astro';`);
       expect(parts.wrapperDefinition).toBe(`const __hero_wrapper__ = { get default() { return __hero_component__; } };`);
-      expect(parts.registrationCall).toBe(`registerComponent('hero', __hero_wrapper__);`);
+      expect(parts.registrationCall).toBe(`registerComponent("hero", __hero_wrapper__);`);
     });
   });
 
@@ -28,7 +28,7 @@ describe('vite-plugin-import-localess-components', () => {
 
       expect(code).toContain(`import.meta.glob('/src/**/*.astro'`);
       expect(code).toContain('eager: true');
-      expect(code).toContain('import { toCamelCase }');
+      expect(code).toContain('import { normalizeComponentKey }');
       expect(code).toContain('export { localessComponents }');
     });
 
@@ -37,7 +37,7 @@ describe('vite-plugin-import-localess-components', () => {
       const code = generateModuleCode('/src', null, manual);
 
       const globLoopIndex = code.indexOf('for (const filePath in modules)');
-      const manualRegisterIndex = code.indexOf(`registerComponent('hero'`);
+      const manualRegisterIndex = code.indexOf(`registerComponent("hero"`);
 
       expect(globLoopIndex).toBeGreaterThan(-1);
       expect(manualRegisterIndex).toBeGreaterThan(globLoopIndex);
@@ -51,8 +51,8 @@ describe('vite-plugin-import-localess-components', () => {
       const manual = [createComponentRegistrationParts({ componentName: 'hero', importPath: '/src/localess/Hero.astro' })];
       const code = generateModuleCode('/src', fallback, manual);
 
-      const heroIndex = code.indexOf(`registerComponent('hero'`);
-      const fallbackIndex = code.indexOf(`registerComponent('FallbackComponent'`);
+      const heroIndex = code.indexOf(`registerComponent("hero"`);
+      const fallbackIndex = code.indexOf(`registerComponent("FallbackComponent"`);
 
       expect(heroIndex).toBeGreaterThan(-1);
       expect(fallbackIndex).toBeGreaterThan(heroIndex);
@@ -62,8 +62,8 @@ describe('vite-plugin-import-localess-components', () => {
       const manual = [createComponentRegistrationParts({ componentName: 'hero', importPath: '/src/localess/Hero.astro' })];
       const code = generateModuleCode('/src', null, manual);
 
-      expect(code).not.toContain(`registerComponent('hero', __hero_component__)`);
-      expect(code).toContain(`registerComponent('hero', __hero_wrapper__)`);
+      expect(code).not.toContain(`registerComponent("hero", __hero_component__)`);
+      expect(code).toContain(`registerComponent("hero", __hero_wrapper__)`);
     });
   });
 
@@ -105,11 +105,30 @@ describe('vite-plugin-import-localess-components', () => {
       expect(ctx.resolve).not.toHaveBeenCalled();
     });
 
-    it('resolves each component and camelCases its schema key', async () => {
+    it('keeps the schema key verbatim under the default exact strategy', async () => {
       const ctx = { resolve: vi.fn().mockResolvedValue({ id: '/resolved/Hero.astro' }) };
       const result = await resolveUserComponents(ctx, { HeroBlock: 'Hero.astro' } as any, '/src', false);
-      expect(result[0].registrationCall).toContain(`registerComponent('heroBlock'`);
+      expect(result[0].registrationCall).toContain(`registerComponent("HeroBlock"`);
       expect(result[0].importStatement).toContain('/resolved/Hero.astro');
+    });
+
+    it('normalizes the schema key under a configured strategy', async () => {
+      const ctx = { resolve: vi.fn().mockResolvedValue({ id: '/resolved/Hero.astro' }) };
+      const result = await resolveUserComponents(ctx, { HeroBlock: 'Hero.astro' } as any, '/src', false, 'camelCase');
+      expect(result[0].registrationCall).toContain(`registerComponent("heroBlock"`);
+    });
+
+    it('emits a valid identifier for a kebab-case schema key', async () => {
+      const ctx = { resolve: vi.fn().mockResolvedValue({ id: '/resolved/Hero.astro' }) };
+      const result = await resolveUserComponents(ctx, { 'hero-block': 'Hero.astro' } as any, '/src', false);
+      // The registry key keeps the hyphen; the generated *variable* names must not,
+      // or the emitted module is a syntax error.
+      expect(result[0].registrationCall).toContain(`registerComponent("hero-block"`);
+      expect(result[0].importStatement).not.toMatch(/__[A-Za-z0-9_$]*-/);
+      expect(result[0].wrapperDefinition).not.toMatch(/__[A-Za-z0-9_$]*-/);
+      expect(
+        () => new Function(`${result[0].importStatement.replace(/^import (\S+) from .*$/, 'let $1;')}\n${result[0].wrapperDefinition}`)
+      ).not.toThrow();
     });
 
     it('throws when a component cannot be resolved and fallback is disabled', async () => {
@@ -131,7 +150,7 @@ describe('vite-plugin-import-localess-components', () => {
       };
       const result = await resolveUserComponents(ctx, { Hero: 'Hero.astro', Missing: 'Missing.astro' } as any, '/src', true);
       expect(result).toHaveLength(1);
-      expect(result[0].registrationCall).toContain(`registerComponent('hero'`);
+      expect(result[0].registrationCall).toContain(`registerComponent("Hero"`);
     });
   });
 
@@ -154,7 +173,7 @@ describe('vite-plugin-import-localess-components', () => {
       const ctx = { resolve: vi.fn().mockResolvedValue({ id: '/resolved/Hero.astro' }) };
       const result = await (plugin.load as any).call(ctx, resolvedId);
       expect(result?.moduleType).toBe('js');
-      expect(result?.code).toContain(`registerComponent('hero'`);
+      expect(result?.code).toContain(`registerComponent("Hero"`);
       expect(result?.code).toContain('FallbackComponent');
     });
   });

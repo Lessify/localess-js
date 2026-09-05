@@ -1,7 +1,7 @@
 ---
 import options from 'virtual:localess-options';
 import { localessComponents } from 'virtual:import-localess-components';
-import { localessEditable, toCamelCase } from '../';
+import { localessEditable, normalizeComponentKey } from '../';
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
 import type { LocalessComponentProps } from '../models';
 
@@ -13,7 +13,7 @@ if (!data) {
   throw new Error('LocalessComponent property "data" is not provided.');
 }
 
-const key = toCamelCase(data._schema);
+const key = normalizeComponentKey(data._schema, options.componentNaming ?? 'exact');
 const loader = localessComponents[key] || localessComponents['FallbackComponent'];
 
 if (!loader) {

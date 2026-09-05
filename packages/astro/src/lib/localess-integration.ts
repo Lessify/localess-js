@@ -30,9 +30,12 @@ const RELOAD_DEBOUNCE_MS = 500;
  * ```
  */
 export function localessIntegration(options: LocalessOptions): AstroIntegration {
-  const resolvedOptions: Required<Pick<LocalessOptions, 'componentsDir' | 'enableFallbackComponent' | 'enableSync' | 'livePreview'>> &
+  const resolvedOptions: Required<
+    Pick<LocalessOptions, 'componentsDir' | 'componentNaming' | 'enableFallbackComponent' | 'enableSync' | 'livePreview'>
+  > &
     LocalessOptions = {
     componentsDir: 'src',
+    componentNaming: 'exact',
     enableFallbackComponent: false,
     enableSync: false,
     livePreview: false,
@@ -53,6 +56,7 @@ export function localessIntegration(options: LocalessOptions): AstroIntegration 
     components,
     enableFallbackComponent,
     customFallbackComponent,
+    componentNaming,
     enableSync,
     livePreview,
   } = resolvedOptions;
@@ -74,8 +78,14 @@ export function localessIntegration(options: LocalessOptions): AstroIntegration 
               // error message; spaceId (not a secret) is read by the live-preview middleware,
               // which can't use import.meta.env — that gets inlined at this package's own
               // build time, not the consumer's, since @localess/astro ships pre-built code.
-              vitePluginLocalessOptions({ componentsDir, spaceId }),
-              vitePluginImportLocalessComponents(components || {}, componentsDir, enableFallbackComponent, customFallbackComponent),
+              vitePluginLocalessOptions({ componentsDir, spaceId, componentNaming }),
+              vitePluginImportLocalessComponents(
+                components || {},
+                componentsDir,
+                enableFallbackComponent,
+                customFallbackComponent,
+                componentNaming
+              ),
             ],
           },
         });

@@ -222,3 +222,20 @@ Everything else imports from the default entry point (`@localess/astro`) — nev
 - Types: `LocalessOptions`, `LocalessComponentProps`, `LocalessSchemaProps`, `LocalessClient`, `LocalessSync`, `EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`; model types `Content`, `ContentData`, `ContentDataSchema`, `ContentDataField`, `ContentMetadata`, `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText`, `Assets`, `AssetMetadata`, `AssetTransformParams`, `Links`, `References`; rich text types `LocalessRichTextInput`, `LocalessRichTextDocument`, `LocalessRichTextNode`, `LocalessRichTextMark`.
 
 The `@localess/astro/middleware` and `@localess/astro/toolbarApp` subpaths exist for the integration's own `addMiddleware`/`addDevToolbarApp` entrypoints — you don't import them yourself.
+
+## componentNaming
+
+| Strategy | `HeroBanner` / `hero-banner` / `hero_banner` -> |
+|---|---|
+| `exact` *(default)* | unchanged — matches only an identical spelling |
+| `camelCase` | `heroBanner` |
+| `PascalCase` | `HeroBanner` |
+| `kebab-case` | `hero-banner` |
+| `snake_case` | `hero_banner` |
+| `lowercase` | `herobanner` |
+
+Applied to **both** the registry key and `data._schema`. Collisions under a non-`exact` strategy log
+a warning and keep the first registration.
+
+Strategy names only (options are `JSON.stringify`d into a virtual module). **Changed in v4:** the
+default was camelCase, it is now `exact`; set `componentNaming: 'camelCase'` to restore.

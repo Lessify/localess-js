@@ -1,9 +1,10 @@
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
 import type { Plugin } from 'vite';
 
+import type { ComponentNamingStrategy } from '../models';
+import { normalizeComponentKey } from '../models';
 import { normalizeAstroExtension } from '../utils/normalize-astro-extension';
 import { normalizePath } from '../utils/normalize-path';
-import { toCamelCase } from '../utils/to-camel-case';
 
 const VIRTUAL_MODULE_ID = 'virtual:import-localess-components';
 const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;
@@ -23,7 +24,8 @@ export function vitePluginImportLocalessComponents(
   components: Record<string, AstroComponentFactory>,
   componentsDir: string,
   enableFallbackComponent: boolean,
-  customFallbackComponent?: string
+  customFallbackComponent?: string,
+  componentNaming: ComponentNamingStrategy = 'exact'
 ): Plugin {
   return {
     name: 'vite-plugin-import-localess-components',
@@ -40,10 +42,10 @@ export function vitePluginImportLocalessComponents(
       }
 
       const fallbackRegistration = await resolveFallbackComponent(this, componentsDir, enableFallbackComponent, customFallbackComponent);
-      const manualRegistrations = await resolveUserComponents(this, components, componentsDir, enableFallbackComponent);
+      const manualRegistrations = await resolveUserComponents(this, components, componentsDir, enableFallbackComponent, componentNaming);
 
       return {
-        code: generateModuleCode(componentsDir, fallbackRegistration, manualRegistrations),
+        code: generateModuleCode(componentsDir, fallbackRegistration, manualRegistrations, componentNaming),
         moduleType: 'js',
       };
     },
@@ -57,7 +59,8 @@ export function vitePluginImportLocalessComponents(
 export function generateModuleCode(
   componentsDir: string,
   fallbackRegistration: ComponentRegistrationParts | null,
-  manualRegistrations: ComponentRegistrationParts[]
+  manualRegistrations: ComponentRegistrationParts[],
+  componentNaming: ComponentNamingStrategy = 'exact'
 ): string {
   const normalizedComponentsDir = normalizePath(componentsDir);
   const globPattern = `${normalizedComponentsDir}/**/*.astro`;
@@ -72,7 +75,7 @@ export function generateModuleCode(
   const registrationCalls = allRegistrations.map(r => r.registrationCall);
 
   return `
-    import { toCamelCase } from '@localess/astro';
+    import { normalizeComponentKey } from '@localess/astro';
     ${importStatements.join('\n    ')}
 
     const modules = import.meta.glob('${globPattern}', { eager: true });
@@ -91,7 +94,7 @@ export function generateModuleCode(
 
     for (const filePath in modules) {
       const fileName = filePath.split('/').pop();
-      const componentName = toCamelCase(fileName?.replace(/\\.[^/.]+$/, '') ?? '');
+      const componentName = normalizeComponentKey(fileName?.replace(/\\.[^/.]+$/, '') ?? '', ${JSON.stringify(componentNaming)});
       if (componentName) {
         registerComponent(componentName, modules[filePath]);
       }
@@ -134,7 +137,8 @@ export async function resolveUserComponents(
   ctx: any,
   components: Record<string, AstroComponentFactory>,
   componentsDir: string,
-  enableFallback: boolean
+  enableFallback: boolean,
+  componentNaming: ComponentNamingStrategy = 'exact'
 ): Promise<ComponentRegistrationParts[]> {
   const resolvedComponents: ComponentRegistrationParts[] = [];
 
@@ -148,7 +152,13 @@ export async function resolveUserComponents(
       }
       continue;
     }
-    resolvedComponents.push(createComponentRegistrationParts({ componentName: toCamelCase(schemaKey), importPath: resolved.id }));
+    resolvedComponents.push(
+      createComponentRegistrationParts({
+        componentName: normalizeComponentKey(schemaKey, componentNaming),
+        importPath: resolved.id,
+        varId: `user_${resolvedComponents.length}`,
+      })
+    );
   }
   return resolvedComponents;
 }
@@ -162,6 +172,13 @@ function getComponentFullPath(componentsDir: string, componentPath: string): str
 export interface CreateComponentRegistrationPartsOptions {
   componentName: string;
   importPath: string;
+  /**
+   * Unique, identifier-safe suffix for the generated variable names. Required
+   * because `componentName` is a registry key, not an identifier — under the
+   * `exact` or `kebab-case` strategies it can contain `-`, which would emit
+   * invalid JavaScript if interpolated into a variable name.
+   */
+  varId?: string;
 }
 
 /**
@@ -173,13 +190,15 @@ export interface CreateComponentRegistrationPartsOptions {
 export function createComponentRegistrationParts({
   componentName,
   importPath,
+  varId,
 }: CreateComponentRegistrationPartsOptions): ComponentRegistrationParts {
-  const varName = `__${componentName}_component__`;
-  const wrapperName = `__${componentName}_wrapper__`;
+  const safeId = (varId ?? componentName).replace(/[^A-Za-z0-9_$]/g, '_');
+  const varName = `__${safeId}_component__`;
+  const wrapperName = `__${safeId}_wrapper__`;
 
   return {
     importStatement: `import ${varName} from '${importPath}';`,
     wrapperDefinition: `const ${wrapperName} = { get default() { return ${varName}; } };`,
-    registrationCall: `registerComponent('${componentName}', ${wrapperName});`,
+    registrationCall: `registerComponent(${JSON.stringify(componentName)}, ${wrapperName});`,
   };
 }
