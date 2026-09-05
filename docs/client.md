@@ -126,9 +126,17 @@ const href = findLink(content.links, data.cta);
 All three flags are **all-or-nothing** — every id the document uses is resolved, and individual
 fields cannot be selected. There is no depth option.
 
-`resolveReference` resolves **one level**. Each referenced document comes back exactly as it was
-published, so its own `references`, `links` and `assets` are **arrays of ids**, not resolved maps —
-even though the `Content` type describes them as maps. To walk further, fetch those ids yourself.
+`resolveReference` resolves **one level**. Each entry carries its metadata, `locale` and `data`
+only, with none of its own `references`/`links`/`assets`. Raw ids are an internal storage concern
+and are stripped, exactly as they are for the top-level document.
+
+Nothing is lost by that: the edges live in `data`. A `REFERENCE` field value is
+`{ kind: 'REFERENCE', uri }`, so you follow one by looking its `uri` up in the same map:
+
+```typescript
+const authorId = content.data?.author?.uri;
+const author = authorId ? content.references?.[authorId] : undefined;
+```
 
 `resolveLink` and `resolveAsset` are terminal: they return metadata only, with nothing nested.
 `resolveAsset` returns no URL — build one with `assetLink()`.
@@ -268,8 +276,10 @@ interface Content<T extends ContentData> extends ContentMetadata {
   links?: Links;
   references?: References;
   assets?: Assets; // Populated when resolveAsset: true
-  // On a resolved reference these three are arrays of ids, not maps — see
-  // "What resolution does and does not do" above.
+}
+
+// Resolved references reuse Content. Resolution is one level deep, so an entry
+// carries metadata, locale and data, and none of the three collections.
 }
 
 interface ContentMetadata {

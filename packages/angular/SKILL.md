@@ -261,9 +261,10 @@ links = await contentService.links({ kind: 'DOCUMENT', parentSlug: 'blog', exclu
 | `resolveLink` | `boolean` | Populate `links` with content metadata |
 | `resolveAsset` | `boolean` | Populate `assets` with asset metadata |
 
-Resolution is all-or-nothing with no depth option. A resolved reference's own
-`references`/`links`/`assets` are **arrays of ids**, not maps. A deleted target is silently omitted
-from the map and the request still succeeds. See `docs/client.md`.
+Resolution is all-or-nothing with no depth option. A resolved reference carries metadata, `locale`
+and `data` but none of its own collections; follow a further reference via the `uri` on the
+`REFERENCE` field value in `data`. A deleted target is silently omitted from the map and the
+request still succeeds. See `docs/client.md`.
 
 ### `LinksFetchParams`
 

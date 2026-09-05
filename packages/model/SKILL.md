@@ -19,7 +19,7 @@ See `docs/model.md` in the repo (or the type table below) for the full list.
 |---|---|
 | `Locale` | `{ id: string; name: string }` |
 | `Space` | `{ id, name, locales: Locale[], localeFallback: Locale, createdAt, updatedAt }` |
-| `Content<T>` | `ContentMetadata & { data?: T; links?: Links; references?: References; assets?: Assets }` |
+| `Content<T>` | `ContentMetadata & { locale: string; data?: T; links?: Links; references?: References; assets?: Assets }` |
 | `ContentData` | `ContentDataSchema & { [field: string]: ContentDataField \| undefined }` |
 | `ContentDataSchema` | `{ _id: string; _schema: string }` — the pair every `ContentData` carries |
 | `ContentDataField` | `any \| string \| string[] \| number \| boolean \| ContentLink \| ContentRichText \| ContentData \| ContentData[] \| ContentAsset \| ContentAsset[] \| ContentReference \| ContentReference[]` |
@@ -29,7 +29,7 @@ See `docs/model.md` in the repo (or the type table below) for the full list.
 | `ContentReference` | `{ kind: 'REFERENCE'; uri: string }` |
 | `ContentRichText` | `{ type?: string; content?: ContentRichText[] }` |
 | `Links` | `Record<string, ContentMetadata>` |
-| `References` | `Record<string, Content>` |
+| `References` | `Record<string, Content>` — one level deep, so an entry has metadata, `locale` and `data` but none of the three collections |
 | `Assets` | `Record<string, AssetMetadata>` |
 | `AssetMetadata` | `{ id, name, extension, type, alt? }` |
 | `AssetTransformParams` | `{ w?, h?, q?, f?: 'webp' \| 'jpeg' \| 'png' \| 'avif', download?, thumbnail? }` |

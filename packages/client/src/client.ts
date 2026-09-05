@@ -87,17 +87,17 @@ export type ContentFetchParams = {
   /**
    * Populate {@link Content.references} with the documents this content references.
    *
-   * **One level only.** Each referenced document is returned exactly as it was published, so its
-   * own `references`, `links` and `assets` come back as **arrays of ids** rather than resolved
-   * maps — even though the `Content` type describes them as maps. Walking further means fetching
-   * those ids yourself. There is no depth option.
+   * **One level only.** Each entry carries its metadata, `locale` and `data`, but none of its own
+   * `references`/`links`/`assets` — the API strips those raw id arrays. To follow a reference
+   * further, read the `uri` from the `REFERENCE` field value in `data` and fetch it yourself. There
+   * is no depth option yet.
    *
    * **All or nothing.** Every id the document references is resolved; you cannot select
    * individual fields.
    *
    * **Partial failure is silent.** A reference whose target has been deleted is omitted from the
-   * map and the request still succeeds — so a missing key means "could not resolve", not "not
-   * referenced". Compare against the document's own reference list if you need to tell them apart.
+   * map and the request still succeeds — so a lookup that misses means "could not resolve", not
+   * "not referenced". Guard the lookup rather than assuming every `uri` in `data` resolves.
    *
    * @default false
    */

@@ -10,6 +10,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- **BREAKING** — the API no longer returns raw `assets`/`links`/`references` **id arrays** on
+  documents inside a `references` map. Those arrays are a denormalized index of edges that already
+  exist in `data` — a `REFERENCE` field value is `{ kind: 'REFERENCE', uri }` — so they were
+  redundant on the wire, and the top-level document already stripped them. Resolved references are
+  now consistent with it.
+
+  `References` stays `Record<string, Content>` — no new type. A resolved reference is simply a
+  `Content` whose three collection fields are absent.
+
+  To follow a reference, read the `uri` off the field value and look it up in the same map:
+
+  ```ts
+  const authorId = content.data?.author?.uri;
+  const author = authorId ? content.references?.[authorId] : undefined;
+  ```
+
+  This also fixes a silent bug: `References` previously typed its values as `Content`, whose
+  `references`/`links`/`assets` are maps, while the runtime values were arrays. So
+  `Object.keys(ref.references)` compiled and returned array indices (`"0"`, `"1"`, …) instead of
+  content ids. That code now fails to compile.
+
 - **BREAKING (types only)** — **`@localess/model`**: `Content` now declares `locale: string`. The API
   has always returned it on both content endpoints, but the type never described it, so
   `content.locale` did not type-check even though the value was present. Reading it no longer needs

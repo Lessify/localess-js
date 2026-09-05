@@ -149,9 +149,9 @@ const href = findLink(content.links, data.cta);
 | `resolveAsset`     | `boolean`              | `false`     | Populate `assets` with asset metadata     |
 
 Resolution is **all-or-nothing** (no per-field selection) and has **no depth option**.
-`resolveReference` resolves one level: a resolved reference's own `references`/`links`/`assets` are
-**arrays of ids**, not maps, despite the `Content` type. `resolveLink`/`resolveAsset` are terminal
-metadata only; `resolveAsset` returns no URL — use `assetLink()`.
+`resolveReference` resolves one level: each entry has metadata, `locale` and `data` but none of its
+own collections. Follow a further reference via the `uri` on the `REFERENCE` field value in `data`. `resolveLink`/`resolveAsset` are terminal metadata only; `resolveAsset`
+returns no URL — use `assetLink()`.
 A deleted target is **silently omitted** from the map and the request still succeeds, so a missing
 key means "could not resolve", not "not used".
 

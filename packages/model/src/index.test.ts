@@ -92,6 +92,29 @@ describe('@localess/model shapes', () => {
     expect(content.locale).toBe('en');
   });
 
+  it('References — a resolved reference is metadata, locale and data; follow edges via data', () => {
+    // The API strips the raw `assets`/`links`/`references` id arrays from resolved references, so
+    // an entry only ever carries these fields. Resolution is one level deep.
+    const references: References = {
+      'author-1': {
+        createdAt: '2026-01-01T00:00:00.000Z',
+        data: { _id: 'author-1', _schema: 'Author', employer: { kind: 'REFERENCE', uri: 'org-9' } },
+        fullSlug: 'authors/jane',
+        id: 'author-1',
+        kind: 'DOCUMENT',
+        locale: 'en',
+        name: 'Jane',
+        parentSlug: 'authors',
+        slug: 'jane',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+    // The edge is the `uri` on the REFERENCE field value, not a separate id array.
+    expect(references['author-1'].data?.employer.uri).toBe('org-9');
+    // Resolution stops here — a resolved reference brings no map of its own to walk.
+    expect(references['author-1'].references).toBeUndefined();
+  });
+
   it('ContentMetadata has no locale — it types Links and getLinks(), which carry none', () => {
     const metadata: ContentMetadata = {
       createdAt: '2026-01-01T00:00:00.000Z',
