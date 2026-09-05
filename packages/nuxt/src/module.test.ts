@@ -1,7 +1,7 @@
 import { normalizeComponentKey } from '@localess/vue';
 import { describe, expect, it } from 'vitest';
 
-import { generateComponentsTemplate } from './module';
+import { generateComponentsTemplate, resolveComponentsDir } from './module';
 
 describe('generateComponentsTemplate', () => {
   it('registers a component under its filename verbatim', () => {
@@ -93,5 +93,28 @@ describe('componentNaming in the generated template', () => {
 
     expect(Object.hasOwn(registry, 'hero_banner')).toBe(true);
     expect(Object.hasOwn(registry, 'Missing')).toBe(false);
+  });
+});
+
+describe('resolveComponentsDir', () => {
+  it('expands ~/ against the app directory', () => {
+    expect(resolveComponentsDir('~/components/localess', '/app')).toBe('/app/components/localess');
+  });
+
+  it('does not emit a double slash when the alias has a trailing separator', () => {
+    expect(resolveComponentsDir('~/components/localess', '/app/')).toBe('/app/components/localess');
+    expect(resolveComponentsDir('~/components/localess', 'C:\\app\\')).toBe('C:\\app/components/localess');
+  });
+
+  it('defaults when no directory is configured', () => {
+    expect(resolveComponentsDir(undefined, '/app')).toBe('/app/components/localess');
+  });
+
+  it('leaves a non-tilde path untouched', () => {
+    expect(resolveComponentsDir('/abs/components', '/app')).toBe('/abs/components');
+  });
+
+  it('leaves the path untouched when there is no alias', () => {
+    expect(resolveComponentsDir('~/components/localess', undefined)).toBe('~/components/localess');
   });
 });

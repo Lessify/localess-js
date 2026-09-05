@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const kit = {
   addComponent: vi.fn(),
+  addDevServerHandler: vi.fn(),
   addImports: vi.fn(),
   addPlugin: vi.fn(),
   addTemplate: vi.fn(),
@@ -19,6 +20,7 @@ function createNuxt() {
     options: {
       alias: { '~': '/app' },
       build: { transpile: [] as unknown[] },
+      dev: true,
       rootDir: '/app',
       runtimeConfig: { public: {} } as Record<string, any>,
       vite: {} as Record<string, any>,
@@ -122,5 +124,42 @@ describe('module setup — wiring', () => {
     const nuxt = await setup({ ...baseOptions, token: 'public-token' });
 
     expect(nuxt.options.build.transpile).toContain('@localess/vue');
+  });
+});
+
+describe('module setup — devtools', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('registers the dev route and a DevTools tab in dev', async () => {
+    const nuxt = await setup({ ...baseOptions, token: 'public-token' });
+
+    expect(kit.addDevServerHandler).toHaveBeenCalledWith(expect.objectContaining({ route: '/__localess' }));
+    expect(nuxt.hook).toHaveBeenCalledWith('devtools:customTabs', expect.any(Function));
+  });
+
+  it('registers nothing outside dev', async () => {
+    const nuxt = createNuxt();
+    nuxt.options.dev = false;
+    await moduleDefinition.setup({ ...moduleDefinition.defaults, ...baseOptions, token: 'public-token' }, nuxt);
+
+    expect(kit.addDevServerHandler).not.toHaveBeenCalled();
+    expect(nuxt.hook).not.toHaveBeenCalledWith('devtools:customTabs', expect.any(Function));
+  });
+
+  it('can be turned off with devtools: false', async () => {
+    await setup({ ...baseOptions, token: 'public-token', devtools: false });
+
+    expect(kit.addDevServerHandler).not.toHaveBeenCalled();
+  });
+
+  it('pushes a tab pointing at the dev route', async () => {
+    const nuxt = await setup({ ...baseOptions, token: 'public-token' });
+    const push = nuxt.hook.mock.calls.find((call: unknown[]) => call[0] === 'devtools:customTabs')![1] as (tabs: unknown[]) => void;
+    const tabs: unknown[] = [];
+    push(tabs);
+
+    expect(tabs).toEqual([expect.objectContaining({ name: 'localess', title: 'Localess', view: { type: 'iframe', src: '/__localess' } })]);
   });
 });

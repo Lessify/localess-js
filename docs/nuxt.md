@@ -47,6 +47,7 @@ initialise the client twice.
 | `serverToken` | `string?` | — | **private** — server only |
 | `componentsDir` | `string?` | `'~/components/localess'` | build time |
 | `componentNaming` | strategy name | `'exact'` | build time |
+| `devtools` | `boolean?` | `true` | dev only |
 | `components` | `Record<string, string>?` | `{}` | build time |
 | `enableSync` | `boolean?` | `false` | public |
 | `debug` | `boolean?` | `false` | public |
@@ -158,6 +159,26 @@ than silently returning an unauthenticated client.
 `enableSync: true` loads the sync script, and edits in Localess Studio update the running app in
 `nuxt dev`. It only has an effect inside the Studio iframe, so leaving it on in production is
 harmless but pointless.
+
+## DevTools
+
+The module registers a **Localess** tab in Nuxt DevTools (`Shift + Alt + D`). It shows:
+
+- the resolved origin and space, with a link into Localess Studio
+- which token kinds are configured — **presence only, never the values**
+- the active `componentNaming` strategy and `componentsDir`
+- the component registry: every discovered file, the key it is registered under, and the key a
+  `_schema` must resolve to in order to match it
+
+That last table is the point. When a block silently renders nothing, the usual cause is a file name
+that does not reconcile with the schema name — the *Resolves as* column makes that visible instead of
+leaving you to infer it from a missing component.
+
+Colliding keys are called out explicitly, since only the first registration wins.
+
+Served from a dev-only route (`/__localess`) and re-read per request, so adding or removing a
+component is reflected without a restart. Never registered in a production build. Turn it off with
+`devtools: false`.
 
 ## Reference
 

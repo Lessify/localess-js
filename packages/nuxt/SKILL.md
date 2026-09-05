@@ -157,3 +157,10 @@ const { data: content } = await useAsyncData('home', () => $fetch('/api/content'
 - Depends on `@localess/vue` — the one sanctioned framework-to-framework dependency in this
   monorepo. See `docs/decisions/011-nuxt-module-depends-on-vue.md`.
 - Built with `@nuxt/module-builder`, not Vite library mode.
+
+## DevTools
+
+A **Localess** tab in Nuxt DevTools showing the resolved config, which token kinds are set (presence
+only — never values), and the component registry with the key each entry resolves as, plus any
+naming collisions. Served from the dev-only route `/__localess`, re-read per request, never present
+in a production build. Disable with `devtools: false`.

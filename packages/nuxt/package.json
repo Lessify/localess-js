@@ -60,6 +60,7 @@
     "@nuxt/module-builder": "^1.0.1",
     "@nuxt/schema": "^4.0.0",
     "@types/node": "^24",
+    "h3": "^1.15.0",
     "nuxt": "^4.0.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11"

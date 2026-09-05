@@ -2,13 +2,25 @@ import { readdir } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 
 import type { ComponentNamingStrategy } from '@localess/vue';
-import { addComponent, addImports, addPlugin, addTemplate, createResolver, defineNuxtModule, updateTemplates } from '@nuxt/kit';
+import {
+  addComponent,
+  addDevServerHandler,
+  addImports,
+  addPlugin,
+  addTemplate,
+  createResolver,
+  defineNuxtModule,
+  updateTemplates,
+} from '@nuxt/kit';
+import { defineEventHandler } from 'h3';
 
+import { buildDevtoolsPayload, renderDevtoolsPage } from './devtools';
 import type { ModuleOptions, PrivateModuleOptions, PublicModuleOptions } from './types';
 
 export type { ModuleOptions, PrivateModuleOptions, PublicModuleOptions } from './types';
 
 const COMPONENTS_TEMPLATE = 'localess-components.mjs';
+const DEVTOOLS_ROUTE = '/__localess';
 
 /** Composables re-exported from `@localess/vue` so Nuxt auto-imports them. */
 const AUTO_IMPORTED_COMPOSABLES = [
@@ -24,6 +36,20 @@ const AUTO_IMPORTED_COMPOSABLES = [
 
 /** Components re-exported from `@localess/vue` so Nuxt auto-registers them. */
 const AUTO_REGISTERED_COMPONENTS = ['LocalessDocument', 'LocalessComponent', 'LocalessRichText'];
+
+/**
+ * Expands a leading `~/` to Nuxt's app directory.
+ *
+ * The `~` alias may or may not carry a trailing separator depending on Nuxt
+ * version, so it is trimmed before joining — otherwise the resolved path picks
+ * up a double slash, which still reads from disk but shows up in error messages
+ * and the DevTools panel.
+ */
+export function resolveComponentsDir(componentsDir: string | undefined, appAlias: string | undefined): string {
+  const dir = componentsDir ?? '~/components/localess';
+  if (!appAlias || !dir.startsWith('~/')) return dir;
+  return `${appAlias.replace(/[/\\]+$/, '')}/${dir.slice(2)}`;
+}
 
 async function findVueFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true, recursive: true }).catch(() => []);
@@ -151,9 +177,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.vite.optimizeDeps.include ||= [];
     nuxt.options.vite.optimizeDeps.include.push('@localess/vue');
 
-    const componentsDir = nuxt.options.alias['~']
-      ? (options.componentsDir ?? '~/components/localess').replace(/^~\//, `${nuxt.options.alias['~']}/`)
-      : (options.componentsDir ?? '~/components/localess');
+    const componentsDir = resolveComponentsDir(options.componentsDir, nuxt.options.alias['~']);
 
     addTemplate({
       filename: COMPONENTS_TEMPLATE,
@@ -189,12 +213,46 @@ export default defineNuxtModule<ModuleOptions>({
     // hooks are not in `NuxtHooks` unless nitropack's augmentation is loaded,
     // hence the narrowed cast rather than a bare `any`.
     const serverPath = resolver.resolve('./runtime/server/index');
-    const hook = nuxt.hook as (name: string, callback: (config: { alias?: Record<string, string> }) => void) => void;
+    // Neither `nitro:config` nor `devtools:customTabs` is in `NuxtHooks` unless
+    // nitropack's / devtools' augmentation is loaded, hence the narrowed casts.
+    const nitroHook = nuxt.hook as (name: string, callback: (config: { alias?: Record<string, string> }) => void) => void;
+    const devtoolsHook = nuxt.hook as (name: string, callback: (tabs: unknown[]) => void) => void;
 
     nuxt.options.alias['#localess/server'] = serverPath;
-    hook('nitro:config', nitroConfig => {
+    nitroHook('nitro:config', nitroConfig => {
       nitroConfig.alias ||= {};
       nitroConfig.alias['#localess/server'] = serverPath;
     });
+
+    if (nuxt.options.dev && options.devtools !== false) {
+      // Re-scanned per request rather than captured once, so the panel reflects
+      // components added or removed while the dev server is running.
+      addDevServerHandler({
+        route: DEVTOOLS_ROUTE,
+        handler: defineEventHandler(async () =>
+          renderDevtoolsPage(
+            buildDevtoolsPayload({
+              origin: options.origin,
+              spaceId: options.spaceId,
+              token: options.token,
+              serverToken: options.serverToken,
+              componentNaming: options.componentNaming ?? 'exact',
+              componentsDir,
+              files: (await findVueFiles(componentsDir)).sort(),
+              overrides: options.components ?? {},
+            })
+          )
+        ),
+      });
+
+      devtoolsHook('devtools:customTabs', (tabs: unknown[]) => {
+        tabs.push({
+          name: 'localess',
+          title: 'Localess',
+          icon: 'carbon:document-multiple-01',
+          view: { type: 'iframe', src: DEVTOOLS_ROUTE },
+        });
+      });
+    }
   },
 });

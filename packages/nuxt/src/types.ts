@@ -70,6 +70,16 @@ export interface ModuleOptions {
    */
   debug?: boolean;
   /**
+   * Registers a **Localess** tab in Nuxt DevTools showing the resolved
+   * configuration, which token kinds are set (never their values), and the
+   * discovered component registry with the key each entry resolves as.
+   *
+   * Dev only — it is never registered in a production build.
+   *
+   * @default true
+   */
+  devtools?: boolean;
+  /**
    * Cache TTL in seconds for the server client, or `false` to disable caching.
    * Applies to `useLocalessServerClient()` only.
    */
