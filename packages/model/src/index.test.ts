@@ -82,12 +82,32 @@ describe('@localess/model shapes', () => {
       fullSlug: 'home',
       id: 'content-1',
       kind: 'DOCUMENT',
+      locale: 'en',
       name: 'Home',
       parentSlug: '',
       slug: 'home',
       updatedAt: '2026-01-01T00:00:00.000Z',
     };
     expect(content.id).toBe('content-1');
+    expect(content.locale).toBe('en');
+  });
+
+  it('ContentMetadata has no locale — it types Links and getLinks(), which carry none', () => {
+    const metadata: ContentMetadata = {
+      createdAt: '2026-01-01T00:00:00.000Z',
+      fullSlug: 'home',
+      id: 'content-1',
+      kind: 'DOCUMENT',
+      name: 'Home',
+      parentSlug: '',
+      slug: 'home',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
+    // @ts-expect-error `locale` belongs on Content, never on ContentMetadata. This line failing to
+    // error means someone added it to ContentMetadata, which would wrongly imply that `Links`
+    // entries and `getLinks()` results carry a locale.
+    expect(metadata.locale).toBeUndefined();
+    expect(metadata.id).toBe('content-1');
   });
 
   it('Links/References/Assets', () => {

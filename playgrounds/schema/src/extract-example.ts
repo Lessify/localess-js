@@ -69,6 +69,7 @@ const richContent: LocalessRichTextDocument = {
 const exampleApiResponse: Content<PageContent> = {
   id: 'Sud2GFSZFjGhwAeje25H',
   name: 'Home',
+  locale: 'en',
   kind: 'DOCUMENT',
   slug: 'home',
   fullSlug: 'home',

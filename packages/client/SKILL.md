@@ -292,6 +292,7 @@ All data-model types are defined in `@localess/model` and re-exported by `@local
 ```typescript
 // Content response wrapper
 interface Content<T extends ContentData> extends ContentMetadata {
+  locale: string; // locale actually served, after any fallback
   data?: T;
   links?: Links;
   references?: References;

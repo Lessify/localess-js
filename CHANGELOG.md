@@ -8,6 +8,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING (types only)** — **`@localess/model`**: `Content` now declares `locale: string`. The API
+  has always returned it on both content endpoints, but the type never described it, so
+  `content.locale` did not type-check even though the value was present. Reading it no longer needs
+  a cast.
+
+  This is a compile-time break for code that *constructs* a `Content` — most likely test fixtures,
+  which now need a `locale`. No runtime behaviour changes, and no response shape changes.
+
+  `ContentMetadata` deliberately does **not** gain `locale`: it types `Links` and `getLinks()`
+  results, which genuinely carry none.
+
+  Note the value is the locale the API **actually served**, which may differ from the one requested —
+  when a locale does not exist in the space, the API falls back to the space's `localeFallback`.
+  Code that assumed the requested locale came back can now verify it.
+
+### Fixed
+
+- **`@localess/client`**: corrected the JSDoc for `resolveReference`, `resolveLink` and
+  `resolveAsset`. They previously read as though resolution walked the whole graph; they now state
+  that resolution is **one level deep**, all-or-nothing, and that a target which cannot be resolved
+  is **silently omitted** from the map while the request still succeeds. The same correction was
+  applied to `docs/client.md`, `packages/client/SKILL.md` and `packages/angular/SKILL.md`.
+- **`@localess/client`**: `assetLink()` and `buildAssetQueryString()` keep emitting `download` and
+  `thumbnail` as valueless flags — the form the Localess API treats as presence and the form the
+  Localess UI itself links to. A `thumbnail` request was previously a silent no-op because the API
+  tested it for truthiness; that has been fixed on the API side, so `thumbnail: true` now works
+  against an updated Localess deployment with no SDK change required.
+
 ## [4.0.0] - 2026-09-04
 
 > Major release: the SDK grows from four packages to ten, and shared types move into a dedicated `@localess/model` root package. Package boundaries are documented in [ADR 005](docs/decisions/005-package-boundary-discipline.md), [ADR 007](docs/decisions/007-shared-richtext-package.md), [ADR 008](docs/decisions/008-schema-package.md), and [ADR 009](docs/decisions/009-shared-model-package.md).

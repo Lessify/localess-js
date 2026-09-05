@@ -23,11 +23,11 @@ they need through their own public API.
 |---|---|
 | `Locale` | A single locale (`id`, `name`) |
 | `Space` | A Localess space — locales, fallback locale, timestamps |
-| `Content<T>` | A content document — metadata plus typed `data`, `links`, `references`, `assets` |
+| `Content<T>` | A content document — metadata, the `locale` actually served, plus typed `data`, `links`, `references`, `assets` |
 | `ContentData` | The typed, schema-shaped payload of a content document (`_id`, `_schema`, plus schema fields) |
 | `ContentDataField` | The union of possible field value types inside `ContentData` |
 | `ContentDataSchema` | The `_id`/`_schema` pair every `ContentData` carries |
-| `ContentMetadata` | Navigation-oriented content summary (slug, kind, timestamps) |
+| `ContentMetadata` | Navigation-oriented content summary (slug, kind, timestamps). Deliberately has **no** `locale` — it types `Links` and `getLinks()`, which carry none |
 | `ContentAsset` | A reference to an asset (`kind: 'ASSET'`, `uri`) |
 | `ContentLink` | A reference to a link (`kind: 'LINK'`, `target`, `type`, `uri`) |
 | `ContentReference` | A reference to another content document (`kind: 'REFERENCE'`, `uri`) |
