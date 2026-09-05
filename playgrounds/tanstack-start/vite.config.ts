@@ -18,8 +18,11 @@ const config = defineConfig({
       token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token — shipped to the browser bundle too, see KNOWN GAP on localess()
       enableSync: true,
       debug: true,
-      //componentsDir: 'src/components/localess',
-      components: { Page: './components/localess/page.tsx', Button: './components/localess/button.tsx' },
+      // Components are auto-discovered from this directory — no manual registry.
+      // Files are lowercase (page.tsx) while the schemas are PascalCase (Page),
+      // so a case-insensitive naming strategy reconciles the two.
+      componentsDir: 'src/components/localess',
+      componentNaming: 'camelCase',
     }),
     tanstackStart(),
     viteReact(),

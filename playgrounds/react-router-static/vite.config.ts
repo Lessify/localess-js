@@ -11,11 +11,9 @@ export default defineConfig({
       spaceId: "MmaT4DL0kJ6nXIILUcQF", // Replace it for your spaceId
       token: "Y4rvboPnyzVeC7LddEK5", // Replace it for your token
       debug: true,
+      // Components are auto-discovered from this directory — no manual registry.
       componentsDir: "app/components/localess",
-      components: {
-        Page: "./page.tsx",
-        Button: "./button.tsx",
-      },
+      componentNaming: "camelCase",
     }),
     reactRouter(),
   ],

@@ -50,7 +50,9 @@ export default defineConfig(async () => {
         spaceId: 'MmaT4DL0kJ6nXIILUcQF', // Replace it for your spaceId
         token: 'Y4rvboPnyzVeC7LddEK5', // Replace it for your token
         debug: true,
-        components: { Page: './components/localess/page.tsx', Button: './components/localess/button.tsx' },
+        // Components are auto-discovered from this directory — no manual registry.
+        componentsDir: 'src/components/localess',
+        componentNaming: 'camelCase',
       }),
       tanstackStart({
         prerender: {

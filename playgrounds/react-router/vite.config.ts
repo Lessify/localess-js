@@ -12,11 +12,11 @@ export default defineConfig({
       token: "Y4rvboPnyzVeC7LddEK5", // Replace it for your token — shipped to the browser bundle too, see KNOWN GAP on localess()
       enableSync: true,
       debug: true,
+      // Components are auto-discovered from this directory — no manual registry.
+      // Files are lowercase (page.tsx) while the schemas are PascalCase (Page),
+      // so a case-insensitive naming strategy reconciles the two.
       componentsDir: "app/components/localess",
-      components: {
-        Page: "./page.tsx",
-        Button: "./button.tsx",
-      },
+      componentNaming: "camelCase",
     }),
     reactRouter(),
   ],
