@@ -3,7 +3,9 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineNuxtConfig({
   compatibilityDate: '2026-08-24',
   future: { compatibilityVersion: 4 },
-  css: ['./app/app.css'],
+  // Nuxt resolves `css` entries as module ids relative to srcDir (`app/`), not to
+  // this file — so `~/app.css`, not `./app/app.css`.
+  css: ['~/app.css'],
   modules: ['@localess/nuxt'],
   localess: {
     origin: 'https://demo.localess.org', // Replace it for your origin
