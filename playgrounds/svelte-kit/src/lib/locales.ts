@@ -11,7 +11,6 @@ export const LOCALES: Locale[] = [
   { id: 'fr', name: 'French' },
   { id: 'de', name: 'German' },
   { id: 'es', name: 'Spanish' },
-  { id: 'it', name: 'Italian' },
   { id: 'ro', name: 'Romanian' },
   { id: 'ru', name: 'Russian' },
 ];
