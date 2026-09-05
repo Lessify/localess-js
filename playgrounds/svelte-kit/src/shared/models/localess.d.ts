@@ -47,15 +47,22 @@ export interface ContentRichText {
   content?: ContentRichText[];
 }
 
+/**
+ * A button
+ */
 export interface Button {
   /** Unique identifier of a component in a content. */
   _id: string;
   /** Unique identifier for the Schema object. */
   _schema: 'Button';
+  /** Text that will appear inside the button */
   label: string;
   type: ButtonType;
 }
 
+/**
+ * It will define the visual part of a button.
+ */
 export type ButtonType = 'primary' | 'secondary';
 
 export interface Page {
