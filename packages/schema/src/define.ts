@@ -98,8 +98,21 @@ type DefinedComponent<TId extends string, TType extends 'ROOT' | 'NODE', TFields
  * Define an ENUM schema. Identity function apart from injecting `type: 'ENUM'`;
  * exists to preserve literal types for inference.
  *
+ * - `id` — unique schema id; also what `OPTION`/`OPTIONS` fields reference via `source`
+ * - `values` — the fixed option set; each `{ name, value }` becomes one selectable option, and
+ *   every `value` across the config becomes part of `InferEnum`'s literal union
+ *
  * @param definition the enum definition (id, values, optional display metadata)
  * @returns the definition with `type: 'ENUM'`, literal types preserved
+ *
+ * @example
+ * const Status = defineEnum({
+ *   id: 'Status',
+ *   values: [
+ *     { name: 'Draft', value: 'draft' },
+ *     { name: 'Published', value: 'published' },
+ *   ],
+ * });
  */
 export function defineEnum<const TId extends string, const TValues extends readonly SchemaEnumValue[] | undefined = undefined>(definition: {
   id: TId;
@@ -120,8 +133,29 @@ export function defineEnum<const TId extends string, const TValues extends reado
  * (`source`, `schemas`) still happens exclusively in `defineSchema`, applied uniformly regardless
  * of a field's origin. See `docs/decisions/008-schema-package.md`.
  *
+ * Every `kind` accepts `name` (required), plus `displayName?`, `required?`, `description?`,
+ * `defaultValue?`, `translatable?`. Kind-specific extras:
+ * - `TEXT` / `TEXTAREA` / `RICH_TEXT` / `MARKDOWN` — `minLength?`, `maxLength?`
+ * - `NUMBER` — `minValue?`, `maxValue?`
+ * - `COLOR` / `DATE` / `DATETIME` / `BOOLEAN` / `LINK` — no extras
+ * - `OPTION` — `source` (required: an ENUM definition from `defineEnum`, or its id)
+ * - `OPTIONS` — `source` (required, same as `OPTION`), `minValues?`, `maxValues?`
+ * - `REFERENCE` / `REFERENCES` — `path?`
+ * - `ASSET` / `ASSETS` — `fileTypes?`, `fileType?`
+ * - `SCHEMA` / `SCHEMAS` — `schemas?` (allowed definitions from `defineSchema`, or their ids;
+ *   every `NODE` schema in the config is allowed when omitted)
+ *
+ * Full field-kind reference, including the type each kind infers to: `docs/schema.md`.
+ *
  * @param field the field definition; `kind` selects which extra properties are allowed
  * @returns the field unchanged, with `name`/`kind`/extras narrowed to their literal types
+ *
+ * @example
+ * defineField({ name: 'title', kind: 'TEXT', required: true, maxLength: 100 });
+ * @example
+ * defineField({ name: 'status', kind: 'OPTION', source: Status }); // Status = defineEnum(...)
+ * @example
+ * defineField({ name: 'blocks', kind: 'SCHEMAS', schemas: [Button] }); // Button = defineSchema(...)
  */
 export function defineField<
   const TKind extends SchemaFieldKind,
@@ -139,9 +173,26 @@ export function defineField<
  * Normalizes by-value references (enum in `source`, components in `schemas`) to their id strings;
  * the returned type keeps those ids as literals for inference.
  *
+ * - `id` — unique schema id; also the `_schema` value on its inferred content type, and what
+ *   `SCHEMA`/`SCHEMAS` fields reference via `schemas`
+ * - `type` — `'ROOT'` for a fetchable content type, `'NODE'` for a nested component only reachable
+ *   through another schema's `SCHEMA`/`SCHEMAS` field
+ * - `previewField` — name of one of this schema's own fields, shown as its preview label in the
+ *   Localess editor
+ * - `fields` — ordered list of `defineField(...)` results and/or raw field literals; see
+ *   `defineField` for the per-kind property reference
+ *
  * @param definition the schema definition; `type` selects ROOT or NODE
  * @returns the definition with references normalized to id strings, literal types preserved
  * @throws Error on duplicate field names — a programming error, not a validation concern
+ *
+ * @example
+ * const Button = defineSchema({
+ *   id: 'Button',
+ *   type: 'NODE',
+ *   previewField: 'label',
+ *   fields: [defineField({ name: 'label', kind: 'TEXT', required: true })],
+ * });
  */
 export function defineSchema<
   const TId extends string,
