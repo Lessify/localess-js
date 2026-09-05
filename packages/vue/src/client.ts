@@ -73,3 +73,10 @@ export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | '
 export function setComponentsForTest(components: Record<string, Component>): void {
   _components = components;
 }
+
+/** @internal test-only helper to reset client/sync state between test cases. */
+export function resetClientForTest(): void {
+  _client = undefined;
+  _enableSync = false;
+  _syncPromise = undefined;
+}

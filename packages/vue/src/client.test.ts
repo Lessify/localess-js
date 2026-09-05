@@ -1,11 +1,37 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
-import { getComponent, getFallbackComponent, isSyncEnabled, localessInit, localessSyncOn } from './client';
+vi.mock('./utils', () => ({
+  isBrowser: vi.fn(() => false),
+  isIframe: vi.fn(() => false),
+  loadLocalessSync: vi.fn(() => Promise.resolve()),
+}));
+
+import {
+  getComponent,
+  getFallbackComponent,
+  getLocalessClient,
+  isSyncEnabled,
+  localessInit,
+  localessSyncOn,
+  localessSyncOnChange,
+  resetClientForTest,
+} from './client';
+import { isBrowser, isIframe, loadLocalessSync } from './utils';
 
 const HelloComponent = defineComponent({ render: () => h('div', 'hello') });
 
 describe('state', () => {
+  beforeEach(() => {
+    resetClientForTest();
+    vi.mocked(isBrowser).mockReturnValue(false);
+    vi.mocked(isIframe).mockReturnValue(false);
+    vi.mocked(loadLocalessSync).mockResolvedValue(undefined);
+  });
+  afterEach(() => {
+    delete (window as unknown as { localess?: unknown }).localess;
+  });
+
   it('localessInit registers components and returns a client', () => {
     const client = localessInit({
       origin: 'https://example.com',
@@ -38,5 +64,50 @@ describe('state', () => {
     const callback = vi.fn();
     localessSyncOn('input', callback);
     expect(callback).not.toHaveBeenCalled();
+  });
+
+  it('getLocalessClient throws when not initialized', () => {
+    expect(() => getLocalessClient()).toThrow(/No client found/);
+  });
+
+  it('isSyncEnabled is true when enableSync is passed and running inside an iframe', () => {
+    vi.mocked(isBrowser).mockReturnValue(true);
+    vi.mocked(isIframe).mockReturnValue(true);
+    localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
+    expect(isSyncEnabled()).toBe(true);
+  });
+
+  it('localessInit logs an error when loadLocalessSync rejects', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.mocked(loadLocalessSync).mockRejectedValue(new Error('script blocked'));
+
+    localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
+
+    await vi.waitFor(() => expect(errorSpy).toHaveBeenCalledWith('[Localess] Failed to load sync script.', expect.any(Error)));
+    errorSpy.mockRestore();
+  });
+
+  it('localessSyncOn attaches a listener once sync is enabled and ready', async () => {
+    vi.mocked(isBrowser).mockReturnValue(true);
+    vi.mocked(isIframe).mockReturnValue(true);
+    window.localess = { on: vi.fn(), onChange: vi.fn() };
+    localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
+    const callback = vi.fn();
+
+    localessSyncOn('input', callback);
+
+    await vi.waitFor(() => expect(window.localess?.on).toHaveBeenCalledWith('input', callback));
+  });
+
+  it('localessSyncOnChange attaches a listener once sync is enabled and ready', async () => {
+    vi.mocked(isBrowser).mockReturnValue(true);
+    vi.mocked(isIframe).mockReturnValue(true);
+    window.localess = { on: vi.fn(), onChange: vi.fn() };
+    localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
+    const callback = vi.fn();
+
+    localessSyncOnChange(callback);
+
+    await vi.waitFor(() => expect(window.localess?.onChange).toHaveBeenCalledWith(callback));
   });
 });

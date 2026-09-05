@@ -105,7 +105,7 @@ export function generateModuleCode(
   `.trim();
 }
 
-async function resolveFallbackComponent(
+export async function resolveFallbackComponent(
   ctx: any,
   componentsDir: string,
   enableFallbackComponent: boolean,
@@ -130,7 +130,7 @@ async function resolveFallbackComponent(
   return createComponentRegistrationParts({ componentName: 'FallbackComponent', importPath: resolved.id });
 }
 
-async function resolveUserComponents(
+export async function resolveUserComponents(
   ctx: any,
   components: Record<string, AstroComponentFactory>,
   componentsDir: string,
