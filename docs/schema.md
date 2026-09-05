@@ -55,6 +55,7 @@ export type Content = InferContentData<typeof config>;
 ```
 
 - `defineEnum` / `defineSchema` are near-identity functions preserving literal types via `const` generics; `defineEnum` injects `type: 'ENUM'`, `defineSchema` normalizes by-value references (`source`, `schemas`) to string ids at runtime, matching the wire format exactly. `defineSchema` throws on duplicate field names.
+- `previewField` is restricted to the names of `fields` in the same `defineSchema` call — a typo like `previewField: 'lable'` is a compile error, not just a `validate()` finding. Falls back to plain `string` when `fields` is omitted.
 - `defineConfig` registers the full schema list — the unit `@localess/cli` loads and inference resolves against. Returns the config unchanged; throws on duplicate schema ids. (Duplicates are programming errors, not validation concerns — `validate()` doesn't report them.)
 - Wire enum values (`'ROOT' | 'NODE' | 'ENUM'`, `'TEXT' | 'NUMBER' | ...`) match the Localess backend exactly, so `defineSchema` output is near-identical to the server's `SchemaExport`.
 

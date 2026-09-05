@@ -1,6 +1,6 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import { defineEnum, defineSchema } from './define';
+import { defineEnum, defineField, defineSchema } from './define';
 
 describe('define type-level behavior', () => {
   it('preserves literals and normalizes refs to id literals', () => {
@@ -43,6 +43,43 @@ describe('define type-level behavior', () => {
       fields: [{ name: 'children', kind: 'SCHEMAS', schemas: [Leaf, Twig] }],
     });
     expectTypeOf(Branch.fields[0].schemas).toEqualTypeOf<['Leaf', 'Twig']>();
+  });
+
+  it('restricts previewField to one of the schema\'s own field names', () => {
+    const ButtonType = defineEnum({ id: 'ButtonType', values: [{ name: 'P', value: 'primary' }] });
+    defineSchema({
+      id: 'Button',
+      type: 'NODE',
+      previewField: 'label',
+      fields: [
+        defineField({ name: 'label', kind: 'TEXT', required: true }),
+        defineField({ name: 'type', kind: 'OPTION', required: true, source: ButtonType }),
+      ],
+    });
+  });
+
+  it('rejects a previewField that does not match any field name', () => {
+    defineSchema({
+      id: 'Button',
+      type: 'NODE',
+      fields: [{ name: 'label', kind: 'TEXT' }],
+      // @ts-expect-error 'lbel' is not a name of any field in this schema
+      previewField: 'lbel',
+    });
+  });
+
+  it('rejects a previewField from another schema (no cross-schema leakage)', () => {
+    defineSchema({
+      id: 'Page',
+      type: 'ROOT',
+      fields: [{ name: 'title', kind: 'TEXT' }],
+      // @ts-expect-error 'label' belongs to a different schema, not this one's fields
+      previewField: 'label',
+    });
+  });
+
+  it('falls back to plain string when fields is omitted', () => {
+    defineSchema({ id: 'Empty', type: 'NODE', previewField: 'anything' });
   });
 
   it('rejects a mismatched kind extra when the field is checked directly against SchemaFieldInput', () => {

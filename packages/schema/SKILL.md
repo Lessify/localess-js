@@ -63,7 +63,7 @@ export type Content = InferContentData<typeof config>;
 | Export | Purpose |
 |---|---|
 | `defineEnum(definition)` | Define an ENUM schema. Identity function; injects `type: 'ENUM'`. |
-| `defineSchema(definition)` | Define a ROOT or NODE schema. Normalizes by-value refs (`source`, `schemas`) to id strings. Throws on duplicate field names. |
+| `defineSchema(definition)` | Define a ROOT or NODE schema. Normalizes by-value refs (`source`, `schemas`) to id strings. Throws on duplicate field names. `previewField` is restricted to the names of the schema's own `fields` (falls back to `string` when `fields` is omitted). |
 | `defineField(field)` | Define a single field, narrowed by `kind`. Optional; catches a stray property from the wrong kind at the call site, unlike a bare field literal. Identity function. |
 | `defineConfig({ schemas })` | Register the full schema list — the unit the CLI loads and inference resolves against. Throws on duplicate schema ids. |
 | `validate(config)` | Non-throwing `{ ok, issues }` — ID/name patterns, reserved names, length limits, reference resolution. |

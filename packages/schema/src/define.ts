@@ -168,6 +168,9 @@ export function defineField<
   return field as Prettify<{ name: TName; kind: TKind } & TField>;
 }
 
+/** Union of a schema's own field names; falls back to plain `string` when `fields` is omitted. */
+type FieldNameOf<TFields> = TFields extends readonly { name: infer N extends string }[] ? N : string;
+
 /**
  * Define a ROOT (content type) or NODE (nested component) schema.
  * Normalizes by-value references (enum in `source`, components in `schemas`) to their id strings;
@@ -178,7 +181,8 @@ export function defineField<
  * - `type` — `'ROOT'` for a fetchable content type, `'NODE'` for a nested component only reachable
  *   through another schema's `SCHEMA`/`SCHEMAS` field
  * - `previewField` — name of one of this schema's own fields, shown as its preview label in the
- *   Localess editor
+ *   Localess editor; restricted to the field names in `fields` (falls back to plain `string`
+ *   when `fields` is omitted)
  * - `fields` — ordered list of `defineField(...)` results and/or raw field literals; see
  *   `defineField` for the per-kind property reference
  *
@@ -204,7 +208,7 @@ export function defineSchema<
   displayName?: string;
   description?: string;
   labels?: readonly string[];
-  previewField?: string;
+  previewField?: FieldNameOf<TFields>;
   fields?: TFields;
 }): DefinedComponent<TId, TType, TFields> {
   const seen = new Set<string>();
