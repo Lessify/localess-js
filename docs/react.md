@@ -300,8 +300,9 @@ For that bare import to type-check, add the ambient declarations to your tsconfi
 `virtual:localess-init` resolves to the same `localessInit()` call regardless
 of which Vite build graph imports it — both the SSR/server graph and the
 client graph get `token`. Every `.tsx`/`.jsx` file under `componentsDir`
-is auto-registered under its kebab-cased filename (`hero-section.tsx` ->
-`'hero-section'`) — matching the schema-key convention above. `components`
+is auto-registered under its filename verbatim (`Page.tsx` -> `'Page'`). How that
+key is matched to `data._schema` is the `componentNaming` option — see
+*Component naming strategies* below. `components`
 overrides take an exact key (no case transformation) and a file path relative
 to `componentsDir`, for cases where the schema key doesn't match a
 kebab-cased filename, or the file lives outside `componentsDir`. A bare path
@@ -653,3 +654,59 @@ declare module 'virtual:localess-components' {}
 - **Calling `localessInit()` with the secret token in a Client Component.** Call it once in the root layout (Server Component). The only client-side call allowed is the static-export fallback, and it must use a public token.
 - **Not passing `links`/`references` down the tree.** Child `LocalessComponent`s need them for resolved data. Always pass them through every level.
 - **Enabling sync in production.** `enableSync: process.env.NODE_ENV !== 'production'` — the sync script is only useful inside the Localess editor iframe.
+
+## Component naming strategies
+
+A Localess schema can be named anything; every framework has its own file-naming convention. The
+`componentNaming` option reconciles them by normalizing **both** the registry key and the incoming
+`data._schema` before they are compared.
+
+| Strategy | `HeroBanner` / `hero-banner` / `hero_banner` -> |
+|---|---|
+| `exact` *(default)* | unchanged — matches only an identical spelling |
+| `camelCase` | `heroBanner` |
+| `PascalCase` | `HeroBanner` |
+| `kebab-case` | `hero-banner` |
+| `snake_case` | `hero_banner` |
+| `lowercase` | `herobanner` — separators dropped entirely |
+
+Every strategy except `exact` is case- and separator-insensitive, so they differ only in the shape of
+the key they produce, not in what they match.
+
+Name your component files after your schemas and the default `exact` works with no configuration.
+Reach for another strategy when the two conventions genuinely differ — e.g. schemas named
+`hero-banner` and files named `HeroBanner`.
+
+Under any strategy other than `exact`, two files that normalize to the same key (`HeroBanner` and
+`hero-banner` in one directory) collide; the SDK logs a warning naming both and keeps the first.
+
+See [ADR 012](decisions/012-component-naming-strategies.md).
+
+This package also accepts a custom `(name: string) => string`. It is applied to **both** sides, so it
+must converge — a function that only adds a prefix will not match, because the registry key gets the
+prefix too.
+
+### Where to set it
+
+`componentNaming` is an option of the **Vite plugin only** — it sits next to `componentsDir`,
+because auto-discovery is the only thing that has to reconcile two naming conventions:
+
+```ts
+// vite.config.ts
+localess({
+  origin, spaceId, token,
+  componentsDir: 'src/components/localess',
+  componentNaming: 'camelCase',
+})
+```
+
+It is **not** an option on `localessInit()`. When you pass a `components` map by hand — the usual
+path in Next.js, which does not use this plugin — you choose the keys, so use the schema name as the
+key and matching is a plain exact lookup.
+
+The plugin implements this without adding anything to the core API: when a non-`exact` strategy is
+configured, the generated `virtual:localess-components` registry resolves keys through the strategy
+itself. Under the default `exact` it emits an ordinary object with no wrapper at all.
+
+Because the plugin serializes its options, it accepts the strategy names only — there is no
+custom-function form in React.

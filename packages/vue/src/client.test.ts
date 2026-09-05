@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
-vi.mock('./utils', () => ({
+vi.mock('./utils', async importOriginal => ({
+  // Only the environment/sync helpers are stubbed; the component-naming helpers
+  // are the thing under test here, so they stay real.
+  ...(await importOriginal<typeof import('./utils')>()),
   isBrowser: vi.fn(() => false),
   isIframe: vi.fn(() => false),
   loadLocalessSync: vi.fn(() => Promise.resolve()),

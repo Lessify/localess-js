@@ -1,0 +1,70 @@
+{
+  "name": "@localess/nuxt",
+  "version": "4.0.0",
+  "description": "Nuxt module for Localess's API.",
+  "keywords": [
+    "localess",
+    "sdk",
+    "api",
+    "client",
+    "nuxt",
+    "vue",
+    "javascript",
+    "typescript"
+  ],
+  "author": "Lessify",
+  "homepage": "https://github.com/Lessify/localess-js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lessify/localess-js.git",
+    "directory": "packages/nuxt"
+  },
+  "bugs": {
+    "url": "https://github.com/Lessify/localess-js/issues"
+  },
+  "files": [
+    "dist",
+    "SKILL.md"
+  ],
+  "type": "module",
+  "main": "./dist/module.mjs",
+  "types": "./dist/types.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.mts",
+      "import": "./dist/module.mjs"
+    },
+    "./server": {
+      "types": "./dist/runtime/server/index.d.ts",
+      "import": "./dist/runtime/server/index.js"
+    }
+  },
+  "private": false,
+  "license": "MIT",
+  "scripts": {
+    "build": "npm run typecheck && nuxt-module-build build",
+    "prepack": "nuxt-module-build build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "nuxt": "^4.0.0"
+  },
+  "dependencies": {
+    "@localess/vue": "*",
+    "@nuxt/kit": "^4.0.0"
+  },
+  "devDependencies": {
+    "@nuxt/module-builder": "^1.0.1",
+    "@nuxt/schema": "^4.0.0",
+    "@types/node": "^24",
+    "nuxt": "^4.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

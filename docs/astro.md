@@ -226,3 +226,38 @@ try {
 ## Testing your own components
 
 Use Astro's `experimental_AstroContainer` (`astro/container`) — see `packages/astro/CONTRIBUTING.md`. Note: `LocalessComponent.astro`/`LocalessDocument.astro` themselves aren't unit-testable this way (they depend on `virtual:*` modules only resolvable inside a real Astro build) — verify changes to them manually against `playgrounds/astro`/`playgrounds/astro-static`.
+
+## Component naming strategies
+
+A Localess schema can be named anything; every framework has its own file-naming convention. The
+`componentNaming` option reconciles them by normalizing **both** the registry key and the incoming
+`data._schema` before they are compared.
+
+| Strategy | `HeroBanner` / `hero-banner` / `hero_banner` -> |
+|---|---|
+| `exact` *(default)* | unchanged — matches only an identical spelling |
+| `camelCase` | `heroBanner` |
+| `PascalCase` | `HeroBanner` |
+| `kebab-case` | `hero-banner` |
+| `snake_case` | `hero_banner` |
+| `lowercase` | `herobanner` — separators dropped entirely |
+
+Every strategy except `exact` is case- and separator-insensitive, so they differ only in the shape of
+the key they produce, not in what they match.
+
+Name your component files after your schemas and the default `exact` works with no configuration.
+Reach for another strategy when the two conventions genuinely differ — e.g. schemas named
+`hero-banner` and files named `HeroBanner`.
+
+Under any strategy other than `exact`, two files that normalize to the same key (`HeroBanner` and
+`hero-banner` in one directory) collide; the SDK logs a warning naming both and keeps the first.
+
+See [ADR 012](decisions/012-component-naming-strategies.md).
+
+**Changed in v4:** the default was previously camelCase — Astro always matched case- and
+separator-insensitively. It is now `exact`. If your `.astro` filenames differ in case from your
+schema names, set `componentNaming: 'camelCase'` to restore the previous behaviour. `toCamelCase()`
+is still exported but deprecated.
+
+Astro serializes its integration options into a virtual module with `JSON.stringify`, so
+`componentNaming` accepts the strategy names only, not a custom function.

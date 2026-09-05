@@ -5,7 +5,14 @@
  * directly — see `packages/vue/CONTRIBUTING.md`.
  */
 export type { LocalessComponentProps, LocalessDocumentProps, LocalessSchemaProps } from './components';
-export type { EventToAppOf, EventToAppType, LocalessClient, LocalessClientOptions } from '@localess/client';
+export type {
+  ComponentNaming,
+  ComponentNamingStrategy,
+  EventToAppOf,
+  EventToAppType,
+  LocalessClient,
+  LocalessClientOptions,
+} from '@localess/client';
 export { LocalessApiError } from '@localess/client';
 export type { Assets, Content, ContentData, ContentDataSchema, Links, References } from '@localess/model';
 export type { LocalessRichTextDocument, LocalessRichTextInput, LocalessRichTextMark, LocalessRichTextNode } from '@localess/richtext';

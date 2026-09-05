@@ -2,7 +2,7 @@
 
 @AGENTS.md
 
-This is a monorepo containing the official JavaScript/TypeScript SDKs for the Localess headless CMS. Ten packages:
+This is a monorepo containing the official JavaScript/TypeScript SDKs for the Localess headless CMS. Eleven packages:
 
 - `@localess/model` — Shared domain-model types (Content, ContentAsset, ContentLink, ContentReference, ContentRichText, Locale, Space, Translations, and related shapes). Zero dependencies.
 - `@localess/client` — Core server-side-only SDK. Zero external dependencies (depends on `@localess/model`).
@@ -13,9 +13,10 @@ This is a monorepo containing the official JavaScript/TypeScript SDKs for the Lo
 - `@localess/vue` — Vue integration (components, composables, Vite plugin).
 - `@localess/svelte` — Svelte integration (components, actions, context).
 - `@localess/astro` — Astro integration (integration, components, live preview).
+- `@localess/nuxt` — Nuxt module wrapping `@localess/vue` (config-driven setup, component auto-registration, public/secret token split, server client).
 - `@localess/cli` — CLI for translations, type generation, and schema pull/push. Depends on `@localess/client`, `@localess/model`, and `@localess/schema`.
 
-Dependency graph: three roots, `@localess/model`, `@localess/richtext`, and `@localess/schema`, which depend on nothing (see ADR 007, ADR 008, ADR 009). `@localess/client` depends on `@localess/model`. `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, and `@localess/astro` depend on `@localess/client`, `@localess/model`, and `@localess/richtext`; `@localess/cli` depends on `@localess/client`, `@localess/model`, and `@localess/schema`. Dependent packages never depend on each other.
+Dependency graph: three roots, `@localess/model`, `@localess/richtext`, and `@localess/schema`, which depend on nothing (see ADR 007, ADR 008, ADR 009). `@localess/client` depends on `@localess/model`. `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, and `@localess/astro` depend on `@localess/client`, `@localess/model`, and `@localess/richtext`; `@localess/cli` depends on `@localess/client`, `@localess/model`, and `@localess/schema`. `@localess/nuxt` depends on `@localess/vue` — the single sanctioned framework-to-framework edge (see ADR 011). Otherwise dependent packages never depend on each other.
 
 ## Quick Reference
 
@@ -34,6 +35,7 @@ npm run build:svelte
 npm run build:cli
 npm run build:angular
 npm run build:astro
+npm run build:nuxt      # requires build:vue first
 
 # Run angular-ssr playground (requires build:angular first)
 npm run start:angular-ssr
@@ -58,7 +60,7 @@ Requirements: Node.js >= 24.0.0, npm >= 10.
 
 3. **`@localess/model` has zero dependencies of any kind; `@localess/client`, `@localess/richtext`, and `@localess/schema` depend on `@localess/model` alone.** `packages/model/package.json` has no `dependencies` key at all and must stay that way. `packages/client/package.json`, `packages/richtext/package.json`, and `packages/schema/package.json` each have exactly one `dependencies` entry, `@localess/model` — never add anything else to `dependencies` in any of the four. All four remain zero-*external*-dependency (no npm package outside this monorepo). `devDependencies` are fine (e.g. TipTap in richtext, used only by its parity test). See `docs/decisions/002-zero-production-deps.md`, `docs/decisions/007-shared-richtext-package.md`, `docs/decisions/008-schema-package.md`, and `docs/decisions/009-shared-model-package.md`.
 
-4. **Package boundaries.** `@localess/client` depends on `@localess/model`. `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, and `@localess/astro` depend on `@localess/client`, `@localess/model`, and `@localess/richtext`; `@localess/cli` depends on `@localess/client`, `@localess/model`, and `@localess/schema`. Dependent packages never depend on each other, and root packages never depend on anything. See `docs/decisions/005-package-boundary-discipline.md`, `docs/decisions/007-shared-richtext-package.md`, `docs/decisions/008-schema-package.md`, and `docs/decisions/009-shared-model-package.md`.
+4. **Package boundaries.** `@localess/client` depends on `@localess/model`. `@localess/react`, `@localess/angular`, `@localess/vue`, `@localess/svelte`, and `@localess/astro` depend on `@localess/client`, `@localess/model`, and `@localess/richtext`; `@localess/cli` depends on `@localess/client`, `@localess/model`, and `@localess/schema`. Dependent packages never depend on each other, and root packages never depend on anything. **One exception:** a framework package may depend on another framework package when it is a host-framework-specific *wrapper* around it — a strict superset relationship, not a shared-utility one. `@localess/nuxt` → `@localess/vue` is the only such edge today (Nuxt is Vue); anything shared between siblings belongs in a root package instead. See `docs/decisions/005-package-boundary-discipline.md`, `docs/decisions/007-shared-richtext-package.md`, `docs/decisions/008-schema-package.md`, `docs/decisions/009-shared-model-package.md`, and `docs/decisions/011-nuxt-module-depends-on-vue.md`.
 
 5. **Upstream check.** When changing `@localess/client`'s public API (adding/removing/renaming methods or types), check whether `@localess/react`, `@localess/angular`, and `@localess/cli` consume the changed surface and update them.
 

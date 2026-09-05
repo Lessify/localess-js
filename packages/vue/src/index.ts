@@ -7,6 +7,8 @@ export * from './composables/use-localess-rich-text';
 export * from './composables/use-localess-sync';
 export type {
   Assets,
+  ComponentNaming,
+  ComponentNamingStrategy,
   Content,
   ContentData,
   ContentDataSchema,
@@ -24,4 +26,4 @@ export { LocalessApiError } from './models';
 export * from './plugin/localess-plugin';
 export * from './plugin/localess-symbol';
 export { type LocalessVueRichTextOptions, type LocalessVueRichTextRenderers, renderRichText, renderRichTextToHtml } from './richtext';
-export { localessEditable, localessEditableField } from './utils';
+export { localessEditable, localessEditableField, normalizeComponentKey } from './utils';

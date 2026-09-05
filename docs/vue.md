@@ -47,7 +47,7 @@ const content = await client.getContentBySlug('home');
 Registration always goes through the `components: { schemaKey: Component }` option of `app.use(Localess, {...})`. Two ways to build that map:
 
 1. **Manual** — import your components and pass the map yourself.
-2. **Vite plugin** — `@localess/vue/vite`'s `localess({ componentsDir, components })` auto-globs a folder's `.vue` files into `virtual:localess-vue-components`, keyed by kebab-cased filename. Its `components` option adds explicit path overrides (relative to `componentsDir`, `#ExportName` suffix for a named export); those win over globbed entries on key collision.
+2. **Vite plugin** — `@localess/vue/vite`'s `localess({ componentsDir, components })` auto-globs a folder's `.vue` files into `virtual:localess-vue-components`, keyed by **filename verbatim** (`Page.vue` -> `Page`). Matching that key to `data._schema` is the `componentNaming` option's job at lookup time (see *Component naming strategies* below), not this plugin's. Its `components` option adds explicit path overrides (relative to `componentsDir`, `#ExportName` suffix for a named export); those win over globbed entries on key collision.
 
 ```typescript
 // vite.config.ts
@@ -168,3 +168,52 @@ Nuxt's own payload transfer hydrates the server-fetched result to the client —
 | `@localess/vue/vite`'s `VIRTUAL_LOCALESS_VUE_COMPONENTS_MODULE_ID` | Constant | `'virtual:localess-vue-components'` |
 
 See `packages/vue/SKILL.md` for the full usage guide (also shipped inside the npm package).
+
+## Component naming strategies
+
+A Localess schema can be named anything; every framework has its own file-naming convention. The
+`componentNaming` option reconciles them by normalizing **both** the registry key and the incoming
+`data._schema` before they are compared.
+
+| Strategy | `HeroBanner` / `hero-banner` / `hero_banner` -> |
+|---|---|
+| `exact` *(default)* | unchanged — matches only an identical spelling |
+| `camelCase` | `heroBanner` |
+| `PascalCase` | `HeroBanner` |
+| `kebab-case` | `hero-banner` |
+| `snake_case` | `hero_banner` |
+| `lowercase` | `herobanner` — separators dropped entirely |
+
+Every strategy except `exact` is case- and separator-insensitive, so they differ only in the shape of
+the key they produce, not in what they match.
+
+Name your component files after your schemas and the default `exact` works with no configuration.
+Reach for another strategy when the two conventions genuinely differ — e.g. schemas named
+`hero-banner` and files named `HeroBanner`.
+
+Under any strategy other than `exact`, two files that normalize to the same key (`HeroBanner` and
+`hero-banner` in one directory) collide; the SDK logs a warning naming both and keeps the first.
+
+See [ADR 012](decisions/012-component-naming-strategies.md).
+
+### Where to set it
+
+`componentNaming` is an option of the **Vite plugin only** — `localess({ componentsDir, componentNaming })`
+— because auto-discovery is the only thing that has to reconcile two naming conventions:
+
+```ts
+// vite.config.ts
+import { localess } from '@localess/vue/vite';
+
+localess({ componentsDir: 'src/components/localess', componentNaming: 'camelCase' })
+```
+
+It is **not** an option on the `Localess` plugin / `localessInit()`. When you pass a `components` map
+by hand you choose the keys, so use the schema name as the key and matching is a plain exact lookup.
+
+The plugin needs nothing from the core API to do this: when a non-`exact` strategy is configured, the
+generated `virtual:localess-vue-components` registry resolves keys through the strategy itself, and
+you pass it to `app.use(Localess, { components: localessComponents })` exactly as before. Under the
+default `exact` it emits an ordinary object with no wrapper.
+
+Strategy names only — there is no custom-function form.

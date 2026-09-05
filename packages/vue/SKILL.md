@@ -188,7 +188,7 @@ const props = defineProps<LocalessSchemaProps<Article>>();
 
 ## `@localess/vue/vite` — Component Auto-Registration
 
-`localess(options)` returns a Vite plugin exposing `virtual:localess-vue-components`, a glob-based auto-registry of every `.vue` file under `componentsDir` (keyed by kebab-cased filename), merged with explicit `components` path overrides (paths are relative to `componentsDir`; suffix a path with `#ExportName` for a named export; a bare path assumes a default export — manual entries win on key collision).
+`localess(options)` returns a Vite plugin exposing `virtual:localess-vue-components`, a glob-based auto-registry of every `.vue` file under `componentsDir` (keyed by filename verbatim, e.g. `Page.vue` -> `Page`; how that key is matched to `data._schema` is the `componentNaming` option), merged with explicit `components` path overrides (paths are relative to `componentsDir`; suffix a path with `#ExportName` for a named export; a bare path assumes a default export — manual entries win on key collision).
 
 ```typescript
 // vite.config.ts
@@ -298,3 +298,24 @@ export type { Content, ContentData, ContentDataSchema, Assets, Links, References
 export { localess }                              // Vite plugin factory
 export { VIRTUAL_LOCALESS_VUE_COMPONENTS_MODULE_ID } // 'virtual:localess-vue-components'
 ```
+
+## componentNaming
+
+| Strategy | `HeroBanner` / `hero-banner` / `hero_banner` -> |
+|---|---|
+| `exact` *(default)* | unchanged — matches only an identical spelling |
+| `camelCase` | `heroBanner` |
+| `PascalCase` | `HeroBanner` |
+| `kebab-case` | `hero-banner` |
+| `snake_case` | `hero_banner` |
+| `lowercase` | `herobanner` |
+
+Applied to **both** the registry key and `data._schema`. Collisions under a non-`exact` strategy log
+a warning and keep the first registration.
+
+Also accepts a custom `(name: string) => string`, applied to both sides.
+
+A **Vite-plugin option only** — `localess({ componentsDir, componentNaming })` from `@localess/vue/vite`.
+Not an option on the `Localess` plugin: a hand-written `components` map has keys you already control,
+so matching there is a plain exact lookup. The generated registry resolves keys itself, so nothing is
+added to `localessInit()`. Strategy names only.

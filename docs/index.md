@@ -66,6 +66,7 @@ Build tools per package:
 - `@localess/model`, `@localess/client`, `@localess/richtext`, `@localess/schema`, `@localess/react`, `@localess/vue`, `@localess/astro`, `@localess/cli`: **Vite library mode** (`vite.config.mts`) → CJS + ESM + types
 - `@localess/svelte`: **`svelte-package`** (ESM-only) for the library surface, gated by a `svelte-check` typecheck step
 - `@localess/angular`: **ng-packagr via Angular CLI** (`ng-package.json`, single `entryFile: src/public-api.ts`) → `dist/` with a unified entry (`fesm2022/`, `types/`) — no `/browser` or `/server` split
+- `@localess/nuxt`: **`@nuxt/module-builder`** (`build.config.ts`) → `dist/module.mjs` plus an unbundled `dist/runtime/` shipped as-is — Nuxt modules need their own entry format, so Vite library mode does not apply (see ADR 011)
 
 Tests use **vitest** everywhere, including `@localess/angular` (via the Angular CLI's `@angular/build:unit-test` builder with `runner: "vitest"`).
 
@@ -88,6 +89,7 @@ Tests use **vitest** everywhere, including `@localess/angular` (via the Angular 
 | [docs/react.md](react.md) | `@localess/react` — export variants, components, hooks, Vite plugin, sync patterns |
 | [docs/angular.md](angular.md) | `@localess/angular` — providers, components, directives, pipes, services, sync |
 | [docs/vue.md](vue.md) | `@localess/vue` — plugin, components, composables, Vite plugin, SSR |
+| [docs/nuxt.md](nuxt.md) | `@localess/nuxt` — module setup, token split, component auto-registration, server client |
 | [docs/svelte.md](svelte.md) | `@localess/svelte` — context init, components, action, stores, SSR |
 | [docs/astro.md](astro.md) | `@localess/astro` — integration, components, live preview |
 | [docs/cli.md](cli.md) | `@localess/cli` — commands (`translation`, `type`, `schema`), credentials, CI/CD |

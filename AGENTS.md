@@ -14,6 +14,7 @@ This file is a redirect stub. The authoritative project reference has moved to `
 | [docs/react.md](docs/react.md) | `@localess/react` — export variants, components, hooks, sync patterns |
 | [docs/angular.md](docs/angular.md) | `@localess/angular` — providers, components, directives, pipes, services, sync |
 | [docs/vue.md](docs/vue.md) | `@localess/vue` — plugin, components, composables, Vite plugin, SSR |
+| [docs/nuxt.md](docs/nuxt.md) | `@localess/nuxt` — module setup, token split, component auto-registration, server client |
 | [docs/svelte.md](docs/svelte.md) | `@localess/svelte` — context init, components, action, stores, SSR |
 | [docs/astro.md](docs/astro.md) | `@localess/astro` — integration, components, live preview |
 | [docs/cli.md](docs/cli.md) | `@localess/cli` — commands, credentials, CI/CD |
