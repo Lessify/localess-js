@@ -131,4 +131,36 @@ export const richTextFixtures: RichTextFixture[] = [
     expected: '<p>kept</p>',
     parity: false,
   },
+  {
+    // A full realistic document exercising every node and mark kind together — modeled on a real
+    // Localess Studio editor page, extended with a link and combined marks on one text node
+    // (neither present in the original page) so every kind in model.ts appears at least once.
+    title: 'realistic document exercising every node and mark kind together',
+    input: doc(
+      { type: 'heading', attrs: { level: 1 }, content: [t('H1')] },
+      { type: 'heading', attrs: { level: 2 }, content: [t('H2')] },
+      { type: 'heading', attrs: { level: 3 }, content: [t('H3')] },
+      { type: 'heading', attrs: { level: 4 }, content: [t('H4')] },
+      { type: 'heading', attrs: { level: 5 }, content: [t('H5')] },
+      { type: 'heading', attrs: { level: 6 }, content: [t('H6')] },
+      p(t('paragraph')),
+      p(t('Bold', [{ type: 'bold' }])),
+      p(t('Italic', [{ type: 'italic' }])),
+      p(t('Strike', [{ type: 'strike' }])),
+      p(t('Underline', [{ type: 'underline' }])),
+      p(t('Code is Here', [{ type: 'code' }])),
+      p(t('Bold Italic', [{ type: 'bold' }, { type: 'italic' }])),
+      p(t('Visit', [link])),
+      p(),
+      p(t('Ordered List')),
+      { type: 'orderedList', attrs: { start: 1 }, content: [li(p(t('First'))), li(p(t('Second')))] },
+      p(t('Bullet List')),
+      { type: 'bulletList', content: [li(p(t('First'))), li(p(t('Second')))] },
+      { type: 'codeBlock', attrs: { language: null }, content: [t('This is Code Block')] },
+      { type: 'codeBlock', attrs: { language: 'typescript' }, content: [t('const x: number = 1;')] }
+    ),
+    expected:
+      '<h1>H1</h1><h2>H2</h2><h3>H3</h3><h4>H4</h4><h5>H5</h5><h6>H6</h6><p>paragraph</p><p><strong>Bold</strong></p><p><em>Italic</em></p><p><s>Strike</s></p><p><u>Underline</u></p><p><code>Code is Here</code></p><p><strong><em>Bold Italic</em></strong></p><p><a target="_blank" rel="noopener noreferrer nofollow" href="https://example.com">Visit</a></p><p></p><p>Ordered List</p><ol><li><p>First</p></li><li><p>Second</p></li></ol><p>Bullet List</p><ul><li><p>First</p></li><li><p>Second</p></li></ul><pre><code>This is Code Block</code></pre><pre><code class="language-typescript">const x: number = 1;</code></pre>',
+    parity: true,
+  },
 ];
