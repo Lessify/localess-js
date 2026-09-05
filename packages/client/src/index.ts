@@ -1,6 +1,7 @@
 export * from './cache';
 export * from './cache-tags';
 export * from './client';
+export * from './component-naming';
 export * from './editable';
 export * from './models';
 export * from './sync';
