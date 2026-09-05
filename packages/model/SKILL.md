@@ -29,7 +29,7 @@ See `docs/model.md` in the repo (or the type table below) for the full list.
 | `ContentReference` | `{ kind: 'REFERENCE'; uri: string }` |
 | `ContentRichText` | `{ type?: string; content?: ContentRichText[] }` |
 | `Links` | `Record<string, ContentMetadata>` |
-| `References` | `Record<string, Content>` — one level deep, so an entry has metadata, `locale` and `data` but none of the three collections |
+| `References` | `Record<string, Content>` — field coverage depends on the producing endpoint |
 | `Assets` | `Record<string, AssetMetadata>` |
 | `AssetMetadata` | `{ id, name, extension, type, alt? }` |
 | `AssetTransformParams` | `{ w?, h?, q?, f?: 'webp' \| 'jpeg' \| 'png' \| 'avif', download?, thumbnail? }` |

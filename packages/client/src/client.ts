@@ -87,10 +87,20 @@ export type ContentFetchParams = {
   /**
    * Populate {@link Content.references} with the documents this content references.
    *
-   * **One level only.** Each entry carries its metadata, `locale` and `data`, but none of its own
-   * `references`/`links`/`assets` — the API strips those raw id arrays. To follow a reference
-   * further, read the `uri` from the `REFERENCE` field value in `data` and fetch it yourself. There
-   * is no depth option yet.
+   * **What each entry carries.** Metadata, `locale` and `data` — and none of its own
+   * `references`/`links`/`assets`. The API strips those raw id arrays, exactly as it does for the
+   * top-level document, so although `References` values are typed as `Content`, those three fields
+   * are always `undefined` here.
+   *
+   * **One level only.** To follow a reference further, read the `uri` from the `REFERENCE` field
+   * value in `data` and look it up — or fetch it yourself if it is not in the map:
+   *
+   * ```ts
+   * const authorId = content.data?.author?.uri;
+   * const author = authorId ? content.references?.[authorId] : undefined;
+   * ```
+   *
+   * There is no depth option yet.
    *
    * **All or nothing.** Every id the document references is resolved; you cannot select
    * individual fields.

@@ -126,9 +126,10 @@ const href = findLink(content.links, data.cta);
 All three flags are **all-or-nothing** — every id the document uses is resolved, and individual
 fields cannot be selected. There is no depth option.
 
-`resolveReference` resolves **one level**. Each entry carries its metadata, `locale` and `data`
-only, with none of its own `references`/`links`/`assets`. Raw ids are an internal storage concern
-and are stripped, exactly as they are for the top-level document.
+`resolveReference` resolves **one level**. Each entry carries metadata, `locale` and `data`, with
+none of its own `references`/`links`/`assets` — raw ids are an internal storage concern and are
+stripped, exactly as they are for the top-level document. `References` values are typed as `Content`
+(it is a shared type, reused elsewhere), so those three fields are simply always `undefined` here.
 
 Nothing is lost by that: the edges live in `data`. A `REFERENCE` field value is
 `{ kind: 'REFERENCE', uri }`, so you follow one by looking its `uri` up in the same map:
@@ -278,8 +279,8 @@ interface Content<T extends ContentData> extends ContentMetadata {
   assets?: Assets; // Populated when resolveAsset: true
 }
 
-// Resolved references reuse Content. Resolution is one level deep, so an entry
-// carries metadata, locale and data, and none of the three collections.
+// References reuses Content. What a value carries depends on the endpoint —
+// for resolveReference the three collections are always absent. See above.
 }
 
 interface ContentMetadata {

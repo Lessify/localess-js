@@ -92,9 +92,10 @@ describe('@localess/model shapes', () => {
     expect(content.locale).toBe('en');
   });
 
-  it('References — a resolved reference is metadata, locale and data; follow edges via data', () => {
-    // The API strips the raw `assets`/`links`/`references` id arrays from resolved references, so
-    // an entry only ever carries these fields. Resolution is one level deep.
+  it('References — what a value carries depends on the endpoint that produced it', () => {
+    // For `resolveReference: true` the API strips the raw assets/links/references id arrays, so an
+    // entry carries metadata, locale and data only. That is endpoint behaviour, documented on
+    // `ContentFetchParams.resolveReference` rather than baked into the shared `References` type.
     const references: References = {
       'author-1': {
         createdAt: '2026-01-01T00:00:00.000Z',
@@ -111,7 +112,7 @@ describe('@localess/model shapes', () => {
     };
     // The edge is the `uri` on the REFERENCE field value, not a separate id array.
     expect(references['author-1'].data?.employer.uri).toBe('org-9');
-    // Resolution stops here — a resolved reference brings no map of its own to walk.
+    // Resolution stops at one level, so this endpoint never populates a nested map.
     expect(references['author-1'].references).toBeUndefined();
   });
 

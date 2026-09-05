@@ -33,7 +33,7 @@ they need through their own public API.
 | `ContentReference` | A reference to another content document (`kind: 'REFERENCE'`, `uri`) |
 | `ContentRichText` | A rich text content node (`type?`, `content?`) |
 | `Links` | Key-value map of content id → `ContentMetadata` |
-| `References` | Key-value map of content id → `Content`. Resolution is one level deep, so an entry carries metadata, `locale` and `data` but none of the three collections — follow further edges via the `uri` on a `REFERENCE` field value in `data` |
+| `References` | Key-value map of content id → `Content`. Which fields a value carries depends on the endpoint that produced the map — see e.g. `ContentFetchParams.resolveReference` |
 | `Assets` | Key-value map of asset id → `AssetMetadata` |
 | `AssetMetadata` | Resolved asset metadata (`id`, `name`, `extension`, `type`, `alt?`) |
 | `AssetTransformParams` | Optional image-transform query parameters for asset URLs |

@@ -16,8 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   redundant on the wire, and the top-level document already stripped them. Resolved references are
   now consistent with it.
 
-  `References` stays `Record<string, Content>` — no new type. A resolved reference is simply a
-  `Content` whose three collection fields are absent.
+  No type change: `References` stays `Record<string, Content>`, since it is a shared shape reused in
+  more than one place. The three collection fields are optional, so they are simply always
+  `undefined` on a resolved reference. The behaviour is documented on
+  `ContentFetchParams.resolveReference`, which is the endpoint that produces the map.
 
   To follow a reference, read the `uri` off the field value and look it up in the same map:
 
