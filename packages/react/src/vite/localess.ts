@@ -1,11 +1,35 @@
+import type { ComponentNamingStrategy } from '@localess/client';
 import type { Plugin } from 'vite';
 
 import { vitePluginLocalessComponents } from './vite-plugin-localess-components';
 import { type LocalessInitOptions, vitePluginLocalessInit } from './vite-plugin-localess-init';
 
 export interface LocalessOptions extends LocalessInitOptions {
+  /**
+   * Directory globbed for `.tsx`/`.jsx` components, each registered under its
+   * filename verbatim.
+   *
+   * @default 'src'
+   */
   componentsDir?: string;
+  /**
+   * Explicit schema-key to path overrides, relative to `componentsDir`. Suffix
+   * a path with `#ExportName` for a named export. These win on key collision.
+   */
   components?: Record<string, string>;
+  /**
+   * How a content `_schema` key is matched to a component discovered under
+   * `componentsDir`.
+   *
+   * This is a discovery concern, so it lives here rather than on
+   * `localessInit()`: filenames follow a React convention while schema names are
+   * chosen in Localess, and only auto-discovery has to reconcile the two. The
+   * generated registry resolves keys itself, so nothing is added to the core
+   * API — a hand-written `components` map keeps plain exact matching.
+   *
+   * @default 'exact'
+   */
+  componentNaming?: ComponentNamingStrategy;
 }
 
 /**
@@ -42,7 +66,7 @@ export function localess(options: LocalessOptions): Plugin[] {
     throw new Error('[@localess/react/vite] localess() requires "origin", "spaceId", and "token".');
   }
 
-  const { componentsDir = 'src', components = {}, ...initOptions } = options;
+  const { componentsDir = 'src', components = {}, componentNaming = 'exact', ...initOptions } = options;
 
-  return [vitePluginLocalessComponents(componentsDir, components), vitePluginLocalessInit(initOptions)];
+  return [vitePluginLocalessComponents(componentsDir, components, componentNaming), vitePluginLocalessInit(initOptions)];
 }

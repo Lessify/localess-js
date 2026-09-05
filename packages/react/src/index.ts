@@ -25,4 +25,5 @@ export * from './core/hooks';
 export type * from './core/models';
 export { LocalessApiError } from './core/models';
 export * from './core/richtext';
+export { normalizeComponentKey } from './core/utils';
 export * from './core/utils';

@@ -45,3 +45,33 @@ describe('vitePluginLocalessInit', () => {
     expect(loaded.code).toContain('"cacheTTL":60');
   });
 });
+
+describe('componentNaming pass-through', () => {
+  const base = { origin: 'https://cms.example.com', spaceId: 'space-1', token: 't' };
+
+  async function generated(options: Record<string, unknown>) {
+    const plugin = vitePluginLocalessInit(options as never);
+    const resolved = await (plugin.resolveId as any)('virtual:localess-init');
+    const loaded = await (plugin.load as any).call({}, resolved);
+    return loaded.code as string;
+  }
+
+  it('threads componentNaming into the generated localessInit call', async () => {
+    const code = await generated({ ...base, componentNaming: 'camelCase' });
+
+    expect(code).toContain('"componentNaming":"camelCase"');
+  });
+
+  it('omits componentNaming when it is not configured', async () => {
+    const code = await generated(base);
+
+    expect(code).not.toContain('componentNaming');
+  });
+
+  it('keeps the generated call valid JSON-serializable output', async () => {
+    const code = await generated({ ...base, componentNaming: 'kebab-case' });
+
+    expect(code).toContain('localessInit(');
+    expect(code).toContain('components: localessComponents');
+  });
+});

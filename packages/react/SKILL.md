@@ -86,7 +86,8 @@ TanStack Start / React Router v7 / Remix Vite, plus the `LocalessOptions`
 `localessInit`); `componentsDir` (default `'src'`); and `components`
 (`Record<schemaKey, path>`, paths relative to `componentsDir`). It generates two virtual
 modules: `virtual:localess-components` (auto-registers every `.tsx`/`.jsx`
-file under `componentsDir` by kebab-cased filename, merged with explicit
+file under `componentsDir` by filename verbatim (`Page.tsx` -> `Page`); how that
+key is matched to `data._schema` is the `componentNaming` option, merged with explicit
 `components` path overrides — suffix a path with `#ExportName` for a named
 export; a bare path assumes a default export; overrides win on key collision)
 and `virtual:localess-init` (imports `localessInit` from `@localess/react` and
@@ -782,3 +783,24 @@ export type { LocalessOptions, LocalessInitOptions }
 declare module 'virtual:localess-init' {}
 declare module 'virtual:localess-components' {}
 ```
+
+## componentNaming
+
+| Strategy | `HeroBanner` / `hero-banner` / `hero_banner` -> |
+|---|---|
+| `exact` *(default)* | unchanged — matches only an identical spelling |
+| `camelCase` | `heroBanner` |
+| `PascalCase` | `HeroBanner` |
+| `kebab-case` | `hero-banner` |
+| `snake_case` | `hero_banner` |
+| `lowercase` | `herobanner` |
+
+Applied to **both** the registry key and `data._schema`. Collisions under a non-`exact` strategy log
+a warning and keep the first registration.
+
+Also accepts a custom `(name: string) => string`, applied to both sides.
+
+A **Vite-plugin option only** — `localess({ componentsDir, componentNaming })`. It is not an option
+on `localessInit()`: a hand-written `components` map has keys you already control, so matching there
+is a plain exact lookup. The plugin makes the generated registry resolve keys itself, so nothing is
+added to the core API. Strategy names only; no custom-function form in React.
