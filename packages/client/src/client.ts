@@ -1,5 +1,6 @@
 import { version } from '../package.json';
 import { ICache, NoCache, TTLCache } from './cache';
+import { localessCacheTags, LocalessCacheTarget } from './cache-tags';
 import { AssetTransformParams, Content, ContentAsset, ContentData, Links, Translations } from './models';
 import { buildAssetQueryString } from './utils';
 
@@ -71,6 +72,48 @@ export type LocalessClientOptions = {
    * calls it with the same arguments it would pass to the global.
    */
   fetch?: typeof globalThis.fetch;
+  /**
+   * Cache implementation to use instead of the built-in one.
+   *
+   * When set, {@link LocalessClientOptions.cacheTTL} is ignored — the supplied cache owns expiry.
+   * Methods may return promises, so a Redis- or KV-backed cache works without wrapping.
+   *
+   * Cache keys exclude the token, so **one cache instance shared between two clients is shared
+   * across their tokens**. That is safe for tokens with equal permissions — the API returns the
+   * same bytes for a given key, and draft-ness is part of the key via `version`. Do **not** share
+   * one instance between tokens with *different* permissions: a token lacking `CONTENT_DRAFT` would
+   * get a hit on a draft entry another client stored, instead of the `403` the API would return.
+   */
+  cache?: ICache<unknown>;
+  /**
+   * Extra `fetch` options merged into every request, for frameworks that extend `fetch`.
+   *
+   * **Setting either field disables the client's own cache for that request.** Two caching layers
+   * over one call is how content survives a `revalidateTag()` and looks like a bug — so when a
+   * request carries framework directives, the framework owns caching for it entirely.
+   */
+  fetchInit?: LocalessFetchInit;
+};
+
+/**
+ * Framework-specific `fetch` options.
+ *
+ * Passed through verbatim, so a runtime that does not understand them simply ignores them.
+ */
+export type LocalessFetchInit = {
+  /**
+   * Next.js App Router caching. Passed as `fetch(url, { next })`.
+   *
+   * When `next` is present and `tags` is not, the client fills in the tags described by
+   * {@link localessCacheTags} — so `revalidateTag('localess:slug:home')` works without any
+   * bookkeeping. An explicit `tags` array **replaces** the generated ones rather than merging, so
+   * you can opt out entirely.
+   */
+  next?: { revalidate?: number | false; tags?: string[] };
+  /**
+   * Standard `RequestCache` mode. Passed as `fetch(url, { cache })`.
+   */
+  cache?: RequestCache;
 };
 
 /**
@@ -118,6 +161,11 @@ export type LinksFetchParams = {
    */
   excludeChildren?: boolean;
   /**
+   * Framework `fetch` options for this request, shallow-merged over the client's own
+   * {@link LocalessClientOptions.fetchInit}. Setting either field bypasses the client's cache.
+   */
+  fetchInit?: LocalessFetchInit;
+  /**
    * Abort this request. Composed with the client's own timeout, so whichever fires first wins.
    *
    * Aborting through this signal is treated as the caller's decision and is **not** retried.
@@ -131,6 +179,11 @@ export type TranslationFetchParams = {
    * Overrides the version set in the client options.
    */
   version?: 'draft';
+  /**
+   * Framework `fetch` options for this request, shallow-merged over the client's own
+   * {@link LocalessClientOptions.fetchInit}. Setting either field bypasses the client's cache.
+   */
+  fetchInit?: LocalessFetchInit;
   /**
    * Abort this request. Composed with the client's own timeout, so whichever fires first wins.
    *
@@ -203,6 +256,11 @@ export type ContentFetchParams = {
    * @default false
    */
   resolveAsset?: boolean;
+  /**
+   * Framework `fetch` options for this request, shallow-merged over the client's own
+   * {@link LocalessClientOptions.fetchInit}. Setting either field bypasses the client's cache.
+   */
+  fetchInit?: LocalessFetchInit;
   /**
    * Abort this request. Composed with the client's own timeout, so whichever fires first wins.
    *
@@ -334,6 +392,26 @@ function retryAfterMs(response: Response): number | undefined {
   const date = Date.parse(header);
   if (Number.isNaN(date)) return undefined;
   return Math.max(0, date - Date.now());
+}
+
+/**
+ * Cache key for a request URL.
+ *
+ * Excludes the token — it is a credential, not part of what identifies a response, and including it
+ * meant two clients on the same space could not share an entry, and any cache that logs or persists
+ * keys persisted a secret. Remaining params are sorted so key equality does not depend on the order
+ * the URL happened to be built in.
+ */
+function cacheKey(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.delete('token');
+    parsed.searchParams.sort();
+    return parsed.toString();
+  } catch {
+    // A non-absolute URL should not happen, but a cache key is not worth throwing over.
+    return url.replace(/([?&])token=[^&]*&?/, '$1');
+  }
 }
 
 function redactToken(url: string): string {
@@ -569,8 +647,26 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
   };
 
   const ttl = typeof options.cacheTTL === 'number' ? options.cacheTTL * 1000 : undefined;
-  // Cache for storing API responses
-  const cache: ICache<any> = options.cacheTTL === false ? new NoCache<any>() : new TTLCache<any>(ttl);
+  // Cache for storing API responses. A supplied cache owns expiry, so cacheTTL no longer applies.
+  if (options.cache && options.cacheTTL !== undefined && options.debug) {
+    console.warn(LOG_GROUP, 'Both `cache` and `cacheTTL` were set — `cache` wins and `cacheTTL` is ignored.');
+  }
+  const cache: ICache<any> = options.cache ?? (options.cacheTTL === false ? new NoCache<any>() : new TTLCache<any>(ttl));
+
+  /**
+   * Merge the per-call fetch options over the client's, and fill in cache tags when the caller
+   * asked for Next.js caching without naming its own.
+   */
+  function resolveFetchInit(target: LocalessCacheTarget, perCall?: LocalessFetchInit): LocalessFetchInit | undefined {
+    const merged: LocalessFetchInit = { ...options.fetchInit, ...perCall };
+    if (merged.next === undefined && merged.cache === undefined) {
+      return undefined;
+    }
+    if (merged.next && merged.next.tags === undefined) {
+      merged.next = { ...merged.next, tags: localessCacheTags(options.spaceId, target) };
+    }
+    return merged;
+  }
 
   const doFetch = options.fetch ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
 
@@ -593,12 +689,17 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
     return signals.length === 1 ? signals[0] : AbortSignal.any(signals);
   }
 
-  async function fetchJson<T>(url: string, methodLabel: string, callerSignal?: AbortSignal): Promise<T> {
-    if (cache.has(url)) {
+  async function fetchJson<T>(url: string, methodLabel: string, callerSignal?: AbortSignal, fetchInit?: LocalessFetchInit): Promise<T> {
+    // When the framework has been asked to cache this request, it owns caching for it entirely.
+    // Layering our cache underneath would let a stale entry survive a `revalidateTag()`.
+    const useInternalCache = fetchInit === undefined;
+    const key = cacheKey(url);
+
+    if (useInternalCache && (await cache.has(key))) {
       if (options.debug) {
         console.log(LOG_GROUP, `${methodLabel} cache hit`);
       }
-      return cache.get(url) as T;
+      return (await cache.get(key)) as T;
     }
 
     let attempt = 0;
@@ -610,7 +711,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
 
       let response: Response;
       try {
-        response = await doFetch(url, { ...fetchOptions, signal: attemptSignal(callerSignal) });
+        response = await doFetch(url, { ...fetchOptions, ...fetchInit, signal: attemptSignal(callerSignal) });
       } catch (cause) {
         // An abort the caller asked for is a decision, not a failure — never retry it.
         const callerAborted = callerSignal?.aborted === true;
@@ -676,7 +777,9 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
 
       const data = (await response.json()) as T;
-      cache.set(url, data);
+      if (useInternalCache) {
+        await cache.set(key, data);
+      }
       return data;
     }
   }
@@ -703,7 +806,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         console.log(LOG_GROUP, 'getLinks fetch url : ', url);
       }
 
-      return fetchJson<Links>(url, 'getLinks', params?.signal);
+      return fetchJson<Links>(url, 'getLinks', params?.signal, resolveFetchInit({ kind: 'links' }, params?.fetchInit));
     },
 
     async getContentBySlug<T extends ContentData = ContentData>(slug: string, params?: ContentFetchParams): Promise<Content<T>> {
@@ -729,7 +832,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         console.log(LOG_GROUP, 'getContentBySlug fetch url : ', url);
       }
 
-      return fetchJson<Content<T>>(url, 'getContentBySlug', params?.signal);
+      return fetchJson<Content<T>>(url, 'getContentBySlug', params?.signal, resolveFetchInit({ kind: 'slug', slug }, params?.fetchInit));
     },
 
     async getContentById<T extends ContentData = ContentData>(id: string, params?: ContentFetchParams): Promise<Content<T>> {
@@ -755,7 +858,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         console.log(LOG_GROUP, 'getContentById fetch url : ', url);
       }
 
-      return fetchJson<Content<T>>(url, 'getContentById', params?.signal);
+      return fetchJson<Content<T>>(url, 'getContentById', params?.signal, resolveFetchInit({ kind: 'content', id }, params?.fetchInit));
     },
 
     async getTranslations(locale: string, params?: TranslationFetchParams): Promise<Translations> {
@@ -777,7 +880,12 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         console.log(LOG_GROUP, 'getTranslations fetch url : ', url);
       }
 
-      return fetchJson<Translations>(url, 'getTranslations', params?.signal);
+      return fetchJson<Translations>(
+        url,
+        'getTranslations',
+        params?.signal,
+        resolveFetchInit({ kind: 'translations', locale }, params?.fetchInit)
+      );
     },
 
     syncScriptUrl(): string {

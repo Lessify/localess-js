@@ -1,4 +1,5 @@
 export * from './cache';
+export * from './cache-tags';
 export * from './client';
 export * from './editable';
 export * from './models';

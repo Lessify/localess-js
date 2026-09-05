@@ -26,7 +26,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   All options are optional and additive. Set `retry: false` and `timeoutMs: false` for the previous
   behaviour.
 
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
+
 ### Changed
+
+- **`@localess/client`** — cache keys no longer contain the API token. Previously the key was the
+  full request URL, so two clients on one space could not share an entry and any cache that logged
+  or persisted keys persisted a credential — which matters more now that keys can leave the process.
+  Draft-ness stays in the key via `version`, and failures are still never cached.
+
+  **Consequence:** a cache instance shared between two clients is shared across their tokens. Safe
+  for equal permissions; **do not share one between tokens with different permissions**. See
+  [ADR 003](docs/decisions/003-ttl-cache-design.md).
 
 - **BREAKING** — the API no longer returns raw `assets`/`links`/`references` **id arrays** on
   documents inside a `references` map. Those arrays are a denormalized index of edges that already
@@ -96,6 +119,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `@localess/cli`: `schema pull|push|diff|validate` commands for syncing `@localess/schema` definitions with a Localess space; `translation diff` command; grouped diff output by status with an option to include unchanged entries (translations and schemas); pre-push previews that include unchanged keys; the pre-push diff is reconciled against the server's result and mismatches are reported as warnings.
 - `playgrounds/schema` — minimal schema-as-code playground exercising `@localess/schema` and the CLI `schema` commands.
 
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
+
 ### Changed
 
 - **Breaking — `@localess/angular`:** single unified entry point. The `@localess/angular/browser` and `@localess/angular/server` entry points and their duplicated services are removed; configure everything through `provideLocaless({ origin, spaceId, token, ... })`, where the token type (public vs secret) follows the app's rendering mode. `LocalessContentService` methods now return Promises. The `LocalessComponent` wrapper component is replaced by the `[llComponent]` directive.
@@ -128,6 +165,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `@localess/cli`: `--verbose` option on commands for debug output.
 - `@localess/angular`: unit tests for `ServerAssetService`, `ServerContentService`, and `ServerTranslationService`.
 
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
+
 ### Changed
 
 - Refactored Visual Editor sync into a dedicated `LocalessSyncService` with simplified event subscription.
@@ -148,12 +199,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - `draft` flag support for pulling unpublished translations via the CLI.
 
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
+
 ### Changed
 
 - Updated the TTL cache implementation; schema components now support assets.
 - Updated Visual Editor sync handling in Localess components.
 
 ## [3.2.4] - 2026-06-11
+
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
 
 ### Changed
 
@@ -168,11 +247,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [3.2.2] - 2026-06-09
 
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
+
 ### Changed
 
 - Refactored `loadLocalessSync`, streamlining its rejection conditions.
 
 ## [3.2.1] - 2026-06-09
+
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
 
 ### Changed
 
@@ -197,6 +304,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - `publishConfig` (public access) to all packages.
 
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
+
 ### Changed
 
 - CI cleanup: removed redundant publish/build workflow steps.
@@ -206,6 +327,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 - `AssetTransformParams` type; `assetLink` / `resolveAsset` now support image transformations.
+
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
 
 ### Changed
 
@@ -217,6 +352,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - CLI version check with dynamic version reporting.
 - Version-bumping script and related npm scripts for lockstep releases.
+
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
 
 ### Changed
 
@@ -236,6 +385,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - `ensureGitignore` helper to automatically manage `.gitignore` entries.
 
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
+
 ### Changed
 
 - Bumped `vite-plugin-dts` to 5.0.0 and removed the `orval` dependency.
@@ -252,6 +415,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 - Tests for type generation.
+
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
 
 ### Changed
 
@@ -271,6 +448,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Server-side `LocalessDocument` component for React.
 - `localess types generate` — schema-to-TypeScript-interface generation, including `_id` and `_schema` fields.
 
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
+
 ### Changed
 
 - Normalized `origin` URLs (strip trailing slash).
@@ -283,6 +474,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - `SKILL.md` files documenting each package's API for AI coding agents.
 
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
+
 ### Changed
 
 - Unified the npm publish process across packages.
@@ -292,6 +497,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 - `@localess/cli` package: `login` / `logout` commands, `localess types generate`, `localess translations pull` (with draft-version fetch) and `localess translations push` (with `--dry-run`), and automatic retry on failed API requests.
+
+- **`@localess/client`** — caching is now pluggable and framework-aware:
+  - `cache?: ICache<unknown>` replaces the built-in cache. `ICache` methods may now return promises,
+    so a Redis- or KV-backed cache is expressible without wrapping. **No adapter ships with the
+    SDK** — the interface is the deliverable, so the zero-dependency constraint holds.
+  - `fetchInit?: { next?, cache? }` on the client and per call, merged into every `fetch`. This makes
+    Next.js on-demand revalidation possible for the first time: `revalidateTag('localess:slug:home')`
+    now works.
+  - **Cache tags are generated** when `next` is set without explicit `tags` — `localess`,
+    `localess:space:<id>`, and one of `localess:links` / `localess:content:<id>` /
+    `localess:slug:<slug>` / `localess:translations:<locale>`. `localessCacheTags()` is exported so a
+    webhook handler can produce the same strings.
+  - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
+    Two caching layers over one call is how content survives a `revalidateTag()`.
 
 ### Changed
 

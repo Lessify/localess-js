@@ -31,6 +31,8 @@ const client = localessClient({
   timeoutMs: 15000,                       // Per-attempt timeout in ms; false to disable; default: 15000
   retry: { attempts: 3 },                 // false to disable; default: 3 attempts, 300ms base, 5s cap
   fetch: myFetch,                         // Replacement for the global fetch; default: global fetch
+  cache: myCache,                         // Your own ICache; overrides cacheTTL
+  fetchInit: { next: { revalidate: 60 } },// Framework fetch options; bypasses the client cache
 });
 ```
 
@@ -228,6 +230,15 @@ Retries, timeouts and cancellation are **on by default**.
 - Every fetching method takes `signal?: AbortSignal`, composed with the timeout. A caller abort is **never retried**; a timeout is.
 - `LocalessApiError` and `LocalessNetworkError` both carry `attempts`.
 - Worst case is roughly `attempts × timeoutMs` plus backoff — each attempt gets a fresh timeout.
+
+### Pluggable cache and framework caching
+
+- `cache?: ICache<unknown>` replaces the built-in cache; methods may return promises. A supplied cache owns expiry, so `cacheTTL` is ignored.
+- **Cache keys exclude the token.** A shared cache instance is therefore shared across tokens — safe for equal permissions, **not** safe between tokens with different ones.
+- `fetchInit?: { next?: { revalidate?, tags? }, cache?: RequestCache }` on the client and per call, shallow-merged.
+- **A request carrying `fetchInit` bypasses the client cache entirely** — neither read nor written. The framework owns that request.
+- When `next` is set without `tags`, these are generated: `localess`, `localess:space:<spaceId>`, then one of `localess:links`, `localess:content:<id>`, `localess:slug:<fullSlug>`, `localess:translations:<locale>`. An explicit `tags` array replaces them.
+- `localessCacheTags(spaceId, target)` is exported for producing the same strings in a webhook handler.
 
 ### cacheTTL
 

@@ -5,14 +5,15 @@ import { AstroComponentFactory } from 'astro/runtime/server/index.js';
  * Configuration for the `localess()` Astro integration.
  *
  * Extends {@link LocalessClientOptions} (origin, spaceId, token, version, debug, cacheTTL,
- * timeoutMs, retry) with Astro-specific settings for component mapping, fallback rendering, and
- * Visual Editor sync.
+ * timeoutMs, retry, fetchInit) with Astro-specific settings for component mapping, fallback
+ * rendering, and Visual Editor sync.
  *
- * `fetch` is deliberately excluded. The client options are serialized with `JSON.stringify` into the
- * generated `virtual:localess-init` module, and a function cannot survive that — accepting it would
- * silently drop it. Omitting it makes that a compile error instead.
+ * `fetch` and `cache` are deliberately excluded. The client options are serialized with
+ * `JSON.stringify` into the generated `virtual:localess-init` module: a function cannot survive that
+ * at all, and an `ICache` arrives as `{}` with its methods gone, which would throw on first use.
+ * Omitting them makes passing either a compile error rather than a runtime surprise.
  */
-export type LocalessOptions = Omit<LocalessClientOptions, 'fetch'> & {
+export type LocalessOptions = Omit<LocalessClientOptions, 'fetch' | 'cache'> & {
   /**
    * Map of schema keys to Astro components, merged with components auto-discovered from
    * `<componentsDir>/**\/*.astro`. Both this map's keys and `_schema` values are

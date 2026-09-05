@@ -27,6 +27,8 @@ const client = localessClient({
   timeoutMs: 15000,                       // Per-attempt timeout in ms; false to disable; default: 15000
   retry: { attempts: 3 },                 // false to disable; default: 3 attempts, 300ms base, 5s cap
   fetch: myFetch,                         // Replacement for the global fetch; default: global fetch
+  cache: myCache,                         // Your own ICache; overrides cacheTTL
+  fetchInit: { next: { revalidate: 60 } },// Framework fetch options; bypasses the client cache
 });
 ```
 
@@ -93,6 +95,69 @@ catch (error) {
   }
 }
 ```
+
+
+## Caching
+
+Two independent layers, and **only one applies to a given request**.
+
+### The client's own cache
+
+In-memory, per client instance, 5-minute TTL by default. Configure with `cacheTTL` (seconds, or
+`false` to disable), or replace it entirely:
+
+```typescript
+const client = localessClient({
+  ...options,
+  cache: {
+    async has(key) { return (await redis.exists(key)) === 1; },
+    async get(key) { return JSON.parse(await redis.get(key)); },
+    async set(key, value) { await redis.set(key, JSON.stringify(value), { EX: 300 }); },
+  },
+});
+```
+
+`ICache` methods may return promises. A supplied cache owns expiry, so `cacheTTL` is ignored.
+
+**Cache keys exclude the token**, so a shared cache instance is shared across tokens. That is safe
+for tokens with equal permissions — the API returns the same bytes for a given key, and draft-ness
+is part of the key via `version`. **Do not share one cache instance between tokens with different
+permissions**: a token lacking `CONTENT_DRAFT` would get a hit on a draft entry another client
+stored, rather than the `403` the API would return. Per-client caches are unaffected.
+
+### Framework caching, and the bypass rule
+
+`fetchInit` is merged into every `fetch` call, for frameworks that extend it:
+
+```typescript
+const client = localessClient({ ...options, fetchInit: { next: { revalidate: 60 } } });
+
+// or per call
+await client.getContentBySlug('home', { fetchInit: { next: { revalidate: 5 } } });
+```
+
+**A request carrying `fetchInit` bypasses the client cache entirely** — neither read nor written.
+Two caching layers over one call is how content survives a `revalidateTag()` and looks like a bug,
+so when the framework has been asked to cache a request, it owns that request.
+
+### Cache tags
+
+When `next` is present and you have not named your own `tags`, the client fills them in:
+
+```
+localess                            every request
+localess:space:<spaceId>            everything in one space
+localess:links                      the link tree
+localess:content:<contentId>        one document by id
+localess:slug:<fullSlug>            one document by slug
+localess:translations:<locale>      one locale's translations
+```
+
+So `revalidateTag('localess:slug:home')` works with no bookkeeping. An explicit `tags` array
+**replaces** the generated ones rather than merging, so you can opt out.
+
+`localessCacheTags(spaceId, target)` is exported, so a webhook handler can produce the same strings
+from the other direction.
 
 ## API Methods
 
