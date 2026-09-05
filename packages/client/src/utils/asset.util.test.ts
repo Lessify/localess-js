@@ -27,7 +27,10 @@ describe('buildAssetQueryString', () => {
     expect(buildAssetQueryString({ f: 'webp' })).toBe('f=webp');
   });
 
-  it('serialises download flag as key-only', () => {
+  // These two params are presence flags in the Localess API, not values: `?download` with no
+  // value is the canonical form and is what the Localess UI links to. Emitting `=true` would also
+  // be accepted by the API, but it is not the form to standardise on.
+  it('serialises download as a valueless flag', () => {
     expect(buildAssetQueryString({ download: true })).toBe('download');
   });
 
@@ -35,7 +38,7 @@ describe('buildAssetQueryString', () => {
     expect(buildAssetQueryString({ download: false })).toBe('');
   });
 
-  it('serialises thumbnail flag as key-only', () => {
+  it('serialises thumbnail as a valueless flag', () => {
     expect(buildAssetQueryString({ thumbnail: true })).toBe('thumbnail');
   });
 
