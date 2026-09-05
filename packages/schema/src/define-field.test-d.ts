@@ -1,7 +1,7 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import { defineEnum, defineField, defineSchema } from './define';
 import type { SchemaFieldInput } from './define';
+import { defineEnum, defineField, defineSchema } from './define';
 
 describe('defineField type-level behavior', () => {
   it('preserves literal types for name/kind/numeric extras', () => {

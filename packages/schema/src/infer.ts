@@ -10,12 +10,11 @@ type FindById<C, Id> = Extract<SchemasOf<C>, { id: Id }>;
 // extends string }` directly (non-distributively, since Extract<...> isn't a naked type param
 // here) is vacuously true, and an infer with no candidate to match falls back to its constraint
 // (`string`) rather than `never` — so an empty extraction must be special-cased before the infer.
-type NodeIds<C> =
-  [Extract<SchemasOf<C>, { type: 'NODE' }>] extends [never]
-    ? never
-    : Extract<SchemasOf<C>, { type: 'NODE' }> extends { id: infer Id extends string }
-      ? Id
-      : never;
+type NodeIds<C> = [Extract<SchemasOf<C>, { type: 'NODE' }>] extends [never]
+  ? never
+  : Extract<SchemasOf<C>, { type: 'NODE' }> extends { id: infer Id extends string }
+    ? Id
+    : never;
 
 type EnumValuesUnion<E> = E extends { values: readonly SchemaEnumValue[] }
   ? E extends { values: readonly { value: infer V extends string }[] }
@@ -80,12 +79,11 @@ export type InferContent<S, C> = S extends { type: 'ROOT' | 'NODE'; id: infer Id
   : never;
 
 // Same never-guard as NodeIds — see comment there.
-type RootIds<C> =
-  [Extract<SchemasOf<C>, { type: 'ROOT' }>] extends [never]
-    ? never
-    : Extract<SchemasOf<C>, { type: 'ROOT' }> extends { id: infer Id extends string }
-      ? Id
-      : never;
+type RootIds<C> = [Extract<SchemasOf<C>, { type: 'ROOT' }>] extends [never]
+  ? never
+  : Extract<SchemasOf<C>, { type: 'ROOT' }> extends { id: infer Id extends string }
+    ? Id
+    : never;
 
 /** Union of the content types of every ROOT schema in config C. */
 export type InferContentData<C> = ContentByIds<RootIds<C>, C>;
