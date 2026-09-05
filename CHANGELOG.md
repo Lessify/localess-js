@@ -8,6 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **`@localess/client`** — a resilience layer on every request, on by default:
+  - **Retries** network failures and `408`/`429`/`500`/`502`/`503`/`504` (3 attempts by default),
+    with exponential backoff and **full jitter**. `401`/`403`/`404` throw immediately — a bad token
+    will not fix itself. All four fetching methods are `GET`s, so retrying is idempotent.
+  - **`Retry-After`** is honoured in preference to the computed backoff, clamped to `maxDelayMs`.
+  - **Timeouts** via `timeoutMs` (default 15s, per attempt). Previously `fetch` had no timeout in
+    Node, so a hung connection could stall a static build indefinitely.
+  - **Cancellation** via `signal` on every fetching method, composed with the client's timeout. A
+    caller abort is never retried; a timeout is.
+  - **An injectable `fetch`**, for instrumentation, a runtime-specific implementation, or tests.
+  - `LocalessApiError` and `LocalessNetworkError` now carry `attempts`, and the rendered error box
+    shows an `Attempts` row when a request was retried.
+
+  All options are optional and additive. Set `retry: false` and `timeoutMs: false` for the previous
+  behaviour.
+
 ### Changed
 
 - **BREAKING** — the API no longer returns raw `assets`/`links`/`references` **id arrays** on

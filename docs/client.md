@@ -24,6 +24,9 @@ const client = localessClient({
   version: 'draft',                       // undefined = published (default), 'draft' for preview
   debug: false,                           // Logs requests; default: false
   cacheTTL: 300,                          // Cache TTL in seconds; false to disable; default: 300 (5 min)
+  timeoutMs: 15000,                       // Per-attempt timeout in ms; false to disable; default: 15000
+  retry: { attempts: 3 },                 // false to disable; default: 3 attempts, 300ms base, 5s cap
+  fetch: myFetch,                         // Replacement for the global fetch; default: global fetch
 });
 ```
 
@@ -32,6 +35,63 @@ Store credentials in environment variables:
 LOCALESS_ORIGIN=https://my-localess.web.app
 LOCALESS_SPACE_ID=your-space-id
 LOCALESS_TOKEN=your-api-token
+```
+
+
+## Resilience
+
+Requests retry, time out, and can be cancelled. Defaults are on — a single transient failure
+should not fail a build.
+
+| Option | Default | Notes |
+|---|---|---|
+| `timeoutMs` | `15000` | Per **attempt**, not per call. `false` waits indefinitely. |
+| `retry.attempts` | `3` | Includes the first request. `1` or `retry: false` disables retrying. |
+| `retry.baseDelayMs` | `300` | Base for exponential backoff. |
+| `retry.maxDelayMs` | `5000` | Caps any single delay, including a `Retry-After` the server asks for. |
+| `retry.retryStatuses` | `[408, 429, 500, 502, 503, 504]` | Every other 4xx throws immediately. |
+| `fetch` | global `fetch` | Injectable, for instrumentation or a runtime-specific implementation. |
+
+**What is retried.** Network failures and the statuses above. A `401` or `403` is thrown straight
+away — a bad token will not fix itself, and retrying only delays the error you need to see. All four
+fetching methods are `GET`s, so retrying is always idempotent.
+
+**Backoff uses full jitter** — each delay is drawn uniformly from `[0, cap]` rather than being
+fixed. That matters when a batch of static-generation workers all start against a cold origin: equal
+jitter would still leave them retrying in step.
+
+**`Retry-After` wins.** On a `429` or `503` the server's requested delay is used instead of the
+computed backoff, clamped to `maxDelayMs`. Both delta-seconds and HTTP-date forms are accepted; an
+unparseable value falls back to backoff.
+
+**Worst-case latency** is roughly `attempts × timeoutMs` plus backoff, since each attempt gets a
+fresh timeout. With the defaults that is about 45 seconds against a completely dead origin.
+
+### Cancellation
+
+Every fetching method accepts a `signal`:
+
+```typescript
+const controller = new AbortController();
+const content = await client.getContentBySlug('home', { signal: controller.signal });
+controller.abort();
+```
+
+It is composed with the client's own timeout, so whichever fires first wins. Aborting through your
+signal is treated as **your decision and is never retried** — unlike a timeout, which is a transient
+failure and is.
+
+### Diagnosing failures
+
+Both error types carry `attempts`, and the rendered error box gains an `Attempts` row when a
+request was retried, so a log line tells you whether the client gave up after trying:
+
+```typescript
+catch (error) {
+  if (error instanceof LocalessApiError) {
+    console.log(error.status, error.attempts);
+  }
+}
 ```
 
 ## API Methods

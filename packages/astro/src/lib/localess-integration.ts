@@ -46,6 +46,8 @@ export function localessIntegration(options: LocalessOptions): AstroIntegration 
     version,
     debug,
     cacheTTL,
+    timeoutMs,
+    retry,
     componentsDir,
     components,
     enableFallbackComponent,
@@ -54,7 +56,9 @@ export function localessIntegration(options: LocalessOptions): AstroIntegration 
     livePreview,
   } = resolvedOptions;
 
-  const clientOptions: LocalessClientOptions = { origin, spaceId, token, version, debug, cacheTTL };
+  // Serialized into the generated `virtual:localess-init` module, so every field here must survive
+  // `JSON.stringify`. That is why `fetch` is not forwarded — see `LocalessOptions`.
+  const clientOptions: LocalessClientOptions = { origin, spaceId, token, version, debug, cacheTTL, timeoutMs, retry };
 
   return {
     name: '@localess/astro',

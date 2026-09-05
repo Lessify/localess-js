@@ -28,6 +28,9 @@ const client = localessClient({
   version: 'draft',                       // undefined = published (default), 'draft' for preview
   debug: false,                           // Logs requests; default: false
   cacheTTL: 300,                          // Cache TTL in seconds; false to disable; default: 300 (5 min)
+  timeoutMs: 15000,                       // Per-attempt timeout in ms; false to disable; default: 15000
+  retry: { attempts: 3 },                 // false to disable; default: 3 attempts, 300ms base, 5s cap
+  fetch: myFetch,                         // Replacement for the global fetch; default: global fetch
 });
 ```
 
@@ -206,6 +209,25 @@ Always wrap calls in `try`/`catch` (or handle rejection) — the promise never s
 - Cache key = full request URL (includes all parameters)
 - `cacheTTL: false` always disables caching, regardless of other options
 - Implementations are exported: `TTLCache` (default; expired entries are dropped on access), `NoCache` (used for `cacheTTL: false`), and a plain unbounded `Cache`, all implementing `ICache<V>` (`set`/`get`/`has`)
+
+### Resilience
+
+Retries, timeouts and cancellation are **on by default**.
+
+| Option | Default | Notes |
+|---|---|---|
+| `timeoutMs` | `15000` | Per attempt. `false` disables. |
+| `retry.attempts` | `3` | Includes the first request. `1` or `retry: false` disables. |
+| `retry.baseDelayMs` | `300` | Exponential backoff base. |
+| `retry.maxDelayMs` | `5000` | Caps any delay, including `Retry-After`. |
+| `retry.retryStatuses` | `[408, 429, 500, 502, 503, 504]` | Other 4xx throw immediately. |
+| `fetch` | global | Injectable replacement. |
+
+- Retried: network failures and the statuses above. **Not** retried: `401`, `403`, `404` — they will not fix themselves.
+- Backoff uses **full jitter**; `Retry-After` (seconds or HTTP-date) overrides it, clamped to `maxDelayMs`.
+- Every fetching method takes `signal?: AbortSignal`, composed with the timeout. A caller abort is **never retried**; a timeout is.
+- `LocalessApiError` and `LocalessNetworkError` both carry `attempts`.
+- Worst case is roughly `attempts × timeoutMs` plus backoff — each attempt gets a fresh timeout.
 
 ### cacheTTL
 

@@ -44,6 +44,61 @@ export type LocalessClientOptions = {
    * cacheTTL: false   // disabled
    */
   cacheTTL?: number | false;
+  /**
+   * Per-request timeout in **milliseconds**, or `false` to wait indefinitely.
+   *
+   * `fetch` has no default timeout in Node, so without this a hung connection stalls until the
+   * platform's own limit — during static generation that can mean a build that never finishes.
+   *
+   * Each attempt gets its own timeout, so with retries enabled the worst case is roughly
+   * `attempts × timeoutMs` plus backoff.
+   *
+   * @default 15000
+   */
+  timeoutMs?: number | false;
+  /**
+   * Retry policy for failed requests, or `false` to disable retrying.
+   *
+   * All four fetching methods are `GET`s, so retrying is always idempotent.
+   *
+   * @default { attempts: 3, baseDelayMs: 300, maxDelayMs: 5000 }
+   */
+  retry?: LocalessRetryOptions | false;
+  /**
+   * Replacement for the global `fetch`.
+   *
+   * Useful for instrumentation, a runtime-specific implementation, or a test double. The client
+   * calls it with the same arguments it would pass to the global.
+   */
+  fetch?: typeof globalThis.fetch;
+};
+
+/**
+ * Retry policy. Only network failures and the configured statuses are retried — a `401` or `403`
+ * is thrown immediately, since it will not resolve itself.
+ */
+export type LocalessRetryOptions = {
+  /**
+   * Maximum requests per call, including the first. `1` disables retrying.
+   * @default 3
+   */
+  attempts?: number;
+  /**
+   * Base delay in milliseconds for exponential backoff.
+   * @default 300
+   */
+  baseDelayMs?: number;
+  /**
+   * Upper bound on any single backoff delay, in milliseconds. Also clamps a `Retry-After` the
+   * server asks for.
+   * @default 5000
+   */
+  maxDelayMs?: number;
+  /**
+   * Response statuses worth retrying.
+   * @default [408, 429, 500, 502, 503, 504]
+   */
+  retryStatuses?: number[];
 };
 
 export type LinksFetchParams = {
@@ -62,6 +117,12 @@ export type LinksFetchParams = {
    * @example false
    */
   excludeChildren?: boolean;
+  /**
+   * Abort this request. Composed with the client's own timeout, so whichever fires first wins.
+   *
+   * Aborting through this signal is treated as the caller's decision and is **not** retried.
+   */
+  signal?: AbortSignal;
 };
 
 export type TranslationFetchParams = {
@@ -70,6 +131,12 @@ export type TranslationFetchParams = {
    * Overrides the version set in the client options.
    */
   version?: 'draft';
+  /**
+   * Abort this request. Composed with the client's own timeout, so whichever fires first wins.
+   *
+   * Aborting through this signal is treated as the caller's decision and is **not** retried.
+   */
+  signal?: AbortSignal;
 };
 
 export type ContentFetchParams = {
@@ -136,6 +203,12 @@ export type ContentFetchParams = {
    * @default false
    */
   resolveAsset?: boolean;
+  /**
+   * Abort this request. Composed with the client's own timeout, so whichever fires first wins.
+   *
+   * Aborting through this signal is treated as the caller's decision and is **not** retried.
+   */
+  signal?: AbortSignal;
 };
 
 export interface LocalessClient {
@@ -191,7 +264,9 @@ export class LocalessApiError extends Error {
     public readonly statusText: string,
     public readonly url: string,
     public readonly body: unknown,
-    public readonly hint: string
+    public readonly hint: string,
+    /** How many requests were issued before giving up. `1` when the failure was not retried. */
+    public readonly attempts: number = 1
   ) {
     super(`Localess API request to ${url} failed with ${status} ${statusText}. ${hint}`);
     this.name = 'LocalessApiError';
@@ -208,11 +283,57 @@ export class LocalessNetworkError extends Error {
     public readonly origin: string,
     public readonly url: string,
     public readonly hint: string,
-    cause: unknown
+    cause: unknown,
+    /** How many requests were issued before giving up. `1` when the failure was not retried. */
+    public readonly attempts: number = 1
   ) {
     super(`Could not reach the Localess API at ${origin}. ${hint}`, { cause });
     this.name = 'LocalessNetworkError';
   }
+}
+
+const DEFAULT_RETRY_ATTEMPTS = 3;
+const DEFAULT_RETRY_BASE_DELAY_MS = 300;
+const DEFAULT_RETRY_MAX_DELAY_MS = 5_000;
+const DEFAULT_TIMEOUT_MS = 15_000;
+
+/**
+ * Statuses worth retrying. Every other 4xx is a client mistake that will not fix itself — retrying
+ * a 401 or 403 only delays the error the consumer needs to see.
+ */
+const DEFAULT_RETRY_STATUSES = [408, 429, 500, 502, 503, 504];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Backoff with **full** jitter: a delay drawn uniformly from `[0, cap]`.
+ *
+ * Equal jitter would still cluster retries; full jitter spreads them, which is what matters when a
+ * batch of SSG workers all start against a cold origin at the same moment.
+ */
+function backoffDelay(attempt: number, baseDelayMs: number, maxDelayMs: number): number {
+  const cap = Math.min(maxDelayMs, baseDelayMs * 2 ** (attempt - 1));
+  return Math.round(Math.random() * cap);
+}
+
+/**
+ * `Retry-After` as milliseconds — either delta-seconds or an HTTP-date. Returns `undefined` when
+ * the header is absent or unparseable, so the caller falls back to computed backoff.
+ */
+function retryAfterMs(response: Response): number | undefined {
+  const header = response.headers?.get?.('Retry-After');
+  if (!header) return undefined;
+
+  const seconds = Number(header);
+  if (Number.isFinite(seconds)) {
+    return seconds > 0 ? seconds * 1000 : 0;
+  }
+
+  const date = Date.parse(header);
+  if (Number.isNaN(date)) return undefined;
+  return Math.max(0, date - Date.now());
 }
 
 function redactToken(url: string): string {
@@ -451,7 +572,28 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
   // Cache for storing API responses
   const cache: ICache<any> = options.cacheTTL === false ? new NoCache<any>() : new TTLCache<any>(ttl);
 
-  async function fetchJson<T>(url: string, methodLabel: string): Promise<T> {
+  const doFetch = options.fetch ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
+
+  const retry = options.retry === false ? undefined : (options.retry ?? {});
+  const maxAttempts = retry ? Math.max(1, Math.floor(retry.attempts ?? DEFAULT_RETRY_ATTEMPTS)) : 1;
+  const baseDelayMs = retry?.baseDelayMs ?? DEFAULT_RETRY_BASE_DELAY_MS;
+  const maxDelayMs = retry?.maxDelayMs ?? DEFAULT_RETRY_MAX_DELAY_MS;
+  const retryStatuses = retry?.retryStatuses ?? DEFAULT_RETRY_STATUSES;
+  const timeoutMs = options.timeoutMs === false ? undefined : (options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+
+  /**
+   * Compose the caller's signal with this attempt's timeout. Each attempt gets a fresh timeout, so
+   * a retry is not penalised by time the previous one spent hanging.
+   */
+  function attemptSignal(callerSignal?: AbortSignal): AbortSignal | undefined {
+    const signals: AbortSignal[] = [];
+    if (timeoutMs !== undefined) signals.push(AbortSignal.timeout(timeoutMs));
+    if (callerSignal) signals.push(callerSignal);
+    if (signals.length === 0) return undefined;
+    return signals.length === 1 ? signals[0] : AbortSignal.any(signals);
+  }
+
+  async function fetchJson<T>(url: string, methodLabel: string, callerSignal?: AbortSignal): Promise<T> {
     if (cache.has(url)) {
       if (options.debug) {
         console.log(LOG_GROUP, `${methodLabel} cache hit`);
@@ -459,55 +601,84 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       return cache.get(url) as T;
     }
 
-    let response: Response;
-    try {
-      response = await fetch(url, fetchOptions);
-    } catch (cause) {
-      const networkError = new LocalessNetworkError(normalizedOrigin, redactToken(url), NETWORK_ERROR_HINT, cause);
-      const causeText = cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause);
-      console.error(
-        LOG_GROUP,
-        `${methodLabel} error :\n` +
-          renderErrorBox(`Localess Network Error — ${methodLabel}`, [
-            ['Origin', normalizedOrigin],
-            ['URL', redactToken(url)],
-            ['Cause', causeText],
-            ['Hint', NETWORK_ERROR_HINT],
-          ])
-      );
-      throw networkError;
-    }
+    let attempt = 0;
 
-    if (options.debug) {
-      console.log(LOG_GROUP, `${methodLabel} status : `, response.status);
-    }
+    // Retrying is safe here because every method that reaches this function is a GET.
+    for (;;) {
+      attempt++;
+      const isLastAttempt = attempt >= maxAttempts;
 
-    if (!response.ok) {
-      const body = await readErrorBody(response);
-      const hint = hintForStatus(response.status, body, tokensSettingsUrl(normalizedOrigin, options.spaceId));
-      const bodyCode = extractBodyCode(body);
-      const bodyDetails = extractBodyDetails(body);
-      const apiError = new LocalessApiError(response.status, response.statusText, redactToken(url), body, hint);
-      console.error(
-        LOG_GROUP,
-        `${methodLabel} error :\n` +
-          renderErrorBox(`Localess API Error — ${methodLabel}`, [
-            ['Status', `${response.status} ${response.statusText}`],
-            ...(bodyCode ? ([['Code', bodyCode]] as [string, string][]) : []),
-            ...(bodyDetails?.reason ? ([['Reason', bodyDetails.reason]] as [string, string][]) : []),
-            ...(bodyDetails?.requiredPermissions?.length
-              ? ([['Required', bodyDetails.requiredPermissions.join(', ')]] as [string, string][])
-              : []),
-            ['URL', redactToken(url)],
-            ['Hint', hint],
-          ])
-      );
-      throw apiError;
-    }
+      let response: Response;
+      try {
+        response = await doFetch(url, { ...fetchOptions, signal: attemptSignal(callerSignal) });
+      } catch (cause) {
+        // An abort the caller asked for is a decision, not a failure — never retry it.
+        const callerAborted = callerSignal?.aborted === true;
+        if (!callerAborted && !isLastAttempt) {
+          if (options.debug) {
+            console.log(LOG_GROUP, `${methodLabel} attempt ${attempt} failed, retrying`);
+          }
+          await sleep(backoffDelay(attempt, baseDelayMs, maxDelayMs));
+          continue;
+        }
+        const networkError = new LocalessNetworkError(normalizedOrigin, redactToken(url), NETWORK_ERROR_HINT, cause, attempt);
+        const causeText = cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause);
+        console.error(
+          LOG_GROUP,
+          `${methodLabel} error :\n` +
+            renderErrorBox(`Localess Network Error — ${methodLabel}`, [
+              ['Origin', normalizedOrigin],
+              ['URL', redactToken(url)],
+              ['Cause', causeText],
+              ...(attempt > 1 ? ([['Attempts', String(attempt)]] as [string, string][]) : []),
+              ['Hint', NETWORK_ERROR_HINT],
+            ])
+        );
+        throw networkError;
+      }
 
-    const data = (await response.json()) as T;
-    cache.set(url, data);
-    return data;
+      if (options.debug) {
+        console.log(LOG_GROUP, `${methodLabel} status : `, response.status);
+      }
+
+      if (!response.ok) {
+        if (retryStatuses.includes(response.status) && !isLastAttempt) {
+          const serverAsked = retryAfterMs(response);
+          const wait = serverAsked === undefined ? backoffDelay(attempt, baseDelayMs, maxDelayMs) : Math.min(serverAsked, maxDelayMs);
+          if (options.debug) {
+            console.log(LOG_GROUP, `${methodLabel} attempt ${attempt} got ${response.status}, retrying in ${wait}ms`);
+          }
+          await sleep(wait);
+          continue;
+        }
+
+        const body = await readErrorBody(response);
+        const hint = hintForStatus(response.status, body, tokensSettingsUrl(normalizedOrigin, options.spaceId));
+        const bodyCode = extractBodyCode(body);
+        const bodyDetails = extractBodyDetails(body);
+        const apiError = new LocalessApiError(response.status, response.statusText, redactToken(url), body, hint, attempt);
+        console.error(
+          LOG_GROUP,
+          `${methodLabel} error :\n` +
+            renderErrorBox(`Localess API Error — ${methodLabel}`, [
+              ['Status', `${response.status} ${response.statusText}`],
+              ...(bodyCode ? ([['Code', bodyCode]] as [string, string][]) : []),
+              ...(bodyDetails?.reason ? ([['Reason', bodyDetails.reason]] as [string, string][]) : []),
+              ...(bodyDetails?.requiredPermissions?.length
+                ? ([['Required', bodyDetails.requiredPermissions.join(', ')]] as [string, string][])
+                : []),
+              ...(attempt > 1 ? ([['Attempts', String(attempt)]] as [string, string][]) : []),
+              ['URL', redactToken(url)],
+              ['Hint', hint],
+            ])
+        );
+        throw apiError;
+      }
+
+      const data = (await response.json()) as T;
+      cache.set(url, data);
+      return data;
+    }
   }
 
   return {
@@ -532,7 +703,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         console.log(LOG_GROUP, 'getLinks fetch url : ', url);
       }
 
-      return fetchJson<Links>(url, 'getLinks');
+      return fetchJson<Links>(url, 'getLinks', params?.signal);
     },
 
     async getContentBySlug<T extends ContentData = ContentData>(slug: string, params?: ContentFetchParams): Promise<Content<T>> {
@@ -558,7 +729,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         console.log(LOG_GROUP, 'getContentBySlug fetch url : ', url);
       }
 
-      return fetchJson<Content<T>>(url, 'getContentBySlug');
+      return fetchJson<Content<T>>(url, 'getContentBySlug', params?.signal);
     },
 
     async getContentById<T extends ContentData = ContentData>(id: string, params?: ContentFetchParams): Promise<Content<T>> {
@@ -584,7 +755,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         console.log(LOG_GROUP, 'getContentById fetch url : ', url);
       }
 
-      return fetchJson<Content<T>>(url, 'getContentById');
+      return fetchJson<Content<T>>(url, 'getContentById', params?.signal);
     },
 
     async getTranslations(locale: string, params?: TranslationFetchParams): Promise<Translations> {
@@ -606,7 +777,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
         console.log(LOG_GROUP, 'getTranslations fetch url : ', url);
       }
 
-      return fetchJson<Translations>(url, 'getTranslations');
+      return fetchJson<Translations>(url, 'getTranslations', params?.signal);
     },
 
     syncScriptUrl(): string {
