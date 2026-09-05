@@ -1,7 +1,7 @@
 export type { LocalessOptions } from './client';
 export type { LocalessComponentProps } from './localess-component-props';
 export type { LocalessSchemaProps } from './localess-schema-props';
-export type { EventToApp, LocalessClient } from '@localess/client';
+export type { EventToApp, LocalessClient, LocalessClientOptions } from '@localess/client';
 export type {
   AssetMetadata,
   Assets,

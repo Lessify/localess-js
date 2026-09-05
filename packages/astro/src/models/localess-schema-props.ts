@@ -1,4 +1,4 @@
-import type { Assets, ContentData, Links, References } from '@localess/client';
+import type { Assets, ContentData, Links, References } from '@localess/model';
 
 /**
  * Props every schema component registered in the {@link LocalessComponent} registry must accept

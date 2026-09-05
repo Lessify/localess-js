@@ -1,5 +1,6 @@
-import type { LocalessClientOptions } from '@localess/client';
 import type { Plugin } from 'vite';
+
+import type { LocalessClientOptions } from '../models';
 
 const VIRTUAL_MODULE_ID = 'virtual:localess-init';
 const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;

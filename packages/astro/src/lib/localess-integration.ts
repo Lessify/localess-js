@@ -1,7 +1,7 @@
-import type { LocalessClientOptions } from '@localess/client';
 import type { AstroIntegration } from 'astro';
 
 import { localessLogo } from '../dev-toolbar/localess-logo';
+import type { LocalessClientOptions } from '../models';
 import type { LocalessOptions } from '../models';
 import { vitePluginImportLocalessComponents } from '../vite-plugins/vite-plugin-import-localess-components';
 import { vitePluginLocalessInit } from '../vite-plugins/vite-plugin-localess-init';

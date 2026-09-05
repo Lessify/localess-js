@@ -1,4 +1,4 @@
-import type { Assets, ContentData, Links, References } from '@localess/client';
+import type { Assets, ContentData, Links, References } from '@localess/model';
 
 /**
  * Props for the built-in {@link LocalessComponent} renderer.
