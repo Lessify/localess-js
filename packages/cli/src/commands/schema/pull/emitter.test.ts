@@ -3,6 +3,15 @@ import { describe, expect, it } from 'vitest';
 import type { SchemaExport, SchemaField } from '../../../models';
 import { emitSchemaFiles, PULL_MARKER, toKebabCase } from './emitter';
 
+/** Asserts each `key:` in `keys` appears in `content`, in that order — a property-order regression guard. */
+function expectKeyOrder(content: string, keys: string[]): void {
+  const positions = keys.map(key => content.indexOf(`${key}:`));
+  expect(positions.every(p => p !== -1)).toBe(true);
+  for (let i = 1; i < positions.length; i++) {
+    expect(positions[i]).toBeGreaterThan(positions[i - 1]);
+  }
+}
+
 describe('toKebabCase', () => {
   it('converts PascalCase ids to kebab-case file names', () => {
     expect(toKebabCase('ButtonType')).toBe('button-type');
@@ -123,7 +132,7 @@ describe('emitSchemaFiles', () => {
     );
   });
 
-  it('orders defineField properties to match the Localess editor UI, not the wire object\'s own key order', () => {
+  it("orders defineField properties to match the Localess editor UI, not the wire object's own key order", () => {
     // Scrambled input covering every ordered property (incl. fileTypes, adjacent to fileType
     // though not explicitly requested — dropping it from the order list would still print it,
     // just last, so this pins it as intentionally placed rather than an accidental leftover).
@@ -148,8 +157,7 @@ describe('emitSchemaFiles', () => {
       name: 'n',
     } as unknown as SchemaField;
     const files = emitSchemaFiles([{ id: 'X', type: 'NODE', fields: [field] }]);
-    const content = files.get('x.ts')!;
-    const order = [
+    expectKeyOrder(files.get('x.ts')!, [
       'name',
       'kind',
       'displayName',
@@ -168,12 +176,36 @@ describe('emitSchemaFiles', () => {
       'path',
       'fileType',
       'fileTypes',
-    ];
-    const positions = order.map(key => content.indexOf(`${key}:`));
-    expect(positions.every(p => p !== -1)).toBe(true);
-    for (let i = 1; i < positions.length; i++) {
-      expect(positions[i]).toBeGreaterThan(positions[i - 1]);
-    }
+    ]);
+  });
+
+  it('emits defineEnum properties in id, displayName, description, labels, values order (locked — should not change)', () => {
+    const files = emitSchemaFiles([
+      {
+        id: 'Status',
+        type: 'ENUM',
+        displayName: 'Status',
+        description: 'Status options',
+        labels: ['status'],
+        values: [{ name: 'Draft', value: 'draft' }],
+      },
+    ]);
+    expectKeyOrder(files.get('status.ts')!, ['id', 'displayName', 'description', 'labels', 'values']);
+  });
+
+  it('emits defineSchema properties in id, type, displayName, description, labels, previewField, fields order (locked — should not change)', () => {
+    const files = emitSchemaFiles([
+      {
+        id: 'Button',
+        type: 'NODE',
+        displayName: 'Button',
+        description: 'A button',
+        labels: ['button'],
+        previewField: 'label',
+        fields: [{ name: 'label', kind: 'TEXT' }],
+      },
+    ]);
+    expectKeyOrder(files.get('button.ts')!, ['id', 'type', 'displayName', 'description', 'labels', 'previewField', 'fields']);
   });
 
   it('keeps a short defineField call on one line', () => {

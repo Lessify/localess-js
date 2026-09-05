@@ -45,7 +45,7 @@ describe('define type-level behavior', () => {
     expectTypeOf(Branch.fields[0].schemas).toEqualTypeOf<['Leaf', 'Twig']>();
   });
 
-  it('restricts previewField to one of the schema\'s own field names', () => {
+  it("restricts previewField to one of the schema's own field names", () => {
     const ButtonType = defineEnum({ id: 'ButtonType', values: [{ name: 'P', value: 'primary' }] });
     defineSchema({
       id: 'Button',

@@ -87,15 +87,14 @@ function orderedEntries(field: SchemaField): [string, unknown][] {
 
 function printFields(fields: SchemaField[], byId: Set<string>, printWidth: number): string {
   const lines = fields.map(field => {
-    const entries = orderedEntries(field)
-      .map(([key, val]) => {
-        if (key === 'source' && typeof val === 'string' && byId.has(val)) return `source: ${val}`;
-        if (key === 'schemas' && Array.isArray(val)) {
-          const items = val.map(ref => (typeof ref === 'string' && byId.has(ref) ? ref : quote(String(ref))));
-          return `schemas: [${items.join(', ')}]`;
-        }
-        return `${key}: ${printValue(val, 2, false)}`;
-      });
+    const entries = orderedEntries(field).map(([key, val]) => {
+      if (key === 'source' && typeof val === 'string' && byId.has(val)) return `source: ${val}`;
+      if (key === 'schemas' && Array.isArray(val)) {
+        const items = val.map(ref => (typeof ref === 'string' && byId.has(ref) ? ref : quote(String(ref))));
+        return `schemas: [${items.join(', ')}]`;
+      }
+      return `${key}: ${printValue(val, 2, false)}`;
+    });
     const singleLine = `    defineField({ ${entries.join(', ')} }),`;
     if (singleLine.length <= printWidth) return singleLine;
     const propLines = entries.map(entry => `      ${entry},`).join('\n');
