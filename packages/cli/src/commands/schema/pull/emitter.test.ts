@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { SchemaExport } from '../../../models';
+import type { SchemaExport, SchemaField } from '../../../models';
 import { emitSchemaFiles, PULL_MARKER, toKebabCase } from './emitter';
 
 describe('toKebabCase', () => {
@@ -90,16 +90,17 @@ describe('emitSchemaFiles', () => {
         id: 'Button',
         type: 'NODE',
         fields: [
+          // Deliberately scrambled key order — output must follow the UI order regardless.
           {
-            name: 'label',
-            kind: 'TEXT',
-            displayName: 'Label',
-            required: true,
-            translatable: true,
             maxLength: 30,
-            minLength: 3,
             defaultValue: 'CTA',
             description: 'Text that will appear inside the button',
+            minLength: 3,
+            kind: 'TEXT',
+            translatable: true,
+            required: true,
+            displayName: 'Label',
+            name: 'label',
           },
         ],
       },
@@ -113,13 +114,66 @@ describe('emitSchemaFiles', () => {
         "      displayName: 'Label',",
         '      required: true,',
         '      translatable: true,',
-        '      maxLength: 30,',
-        '      minLength: 3,',
-        "      defaultValue: 'CTA',",
         "      description: 'Text that will appear inside the button',",
+        "      defaultValue: 'CTA',",
+        '      minLength: 3,',
+        '      maxLength: 30,',
         '    }),',
       ].join('\n')
     );
+  });
+
+  it('orders defineField properties to match the Localess editor UI, not the wire object\'s own key order', () => {
+    // Scrambled input covering every ordered property (incl. fileTypes, adjacent to fileType
+    // though not explicitly requested — dropping it from the order list would still print it,
+    // just last, so this pins it as intentionally placed rather than an accidental leftover).
+    const field = {
+      fileTypes: ['IMAGE'],
+      fileType: 'IMAGE',
+      path: 'a/b',
+      schemas: ['Other'],
+      source: 'SomeEnum',
+      maxValues: 5,
+      minValues: 1,
+      maxLength: 10,
+      minLength: 2,
+      maxValue: 100,
+      minValue: 0,
+      defaultValue: 'x',
+      description: 'd',
+      translatable: true,
+      required: true,
+      displayName: 'D',
+      kind: 'TEXT',
+      name: 'n',
+    } as unknown as SchemaField;
+    const files = emitSchemaFiles([{ id: 'X', type: 'NODE', fields: [field] }]);
+    const content = files.get('x.ts')!;
+    const order = [
+      'name',
+      'kind',
+      'displayName',
+      'required',
+      'translatable',
+      'description',
+      'defaultValue',
+      'minValue',
+      'maxValue',
+      'minLength',
+      'maxLength',
+      'minValues',
+      'maxValues',
+      'source',
+      'schemas',
+      'path',
+      'fileType',
+      'fileTypes',
+    ];
+    const positions = order.map(key => content.indexOf(`${key}:`));
+    expect(positions.every(p => p !== -1)).toBe(true);
+    for (let i = 1; i < positions.length; i++) {
+      expect(positions[i]).toBeGreaterThan(positions[i - 1]);
+    }
   });
 
   it('keeps a short defineField call on one line', () => {

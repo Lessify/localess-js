@@ -47,10 +47,47 @@ function printValue(value: unknown, indent = 2, multiline = true): string {
 // parameter precisely so it never has to match a value hardcoded here.
 export const DEFAULT_PRINT_WIDTH = 80;
 
+// Matches the property order the Localess editor UI shows for a field, so a generated
+// defineField(...) call reads in the same order regardless of the wire object's own key order.
+// `fileTypes` (the plural ASSET/ASSETS restriction) isn't part of the editor's field-detail form
+// the rest of this list mirrors, so it's placed right after its singular counterpart rather than
+// specified by that UI ordering.
+const FIELD_PROPERTY_ORDER = [
+  'name',
+  'kind',
+  'displayName',
+  'required',
+  'translatable',
+  'description',
+  'defaultValue',
+  'minValue',
+  'maxValue',
+  'minLength',
+  'maxLength',
+  'minValues',
+  'maxValues',
+  'source',
+  'schemas',
+  'path',
+  'fileType',
+  'fileTypes',
+];
+
+function orderedEntries(field: SchemaField): [string, unknown][] {
+  return Object.entries(field)
+    .filter(([, v]) => v !== undefined)
+    .sort(([a], [b]) => {
+      const rank = (key: string) => {
+        const i = FIELD_PROPERTY_ORDER.indexOf(key);
+        return i === -1 ? FIELD_PROPERTY_ORDER.length : i;
+      };
+      return rank(a) - rank(b);
+    });
+}
+
 function printFields(fields: SchemaField[], byId: Set<string>, printWidth: number): string {
   const lines = fields.map(field => {
-    const entries = Object.entries(field)
-      .filter(([, v]) => v !== undefined)
+    const entries = orderedEntries(field)
       .map(([key, val]) => {
         if (key === 'source' && typeof val === 'string' && byId.has(val)) return `source: ${val}`;
         if (key === 'schemas' && Array.isArray(val)) {
