@@ -41,9 +41,9 @@ LOCALESS_TOKEN=your-api-token
 ```typescript
 const content = await client.getContentBySlug<Page>('home', {
   locale: 'en',
-  resolveReference: true,  // Inline referenced content objects
-  resolveLink: true,        // Inline linked content metadata
-  resolveAsset: true,       // Inline referenced asset metadata
+  resolveReference: true,  // Populate `references` (one level only)
+  resolveLink: true,        // Populate `links` with content metadata
+  resolveAsset: true,       // Populate `assets` with asset metadata
   version: 'draft',         // Override client default per-request
 });
 // content.data is typed as Page
@@ -117,9 +117,26 @@ const href = findLink(content.links, data.cta);
 |--------------------|------------------------|-------------|-------------------------------------------|
 | `version`          | `'draft' \| undefined` | `undefined` | `'draft'` for preview, omit for published |
 | `locale`           | `string`               | —           | ISO 639-1 code: `'en'`, `'de'`, etc.      |
-| `resolveReference` | `boolean`              | `false`     | Inline referenced content objects         |
-| `resolveLink`      | `boolean`              | `false`     | Inline linked content metadata            |
-| `resolveAsset`     | `boolean`              | `false`     | Inline referenced asset metadata          |
+| `resolveReference` | `boolean`              | `false`     | Populate `references` — **one level only** |
+| `resolveLink`      | `boolean`              | `false`     | Populate `links` with content metadata    |
+| `resolveAsset`     | `boolean`              | `false`     | Populate `assets` with asset metadata     |
+
+### What resolution does and does not do
+
+All three flags are **all-or-nothing** — every id the document uses is resolved, and individual
+fields cannot be selected. There is no depth option.
+
+`resolveReference` resolves **one level**. Each referenced document comes back exactly as it was
+published, so its own `references`, `links` and `assets` are **arrays of ids**, not resolved maps —
+even though the `Content` type describes them as maps. To walk further, fetch those ids yourself.
+
+`resolveLink` and `resolveAsset` are terminal: they return metadata only, with nothing nested.
+`resolveAsset` returns no URL — build one with `assetLink()`.
+
+**Partial failure is silent.** If a referenced document, linked document, or asset has been
+deleted, it is omitted from the map and the request still succeeds. A missing key therefore means
+"could not resolve", not "not used" — compare against the document's own id list if you need to
+tell the two apart.
 
 `getTranslations` takes `TranslationFetchParams` (`version` only). `getLinks` takes `LinksFetchParams`:
 
@@ -250,6 +267,8 @@ interface Content<T extends ContentData> extends ContentMetadata {
   links?: Links;
   references?: References;
   assets?: Assets; // Populated when resolveAsset: true
+  // On a resolved reference these three are arrays of ids, not maps — see
+  // "What resolution does and does not do" above.
 }
 
 interface ContentMetadata {

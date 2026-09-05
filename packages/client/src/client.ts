@@ -85,17 +85,44 @@ export type ContentFetchParams = {
    */
   locale?: string;
   /**
-   * Resolve references in the content data.
+   * Populate {@link Content.references} with the documents this content references.
+   *
+   * **One level only.** Each referenced document is returned exactly as it was published, so its
+   * own `references`, `links` and `assets` come back as **arrays of ids** rather than resolved
+   * maps — even though the `Content` type describes them as maps. Walking further means fetching
+   * those ids yourself. There is no depth option.
+   *
+   * **All or nothing.** Every id the document references is resolved; you cannot select
+   * individual fields.
+   *
+   * **Partial failure is silent.** A reference whose target has been deleted is omitted from the
+   * map and the request still succeeds — so a missing key means "could not resolve", not "not
+   * referenced". Compare against the document's own reference list if you need to tell them apart.
+   *
    * @default false
    */
   resolveReference?: boolean;
   /**
-   * Resolve links in the content data.
+   * Populate {@link Content.links} with metadata for the content this document links to.
+   *
+   * Values are `ContentMetadata` — id, kind, name, slugs and timestamps. No `data`, and
+   * nothing nested, so unlike `resolveReference` there is no deeper level to ask for.
+   *
+   * **Partial failure is silent.** A link whose target has been deleted is omitted from the map
+   * and the request still succeeds.
+   *
    * @default false
    */
   resolveLink?: boolean;
   /**
-   * Resolve all assets.
+   * Populate {@link Content.assets} with metadata for the assets this document uses.
+   *
+   * Values are `AssetMetadata` — id, name, extension, type and `alt`. No URL: build one
+   * with {@link LocalessClient.assetLink}. Nothing nested.
+   *
+   * **Partial failure is silent.** An asset that has been deleted is omitted from the map and the
+   * request still succeeds.
+   *
    * @default false
    */
   resolveAsset?: boolean;

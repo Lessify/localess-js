@@ -40,9 +40,9 @@ const client = localessClient({
 ```typescript
 const content = await client.getContentBySlug<Page>('home', {
   locale: 'en',
-  resolveReference: true,  // Inline referenced content
-  resolveLink: true,        // Inline linked content
-  resolveAsset: true,       // Inline referenced assets
+  resolveReference: true,  // Populate `references` (ONE level only)
+  resolveLink: true,        // Populate `links` with content metadata
+  resolveAsset: true,       // Populate `assets` with asset metadata
   version: 'draft',         // Override client default per-request
 });
 // content.data is typed as Page
@@ -144,9 +144,16 @@ const href = findLink(content.links, data.cta);
 |--------------------|------------------------|-------------|-------------------------------------------|
 | `version`          | `'draft' \| undefined` | `undefined` | `'draft'` for preview, omit for published |
 | `locale`           | `string`               | —           | ISO 639-1 code: `'en'`, `'de'`, etc.      |
-| `resolveReference` | `boolean`              | `false`     | Inline referenced content objects         |
-| `resolveLink`      | `boolean`              | `false`     | Inline linked content metadata            |
-| `resolveAsset`     | `boolean`              | `false`     | Inline referenced asset metadata          |
+| `resolveReference` | `boolean`              | `false`     | Populate `references` — **one level only** |
+| `resolveLink`      | `boolean`              | `false`     | Populate `links` with content metadata    |
+| `resolveAsset`     | `boolean`              | `false`     | Populate `assets` with asset metadata     |
+
+Resolution is **all-or-nothing** (no per-field selection) and has **no depth option**.
+`resolveReference` resolves one level: a resolved reference's own `references`/`links`/`assets` are
+**arrays of ids**, not maps, despite the `Content` type. `resolveLink`/`resolveAsset` are terminal
+metadata only; `resolveAsset` returns no URL — use `assetLink()`.
+A deleted target is **silently omitted** from the map and the request still succeeds, so a missing
+key means "could not resolve", not "not used".
 
 ## Translation Fetch Parameters (`TranslationFetchParams`)
 
