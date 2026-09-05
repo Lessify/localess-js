@@ -43,6 +43,39 @@ describe('emitSchemaFiles', () => {
     expect(page).toContain('schemas: [Button]');
   });
 
+  it('prints an enum values array with one value per line', () => {
+    const files = emitSchemaFiles([
+      {
+        id: 'ButtonType',
+        type: 'ENUM',
+        displayName: 'Button Type',
+        values: [
+          { name: 'Primary', value: 'primary' },
+          { name: 'Secondary', value: 'secondary' },
+        ],
+      },
+    ]);
+    const buttonType = files.get('button-type.ts')!;
+    expect(buttonType).toContain(
+      "values: [\n    { name: 'Primary', value: 'primary' },\n    { name: 'Secondary', value: 'secondary' },\n  ],"
+    );
+  });
+
+  it('keeps a single-value enum values array on one line entry, still using the array form', () => {
+    const files = emitSchemaFiles([{ id: 'Solo', type: 'ENUM', values: [{ name: 'Only', value: 'only' }] }]);
+    expect(files.get('solo.ts')).toContain("values: [\n    { name: 'Only', value: 'only' },\n  ],");
+  });
+
+  it('prints an empty values array inline', () => {
+    const files = emitSchemaFiles([{ id: 'Empty2', type: 'ENUM', values: [] }]);
+    expect(files.get('empty2.ts')).toContain('values: [],');
+  });
+
+  it('keeps primitive arrays (e.g. labels) inline, not one per line', () => {
+    const files = emitSchemaFiles([{ id: 'Labeled', type: 'NODE', labels: ['button', 'ui'] }]);
+    expect(files.get('labeled.ts')).toContain("labels: ['button', 'ui'],");
+  });
+
   it('wraps each field in defineField instead of a bare object literal', () => {
     const files = emitSchemaFiles(schemas);
     const button = files.get('button.ts')!;

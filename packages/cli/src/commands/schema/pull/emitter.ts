@@ -11,14 +11,32 @@ function quote(value: string): string {
   return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 }
 
-function printValue(value: unknown): string {
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * `multiline` controls whether an array of plain objects (e.g. an enum's `values`) prints one
+ * item per line, indented under `indent` — used for top-level schema/enum properties, but not
+ * for a field's own properties, which stay on `defineField`'s single line.
+ */
+function printValue(value: unknown, indent = 2, multiline = true): string {
   if (typeof value === 'string') return quote(value);
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  if (Array.isArray(value)) return `[${value.map(item => printValue(item)).join(', ')}]`;
-  if (value !== null && typeof value === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>)
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]';
+    if (multiline && value.every(isPlainObject)) {
+      const itemIndent = ' '.repeat(indent + 2);
+      const closeIndent = ' '.repeat(indent);
+      const items = value.map(item => `${itemIndent}${printValue(item, indent + 2, multiline)},`);
+      return `[\n${items.join('\n')}\n${closeIndent}]`;
+    }
+    return `[${value.map(item => printValue(item, indent, multiline)).join(', ')}]`;
+  }
+  if (isPlainObject(value)) {
+    const entries = Object.entries(value)
       .filter(([, v]) => v !== undefined)
-      .map(([k, v]) => `${k}: ${printValue(v)}`);
+      .map(([k, v]) => `${k}: ${printValue(v, indent, multiline)}`);
     return `{ ${entries.join(', ')} }`;
   }
   return String(value);
@@ -34,7 +52,7 @@ function printFields(fields: SchemaField[], byId: Set<string>): string {
           const items = val.map(ref => (typeof ref === 'string' && byId.has(ref) ? ref : quote(String(ref))));
           return `schemas: [${items.join(', ')}]`;
         }
-        return `${key}: ${printValue(val)}`;
+        return `${key}: ${printValue(val, 2, false)}`;
       });
     return `    defineField({ ${entries.join(', ')} }),`;
   });
