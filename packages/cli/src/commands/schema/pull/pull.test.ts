@@ -47,6 +47,32 @@ describe('schema pull', () => {
     expect(readFileSync(join(dir, 'button.ts'), 'utf8')).toContain('defineSchema');
   });
 
+  it('passes --print-width through to the emitter', async () => {
+    getSchemas.mockResolvedValue([
+      {
+        id: 'Button',
+        type: 'NODE',
+        fields: [{ name: 'type', kind: 'OPTION', displayName: 'Type', required: true, source: 'ButtonType' }],
+      },
+    ]);
+    await schemaCommand.parseAsync(['pull', '--path', dir, '--print-width', '140'], { from: 'user' });
+    expect(readFileSync(join(dir, 'button.ts'), 'utf8')).toContain(
+      `defineField({ name: 'type', kind: 'OPTION', displayName: 'Type', required: true, source: 'ButtonType' }),`
+    );
+  });
+
+  it('defaults --print-width to 80 when not provided', async () => {
+    getSchemas.mockResolvedValue([
+      {
+        id: 'Button',
+        type: 'NODE',
+        fields: [{ name: 'type', kind: 'OPTION', displayName: 'Type', required: true, source: 'ButtonType' }],
+      },
+    ]);
+    await schemaCommand.parseAsync(['pull', '--path', dir], { from: 'user' });
+    expect(readFileSync(join(dir, 'button.ts'), 'utf8')).toContain('defineField({\n');
+  });
+
   it('skips a same-named file that lacks the marker and reports it', async () => {
     writeFileSync(join(dir, 'button.ts'), `// hand-written, not from pull`);
     getSchemas.mockResolvedValue([{ id: 'Button', type: 'NODE', fields: [] }]);

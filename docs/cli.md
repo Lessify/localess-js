@@ -241,13 +241,14 @@ localess schema validate ./schemas/index.ts
 localess schema validate ./schemas/index.ts --format json
 ```
 
-### `localess schema pull [--path <dir>]`
+### `localess schema pull [--path <dir>] [--print-width <n>]`
 
-(Re)generates one TS definition file per schema (kebab-case name, e.g. `HeroBlock` → `hero-block.ts`) plus `index.ts` (`export const config = defineConfig({ schemas: [...] })`) from the space, into `--path` (default `schemas`). Repeatable: only overwrites/deletes files it previously generated (marked with a header comment); a same-named hand-written file without that marker is skipped and reported, never overwritten. Each field is emitted wrapped in `defineField(...)` rather than as a bare object literal (`import { defineField, defineSchema } from '@localess/schema'`; `defineEnum` for `ENUM`s). References to other pulled schemas (`source`, `schemas`) become `import { X } from './x'` statements and by-value refs; unknown ids stay strings. Output is deterministic.
+(Re)generates one TS definition file per schema (kebab-case name, e.g. `HeroBlock` → `hero-block.ts`) plus `index.ts` (`export const config = defineConfig({ schemas: [...] })`) from the space, into `--path` (default `schemas`). Repeatable: only overwrites/deletes files it previously generated (marked with a header comment); a same-named hand-written file without that marker is skipped and reported, never overwritten. Each field is emitted wrapped in `defineField(...)` rather than as a bare object literal (`import { defineField, defineSchema } from '@localess/schema'`; `defineEnum` for `ENUM`s). References to other pulled schemas (`source`, `schemas`) become `import { X } from './x'` statements and by-value refs; unknown ids stay strings. A `defineField(...)` call wraps to one property per line once it would exceed `--print-width` columns (default `80`, Prettier's own default — set it to match your own project's `.prettierrc`, since that's a per-project preference this CLI doesn't assume). Output is deterministic for a given input and `--print-width`.
 
 ```bash
 localess schema pull
 localess schema pull --path src/schemas
+localess schema pull --print-width 100
 ```
 
 ### `localess schema diff <entry>`

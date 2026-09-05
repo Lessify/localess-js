@@ -84,6 +84,66 @@ describe('emitSchemaFiles', () => {
     expect(button).toContain(`defineField({ name: 'kind', kind: 'OPTION', source: ButtonType }),`);
   });
 
+  it('wraps a defineField call onto multiple lines when it would exceed the print width', () => {
+    const files = emitSchemaFiles([
+      {
+        id: 'Button',
+        type: 'NODE',
+        fields: [
+          {
+            name: 'label',
+            kind: 'TEXT',
+            displayName: 'Label',
+            required: true,
+            translatable: true,
+            maxLength: 30,
+            minLength: 3,
+            defaultValue: 'CTA',
+            description: 'Text that will appear inside the button',
+          },
+        ],
+      },
+    ]);
+    const button = files.get('button.ts')!;
+    expect(button).toContain(
+      [
+        '    defineField({',
+        "      name: 'label',",
+        "      kind: 'TEXT',",
+        "      displayName: 'Label',",
+        '      required: true,',
+        '      translatable: true,',
+        '      maxLength: 30,',
+        '      minLength: 3,',
+        "      defaultValue: 'CTA',",
+        "      description: 'Text that will appear inside the button',",
+        '    }),',
+      ].join('\n')
+    );
+  });
+
+  it('keeps a short defineField call on one line', () => {
+    const files = emitSchemaFiles([{ id: 'Button', type: 'NODE', fields: [{ name: 'link', kind: 'LINK' }] }]);
+    expect(files.get('button.ts')).toContain(`    defineField({ name: 'link', kind: 'LINK' }),`);
+  });
+
+  it('respects a custom printWidth instead of a hardcoded value', () => {
+    const mediumField: SchemaExport[] = [
+      {
+        id: 'Button',
+        type: 'NODE',
+        fields: [{ name: 'type', kind: 'OPTION', displayName: 'Type', required: true, source: 'ButtonType' }],
+      },
+    ];
+    // Under the default (80): wraps. Under a wider printWidth (140): stays on one line.
+    const atDefault = emitSchemaFiles(mediumField).get('button.ts')!;
+    expect(atDefault).toContain('defineField({\n');
+    const atWide = emitSchemaFiles(mediumField, 140).get('button.ts')!;
+    expect(atWide).toContain(
+      `    defineField({ name: 'type', kind: 'OPTION', displayName: 'Type', required: true, source: 'ButtonType' }),`
+    );
+  });
+
   it('does not import defineField for a schema with no fields', () => {
     const files = emitSchemaFiles([{ id: 'Empty', type: 'NODE' }]);
     const empty = files.get('empty.ts')!;

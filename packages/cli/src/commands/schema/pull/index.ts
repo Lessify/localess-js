@@ -7,16 +7,23 @@ import { Command } from 'commander';
 import { localessCliClient } from '../../../client';
 import { LocalessApiError } from '../../../models';
 import { getSession } from '../../../session';
-import { emitSchemaFiles, PULL_MARKER } from './emitter';
+import { DEFAULT_PRINT_WIDTH, emitSchemaFiles, PULL_MARKER } from './emitter';
 
 type PullOptions = {
   path: string;
+  printWidth: number;
   verbose?: boolean;
 };
 
 export const schemaPullCommand = new Command('pull')
   .description('Generate TypeScript schema definitions from your Localess space')
   .option('-p, --path <path>', 'Directory to write schema definition files into', 'schemas')
+  .option(
+    '--print-width <n>',
+    'Column width before a defineField(...) call wraps to one property per line — match your own .prettierrc',
+    value => parseInt(value, 10),
+    DEFAULT_PRINT_WIDTH
+  )
   .option('-v, --verbose', 'Print verbose debug output')
   .action(async (options: PullOptions) => {
     const session = await getSession();
@@ -35,7 +42,7 @@ export const schemaPullCommand = new Command('pull')
     try {
       console.log('Fetching schemas from Localess...');
       const schemas = await client.getSchemas();
-      const files = emitSchemaFiles(schemas);
+      const files = emitSchemaFiles(schemas, options.printWidth);
       const dir = resolve(process.cwd(), options.path);
       mkdirSync(dir, { recursive: true });
       const skipped: string[] = [];
