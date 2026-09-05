@@ -182,3 +182,85 @@ return sanitizer-trusted HTML that the package generates and escapes itself:
 <ll-rich-text [content]="data.body" />
 <div [innerHTML]="data.body | llRichText"></div>
 ```
+
+## Parsing into rich text
+
+The package parses as well as renders. Two subpath exports turn HTML or Markdown into a
+`LocalessRichTextDocument`, which is what makes content *import* possible — a migration that cannot
+construct rich text cannot migrate a body field.
+
+```ts
+import { parseHtmlToRichText } from '@localess/richtext/html-parser';
+import { parseMarkdownToRichText } from '@localess/richtext/markdown-parser';
+
+const { doc, unsupported } = parseHtmlToRichText('<p>Hello <strong>world</strong></p>');
+```
+
+Both return the document **and** a report, never just the document:
+
+```ts
+interface RichTextParseResult {
+  doc: LocalessRichTextDocument;
+  unsupported: { element: string; action: 'unwrapped' | 'skipped'; count: number }[];
+}
+```
+
+A migration that silently drops every `<table>` in a 10,000-page import is the failure mode this
+design exists to prevent — the report lets a caller surface "347 tables were unwrapped" *before*
+committing a write.
+
+### Unsupported input
+
+The model is closed: it holds exactly what the Studio editor can produce. Anything else has nowhere
+to go, and the policy is explicit:
+
+| `unsupported` | Behaviour |
+|---|---|
+| `'unwrap'` *(default)* | Keep the text content, drop the wrapper |
+| `'skip'` | Drop the element and everything inside it |
+| `'throw'` | Throw `RichTextParseError`, naming the element |
+
+One warning per unsupported element type per parse, silent when `NODE_ENV === 'production'` —
+matching the renderer's behaviour for unknown node types.
+
+### HTML — supported subset
+
+| Supported | Notes |
+|---|---|
+| `p`, `h1`–`h6`, `ul`, `ol` (`start`), `li`, `pre`/`code` | `class="language-x"` becomes `codeBlock.attrs.language` |
+| `strong`/`b`, `em`/`i`, `s`/`strike`/`del`, `u`, `code`, `a` | aliases map to the one model mark |
+| `div`, `span`, `section`, `article`, `main` | transparent — children kept, wrapper dropped |
+| `script`, `style` | always dropped with their content, whatever the policy |
+
+**It is a subset parser, not an HTML5-conformant one.** It performs no error recovery beyond never
+throwing. That is deliberate: a hand-written tokenizer behaves identically in browsers, Node, and
+edge runtimes, where branching on `DOMParser` would not, and it keeps the package's
+zero-dependency guarantee. A differential test against `happy-dom` covers the supported subset.
+
+### Markdown — supported subset
+
+| Supported | Not supported |
+|---|---|
+| ATX (`# x`) and setext headings | tables |
+| paragraphs, soft-wrapped | images *(kept as literal text)* |
+| bullet and ordered lists, nested, with `start` | blockquotes |
+| fenced and indented code blocks | thematic breaks |
+| `**bold**`, `*italic*`, `~~strike~~`, `` `code` `` | footnotes |
+| `[text](href)`, `<...>` destinations | reference links, autolinks |
+| backslash escapes | link titles *(dropped — no model field)* |
+
+**No CommonMark compliance is claimed.** Most of the spec maps to nodes the model does not have. A
+differential test against `markdown-it` covers the supported subset only.
+
+### Security
+
+Both parsers pass link hrefs through the same `sanitizeUrl` allowlist the renderer applies, so
+`javascript:` and `data:` become `""` while `http:`, `https:`, `mailto:`, `tel:` and scheme-less
+URLs survive. Parsing untrusted HTML is the more security-sensitive direction, so the check is
+applied on the way in as well as out — one allowlist, no second copy to drift.
+
+### Round-tripping
+
+`parseHtmlToRichText` is the renderer's inverse. Every fixture in the shared corpus survives
+`renderRichTextToHtml` → `parseHtmlToRichText` → `renderRichTextToHtml` unchanged, which is the
+test that proves it.

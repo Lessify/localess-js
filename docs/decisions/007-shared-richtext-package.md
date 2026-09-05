@@ -70,3 +70,27 @@ changed: `useLocalessRichText` (vue, now returns VNodes;
 `useLocalessRichTextHtml` covers the string case). Kept as alias:
 `renderLocalessRichTextToHtml` (astro). New everywhere: `LocalessRichText`
 component and per-framework `renderRichText` / `renderRichTextToHtml`.
+
+---
+
+## Amendment — 2026-09-06 (F17)
+
+The package now **parses as well as renders**. `@localess/richtext/html-parser` and
+`/markdown-parser` produce a `LocalessRichTextDocument` from HTML or Markdown.
+
+This does not change the ADR's reasoning — it strengthens it. The argument for a shared package was
+that the rich text *format* should have exactly one owner rather than a copy per framework. Parsing
+is the same format knowledge in the opposite direction: the parsers must be the precise inverse of
+the renderer, share its `sanitizeUrl` allowlist, and target the same closed node/mark set. Putting
+them anywhere else would mean duplicating the model or creating a sibling-to-sibling dependency.
+
+**The zero-dependency constraint held.** `packages/richtext/package.json` still has exactly one
+`dependencies` entry. Storyblok's equivalents are built on TipTap and `markdown-it` as *production*
+dependencies; both parsers here are hand-written against the closed model, which is small enough to
+make that practical. `happy-dom` and `markdown-it` are devDependencies used only for differential
+tests — the same pattern TipTap already had for the parity test.
+
+**Both parsers are documented subsets.** Not HTML5-conformant, not CommonMark. The model has no
+tables, images, or blockquotes, so most of either spec maps to nodes that do not exist. A
+hand-written HTML tokenizer was chosen over branching on `DOMParser` so behaviour is identical
+across browsers, Node, and edge runtimes.

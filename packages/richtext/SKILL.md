@@ -122,3 +122,38 @@ export type {
 export { richTextFixtures }
 export type { RichTextFixture }
 ```
+
+## Parsing (`@localess/richtext/html-parser`, `/markdown-parser`)
+
+```ts
+import { parseHtmlToRichText } from '@localess/richtext/html-parser';
+import { parseMarkdownToRichText } from '@localess/richtext/markdown-parser';
+
+parseHtmlToRichText(html: string | null | undefined, options?: RichTextParseOptions): RichTextParseResult
+parseMarkdownToRichText(markdown: string | null | undefined, options?: RichTextParseOptions): RichTextParseResult
+```
+
+```ts
+interface RichTextParseOptions { unsupported?: 'unwrap' | 'skip' | 'throw' }  // default 'unwrap'
+interface RichTextParseResult {
+  doc: LocalessRichTextDocument;
+  unsupported: { element: string; action: 'unwrapped' | 'skipped'; count: number }[];
+}
+class RichTextParseError extends Error { element: string }
+```
+
+Both are **subset** parsers matched to the closed model — not HTML5-conformant, not CommonMark.
+HTML covers `p`, `h1`–`h6`, `ul`, `ol` (`start`), `li`, `pre`/`code` (`language-*`) and the marks
+`strong`/`b`, `em`/`i`, `s`/`strike`/`del`, `u`, `code`, `a`; `div`/`span` are transparent and
+`script`/`style` are always dropped. Markdown covers ATX and setext headings, paragraphs, bullet and
+ordered lists (nested, `start`), fenced and indented code blocks, `**bold**`, `*italic*`,
+`~~strike~~`, `` `code` ``, `[text](href)` and backslash escapes.
+
+Anything else goes through `unsupported` and is listed in the result — return the report to the
+caller, do not assume a clean parse. One warning per element type per parse, silent in production.
+
+Link hrefs pass the renderer's `sanitizeUrl` allowlist: `javascript:` and `data:` become `""`.
+
+Never throws except under `unsupported: 'throw'`; `null`, `undefined`, and `''` give an empty doc.
+
+`parseHtmlToRichText` is the exact inverse of `renderRichTextToHtml` over the whole supported model.

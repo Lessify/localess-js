@@ -15,6 +15,8 @@ export default defineConfig({
       entry: {
         index: resolve(import.meta.dirname, 'src/index.ts'),
         'test-utils/index': resolve(import.meta.dirname, 'src/test-utils/index.ts'),
+        'html-parser/index': resolve(import.meta.dirname, 'src/html-parser/index.ts'),
+        'markdown-parser/index': resolve(import.meta.dirname, 'src/markdown-parser/index.ts'),
       },
       formats: ['es', 'cjs'],
       fileName: (format, entryName) => `${entryName}.${format === 'es' ? 'mjs' : 'js'}`,

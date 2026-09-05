@@ -30,6 +30,16 @@
       "types": "./dist/test-utils/index.d.ts",
       "import": "./dist/test-utils/index.mjs",
       "require": "./dist/test-utils/index.js"
+    },
+    "./html-parser": {
+      "types": "./dist/html-parser/index.d.ts",
+      "import": "./dist/html-parser/index.mjs",
+      "require": "./dist/html-parser/index.js"
+    },
+    "./markdown-parser": {
+      "types": "./dist/markdown-parser/index.d.ts",
+      "import": "./dist/markdown-parser/index.mjs",
+      "require": "./dist/markdown-parser/index.js"
     }
   },
   "repository": {
@@ -67,7 +77,10 @@
     "@tiptap/extension-text": "^3.22.5",
     "@tiptap/extension-underline": "^3.22.5",
     "@tiptap/html": "^3.22.5",
+    "@types/markdown-it": "^14.1.2",
     "@types/node": "^24",
+    "happy-dom": "^20.9.0",
+    "markdown-it": "^14.1.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.16",
     "vite-plugin-dts": "^5.0.0"
