@@ -54,12 +54,55 @@ Credentials are resolved in this priority order:
 
 Every command that talks to the API accepts `-v, --verbose` to print client debug output (request URLs, statuses). Commands that need credentials exit `1` with `Not logged in` when neither source is available.
 
+## Platform Compatibility Check
+
+The CLI and the platform are released in lockstep: a `4.x.x` CLI is designed against a `4.x.x` platform. Before running a command, the CLI reads the platform's version from `<origin>/assets/version.json` and enforces two rules:
+
+1. **The majors must match.** A `4.x.x` CLI refuses a `3.x.x` or `5.x.x` platform.
+2. **The platform must meet the command's minimum**, from the compatibility matrix below.
+
+A confirmed incompatibility **blocks the command** — every command, not only the ones that write — and exits `1` before any API call, because an unmet requirement means the command cannot work correctly.
+
+### Compatibility matrix
+
+| Command | Minimum platform |
+|---|---|
+| `login` | — (no platform call) |
+| `logout` | — (no platform call) |
+| `schema validate` | — (reads local files only) |
+| `schema pull` | 4.0.0 |
+| `schema diff` | 4.0.0 |
+| `schema push` | 4.0.0 |
+| `translation pull` | 4.0.0 |
+| `translation push` | 4.0.0 |
+| `translation diff` | 4.0.0 |
+| `type generate` | 4.0.0 |
+
+Entries are minimums, not ranges. A *future* platform that breaks a command can't be predicted from the CLI, so that direction is covered by rule 1 instead. Every command must appear in the matrix — a test walks the command tree and fails on a missing or stale entry, so adding a command forces a deliberate choice.
+
+### When the check does not block
+
+| Situation | Behaviour |
+|---|---|
+| Both rules satisfied | Runs normally, prints nothing |
+| Command makes no platform call | Skipped, so it works offline and against any platform |
+| No credentials configured | Skipped — the command reports the auth problem itself |
+| Version undeterminable | Skipped silently and the command proceeds |
+| `LOCALESS_SKIP_VERSION_CHECK` set | Skipped entirely; the version is not even fetched |
+
+"Undeterminable" covers a non-2xx response, an unreachable host, a malformed body, and a 3-second timeout. A network problem can never stop a command — only a *confirmed* incompatibility does.
+
+That version file is emitted by the platform's Angular build and served by Firebase Hosting, so it is present on every normally deployed instance. It is **not** served by an API-only or emulator-only deployment, where the check reports "unknown" and proceeds.
+
 ### Environment variables
 
 ```bash
 export LOCALESS_ORIGIN=https://my-localess.web.app
 export LOCALESS_SPACE=YOUR_SPACE_ID
 export LOCALESS_TOKEN=YOUR_API_TOKEN
+
+# Optional: bypass the platform compatibility check (any value)
+export LOCALESS_SKIP_VERSION_CHECK=1
 ```
 
 ### File-based credentials

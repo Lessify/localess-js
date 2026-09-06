@@ -10,7 +10,7 @@ type ParsedVersion = {
   preRelease: string | null; // e.g. "dev.20260513180146" or null for stable
 };
 
-function parseVersion(v: string): ParsedVersion {
+export function parseVersion(v: string): ParsedVersion {
   const [core, preRelease = null] = v.split('-') as [string, string | undefined];
   const parts = core.split('.').map(Number);
   return {
@@ -57,21 +57,35 @@ function visibleLength(s: string): number {
   return s.replace(/\u001B\[[0-9;]*m/g, '').length;
 }
 
-function buildUpdateMessage(currentVersion: string, latestVersion: string, tag: 'latest' | 'dev'): string {
-  const line1 = `  Update available: ${chalk.dim(currentVersion)} → ${chalk.green.bold(latestVersion)}  `;
-  const line2 = `  Run ${chalk.cyan(`npm install --save-dev ${PACKAGE_NAME}@${tag}`)} to update  `;
-  const width = Math.max(visibleLength(line1), visibleLength(line2));
+/**
+ * Renders lines inside a box, padded to the widest line.
+ *
+ * Width is measured with {@link visibleLength} so ANSI colour codes don't inflate it.
+ *
+ * @param lines - Already-coloured content lines, each with its own leading/trailing spacing.
+ * @param color - Border colour.
+ * @returns The boxed message, with a blank line above and below.
+ */
+export function buildBox(lines: string[], color: 'yellow' | 'red' = 'yellow'): string {
+  const paint = color === 'red' ? chalk.red : chalk.yellow;
+  const width = Math.max(...lines.map(visibleLength));
   const pad = (s: string) => s + ' '.repeat(width - visibleLength(s));
-  const border = chalk.yellow('─'.repeat(width + 1));
+  const border = paint('─'.repeat(width + 1));
 
   return [
     '',
-    chalk.yellow('┌') + border + chalk.yellow('┐'),
-    chalk.yellow('│') + ' ' + pad(line1) + chalk.yellow('│'),
-    chalk.yellow('│') + ' ' + pad(line2) + chalk.yellow('│'),
-    chalk.yellow('└') + border + chalk.yellow('┘'),
+    paint('┌') + border + paint('┐'),
+    ...lines.map(line => paint('│') + ' ' + pad(line) + paint('│')),
+    paint('└') + border + paint('┘'),
     '',
   ].join('\n');
+}
+
+function buildUpdateMessage(currentVersion: string, latestVersion: string, tag: 'latest' | 'dev'): string {
+  return buildBox([
+    `  Update available: ${chalk.dim(currentVersion)} → ${chalk.green.bold(latestVersion)}  `,
+    `  Run ${chalk.cyan(`npm install --save-dev ${PACKAGE_NAME}@${tag}`)} to update  `,
+  ]);
 }
 
 export async function checkForUpdate(currentVersion: string): Promise<string | null> {

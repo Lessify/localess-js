@@ -13,6 +13,12 @@
 
 Command groups use **singular** nouns: `localess login`, `localess logout`, `localess translation <pull|push|diff>`, `localess type generate`, `localess schema <validate|pull|diff|push>`. Every command that talks to the API accepts `-v, --verbose` (prints client debug output, including request URLs and statuses); commands that need credentials exit `1` with `Not logged in` when no session is found. After any command, the CLI checks the npm registry (3-second timeout, failures ignored) and prints an "Update available" box if a newer `@localess/cli` exists.
 
+**Platform compatibility check.** CLI and platform ship in lockstep. Before each command the CLI reads the platform's version from `<origin>/assets/version.json` and enforces two rules: the majors must match (a `4.x.x` CLI refuses a `3.x.x` or `5.x.x` platform), and the platform must meet that command's minimum from the compatibility matrix in `platform-version.ts`. A confirmed incompatibility **blocks the command** — all commands, not just writes — printing an error and exiting `1` **without calling the API**.
+
+Currently every platform-facing command requires `4.0.0`; `login`, `logout` and `schema validate` make no platform call and are exempt. Entries are minimums only — a future platform that breaks a command can't be predicted CLI-side, so that direction is covered by the major-match rule. `platform-version.matrix.test.ts` walks the command tree and fails on a missing or stale entry, so a new command must declare its requirement.
+
+The check is silently skipped — never blocking — when the command makes no platform call, no credentials are configured, the version can't be determined (non-2xx, unreachable, malformed, or a 3-second timeout), or `LOCALESS_SKIP_VERSION_CHECK` is set to any value. API-only and emulator-only deployments don't serve that asset, so the check reports "unknown" and proceeds there.
+
 ---
 
 ## Installation
