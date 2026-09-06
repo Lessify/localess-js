@@ -1,5 +1,5 @@
 import { readdir } from 'node:fs/promises';
-import { join, relative, sep } from 'node:path';
+import { join, relative } from 'node:path';
 
 import type { ComponentNamingStrategy } from '@localess/vue';
 import {
@@ -57,6 +57,19 @@ async function findVueFiles(dir: string): Promise<string[]> {
 }
 
 /**
+ * Rewrites a filesystem path into an ESM specifier.
+ *
+ * Backslashes are matched literally rather than via `path.sep`, which is the *host's*
+ * separator: splitting a Windows path on `sep` is a no-op on Linux, so the backslashes
+ * survived into `JSON.stringify` and got emitted as `"C:\\app\\..."` — a specifier no
+ * bundler resolves. Real Linux paths never contain backslashes, so this only bit
+ * Windows-path input, which is exactly what the unit tests feed on a Linux runner.
+ */
+function toModuleSpecifier(path: string): string {
+  return path.replace(/\\/g, '/');
+}
+
+/**
  * Builds the registry module source: one static import per discovered component,
  * keyed by its filename verbatim, then explicit overrides last so they win on
  * collision. Matching that key to `data._schema` is `componentNaming`'s job at
@@ -80,7 +93,7 @@ export function generateComponentsTemplate(
       .split(/[\\/]/)
       .pop()!
       .replace(/\.vue$/, '');
-    const specifier = file.split(sep).join('/');
+    const specifier = toModuleSpecifier(file);
     lines.push(`import __component_${index}__ from ${JSON.stringify(specifier)};`);
     assignments.push(
       `if (!Object.hasOwn(__localessRegistry__, ${JSON.stringify(baseName)})) __localessRegistry__[${JSON.stringify(baseName)}] = __component_${index}__;`
@@ -88,7 +101,7 @@ export function generateComponentsTemplate(
   });
 
   overrides.forEach((override, index) => {
-    const specifier = override.importPath.split(sep).join('/');
+    const specifier = toModuleSpecifier(override.importPath);
     lines.push(
       override.exportName
         ? `import { ${override.exportName} as __override_${index}__ } from ${JSON.stringify(specifier)};`
