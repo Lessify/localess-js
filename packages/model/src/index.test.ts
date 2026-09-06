@@ -153,6 +153,20 @@ describe('@localess/model shapes', () => {
     expect(params.f).toBe('webp');
   });
 
+  it('AssetTransformParams accepts every fit mode', () => {
+    const fits: NonNullable<AssetTransformParams['fit']>[] = ['cover', 'contain', 'inside', 'outside', 'fill'];
+    const params: AssetTransformParams = { w: 400, h: 300, fit: 'inside' };
+
+    expect(params.fit).toBe('inside');
+    expect(fits).toHaveLength(5);
+  });
+
+  it('AssetTransformParams leaves fit optional', () => {
+    const params: AssetTransformParams = { w: 400, h: 300 };
+
+    expect(params.fit).toBeUndefined();
+  });
+
   it('Translations', () => {
     const translations: Translations = { 'nav.home': 'Home' };
     expect(translations['nav.home']).toBe('Home');

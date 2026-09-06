@@ -32,7 +32,7 @@ See `docs/model.md` in the repo (or the type table below) for the full list.
 | `References` | `Record<string, Content>` — field coverage depends on the producing endpoint |
 | `Assets` | `Record<string, AssetMetadata>` |
 | `AssetMetadata` | `{ id, name, extension, type, alt? }` |
-| `AssetTransformParams` | `{ w?, h?, q?, f?: 'webp' \| 'jpeg' \| 'png' \| 'avif', download?, thumbnail? }` |
+| `AssetTransformParams` | `{ w?, h?, q?, f?: 'webp' \| 'jpeg' \| 'png' \| 'avif', fit?: 'cover' \| 'contain' \| 'inside' \| 'outside' \| 'fill', download?, thumbnail? }` — `fit` applies only when **both** `w` and `h` are set |
 | `Translations` | `Record<string, string>` |
 
 ### Schema wire model (moved from `@localess/schema` — ADR 009)

@@ -371,14 +371,33 @@ if (window.localess) {
 
 | Param       | Type                                    | Description                                                                      |
 |-------------|-----------------------------------------|----------------------------------------------------------------------------------|
-| `w`         | `number`                                | Width in px. With `h` → cover crop. Without → proportional scale.               |
-| `h`         | `number`                                | Height in px. With `w` → cover crop. Without → proportional scale.              |
+| `w`         | `number`                                | Width in px. With `h` → governed by `fit`. Without → proportional scale.        |
+| `h`         | `number`                                | Height in px. With `w` → governed by `fit`. Without → proportional scale.       |
 | `q`         | `number` (1–100)                        | Output quality for JPEG, WebP, AVIF. Ignored for PNG. Default: 85.              |
 | `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'`  | Convert to this output format.                                                   |
 | `download`  | `boolean`                               | `true` → force browser download (`Content-Disposition: form-data`).             |
 | `thumbnail` | `boolean`                               | `true` → extract first frame from animated WebP/GIF or video (via FFmpeg).      |
 
 SVG files are always passed through unchanged — `w`, `h`, `f` are ignored for SVG.
+### `fit` — controlling the `w`+`h` crop
+
+Only applied when **both** `w` and `h` are given; a single dimension always preserves the aspect
+ratio. Examples show a 200×100 source into a 50×50 box.
+
+| `fit` | Behaviour | 200×100 → 50×50 |
+|---|---|---|
+| `cover` *(API default)* | Fill the box, crop the overflow | 50×50, sides cropped |
+| `contain` | Fit inside the box, pad to the exact box | 50×50, padded |
+| `inside` | Shrink to fit inside the box, no pad, no crop | 50×25 |
+| `outside` | Cover the box without cropping; may exceed it | 100×50 |
+| `fill` | Stretch to the exact box, aspect ratio not preserved | 50×50, distorted |
+
+**`inside` is usually what a thumbnail wants.** The SDK applies **no** client-side default — omitting
+`fit` leaves the API default (`cover`) in force, so existing URLs are byte-identical.
+
+An unrecognised `f` or `fit` is rejected by the API with `400`. Requires a Localess deployment with
+asset `fit` support; older deployments ignore the parameter.
+
 
 ## Environment Utilities
 

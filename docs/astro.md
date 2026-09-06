@@ -179,7 +179,7 @@ import { resolveAsset } from '@localess/astro';
 <img src={resolveAsset(data.heroImage, { w: 800 })} alt={data.title} />
 ```
 
-`resolveAsset(asset: ContentAsset, params?: AssetTransformParams)` delegates to the client's `assetLink`. A `ContentAsset` is `{ kind: 'ASSET', uri }` — it carries no alt text; take that from another field. Transform params include `w`, `h`, `q`, `f`, `download`, `thumbnail` (see [docs/client.md](client.md)).
+`resolveAsset(asset: ContentAsset, params?: AssetTransformParams)` delegates to the client's `assetLink`. A `ContentAsset` is `{ kind: 'ASSET', uri }` — it carries no alt text; take that from another field. Transform params include `w`, `h`, `q`, `f`, `fit`, `download`, `thumbnail` — `fit` controls the `w`+`h` behaviour, where the API default `cover` crops and `inside` shrinks to fit (see [docs/client.md](client.md#asset-transform-parameters)).
 
 ## Import paths — subpath exports required for `.astro` files
 

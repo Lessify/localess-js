@@ -185,10 +185,12 @@ For rich text there is also a component — `<ll-rich-text>` (`LocalessRichText`
 Pipe the `llAsset` pipe with transform params for image resizing:
 
 ```html
-<img [src]="data.image | llAsset:{ w: 800, h: 600, f: 'webp' }" />
+<img [src]="data.image | llAsset:{ w: 800, h: 600, f: 'webp', fit: 'inside' }" />
 ```
 
-See `AssetTransformParams` in [docs/client.md](client.md#asset-transform-parameters).
+`fit` controls what happens when both `w` and `h` are set — the API default `cover` crops, while
+`inside` shrinks to fit without cropping. See `AssetTransformParams` in
+[docs/client.md](client.md#asset-transform-parameters).
 
 ## Visual Editor Sync
 

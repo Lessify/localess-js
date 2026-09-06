@@ -115,10 +115,11 @@ buildAssetQueryString({ w: 800, download: true }); // 'w=800&download'
 
 | Param       | Type                                  | Description                                                                 |
 |-------------|---------------------------------------|-----------------------------------------------------------------------------|
-| `w`         | `number`                              | Target width in pixels. With `h` → cover crop. Without → scale proportionally. |
-| `h`         | `number`                              | Target height in pixels. With `w` → cover crop. Without → scale proportionally. |
+| `w`         | `number`                              | Target width in pixels. With `h` → governed by `fit`. Without → scale proportionally. |
+| `h`         | `number`                              | Target height in pixels. With `w` → governed by `fit`. Without → scale proportionally. |
 | `q`         | `number` (1–100)                      | Output quality. Applies to JPEG, WebP, AVIF. Ignored for PNG. Default: 85. |
-| `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Convert to this output format.                                              |
+| `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Convert to this output format. Invalid → `400`.                             |
+| `fit`       | `'cover' \| 'contain' \| 'inside' \| 'outside' \| 'fill'` | Fit mode, applied only when **both** `w` and `h` are set. No client-side default — the API default is `cover` (crops). `inside` shrinks to fit without cropping and is usually what a thumbnail wants. Invalid → `400`. |
 | `download`  | `boolean`                             | `true` → force browser download (Content-Disposition: form-data).          |
 | `thumbnail` | `boolean`                             | `true` → extract first frame from animated WebP/GIF or video frame via FFmpeg. |
 

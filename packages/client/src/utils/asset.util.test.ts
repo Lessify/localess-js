@@ -56,3 +56,41 @@ describe('buildAssetQueryString', () => {
     expect(buildAssetQueryString({ w: 400, f: 'avif' })).toBe('w=400&f=avif');
   });
 });
+
+describe('buildAssetQueryString — fit', () => {
+  it.each(['cover', 'contain', 'inside', 'outside', 'fill'] as const)('serialises fit=%s', fit => {
+    expect(buildAssetQueryString({ fit })).toBe(`fit=${fit}`);
+  });
+
+  it('omits fit when absent — the API default applies', () => {
+    expect(buildAssetQueryString({ w: 400, h: 300 })).toBe('w=400&h=300');
+  });
+
+  it('applies no client-side default for fit', () => {
+    expect(buildAssetQueryString({ w: 400, h: 300 })).not.toContain('fit');
+  });
+
+  it('places fit after f and before the flags', () => {
+    expect(buildAssetQueryString({ w: 400, h: 300, q: 80, f: 'webp', fit: 'inside', download: true, thumbnail: true })).toBe(
+      'w=400&h=300&q=80&f=webp&fit=inside&download&thumbnail'
+    );
+  });
+});
+
+describe('buildAssetQueryString — encoding and back-compat', () => {
+  it('produces the same string as before this change for the common case', () => {
+    expect(buildAssetQueryString({ w: 400, h: 300, q: 80, f: 'webp' })).toBe('w=400&h=300&q=80&f=webp');
+  });
+
+  it('URI-encodes values', () => {
+    expect(buildAssetQueryString({ f: 'a b&c=d' as never })).toBe('f=a%20b%26c%3Dd');
+  });
+
+  it('leaves values needing no encoding untouched', () => {
+    expect(buildAssetQueryString({ w: 1200, f: 'jpeg', fit: 'outside' })).toBe('w=1200&f=jpeg&fit=outside');
+  });
+
+  it('keeps the boolean flags valueless', () => {
+    expect(buildAssetQueryString({ download: true, thumbnail: true })).toBe('download&thumbnail');
+  });
+});
