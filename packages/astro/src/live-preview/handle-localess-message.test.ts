@@ -63,4 +63,40 @@ describe('handleLocalessMessage', () => {
     await vi.advanceTimersByTimeAsync(500);
     await vi.waitFor(() => expect(document.body.textContent).toContain('New'));
   });
+
+  /** Patches the page the way the Visual Editor does, and returns once the DOM has settled. */
+  async function patch(): Promise<void> {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('<html><body><div data-ll-id="1" data-ll-schema="page">New</div></body></html>', { status: 200 })
+    );
+    vi.stubGlobal('location', { ...window.location, href: 'https://example.com/' });
+
+    await handleLocalessMessage({ type: 'change', data: { _id: '1', _schema: 'page' } } as any);
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.waitFor(() => expect(document.body.textContent).toContain('New'));
+  }
+
+  it("keeps the sync script's snackbar container across a patch", async () => {
+    // The server HTML knows nothing about the container, so morphdom used to discard it and
+    // every later snackbar had nowhere to render.
+    const container = document.createElement('div');
+    container.className = 'll-snackbar-container';
+    container.appendChild(document.createElement('div')).className = 'll-snackbar';
+    document.body.appendChild(container);
+
+    await patch();
+
+    expect(document.querySelector('.ll-snackbar-container')).not.toBeNull();
+    expect(document.querySelectorAll('.ll-snackbar')).toHaveLength(1);
+  });
+
+  it('keeps the editor hover highlight on a patched element', async () => {
+    // morphdom copies `class` from the incoming element, which dropped the highlight the
+    // editor applies on hoverSchema.
+    document.querySelector('[data-ll-id="1"]')!.classList.add('ll-hover-highlight');
+
+    await patch();
+
+    expect(document.querySelector('[data-ll-id="1"]')!.classList.contains('ll-hover-highlight')).toBe(true);
+  });
 });
