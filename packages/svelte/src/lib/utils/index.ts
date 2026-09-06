@@ -1,7 +1,7 @@
 /**
- * One of three internal boundaries to `@localess/client` (with `../models` and `../client`).
- * Every other file in this package imports functions through this module (relatively, e.g.
- * `./utils` or `../utils`) instead of importing `@localess/client` directly — see
- * `packages/svelte/CONTRIBUTING.md`.
+ * Internal boundary to the root packages. Every other file in this package imports
+ * functions through this module instead of importing `@localess/client` or
+ * `@localess/live-preview` directly — see `packages/svelte/CONTRIBUTING.md`.
  */
-export { findLink, isBrowser, isIframe, isServer, loadLocalessSync, localessEditable, localessEditableField } from '@localess/client';
+export { findLink } from '@localess/client';
+export { createSyncController, isBrowser, isIframe, isServer, localessEditable, localessEditableField } from '@localess/live-preview';

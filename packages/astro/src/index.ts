@@ -4,13 +4,7 @@ export { handleLocalessMessage } from './live-preview/handle-localess-message';
 export * from './models';
 export { renderLocalessRichTextToHtml, renderRichTextToHtml } from './richtext';
 export { toCamelCase } from './utils/to-camel-case';
-export type { EventCallback, EventToApp, EventToAppOf, EventToAppType, LocalessSync } from '@localess/client';
-export {
-  isBrowser,
-  isIframe,
-  loadLocalessSync,
-  LocalessApiError,
-  localessClient,
-  localessEditable,
-  localessEditableField,
-} from '@localess/client';
+// Documented pass-through: consumers import everything from '@localess/astro'.
+export { LocalessApiError, localessClient } from '@localess/client';
+export type { EventCallback, EventToApp, EventToAppOf, EventToAppType, LocalessSync } from '@localess/live-preview';
+export { isBrowser, isIframe, loadLocalessSync, localessEditable, localessEditableField } from '@localess/live-preview';

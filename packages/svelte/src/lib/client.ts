@@ -4,25 +4,19 @@ import type { Component } from 'svelte';
 export { localessClient };
 
 import { type EventToAppOf, type EventToAppType, type LocalessClient, type LocalessSvelteInitOptions } from './models';
-import { isBrowser, isIframe, loadLocalessSync } from './utils';
+import { createSyncController } from './utils';
 
 let _client: LocalessClient | undefined = undefined;
 let _components: Record<string, Component<any>> = {};
 let _fallbackComponent: Component<any> | undefined = undefined;
-let _enableSync = false;
-let _syncPromise: Promise<void> | undefined = undefined;
+const _sync = createSyncController();
 
 export function localessInit(options: LocalessSvelteInitOptions): LocalessClient {
   const { components, fallbackComponent, enableSync, ...restOptions } = options;
   _client = localessClient(restOptions);
   _components = components || {};
   _fallbackComponent = fallbackComponent;
-  if (enableSync) {
-    _enableSync = true;
-    _syncPromise = loadLocalessSync(restOptions.origin).catch(error => {
-      console.error('[Localess] Failed to load sync script.', error);
-    });
-  }
+  _sync.init(restOptions.origin, enableSync);
   return _client;
 }
 
@@ -42,23 +36,13 @@ export function getFallbackComponent(): Component<any> | undefined {
 }
 
 export function isSyncEnabled(): boolean {
-  return _enableSync && isBrowser() && isIframe();
-}
-
-function localessSyncReady(): Promise<void> {
-  return _syncPromise ?? Promise.resolve();
+  return _sync.isEnabled();
 }
 
 export function localessSyncOn<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): void {
-  if (!isSyncEnabled()) return;
-  localessSyncReady().then(() => {
-    window.localess?.on(event, callback);
-  });
+  _sync.on(event, callback);
 }
 
 export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): void {
-  if (!isSyncEnabled()) return;
-  localessSyncReady().then(() => {
-    window.localess?.onChange(callback);
-  });
+  _sync.onChange(callback);
 }

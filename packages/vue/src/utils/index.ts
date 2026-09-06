@@ -1,7 +1,8 @@
 /**
- * One of three internal boundaries to `@localess/client` (with `../models` and `../client.ts`).
- * Every other file in this package imports functions through this module (relatively, e.g.
- * `./utils` or `../utils`) instead of importing `@localess/client` directly — see
+ * Internal boundary to the root packages. Every other file in this package imports
+ * functions through this module (relatively, e.g. `./utils` or `../utils`) instead of
+ * importing `@localess/client` or `@localess/live-preview` directly — see
  * `packages/vue/CONTRIBUTING.md`.
  */
-export { isBrowser, isIframe, loadLocalessSync, localessEditable, localessEditableField, normalizeComponentKey } from '@localess/client';
+export { normalizeComponentKey } from '@localess/client';
+export { createSyncController, isBrowser, isIframe, localessEditable, localessEditableField } from '@localess/live-preview';

@@ -10,6 +10,7 @@ This file is a redirect stub. The authoritative project reference has moved to `
 | [docs/model.md](docs/model.md) | `@localess/model` — shared domain-model types |
 | [docs/client.md](docs/client.md) | `@localess/client` — initialization, API methods, caching, types |
 | [docs/richtext.md](docs/richtext.md) | `@localess/richtext` — model, HTML renderer, overrides, fixtures, per-framework usage |
+| [docs/live-preview.md](docs/live-preview.md) | `@localess/live-preview` — Visual Editor bridge, sync controller, editable attributes |
 | [docs/schema.md](docs/schema.md) | `@localess/schema` — defineSchema/defineEnum/defineField/defineConfig, type inference, validate, export |
 | [docs/react.md](docs/react.md) | `@localess/react` — export variants, components, hooks, sync patterns |
 | [docs/angular.md](docs/angular.md) | `@localess/angular` — providers, components, directives, pipes, services, sync |

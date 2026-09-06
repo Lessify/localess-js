@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "@localess/client": "*",
+    "@localess/live-preview": "*",
     "@localess/model": "*",
     "@localess/richtext": "*"
   },

@@ -1,5 +1,5 @@
 import { IMAGE_LOADER, ImageLoaderConfig } from '@angular/common';
-import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import { ApplicationRef, EnvironmentProviders, inject, makeEnvironmentProviders, provideAppInitializer } from '@angular/core';
 
 import { LocalessFeature } from './localess.components';
 import { LOCALESS_CONFIG, LOCALESS_SYNC_READY, LocalessConfig } from './localess.config';
@@ -60,14 +60,32 @@ export function provideLocaless(options: LocalessOptions, ...features: LocalessF
   const assetPathPrefix = `${options.origin}/api/v1/spaces/${options.spaceId}/assets/`;
 
   let syncReady: Promise<void> = Promise.resolve();
+  let appStable: (() => void) | undefined = undefined;
   if (options.enableSync) {
     if (options.debug) {
       console.log('[Localess] enableSync', options.enableSync);
     }
-    syncReady = loadLocalessSync(options.origin).catch(error => {
-      console.error('[Localess] Failed to load sync script.', error);
+    // The script is loaded only once the application is stable, not immediately.
+    //
+    // The sync script pings the Visual Editor as soon as it runs, and hooks every
+    // `[data-ll-id]` element it can see when the editor pongs back. Loading it eagerly races
+    // the first render: `LocalessComponentDirective` awaits `LocalessComponentResolver`
+    // before calling `createComponent`, so a lazily registered schema component destroys and
+    // recreates its server-rendered DOM part-way through that handshake, and any element
+    // recreated after the pong stayed unhooked. Waiting for stability moves the handshake
+    // past the last render caused by bootstrap.
+    const stable = new Promise<void>(resolve => {
+      appStable = resolve;
     });
+    syncReady = stable
+      .then(() => loadLocalessSync(options.origin))
+      .catch(error => {
+        console.error('[Localess] Failed to load sync script.', error);
+      });
   }
+
+  // Aliased to a const so it narrows inside the initializer closure below.
+  const notifyAppStable = appStable;
 
   return [
     makeEnvironmentProviders([
@@ -99,5 +117,16 @@ export function provideLocaless(options: LocalessOptions, ...features: LocalessF
       LocalessComponentResolver,
       ...features.flatMap(feature => feature.ɵproviders),
     ]),
+    ...(notifyAppStable
+      ? [
+          provideAppInitializer(() => {
+            const appRef = inject(ApplicationRef);
+            // Deliberately not returned: an initializer's promise blocks bootstrap, and the
+            // application cannot become stable until bootstrap has finished, so returning
+            // this would deadlock.
+            void appRef.whenStable().then(notifyAppStable);
+          }),
+        ]
+      : []),
   ];
 }

@@ -107,7 +107,7 @@ provideLocaless(
 );
 ```
 
-`provideLocaless()` accepts features as trailing arguments (same pattern as `provideRouter()`). `withLocalessComponents` is the only one today. Besides `LOCALESS_CONFIG` and the services, `provideLocaless()` registers `LocalessComponentResolver` (resolves and caches registry lookups, invoking a lazy loader once per key), `LOCALESS_SYNC_READY` (a `Promise<void>` for the sync script load), and Angular's `IMAGE_LOADER` (appends `?w=<width>` to Localess asset URLs for `NgOptimizedImage`). Other options: `version: 'draft'`, `debug`, `enableSync`, `cacheTTL` (seconds, default 300, `false` disables). It throws if `origin`, `spaceId`, or `token` is empty.
+`provideLocaless()` accepts features as trailing arguments (same pattern as `provideRouter()`). `withLocalessComponents` is the only one today. Besides `LOCALESS_CONFIG` and the services, `provideLocaless()` registers `LocalessComponentResolver` (resolves and caches registry lookups, invoking a lazy loader once per key), `LOCALESS_SYNC_READY` (a `Promise<void>` for the sync script load, which begins once the app is stable), and Angular's `IMAGE_LOADER` (appends `?w=<width>` to Localess asset URLs for `NgOptimizedImage`). Other options: `version: 'draft'`, `debug`, `enableSync`, `cacheTTL` (seconds, default 300, `false` disables). It throws if `origin`, `spaceId`, or `token` is empty.
 
 ```html
 <!-- top-level: renders a full Content response, wires up Visual Editor sync internally -->
@@ -195,6 +195,8 @@ Pipe the `llAsset` pipe with transform params for image resizing:
 ## Visual Editor Sync
 
 Set `enableSync: !environment.production` in `provideLocaless()`. `LocalessSyncService` manages the bridge automatically, and `<ll-document>` already subscribes for you. For custom wiring:
+
+> The sync script load is deferred to `ApplicationRef.whenStable()` via `provideAppInitializer`, rather than started when `provideLocaless()` runs. The script hooks every `[data-ll-id]` element as soon as the editor pongs, and `LocalessComponentDirective` destroys and recreates its server-rendered DOM once `LocalessComponentResolver` resolves the component — so with an eager load, a lazily registered schema whose loader settled during that handshake ended up unhooked and unclickable in the editor for the rest of the session. `LocalessComponentResolver` wraps each lazy loader in a `PendingTasks` task, so `whenStable()` waits for it under zoneless change detection as well as with zone.js (which also makes SSR serialization wait for lazily registered schemas).
 
 ```typescript
 import { ContentData, LocalessSyncService } from '@localess/angular';

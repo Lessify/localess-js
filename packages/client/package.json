@@ -43,6 +43,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@localess/live-preview": "*",
     "@localess/model": "*"
   },
   "devDependencies": {

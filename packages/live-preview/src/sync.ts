@@ -1,12 +1,23 @@
-import { isIframe, isServer } from './utils';
+import { isIframe, isServer } from './platform';
 
 const JS_SYNC_ID = 'localess-js-sync';
 
 let syncPromise: Promise<void> | undefined;
 
 /**
- * Inject Localess Sync Script in Header
- * @param {string} origin A fully qualified domain name with protocol (http/https) and port.
+ * Loads the Localess Visual Editor sync script and resolves once `window.localess`
+ * is available.
+ *
+ * `origin` is an explicit parameter rather than read from any configuration: the
+ * script is served by the Localess deployment itself (`<origin>/scripts/sync-v1.js`),
+ * so it is always version-matched to the server the app is talking to. That is why
+ * this package needs no config object, and why it does not depend on
+ * `@localess/client`.
+ *
+ * No-ops outside a browser, and outside the Visual Editor iframe — sync has no
+ * meaning there. Concurrent callers share one promise.
+ * @param {string} origin Fully qualified origin of the Localess deployment, with protocol.
+ * @return {Promise<void>} resolves when the script has loaded.
  */
 export function loadLocalessSync(origin: string): Promise<void> {
   if (isServer()) {
@@ -52,4 +63,16 @@ export function loadLocalessSync(origin: string): Promise<void> {
   });
 
   return syncPromise;
+}
+
+/**
+ * @internal Clears the shared load promise between test cases.
+ *
+ * The promise is module-level on purpose — there is only ever one sync script,
+ * so concurrent callers must share one load. That also means it outlives a
+ * single test, and a stale promise would let a later test take the
+ * already-loaded early return instead of the path it means to exercise.
+ */
+export function resetSyncForTest(): void {
+  syncPromise = undefined;
 }

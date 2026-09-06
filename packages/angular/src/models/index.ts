@@ -1,4 +1,5 @@
-export type { ContentFetchParams, EventToAppOf, EventToAppType, LinksFetchParams, TranslationFetchParams } from '@localess/client';
+export type { ContentFetchParams, LinksFetchParams, TranslationFetchParams } from '@localess/client';
+export type { EventToAppOf, EventToAppType } from '@localess/live-preview';
 export type {
   Assets,
   AssetTransformParams,

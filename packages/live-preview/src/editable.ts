@@ -1,4 +1,4 @@
-import { ContentData, ContentDataSchema } from './models';
+import type { ContentData, ContentDataSchema } from '@localess/model';
 
 /**
  * Adds Localess editable attributes to a content item.

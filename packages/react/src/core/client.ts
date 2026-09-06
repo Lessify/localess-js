@@ -10,14 +10,13 @@ import {
   type LocalessClient,
   type LocalessOptions,
 } from './models';
-import { buildAssetQueryString, isBrowser, isIframe, loadLocalessSync } from './utils';
+import { buildAssetQueryString, createSyncController } from './utils';
 
 let _origin: string | undefined = undefined;
 let _client: LocalessClient | undefined = undefined;
 let _components: Record<string, React.ElementType> = {};
 let _fallbackComponent: React.ElementType | undefined = undefined;
-let _enableSync: boolean = false;
-let _syncPromise: Promise<void> | undefined = undefined;
+const _sync = createSyncController();
 let _assetPathPrefix = '';
 
 /**
@@ -68,13 +67,7 @@ export function localessInit(options: LocalessOptions): LocalessClient {
 
   _components = components || {};
   _fallbackComponent = fallbackComponent;
-  if (enableSync) {
-    _enableSync = true;
-    // Script will be loaded in client.
-    _syncPromise = loadLocalessSync(restOptions.origin).catch(error => {
-      console.error('[Localess] Failed to load sync script.', error);
-    });
-  }
+  _sync.init(restOptions.origin, enableSync);
   return _client;
 }
 
@@ -142,7 +135,7 @@ export function getFallbackComponent(): React.ElementType | undefined {
  * @returns `true` if sync is enabled and usable, `false` otherwise.
  */
 export function isSyncEnabled(): boolean {
-  return _enableSync && isBrowser() && isIframe();
+  return _sync.isEnabled();
 }
 
 /**
@@ -158,7 +151,7 @@ export function isSyncEnabled(): boolean {
  * @returns The `enableSync` value passed to `localessInit`, defaulting to `false`.
  */
 export function isSyncConfigured(): boolean {
-  return _enableSync;
+  return _sync.isConfigured();
 }
 
 /**
@@ -186,7 +179,7 @@ export function isSyncConfigured(): boolean {
  * ```
  */
 export function localessSyncReady(): Promise<void> {
-  return _syncPromise ?? Promise.resolve();
+  return _sync.ready();
 }
 
 /**
@@ -206,10 +199,7 @@ export function localessSyncReady(): Promise<void> {
  * ```
  */
 export function localessSyncOn<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): void {
-  if (!isSyncEnabled()) return;
-  localessSyncReady().then(() => {
-    window.localess?.on(event, callback);
-  });
+  _sync.on(event, callback);
 }
 
 /**
@@ -232,10 +222,7 @@ export function localessSyncOn<T extends EventToAppType>(event: T | T[], callbac
  * ```
  */
 export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): void {
-  if (!isSyncEnabled()) return;
-  localessSyncReady().then(() => {
-    window.localess?.onChange(callback);
-  });
+  _sync.onChange(callback);
 }
 
 export function getOrigin() {

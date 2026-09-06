@@ -1,15 +1,38 @@
-import { describe, expect, it, vi } from 'vitest';
-
-vi.mock('./utils', async importOriginal => {
-  const actual = await importOriginal<typeof import('./utils')>();
-  return { ...actual, isIframe: () => true };
-});
+import { resetSyncForTest } from '@localess/live-preview';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getComponent, getFallbackComponent, isSyncEnabled, localessInit, localessSyncOn, localessSyncOnChange } from './client';
 
 class FakeComponent {}
 
+const SCRIPT_ID = 'localess-js-sync';
+
+/**
+ * Frames the page so the Visual Editor environment check passes. The check lives
+ * in `@localess/live-preview`, so it is faked at the environment level rather
+ * than by stubbing a re-export.
+ */
+function enterEditorFrame(): void {
+  vi.spyOn(window, 'top', 'get').mockReturnValue({} as Window);
+}
+
+function syncScript(): HTMLElement | null {
+  return document.getElementById(SCRIPT_ID);
+}
+
 describe('client', () => {
+  beforeEach(() => {
+    resetSyncForTest();
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetSyncForTest();
+    syncScript()?.remove();
+    delete (window as any).localess;
+  });
+
   it('localessInit registers components and returns a client', () => {
     const client = localessInit({
       origin: 'https://example.com',
@@ -51,35 +74,38 @@ describe('client', () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it('localessInit with enableSync loads the sync script and enables sync (isBrowser/isIframe both true)', () => {
+  it('localessInit with enableSync injects the script and enables sync inside the editor frame', () => {
+    enterEditorFrame();
     localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
+
+    expect(syncScript()).not.toBeNull();
     expect(isSyncEnabled()).toBe(true);
   });
 
   it('localessSyncOn subscribes via window.localess once sync is ready', async () => {
+    enterEditorFrame();
     localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
     const on = vi.fn();
     (window as any).localess = { on };
+    syncScript()?.dispatchEvent(new Event('load'));
     const callback = vi.fn();
 
     localessSyncOn('input', callback);
-    await new Promise(resolve => setTimeout(resolve, 0));
 
-    expect(on).toHaveBeenCalledWith('input', callback);
-    delete (window as any).localess;
+    await vi.waitFor(() => expect(on).toHaveBeenCalledWith('input', callback));
   });
 
   it('localessSyncOnChange subscribes via window.localess.onChange once sync is ready', async () => {
+    enterEditorFrame();
     localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
     const onChange = vi.fn();
     (window as any).localess = { onChange };
+    syncScript()?.dispatchEvent(new Event('load'));
     const callback = vi.fn();
 
     localessSyncOnChange(callback);
-    await new Promise(resolve => setTimeout(resolve, 0));
 
-    expect(onChange).toHaveBeenCalledWith(callback);
-    delete (window as any).localess;
+    await vi.waitFor(() => expect(onChange).toHaveBeenCalledWith(callback));
   });
 });
 

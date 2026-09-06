@@ -1,13 +1,12 @@
 {
-  "name": "@localess/vue",
+  "name": "@localess/live-preview",
   "version": "4.0.0",
-  "description": "Vue JavaScript/TypeScript SDK for Localess's API.",
+  "description": "Framework-neutral Visual Editor bridge for Localess — sync script loading, editable attributes, and editor events.",
   "keywords": [
     "localess",
     "sdk",
-    "api",
-    "client",
-    "vue",
+    "visual-editor",
+    "live-preview",
     "javascript",
     "typescript"
   ],
@@ -17,7 +16,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Lessify/localess-js.git",
-    "directory": "packages/vue"
+    "directory": "packages/live-preview"
   },
   "bugs": {
     "url": "https://github.com/Lessify/localess-js/issues"
@@ -34,42 +33,26 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
-    },
-    "./vite": {
-      "types": "./dist/vite/index.d.ts",
-      "import": "./dist/vite/index.mjs",
-      "require": "./dist/vite/index.js"
     }
   },
   "private": false,
   "license": "MIT",
   "scripts": {
     "build": "npm run typecheck && vite build",
-    "typecheck": "vue-tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
-  "peerDependencies": {
-    "vue": ">=3.4"
-  },
   "dependencies": {
-    "@localess/client": "*",
-    "@localess/live-preview": "*",
-    "@localess/model": "*",
-    "@localess/richtext": "*"
+    "@localess/model": "*"
   },
   "devDependencies": {
     "@types/node": "^24",
-    "@vitejs/plugin-vue": "^6.0.0",
-    "@vue/language-core": "^3.3.11",
-    "@vue/test-utils": "^2.4.6",
     "happy-dom": "^20.9.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.16",
-    "vite-plugin-dts": "^5.0.0",
-    "vue": "^3.5.13",
-    "vue-tsc": "^3.3.11"
+    "vite-plugin-dts": "^5.0.0"
   },
   "engines": {
     "node": ">= 24.0.0"

@@ -85,6 +85,7 @@ Tests use **vitest** everywhere, including `@localess/angular` (via the Angular 
 | [docs/client.md](client.md) | `@localess/client` — initialization, API methods, caching, types |
 | [docs/model.md](model.md) | `@localess/model` — shared domain-model types |
 | [docs/richtext.md](richtext.md) | `@localess/richtext` — model, HTML renderer, overrides, fixtures, per-framework usage |
+| [docs/live-preview.md](live-preview.md) | `@localess/live-preview` — Visual Editor bridge, sync controller, editable attributes |
 | [docs/schema.md](schema.md) | `@localess/schema` — defineSchema/defineEnum/defineField/defineConfig, type inference, validate, export |
 | [docs/react.md](react.md) | `@localess/react` — export variants, components, hooks, Vite plugin, sync patterns |
 | [docs/angular.md](angular.md) | `@localess/angular` — providers, components, directives, pipes, services, sync |

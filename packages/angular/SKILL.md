@@ -542,6 +542,8 @@ Bypasses Angular's `DomSanitizer` for a trusted HTML string. Accepts `string | n
 
 The Localess Visual Editor enables live in-browser content editing. Set `enableSync: true` in `provideLocaless()` to automatically inject the sync script.
 
+The script is injected once the application is stable (`ApplicationRef.whenStable()`), not during bootstrap. The sync script hooks every `[data-ll-id]` element it can see the moment the editor answers its ping, so loading it eagerly raced the first render: a lazily registered schema component destroys and recreates its server-rendered DOM when its loader resolves, and elements recreated after that handshake stayed unclickable in the editor. `LocalessComponentResolver` registers each lazy loader as a `PendingTasks` task so stability accounts for it under zoneless change detection too.
+
 Inject `LocalessSyncService` and use `onChange()` — it already covers the `enabled()` check (browser + Visual Editor iframe) and the `ready()` wait:
 
 ```ts
