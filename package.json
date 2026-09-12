@@ -20,6 +20,8 @@
     "build:svelte": "npm run build --workspace=@localess/svelte",
     "start:angular-ssr": "npm run start --workspace=angular-ssr",
     "start:angular-static": "npm run start --workspace=angular-static",
+    "start:analog": "npm run dev --workspace=analog",
+    "start:analog-static": "npm run dev --workspace=analog-static",
     "version:patch": "node scripts/bump-version.mjs patch",
     "version:minor": "node scripts/bump-version.mjs minor",
     "version:major": "node scripts/bump-version.mjs major",

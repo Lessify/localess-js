@@ -1,0 +1,62 @@
+{
+  "name": "analog",
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.22.3"
+  },
+  "scripts": {
+    "ng": "ng",
+    "dev": "vite",
+    "start": "npm run dev",
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "test": "vitest",
+    "preview": "node dist/analog/server/index.mjs",
+    "localess:types": "localess types generate --path ./src/app/shared/models/localess.d.ts",
+    "localess:login": "localess login"
+  },
+  "private": true,
+  "dependencies": {
+    "@analogjs/content": "^2.7.2",
+    "@analogjs/router": "^2.7.2",
+    "@angular/common": "^21.2.19",
+    "@angular/compiler": "^21.2.19",
+    "@angular/core": "^21.2.19",
+    "@angular/forms": "^21.2.19",
+    "@angular/platform-browser": "^21.2.19",
+    "@angular/platform-server": "^21.2.19",
+    "@angular/router": "^21.2.19",
+    "@tailwindcss/vite": "^4.1.4",
+    "front-matter": "^4.0.2",
+    "marked": "^15.0.7",
+    "marked-gfm-heading-id": "^4.1.1",
+    "marked-highlight": "^2.2.1",
+    "marked-mangle": "^1.1.10",
+    "postcss": "^8.5.3",
+    "prismjs": "^1.29.0",
+    "rxjs": "~7.8.0",
+    "tailwindcss": "^4.1.4",
+    "tslib": "^2.3.0",
+    "@localess/angular": "*"
+  },
+  "devDependencies": {
+    "@analogjs/platform": "^2.7.2",
+    "@analogjs/vite-plugin-angular": "^2.7.2",
+    "@analogjs/vitest-angular": "^2.7.2",
+    "@angular/build": "^21.2.19",
+    "@angular/cli": "^21.2.19",
+    "@angular/compiler-cli": "^21.2.19",
+    "jsdom": "^22.0.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.0",
+    "vite-tsconfig-paths": "^4.2.0",
+    "vitest": "4.1.11",
+    "@localess/cli": "*",
+    "@tailwindcss/typography": "^0.5.20"
+  },
+  "overrides": {
+    "vite": "$vite",
+    "vitest": "$vitest"
+  }
+}

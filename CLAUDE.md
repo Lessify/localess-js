@@ -39,9 +39,11 @@ npm run build:angular
 npm run build:astro
 npm run build:nuxt      # requires build:vue first
 
-# Run angular-ssr / angular-static playgrounds (requires build:angular first)
-npm run start:angular-ssr
-npm run start:angular-static
+# Run Angular playgrounds (requires build:angular first)
+npm run start:angular-ssr      # Angular CLI, SSR
+npm run start:angular-static   # Angular CLI, prerendered
+npm run start:analog           # AnalogJS (Vite + Nitro), SSR
+npm run start:analog-static    # AnalogJS, prerendered
 
 # Run all package tests (vitest everywhere, including @localess/angular via Angular CLI's unit-test builder)
 npm test

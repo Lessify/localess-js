@@ -225,10 +225,12 @@ export class PageComponent implements OnInit {
 
 `@localess/angular` works under every Angular rendering mode — CSR, SSR, and SSG — with the same `provideLocaless()` setup. Two playgrounds cover the server-rendered and fully static ends:
 
-| Playground | `outputMode` | Output |
+| Playground | Tooling | Output |
 | --- | --- | --- |
-| `playgrounds/angular-ssr` | `"server"` | `browser/` + a Node/Express `server/` bundle |
-| `playgrounds/angular-static` | `"static"` | `browser/` only — deployable to any static file host |
+| `playgrounds/angular-ssr` | Angular CLI, `outputMode: "server"` | `browser/` + a Node/Express `server/` bundle |
+| `playgrounds/angular-static` | Angular CLI, `outputMode: "static"` | `browser/` only — deployable to any static file host |
+| `playgrounds/analog` | AnalogJS (Vite + Nitro) | `dist/analog/public` + Nitro server in `dist/analog/server` |
+| `playgrounds/analog-static` | AnalogJS, `static: true` | `dist/analog/public` only |
 
 ### Prerendering (SSG)
 
@@ -249,6 +251,27 @@ export const serverRoutes: ServerRoute[] = [
 ```
 
 `PrerenderFallback.Client` renders documents added after the build client-side via `index.csr.html`, instead of 404ing. Keep `server: "src/main.server.ts"` in `angular.json` — it drives prerendering — and drop `ssr.entry`.
+
+### AnalogJS
+
+`@localess/angular` works unchanged under [AnalogJS](https://analogjs.org), which builds with Vite and Nitro instead of the Angular CLI. Two details differ from a CLI app:
+
+- **Module resolution.** Analog needs `ssr.noExternal: ['@localess/angular']` in `vite.config.ts` so the package's FESM2022 bundle is bundled rather than treated as an external CommonJS dependency.
+- **Catch-all resolvers read `state.url`.** For Analog's file-based catch-all route (`[...slug].page.ts`), `ActivatedRouteSnapshot.url` and `.params` are empty — take the segments from the `RouterStateSnapshot` instead.
+
+For static Analog builds, route enumeration moves into `vite.config.ts`, which runs in plain Node with no Angular injector — so it uses `localessClient` from `@localess/client` rather than `LocalessContentService`:
+
+```ts
+analog({
+  static: true,
+  prerender: {
+    routes: async () => {
+      const links = await localessClient(connection).getLinks({ kind: 'DOCUMENT' });
+      return Object.values(links).map(link => `/${link.fullSlug}`);
+    },
+  },
+})
+```
 
 Visual Editor sync still works on a static host: Angular ships a live application, so prerendered HTML hydrates and then responds to editor events normally. The token reaches the browser in this mode, so it must be a **public** (read-only) token.
 
