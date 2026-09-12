@@ -51,8 +51,9 @@ npm run build:cli
 npm run build:angular
 npm run build:astro
 
-# Run angular-ssr playground
+# Run angular-ssr / angular-static playgrounds
 npm run start:angular-ssr
+npm run start:angular-static
 
 # Run all package tests
 npm test

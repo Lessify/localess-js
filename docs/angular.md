@@ -221,6 +221,37 @@ export class PageComponent implements OnInit {
 
 `on`/`onChange` are no-ops when `enabled()` is false and wait for `ready()` internally.
 
+## Rendering Modes
+
+`@localess/angular` works under every Angular rendering mode — CSR, SSR, and SSG — with the same `provideLocaless()` setup. Two playgrounds cover the server-rendered and fully static ends:
+
+| Playground | `outputMode` | Output |
+| --- | --- | --- |
+| `playgrounds/angular-ssr` | `"server"` | `browser/` + a Node/Express `server/` bundle |
+| `playgrounds/angular-static` | `"static"` | `browser/` only — deployable to any static file host |
+
+### Prerendering (SSG)
+
+With `outputMode: "static"` there is no request-time server, so every navigable URL must be enumerated at build time. `getPrerenderParams()` runs inside the injector context, so it can fetch the space's documents through `LocalessContentService`:
+
+```ts
+export const serverRoutes: ServerRoute[] = [
+  {
+    path: '**',
+    renderMode: RenderMode.Prerender,
+    fallback: PrerenderFallback.Client,
+    async getPrerenderParams() {
+      const links = await inject(LocalessContentService).links({ kind: 'DOCUMENT' });
+      return Object.values(links).map(link => ({ '**': link.fullSlug }));
+    },
+  },
+];
+```
+
+`PrerenderFallback.Client` renders documents added after the build client-side via `index.csr.html`, instead of 404ing. Keep `server: "src/main.server.ts"` in `angular.json` — it drives prerendering — and drop `ssr.entry`.
+
+Visual Editor sync still works on a static host: Angular ships a live application, so prerendered HTML hydrates and then responds to editor events normally. The token reaches the browser in this mode, so it must be a **public** (read-only) token.
+
 ## Full Export Surface
 
 `src/public-api.ts` exports: `LocalessDocument`, `LocalessRichText`, `SchemaComponent`, `ContentDirective`, `ContentIdDirective`, `ContentSchemaDirective`, `ContentFieldDirective`, `LocalessComponentDirective`, `provideLocaless`, `LocalessOptions`, `withLocalessComponents`, `isComponentLoader`, `LocalessComponentsMap`, `LocalessComponentLoader`, `AnySchemaComponent`, `LOCALESS_COMPONENTS`, `LOCALESS_FALLBACK_COMPONENT`, `LOCALESS_CONFIG`, `LocalessConfig`, `defaultConfig`, `LOCALESS_SYNC_READY`, `AssetPipe`, `LinkPipe`, `LocalessRichTextPipe`, `SafeHtmlPipe`, `LocalessAssetService`, `LocalessClientService`, `LocalessComponentResolver`, `LocalessContentService`, `LocalessSyncService`, `LocalessTranslationService`, the `models` barrel (type-only re-exports from `@localess/model`, `@localess/client`, `@localess/richtext`), the `utils` barrel (`buildAssetQueryString`, `findLink`, `isBrowser`, `isIframe`, `loadLocalessSync`), and `export * from '@localess/client'` (so `LocalessApiError`, `localessClient`, etc. are available from `@localess/angular`).
@@ -235,7 +266,8 @@ npm run build:angular   # from monorepo root
 
 ## Common Mistakes
 
-- **Not building before running the playground.** `playgrounds/angular-ssr` reads from `packages/angular/dist/`. Run `npm run build:angular` first.
+- **Not building before running the playground.** `playgrounds/angular-ssr` and `playgrounds/angular-static` read from `packages/angular/dist/`. Run `npm run build:angular` first.
 - **Enabling sync in production.** `enableSync: !environment.production` — the sync script is only useful inside the Localess editor iframe.
 - **Piping `llRichText` through `| async` or `| llSafeHtml`.** It is synchronous and already returns `SafeHtml` — bind `data.body | llRichText` directly to `[innerHTML]`.
 - **Using a secret token in `app.config.ts`.** That configuration ships to the browser bundle — only use a public (read-only) token there. Keep the secret token in `app.config.server.ts`.
+- **Prerendering a wildcard route without `getPrerenderParams`.** Under `outputMode: "static"` a bare `path: '**'` prerenders nothing useful — enumerate the locale/slug combinations from `LocalessContentService.links()`.

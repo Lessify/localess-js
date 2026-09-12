@@ -271,7 +271,8 @@ localess-js/
 │   ├── astro/           # @localess/astro
 │   └── cli/             # @localess/cli
 ├── playgrounds/         # Example apps per framework (next, react-router, tanstack-start,
-│                        # angular-ssr, nuxt, svelte-kit, astro, schema, and their static variants)
+│                        # angular-ssr, angular-static, nuxt, svelte-kit, astro, schema,
+│                        # and their static variants)
 ├── docs/                # Project reference and architectural decision records (ADRs)
 ├── package.json         # Workspace root (npm workspaces)
 └── LICENSE
@@ -334,6 +335,9 @@ npx vitest run packages/cli/src/commands/login/login.test.ts
 ```bash
 # Angular SSR playground (requires build:angular first)
 npm run start:angular-ssr
+
+# Angular SSG / static-prerender playground (requires build:angular first)
+npm run start:angular-static
 ```
 
 Other playgrounds under `playgrounds/` are regular npm workspaces — run them with `npm run dev --workspace=<name>`; see each playground's README.
