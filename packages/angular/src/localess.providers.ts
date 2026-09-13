@@ -3,13 +3,14 @@ import { ApplicationRef, EnvironmentProviders, inject, makeEnvironmentProviders,
 
 import { LocalessFeature } from './localess.components';
 import { LOCALESS_CONFIG, LOCALESS_SYNC_READY, LocalessConfig } from './localess.config';
+import type { AssetTransformParams } from './models';
 import { LocalessAssetService } from './services/asset.service';
 import { LocalessClientService } from './services/client.service';
 import { LocalessComponentResolver } from './services/component-resolver.service';
 import { LocalessContentService } from './services/content.service';
 import { LocalessSyncService } from './services/sync.service';
 import { LocalessTranslationService } from './services/translation.service';
-import { loadLocalessSync } from './utils';
+import { buildAssetQueryString, loadLocalessSync } from './utils';
 
 export type LocalessOptions = {
   /**
@@ -103,10 +104,25 @@ export function provideLocaless(options: LocalessOptions, ...features: LocalessF
           if (config.debug) {
             console.log('[Localess] ImageLoader', imgConfig);
           }
-          if (imgConfig.src.startsWith(assetPathPrefix) && imgConfig.width) {
-            return `${imgConfig.src}?w=${imgConfig.width}`;
+          if (!imgConfig.src.startsWith(assetPathPrefix)) {
+            return imgConfig.src;
           }
-          return imgConfig.src;
+          // `loaderParams` is Angular's per-image channel (the `[loaderParams]` input) and
+          // `callImageLoader` injects it into *every* call — including the width-less one that
+          // builds the `src` attribute. Honouring it is what lets `ngSrc` reach `q`, `f`, `fit`
+          // and `thumbnail`, which `llAsset` and `LocalessAssetService.link()` already support.
+          const params: AssetTransformParams = { ...(imgConfig.loaderParams as AssetTransformParams | undefined) };
+          // Angular's width wins over any `w` in loaderParams: srcset entries are per-width by
+          // definition, and varying it is the entire purpose of the srcset call sites.
+          if (imgConfig.width) {
+            params.w = imgConfig.width;
+          }
+          // `imgConfig.height` is deliberately discarded. Angular derives it from the *declared*
+          // aspect ratio, and sending both `w` and `h` switches the API from width-only scaling
+          // (aspect preserved) to a `fit` crop — silently cropping whenever the declared ratio
+          // differs from the source's. A caller who wants a box passes `h` via loaderParams.
+          const query = buildAssetQueryString(params);
+          return query ? `${imgConfig.src}?${query}` : imgConfig.src;
         },
       },
       LocalessClientService,

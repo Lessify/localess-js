@@ -50,6 +50,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   passthrough, since the re-encode would produce equivalent bytes. Lossy formats deliberately still
   re-encode: `f: 'jpeg'` on a JPEG compresses at `q`, which keeps the WebP escape hatch cheap.
 
+- **`@localess/angular`** — `NgOptimizedImage` now reaches every transform parameter. The
+  `IMAGE_LOADER` registered by `provideLocaless` honours `[loaderParams]`, so `h`, `q`, `f`, `fit`
+  and `thumbnail` work through `ngSrc` — previously only `w` did, leaving `ngSrc` strictly less
+  capable than the `llAsset` pipe and `LocalessAssetService.link()` in the same package.
+
+  ```html
+  <img ngSrc="..." width="800" height="600" [loaderParams]="{ f: 'avif', fit: 'inside' }" />
+  ```
+
+  Angular's per-entry width still wins over a `w` in `loaderParams`, so `srcset` generation is
+  unaffected. The `height` Angular derives from the declared aspect ratio is deliberately **not**
+  forwarded: sending both `w` and `h` switches the API from width-only scaling to a `fit` crop, which
+  would silently crop whenever the declared ratio differs from the source's. Pass `h` through
+  `loaderParams` to opt into a box.
+
 - **`@localess/client`** — a resilience layer on every request, on by default:
   - **Retries** network failures and `408`/`429`/`500`/`502`/`503`/`504` (3 attempts by default),
     with exponential backoff and **full jitter**. `401`/`403`/`404` throw immediately — a bad token
@@ -79,6 +94,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
     webhook handler can produce the same strings.
   - **A request carrying `fetchInit` bypasses the client's own cache** — neither read nor written.
     Two caching layers over one call is how content survives a `revalidateTag()`.
+
+### Fixed
+
+- **`@localess/angular`** — the `src` attribute of an `ngSrc` image no longer points at the
+  untransformed original. Angular builds that attribute by calling the loader with **no width** (see
+  `getRewrittenSrc`), for every image rather than only `fill` ones, and the old loader fell through
+  to the bare URL whenever width was absent. It now emits whatever `loaderParams` provide.
+
+  This mattered most where `NgOptimizedImage` generates no `srcset` at all — with no `sizes` and a
+  declared `width > 1920` or `height > 1080`, Angular skips srcset as "oversized", leaving `src` as
+  the only URL. A large hero therefore fetched the full-resolution original. Setting
+  `[loaderParams]="{ w: 1920 }"` now bounds it.
 
 ### Changed
 
