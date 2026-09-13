@@ -24,10 +24,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   few link/OG crawlers — pass `f: 'jpeg'` to get a compressed JPEG, or `f: 'original'` for the
   stored bytes.
 
-- **`w` and `h` never upscale.** Both are clamped to the source image's own dimensions and to a
-  4096 px ceiling. Values above either bound are clamped rather than rejected, so a responsive
-  `srcset` that walks past the source size now receives the source size instead of an inflated
-  render that was *larger than the original file*.
+- **`w` and `h` upscale, and are bounded to 1–8192.** A width above the stored original is
+  honoured — `w=3840` on a 500 px source returns a 3840 px render, not the source size. A value
+  outside the range is **rejected with `400`**, never clamped into it.
+
+  The principle is *one URL, one output*. Clamping meant `w=5000` and `w=99999` on a 400 px source
+  returned identical bytes under two cache keys, so the CDN stored both and Sharp ran twice for the
+  same result. Rejecting instead keeps every accepted value mapped to exactly one response.
+
+  **Note for responsive images:** `NgOptimizedImage` and similar helpers generate `srcset` entries
+  from a fixed ladder (16, 32, … 1920, 2048, 3840). Against a small source those upper entries are
+  now genuine upscales, which are larger than the original. Constrain the ladder, or pass
+  `sizes`/`loaderParams` so only sensible widths are requested.
 
 - **Default quality is now 80** (was 85), for requests that do not pass `q`.
 
@@ -39,6 +47,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Transformed responses carry an `ETag`**, and a matching `If-None-Match` returns `304` before any
   re-encode.
 
+- **⚠ Malformed `w`, `h` and `q` are now rejected with `400` instead of being silently ignored** —
+  and that `400` is cached for an hour. This is the one change here that can break a URL which
+  works today.
+
+  Previously `?w=abc` served the untransformed image; it now fails the request. The case to check
+  for is a template emitting a placeholder — `?w=undefined`, `?w=null`, `?w=NaN` — which used to
+  degrade gracefully and no longer does. Omit the parameter instead.
+
+  | Value | Before | Now |
+  |-------|--------|-----|
+  | `w=abc`, `w=undefined`, `w=NaN` | ignored, image served | **`400`** |
+  | `w=0`, `w=-5` | ignored, image served | **`400`** |
+  | `q=abc` | defaulted | **`400`** |
+  | `q=150`, `q=101`, `q=0` | clamped to 100 / 1 | **`400`** |
+  | `w=400.9`, `q=50.5` | truncated to 400 / 50 | **`400`** |
+  | `w=0400`, `w=4e2` | parsed as 400 | **`400`** |
+  | `w=` (empty) | ignored | ignored — unchanged |
+  | `w=400`, `q=50` | accepted | accepted — unchanged |
+
+  **Fractions and aliases are rejected as a caching rule, not a pedantic one.** `q=50`, `q=50.1`
+  and `q=50.5` all encode at quality 50 and return byte-identical responses — but they are three
+  URLs, so three CDN cache entries and three runs of the image pipeline for the same bytes.
+  `w=400`, `w=0400` and `w=4e2` do the same for resizing. The usual source of a fraction is a CSS
+  width times a fractional device pixel ratio, so **round computed dimensions** before passing them.
+
+  `f` and `fit` already behaved this way; the numeric parameters now match them.
+
+- **`Content-Disposition` for `download: true` is now `attachment`**, not `form-data`. RFC 6266
+  defines `inline` and `attachment`; `form-data` is a multipart-body token that only worked because
+  browsers fall back to `attachment` for unrecognised types. No practical change for browsers.
+
+- **Non-ASCII asset names now download under their real name.** The header carries an RFC 5987
+  `filename*` parameter with an ASCII-safe `filename` fallback, so an asset named in Cyrillic or CJK
+  no longer saves as a string of percent-escapes.
+
+- **A `404` for an asset that does not exist is cached; one for an upload still in flight is not.**
+  A deleted asset still referenced by published content no longer re-enters the function on every
+  page view, while an asset whose upload has not finished is not pinned behind a cached `404`.
+
 ### Added
 
 - **`@localess/model`** — `AssetTransformParams['f']` accepts **`'original'`**: returns the stored
@@ -49,6 +96,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   Requesting a lossless format the source already is (`f: 'png'` on a PNG) is likewise served as a
   passthrough, since the re-encode would produce equivalent bytes. Lossy formats deliberately still
   re-encode: `f: 'jpeg'` on a JPEG compresses at `q`, which keeps the WebP escape hatch cheap.
+
+- **`@localess/client`** — `buildAssetQueryString` now **throws a `TypeError`** for a `w`, `h` or
+  `q` that the API would reject: a non-finite number, or a non-positive `w`/`h`. This surfaces the
+  bug at the call site rather than as a `400` cached for an hour in production.
+
+  It matters because `NaN` **is** a `number` to TypeScript, so `{ w: NaN }` — from a failed
+  `parseInt`, a division, an absent CMS field — type-checks cleanly and used to build a working URL
+  back when the API ignored malformed numerics. `null` slipping through from plain JS behaves the
+  same way.
+
+  `w`, `h` and `q` must now be **whole numbers**, and `q` must be within its documented **1–100**
+  range — both matching the API exactly. A fraction is rejected rather than truncated: `{ q: 50.5 }`
+  encodes identically to `{ q: 50 }` but produces a different URL, and therefore a duplicate CDN
+  cache entry. Omitting a parameter is still always valid — `{ w: undefined }` is treated as absent,
+  not invalid.
+
+  This is deliberately a throw rather than silently dropping the parameter, which would
+  re-introduce at the SDK layer exactly the leniency the API removed.
 
 - **`@localess/angular`** — `NgOptimizedImage` now reaches every transform parameter. The
   `IMAGE_LOADER` registered by `provideLocaless` honours `[loaderParams]`, so `h`, `q`, `f`, `fit`

@@ -21,10 +21,19 @@ export type AssetTransformParams = {
    * Combined with `h`, the result is governed by `fit` — which defaults to a
    * cover crop filling the exact box.
    *
-   * **Never upscales.** Clamped to the source image's own width and to a hard ceiling of
-   * 4096 px. A value above either bound is clamped rather than rejected, so a responsive
-   * `srcset` may safely walk past the source size — the response is the source size, not an
-   * inflated render of it.
+   * **Upscaling is allowed.** A width above the source dimensions is honoured, not silently
+   * reduced — asking for `w=3840` from a 500 px source returns a 3840 px render. Two different
+   * widths therefore always mean two genuinely different responses.
+   *
+   * **Must be a whole number between 1 and 8192.** `w=abc`, `w=undefined` (a stringified
+   * `undefined` from a template), `w=0`, `w=-5`, `w=400.9` and `w=50000` all fail with `400`,
+   * and that `400` is cached for an hour. An empty value (`w=`) counts as omitted. The 8192
+   * ceiling bounds the decoded bitmap the API must hold; it is not a limit on the source.
+   *
+   * **Round any computed width.** A CSS width times a fractional device pixel ratio —
+   * `320 * 1.5` is fine, `333 * 1.5` is `499.5` — is the usual source of a fraction here.
+   * Each distinct spelling is a separate CDN cache key for identical output, so
+   * `Math.round()` before passing it.
    */
   w?: number;
   /**
@@ -33,13 +42,22 @@ export type AssetTransformParams = {
    * Combined with `w`, the result is governed by `fit` — which defaults to a
    * cover crop filling the exact box.
    *
-   * **Never upscales.** Clamped to the source image's own height and to a hard ceiling of
-   * 4096 px, on the same terms as `w`.
+   * **Upscaling is allowed**, and the value **must be a whole number between 1 and 8192**, on
+   * the same terms as `w`.
    */
   h?: number;
   /**
    * Output quality, 1–100. Default: 80.
    * Applies to JPEG, WebP, AVIF. Ignored for PNG.
+   *
+   * **Must be a whole number within 1–100.** A fraction or an out-of-range value throws a
+   * `TypeError` from `buildAssetQueryString` before the URL is built, and returns `400` from
+   * the API for a URL constructed by hand.
+   *
+   * Fractions are rejected rather than truncated because each one is a **separate cache
+   * key for identical output**: `q: 50`, `q: 50.1` and `q: 50.5` all encode at quality 50,
+   * so accepting them multiplies CDN entries and re-runs the image pipeline for the same
+   * bytes. Round before passing a computed value.
    */
   q?: number;
   /**
@@ -80,7 +98,11 @@ export type AssetTransformParams = {
    */
   fit?: 'cover' | 'contain' | 'inside' | 'outside' | 'fill';
   /**
-   * When true, sets Content-Disposition to `form-data`, forcing a browser download.
+   * When true, sets `Content-Disposition: attachment`, forcing a browser download.
+   *
+   * A non-ASCII asset name is carried in an RFC 5987 `filename*` parameter, with an
+   * ASCII-safe `filename` fallback for clients that do not understand it — so an asset named
+   * in Cyrillic or CJK downloads under its real name rather than a percent-escaped one.
    *
    * Also opts out of the WebP default, so a download returns the file the user uploaded
    * with its original extension rather than a re-encoded copy. An explicit `f` still wins,
