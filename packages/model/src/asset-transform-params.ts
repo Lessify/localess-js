@@ -21,9 +21,11 @@ export type AssetTransformParams = {
    * Combined with `h`, the result is governed by `fit` — which defaults to a
    * cover crop filling the exact box.
    *
-   * **Upscaling is allowed.** A width above the source dimensions is honoured, not silently
-   * reduced — asking for `w=3840` from a 500 px source returns a 3840 px render. Two different
-   * widths therefore always mean two genuinely different responses.
+   * **A width above the source size redirects, it does not upscale.** `w=5000` against a
+   * 400 px asset responds `302` to `?w=400`. Browsers follow this transparently, so `srcset`
+   * ladders that walk past a small source keep working — they just converge on one URL.
+   * An asset with no recorded dimensions is served as requested, since the source size is
+   * unknown.
    *
    * **Must be a whole number between 1 and 8192.** `w=abc`, `w=undefined` (a stringified
    * `undefined` from a template), `w=0`, `w=-5`, `w=400.9` and `w=50000` all fail with `400`,
@@ -42,8 +44,12 @@ export type AssetTransformParams = {
    * Combined with `w`, the result is governed by `fit` — which defaults to a
    * cover crop filling the exact box.
    *
-   * **Upscaling is allowed**, and the value **must be a whole number between 1 and 8192**, on
-   * the same terms as `w`.
+   * **Redirects rather than upscaling** above the source height, and **must be a whole number
+   * between 1 and 8192**, on the same terms as `w`.
+   *
+   * When both `w` and `h` exceed the source, the *box* is shrunk proportionally rather than
+   * each axis capped independently — so a square box stays square and `fit` still means what
+   * it meant.
    */
   h?: number;
   /**

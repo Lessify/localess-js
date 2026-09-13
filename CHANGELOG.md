@@ -24,18 +24,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   few link/OG crawlers — pass `f: 'jpeg'` to get a compressed JPEG, or `f: 'original'` for the
   stored bytes.
 
-- **`w` and `h` upscale, and are bounded to 1–8192.** A width above the stored original is
-  honoured — `w=3840` on a 500 px source returns a 3840 px render, not the source size. A value
-  outside the range is **rejected with `400`**, never clamped into it.
+- **`w` and `h` above the source size now redirect instead of being silently clamped**, and are
+  bounded to 1–8192. `?w=5000` on a 400 px asset responds `302` to `?w=400`; a value outside 1–8192
+  is rejected with `400`.
 
-  The principle is *one URL, one output*. Clamping meant `w=5000` and `w=99999` on a 400 px source
-  returned identical bytes under two cache keys, so the CDN stored both and Sharp ran twice for the
-  same result. Rejecting instead keeps every accepted value mapped to exactly one response.
+  The principle is *one URL, one output*. Clamping meant `w=5000` and `w=99999` returned identical
+  bytes under two cache keys, so the CDN stored both and Sharp ran twice for the same result.
+  Redirecting collapses every oversized spelling onto one canonical URL instead — the same approach
+  the `cv` parameter already uses for content.
 
-  **Note for responsive images:** `NgOptimizedImage` and similar helpers generate `srcset` entries
-  from a fixed ladder (16, 32, … 1920, 2048, 3840). Against a small source those upper entries are
-  now genuine upscales, which are larger than the original. Constrain the ladder, or pass
-  `sizes`/`loaderParams` so only sensible widths are requested.
+  **Responsive images are unaffected.** Browsers follow redirects inside `srcset`, so a ladder that
+  walks past a small source still works; its upper entries simply converge on the same canonical
+  URL. Nothing upscales.
+
+  With **both** dimensions oversized the box shrinks proportionally rather than per-axis, so `fit`
+  keeps its meaning: `?w=5000&h=5000&fit=cover` against 400×300 becomes `?w=300&h=300&fit=cover`, a
+  square box that still crops — not `400×300`, which would not.
+
+  Assets with no recorded dimensions are served as requested, since the source size is unknown.
 
 - **Default quality is now 80** (was 85), for requests that do not pass `q`.
 
