@@ -8,7 +8,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed — asset delivery behaviour (action may be required)
+
+> These are **platform-side** changes to the `/api/v1/spaces/:spaceId/assets/:assetId` endpoint.
+> No SDK signature changes, but the bytes and `Content-Type` your asset URLs return do change once
+> the platform ships them. Listed here because `assetUrl()` callers see the difference without
+> touching their code.
+
+- **`image/jpeg` sources now return WebP by default** — including URLs built with no transform
+  parameters at all. A bare `assetUrl(asset)` on a JPEG responds with `Content-Type: image/webp`
+  instead of `image/jpeg`, typically 25–35% smaller.
+
+  All other source types are unaffected: PNG, GIF, animated WebP, SVG and video keep their stored
+  format. **If a consumer cannot render WebP** — Outlook and some email clients, Safari below 14, a
+  few link/OG crawlers — pass `f: 'jpeg'` to get a compressed JPEG, or `f: 'original'` for the
+  stored bytes.
+
+- **`w` and `h` never upscale.** Both are clamped to the source image's own dimensions and to a
+  4096 px ceiling. Values above either bound are clamped rather than rejected, so a responsive
+  `srcset` that walks past the source size now receives the source size instead of an inflated
+  render that was *larger than the original file*.
+
+- **Default quality is now 80** (was 85), for requests that do not pass `q`.
+
+- **`download: true` returns the stored original.** Previously it only changed
+  `Content-Disposition`; it now also opts out of the WebP default, so a download hands back the file
+  that was uploaded, with its original extension. An explicit `f` still wins, and `w`/`h` still
+  apply.
+
+- **Transformed responses carry an `ETag`**, and a matching `If-None-Match` returns `304` before any
+  re-encode.
+
 ### Added
+
+- **`@localess/model`** — `AssetTransformParams['f']` accepts **`'original'`**: returns the stored
+  bytes byte-for-byte with an `inline` disposition, without forcing a download the way
+  `download: true` does. Use it for a full-quality lightbox, print, or downstream processing.
+  Composes with a resize — `{ w: 200, f: 'original' }` scales while keeping the source format.
+
+  Requesting a lossless format the source already is (`f: 'png'` on a PNG) is likewise served as a
+  passthrough, since the re-encode would produce equivalent bytes. Lossy formats deliberately still
+  re-encode: `f: 'jpeg'` on a JPEG compresses at `q`, which keeps the WebP escape hatch cheap.
 
 - **`@localess/client`** — a resilience layer on every request, on by default:
   - **Retries** network failures and `408`/`429`/`500`/`502`/`503`/`504` (3 attempts by default),

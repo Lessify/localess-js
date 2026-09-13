@@ -149,8 +149,22 @@ describe('@localess/model shapes', () => {
   });
 
   it('AssetTransformParams', () => {
-    const params: AssetTransformParams = { w: 800, h: 600, q: 85, f: 'webp' };
+    const params: AssetTransformParams = { w: 800, h: 600, q: 80, f: 'webp' };
     expect(params.f).toBe('webp');
+  });
+
+  it('AssetTransformParams accepts every output format, including the original passthrough', () => {
+    const formats: NonNullable<AssetTransformParams['f']>[] = ['webp', 'jpeg', 'png', 'avif', 'original'];
+    const params: AssetTransformParams = { f: 'original' };
+
+    expect(params.f).toBe('original');
+    expect(formats).toHaveLength(5);
+  });
+
+  it('AssetTransformParams allows original alongside a resize, to scale without converting', () => {
+    const params: AssetTransformParams = { w: 200, f: 'original' };
+
+    expect(params).toEqual({ w: 200, f: 'original' });
   });
 
   it('AssetTransformParams accepts every fit mode', () => {
