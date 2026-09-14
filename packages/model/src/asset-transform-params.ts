@@ -2,15 +2,19 @@
  * Optional image transform parameters for asset URL generation.
  * Appended as query parameters to the asset URL.
  *
- * ## Default output format
+ * ## Nothing is converted implicitly
  *
- * **`image/jpeg` sources are re-encoded to WebP by default** — including asset URLs built
- * with no parameters at all. A bare `assetUrl(asset)` on a JPEG therefore responds with
- * `Content-Type: image/webp`. All other source types (PNG, GIF, animated WebP, SVG, video)
- * keep their stored format.
+ * **`f` is the only thing that changes an image's format.** A URL built without it returns
+ * the format that was uploaded, so a bare `assetLink(asset)` never puts the API through a
+ * decode and re-encode at all.
  *
- * Pass `f: 'original'` for the stored bytes untouched, or `f: 'jpeg'` for a JPEG re-encode
- * when the client cannot render WebP.
+ * **Passing `f` is the recommended way to cut transfer size** — `f: 'webp'` is typically
+ * 25–35% smaller than the equivalent JPEG, and `f: 'avif'` usually smaller again. It is
+ * opt-in rather than imposed because a format change is the developer's call.
+ *
+ * For the stored bytes untouched, build the URL with **no parameters at all** — a bare
+ * `assetLink(asset)` already returns the uploaded file byte-for-byte. To force a browser
+ * download instead of displaying it, use `assetDownloadLink`.
  *
  * @see https://docs.localess.io (Localess API — Asset Query Parameters)
  */
@@ -53,8 +57,16 @@ export type AssetTransformParams = {
    */
   h?: number;
   /**
-   * Output quality, 1–100. Default: 80.
-   * Applies to JPEG, WebP, AVIF. Ignored for PNG.
+   * Output quality, 1–100.
+   *
+   * **Omit it and each encoder applies its own default** — JPEG and WebP 80, AVIF 50; PNG is
+   * lossless and ignores it entirely. The API deliberately imposes no single number, because
+   * a quality value is not portable between codecs: AVIF is quantizer-based and sits on a
+   * different perceptual curve, so 50 there is roughly what 80 is for JPEG. Forcing 80 onto
+   * AVIF produces a file several times larger than its own default, and larger than the
+   * equivalent WebP.
+   *
+   * An explicit value always wins, for every format.
    *
    * **Must be a whole number within 1–100.** A fraction or an out-of-range value throws a
    * `TypeError` from `buildAssetQueryString` before the URL is built, and returns `400` from
@@ -69,22 +81,23 @@ export type AssetTransformParams = {
   /**
    * Output format. Converts the image to the specified format.
    *
-   * Defaults to `webp` for `image/jpeg` sources; every other source type keeps its stored
-   * format. The values differ in kind:
+   * **Nothing is converted without this parameter** — omit it and the stored format is kept.
+   * Passing it is the recommended way to cut transfer size: `webp` is typically 25–35% smaller
+   * than the equivalent JPEG, and `avif` usually smaller again.
    *
-   * - `webp` / `jpeg` / `png` / `avif` — **encode** to that format. `f: 'jpeg'` on a JPEG
-   *   source still re-encodes, at `q`, which is the point: it is the escape hatch for
-   *   clients that cannot render WebP and it stays compressed.
-   * - `original` — **no encode.** Returns the stored bytes byte-for-byte, with an `inline`
-   *   disposition. Use it for a full-quality lightbox, print, or downstream processing;
-   *   combine with `w` to resize without converting.
+   * Every value **encodes**: `f: 'jpeg'` on a JPEG source still re-encodes, at `q`.
+   *
+   * A resize without `f` re-encodes in the *source* format, so `{ w: 400 }` on a JPEG returns a
+   * 400 px JPEG — the size changes, the format does not. For the stored bytes with no re-encode
+   * at all, pass no parameters.
    *
    * Requesting a *lossless* format the source already is (`f: 'png'` on a PNG) is served as
    * a passthrough, since the re-encode would produce equivalent bytes.
    *
-   * An unrecognised value is rejected by the API with `400`.
+   * An unrecognised value is rejected by the API with `400`. `f: 'original'` was removed in
+   * v4 and is now rejected — omit the parameter instead.
    */
-  f?: 'webp' | 'jpeg' | 'png' | 'avif' | 'original';
+  f?: 'webp' | 'jpeg' | 'png' | 'avif';
   /**
    * How the image is fitted when **both** `w` and `h` are given. Ignored otherwise,
    * since a single dimension always preserves the aspect ratio.
@@ -103,19 +116,6 @@ export type AssetTransformParams = {
    * ignore the parameter.
    */
   fit?: 'cover' | 'contain' | 'inside' | 'outside' | 'fill';
-  /**
-   * When true, sets `Content-Disposition: attachment`, forcing a browser download.
-   *
-   * A non-ASCII asset name is carried in an RFC 5987 `filename*` parameter, with an
-   * ASCII-safe `filename` fallback for clients that do not understand it — so an asset named
-   * in Cyrillic or CJK downloads under its real name rather than a percent-escaped one.
-   *
-   * Also opts out of the WebP default, so a download returns the file the user uploaded
-   * with its original extension rather than a re-encoded copy. An explicit `f` still wins,
-   * and `w`/`h` still apply — `{ w: 200, download: true }` downloads a 200 px render in the
-   * source format. For the stored bytes *without* forcing a download, use `f: 'original'`.
-   */
-  download?: boolean;
   /**
    * When true, extracts the first frame of animated WebP/GIF before resizing.
    * For video with `w`, extracts a frame via FFmpeg then resizes with Sharp (output defaults to webp).

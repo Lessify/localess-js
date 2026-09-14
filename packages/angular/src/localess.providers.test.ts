@@ -114,8 +114,8 @@ describe('provideLocaless — IMAGE_LOADER', () => {
     expect(url).toBe(`${assetSrc}?h=300&q=70&f=avif&fit=inside&thumbnail`);
   });
 
-  it('supports f=original as a passthrough request', () => {
-    expect(loader()({ src: assetSrc, loaderParams: { f: 'original' } })).toBe(`${assetSrc}?f=original`);
+  it('supports an explicit format as a no-convert resize request', () => {
+    expect(loader()({ src: assetSrc, loaderParams: { w: 400, f: 'jpeg' } })).toBe(`${assetSrc}?w=400&f=jpeg`);
   });
 
   it("lets Angular's per-entry width win over a w in loaderParams", () => {

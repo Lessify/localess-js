@@ -307,6 +307,18 @@ export interface LocalessClient {
   syncScriptUrl(): string;
 
   assetLink(asset: ContentAsset | string, params?: AssetTransformParams): string;
+
+  /**
+   * URL for the stored bytes of an asset, served as an attachment so the browser saves
+   * rather than displays them.
+   *
+   * A non-ASCII asset name is carried in an RFC 5987 `filename*` parameter with an
+   * ASCII-safe fallback, so an asset named in Cyrillic or CJK downloads under its real name.
+   *
+   * Replaces `assetLink(asset, { download: true })`, removed in v4.
+   * @param asset{ContentAsset | string} - Asset object or its uri
+   */
+  assetDownloadLink(asset: ContentAsset | string): string;
 }
 
 const LOG_GROUP = `${FG_BLUE}[Localess:Client]${RESET}`;
@@ -897,6 +909,11 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const base = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${uri}`;
       const qs = buildAssetQueryString(params);
       return qs ? `${base}?${qs}` : base;
+    },
+
+    assetDownloadLink(asset: ContentAsset | string): string {
+      const uri = typeof asset === 'string' ? asset : asset.uri;
+      return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${uri}/download`;
     },
   };
 }

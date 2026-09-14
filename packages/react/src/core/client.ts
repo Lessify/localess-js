@@ -253,3 +253,21 @@ export function resolveAsset(asset: ContentAsset, params?: AssetTransformParams)
   const qs = buildAssetQueryString(params);
   return qs ? `${base}?${qs}` : base;
 }
+
+/**
+ * Resolves a {@link ContentAsset} to the URL for its stored bytes, served as an attachment
+ * so the browser saves rather than displays them.
+ *
+ * Replaces `resolveAsset(asset, { download: true })`, removed in v4.
+ *
+ * @param asset - The asset reference object containing a `uri` field.
+ * @returns The fully qualified download URL string.
+ *
+ * @example
+ * ```tsx
+ * <a href={resolveAssetDownload(data.brochure)} download>Download</a>
+ * ```
+ */
+export function resolveAssetDownload(asset: ContentAsset): string {
+  return `${_assetPathPrefix}${asset.uri}/download`;
+}

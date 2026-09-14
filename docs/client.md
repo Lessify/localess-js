@@ -212,12 +212,31 @@ const url = client.assetLink(content.data.image);
 // With transform params
 const url = client.assetLink(content.data.image, { w: 800, h: 600, f: 'webp', q: 90 });
 
-// Download link
-const url = client.assetLink(content.data.file, { download: true });
-
 // Accepts ContentAsset or raw URI string
 const url = client.assetLink('my-image.png', { w: 400 });
 ```
+
+### `assetDownloadLink(asset)`
+
+The stored bytes as an attachment, so the browser saves rather than displays them. Its own route
+rather than a transform parameter — the response never enters the image pipeline, so it takes no
+`w`/`h`/`q`/`f`/`fit`, and passing one is rejected by the API with a `400`.
+
+```typescript
+const url = client.assetDownloadLink(content.data.file);
+// Returns: https://my-localess.web.app/api/v1/spaces/{spaceId}/assets/{uri}/download
+
+// Accepts a ContentAsset or a raw URI string
+const url = client.assetDownloadLink('brochure.pdf');
+```
+
+**For the stored bytes inline, use `assetLink(asset)` with no params.** Nothing is converted
+implicitly, so a bare asset URL already returns the uploaded file byte-for-byte — there is no
+separate "original" method, because it would build a second URL for identical output.
+
+> **Removed in v4.** `assetLink(asset, { download: true })` and `assetLink(asset, { f: 'original' })`
+> were the old spellings; both are now rejected by the API with a `400`. To resize without
+> converting, name the source format explicitly — `{ w: 400, f: 'jpeg' }`.
 
 ### `syncScriptUrl()`
 
@@ -373,10 +392,12 @@ if (window.localess) {
 |-------------|-----------------------------------------|----------------------------------------------------------------------------------|
 | `w`         | `number`                                | Width in px. With `h` → governed by `fit`. Without → proportional scale.        |
 | `h`         | `number`                                | Height in px. With `w` → governed by `fit`. Without → proportional scale.       |
-| `q`         | `number` (1–100)                        | Output quality for JPEG, WebP, AVIF. Ignored for PNG. Default: 85.              |
-| `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'`  | Convert to this output format.                                                   |
-| `download`  | `boolean`                               | `true` → force browser download (`Content-Disposition: form-data`).             |
+| `q`         | `number` (1–100)                        | Output quality. Omit it and each encoder uses its own default (JPEG/WebP 80, AVIF 50); PNG ignores it. |
+| `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'`  | Convert to this output format. **Nothing converts without it** — recommended for cutting transfer size. |
 | `thumbnail` | `boolean`                               | `true` → extract first frame from animated WebP/GIF or video (via FFmpeg).      |
+
+For the stored bytes as an attachment use [`assetDownloadLink`](#assetdownloadlinkasset); for them
+inline just omit every parameter. `download` and `f: 'original'` were removed in v4.
 
 SVG files are always passed through unchanged — `w`, `h`, `f` are ignored for SVG.
 ### `fit` — controlling the `w`+`h` crop

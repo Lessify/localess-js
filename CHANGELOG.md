@@ -8,6 +8,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Breaking
+
+- **`AssetTransformParams` no longer accepts `download` or `f: 'original'`.**
+
+  `download` became its own route: replace `assetLink(asset, { download: true })` with
+  `assetDownloadLink(asset)`. React: `resolveAssetDownload`. Angular:
+  `LocalessAssetService.downloadLink()`. Astro: `resolveAssetDownload`. It takes **no** transform
+  parameters — the response never enters the image pipeline, and passing one is rejected with a
+  `400`.
+
+  `f: 'original'` simply goes away: **omit every parameter instead.** Nothing is converted
+  implicitly now, so a bare `assetLink(asset)` already returns the uploaded file byte-for-byte.
+  There is deliberately no `assetOriginalLink` — it would build a second URL for identical output.
+  To resize without converting, name the source format explicitly: `{ w: 400, f: 'jpeg' }`
+  replaces `{ w: 400, f: 'original' }`.
+
+  TypeScript consumers get a compile error naming the replacement. JavaScript consumers keep
+  compiling and get a `400` from the API instead, whose message says what to do.
+
+  **Requires a Localess deployment with v4 asset routes.** Against an older self-hosted Localess
+  `assetDownloadLink` returns `404`, because that route does not exist yet. Upgrade the platform
+  and the SDK together.
+
 ### Changed — asset delivery behaviour (action may be required)
 
 > These are **platform-side** changes to the `/api/v1/spaces/:spaceId/assets/:assetId` endpoint.
@@ -15,14 +38,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 > the platform ships them. Listed here because `assetUrl()` callers see the difference without
 > touching their code.
 
-- **`image/jpeg` sources now return WebP by default** — including URLs built with no transform
-  parameters at all. A bare `assetUrl(asset)` on a JPEG responds with `Content-Type: image/webp`
-  instead of `image/jpeg`, typically 25–35% smaller.
+- **No format is converted implicitly.** `f` is the only thing that changes an image's format — a
+  URL built without it returns the format that was uploaded, and never puts the API through a
+  decode and re-encode.
 
-  All other source types are unaffected: PNG, GIF, animated WebP, SVG and video keep their stored
-  format. **If a consumer cannot render WebP** — Outlook and some email clients, Safari below 14, a
-  few link/OG crawlers — pass `f: 'jpeg'` to get a compressed JPEG, or `f: 'original'` for the
-  stored bytes.
+  **Passing `f` is the recommended way to cut transfer size**: `f: 'webp'` is typically 25–35%
+  smaller than the equivalent JPEG, and `f: 'avif'` usually smaller again. It is opt-in rather than
+  imposed because a format change is the developer's call.
+
+  A resize without `f` re-encodes in the *source* format — `{ w: 400 }` on a JPEG returns a 400 px
+  JPEG. The size changes, the format does not.
+
+- **`q` is no longer defaulted to 80.** Omit it and each encoder applies its own calibrated
+  default: JPEG and WebP 80, AVIF 50, PNG lossless. An explicit `q` always wins.
+
+  A quality number is not portable between codecs — AVIF is quantizer-based and sits on a different
+  perceptual curve, so 50 there is roughly what 80 is for JPEG. Forcing 80 onto every encoder made
+  `f: 'avif'` produce files several times larger than its own default, and larger than the
+  equivalent WebP. **If you pass `q` explicitly alongside `f: 'avif'`, re-check the value** — 80
+  there is a much higher quality setting than 80 for JPEG.
 
 - **`w` and `h` above the source size now redirect instead of being silently clamped**, and are
   bounded to 1–8192. `?w=5000` on a 400 px asset responds `302` to `?w=400`; a value outside 1–8192

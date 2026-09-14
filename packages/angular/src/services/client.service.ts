@@ -45,4 +45,8 @@ export class LocalessClientService {
   assetLink(asset: ContentAsset | string, params?: AssetTransformParams): string {
     return this.client.assetLink(asset, params);
   }
+
+  assetDownloadLink(asset: ContentAsset | string): string {
+    return this.client.assetDownloadLink(asset);
+  }
 }

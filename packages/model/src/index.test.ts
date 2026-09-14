@@ -153,18 +153,18 @@ describe('@localess/model shapes', () => {
     expect(params.f).toBe('webp');
   });
 
-  it('AssetTransformParams accepts every output format, including the original passthrough', () => {
-    const formats: NonNullable<AssetTransformParams['f']>[] = ['webp', 'jpeg', 'png', 'avif', 'original'];
-    const params: AssetTransformParams = { f: 'original' };
+  it('AssetTransformParams accepts every output format', () => {
+    const formats: NonNullable<AssetTransformParams['f']>[] = ['webp', 'jpeg', 'png', 'avif'];
+    const params: AssetTransformParams = { f: 'avif' };
 
-    expect(params.f).toBe('original');
-    expect(formats).toHaveLength(5);
+    expect(params.f).toBe('avif');
+    expect(formats).toHaveLength(4);
   });
 
-  it('AssetTransformParams allows original alongside a resize, to scale without converting', () => {
-    const params: AssetTransformParams = { w: 200, f: 'original' };
+  it('AssetTransformParams pairs a resize with an explicit format, to scale without converting', () => {
+    const params: AssetTransformParams = { w: 200, f: 'jpeg' };
 
-    expect(params).toEqual({ w: 200, f: 'original' });
+    expect(params).toEqual({ w: 200, f: 'jpeg' });
   });
 
   it('AssetTransformParams accepts every fit mode', () => {

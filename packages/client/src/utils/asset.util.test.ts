@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { AssetTransformParams } from '../models';
 import { buildAssetQueryString } from './asset.util';
 
 describe('buildAssetQueryString', () => {
@@ -27,17 +28,16 @@ describe('buildAssetQueryString', () => {
     expect(buildAssetQueryString({ f: 'webp' })).toBe('f=webp');
   });
 
-  // These two params are presence flags in the Localess API, not values: `?download` with no
-  // value is the canonical form and is what the Localess UI links to. Emitting `=true` would also
-  // be accepted by the API, but it is not the form to standardise on.
-  it('serialises download as a valueless flag', () => {
-    expect(buildAssetQueryString({ download: true })).toBe('download');
+  // `download` was removed from the type in v4 — it is now the `/download` route. JavaScript
+  // consumers can still pass it at runtime, so pin that it does not leak into the query string.
+  // A stray `?download` would be rejected by the API with a 400 that is cached for an hour.
+  it('ignores a runtime download flag', () => {
+    expect(buildAssetQueryString({ download: true } as unknown as AssetTransformParams)).toBe('');
   });
 
-  it('omits download when false', () => {
-    expect(buildAssetQueryString({ download: false })).toBe('');
-  });
-
+  // `thumbnail` is a presence flag in the Localess API, not a value: `?thumbnail` with no value
+  // is the canonical form and is what the Localess UI links to. Emitting `=true` would also be
+  // accepted by the API, but it is not the form to standardise on.
   it('serialises thumbnail as a valueless flag', () => {
     expect(buildAssetQueryString({ thumbnail: true })).toBe('thumbnail');
   });
@@ -47,9 +47,7 @@ describe('buildAssetQueryString', () => {
   });
 
   it('serialises all params combined in correct order', () => {
-    expect(buildAssetQueryString({ w: 800, h: 600, q: 90, f: 'webp', download: true, thumbnail: true })).toBe(
-      'w=800&h=600&q=90&f=webp&download&thumbnail'
-    );
+    expect(buildAssetQueryString({ w: 800, h: 600, q: 90, f: 'webp', thumbnail: true })).toBe('w=800&h=600&q=90&f=webp&thumbnail');
   });
 
   it('omits undefined params', () => {
@@ -71,8 +69,8 @@ describe('buildAssetQueryString — fit', () => {
   });
 
   it('places fit after f and before the flags', () => {
-    expect(buildAssetQueryString({ w: 400, h: 300, q: 80, f: 'webp', fit: 'inside', download: true, thumbnail: true })).toBe(
-      'w=400&h=300&q=80&f=webp&fit=inside&download&thumbnail'
+    expect(buildAssetQueryString({ w: 400, h: 300, q: 80, f: 'webp', fit: 'inside', thumbnail: true })).toBe(
+      'w=400&h=300&q=80&f=webp&fit=inside&thumbnail'
     );
   });
 });
@@ -90,8 +88,8 @@ describe('buildAssetQueryString — encoding and back-compat', () => {
     expect(buildAssetQueryString({ w: 1200, f: 'jpeg', fit: 'outside' })).toBe('w=1200&f=jpeg&fit=outside');
   });
 
-  it('keeps the boolean flags valueless', () => {
-    expect(buildAssetQueryString({ download: true, thumbnail: true })).toBe('download&thumbnail');
+  it('keeps the thumbnail flag valueless', () => {
+    expect(buildAssetQueryString({ thumbnail: true })).toBe('thumbnail');
   });
 });
 
@@ -194,9 +192,7 @@ describe('buildAssetQueryString — rejects values the API would 400 on', () => 
     });
 
     it('leaves a fully valid query unchanged', () => {
-      expect(buildAssetQueryString({ w: 800, h: 600, q: 90, f: 'webp', fit: 'inside', download: true })).toBe(
-        'w=800&h=600&q=90&f=webp&fit=inside&download'
-      );
+      expect(buildAssetQueryString({ w: 800, h: 600, q: 90, f: 'webp', fit: 'inside' })).toBe('w=800&h=600&q=90&f=webp&fit=inside');
     });
   });
 });

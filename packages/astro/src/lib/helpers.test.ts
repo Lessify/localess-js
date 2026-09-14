@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { getLivePayload, getLocalessClient, resolveAsset } from './helpers';
+import { getLivePayload, getLocalessClient, resolveAsset, resolveAssetDownload } from './helpers';
 
 describe('getLocalessClient', () => {
   afterEach(() => {
@@ -50,5 +50,22 @@ describe('resolveAsset', () => {
 
     expect(assetLink).toHaveBeenCalledWith(asset, { w: 200 });
     expect(url).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/logo.png?w=200');
+  });
+});
+
+describe('resolveAssetDownload', () => {
+  afterEach(() => {
+    delete (globalThis as any).localessClientInstance;
+  });
+
+  it("delegates to the client's assetDownloadLink method", () => {
+    const assetDownloadLink = vi.fn().mockReturnValue('https://cms.example.com/api/v1/spaces/space-1/assets/logo.png/download');
+    (globalThis as any).localessClientInstance = { assetDownloadLink };
+
+    const asset = { kind: 'ASSET' as const, uri: 'logo.png' };
+    const url = resolveAssetDownload(asset);
+
+    expect(assetDownloadLink).toHaveBeenCalledWith(asset);
+    expect(url).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/logo.png/download');
   });
 });

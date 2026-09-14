@@ -58,6 +58,15 @@ describe('client', () => {
     );
   });
 
+  it('resolveAssetDownload builds the attachment URL with no query string', async () => {
+    const state = await import('./client');
+    state.localessInit(baseOptions);
+
+    expect(state.resolveAssetDownload({ kind: 'ASSET', uri: 'images/logo.png' } as any)).toBe(
+      'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download'
+    );
+  });
+
   it('localessInit populates the component registry, and a later call replaces it entirely', async () => {
     const state = await import('./client');
     const ComponentA = () => null;

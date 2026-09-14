@@ -69,10 +69,9 @@ export function buildAssetQueryString(params?: AssetTransformParams): string {
     parts.push(`h=${encode(params.h)}`);
   }
   if (params.q !== undefined) {
-    // The API clamps an out-of-range quality rather than rejecting it, so `q: 150` would
-    // "work" as 100. It is still rejected here: silently honouring a value the documented
-    // range excludes hides a caller bug, and 150 far more often means a mistake than a
-    // request for maximum quality.
+    // The API rejects an out-of-range quality with a 400 that is cached for an hour. Rejecting it
+    // here too turns that cached production failure into a stack trace at the call site, and `150`
+    // far more often means a caller bug than a request for maximum quality.
     assertNumeric('q', params.q, 1, 100);
     parts.push(`q=${encode(params.q)}`);
   }
@@ -80,7 +79,6 @@ export function buildAssetQueryString(params?: AssetTransformParams): string {
   if (params.fit !== undefined) parts.push(`fit=${encode(params.fit)}`);
   // Valueless flags are deliberate: the API treats these as presence flags, not values, and this
   // is the canonical form the Localess UI itself links to. Do not "fix" these to `=true`.
-  if (params.download) parts.push('download');
   if (params.thumbnail) parts.push('thumbnail');
   return parts.join('&');
 }

@@ -82,9 +82,16 @@ export class PageComponent {
 ```typescript
 import { LocalessAssetService, LocalessClientService, LocalessTranslationService } from '@localess/angular';
 // assetService.link(asset | path, params?) → string
+// assetService.downloadLink(asset | path) → string — stored bytes, attachment, no transform
 // translationService.fetch('en', params?) → Promise<Translations>
 // clientService.getContentBySlug / getContentById / getLinks / getTranslations / assetLink — raw localessClient() calls, no TransferState
 ```
+
+`downloadLink` takes no transform params — the response never enters the image pipeline, and a
+transform parameter on that route is rejected by the API with a `400`. It replaces
+`link(asset, { download: true })`, removed in v4. For the stored bytes **inline**, call
+`link(asset)` with no params: nothing is converted implicitly, so a bare asset URL already returns
+the uploaded file byte-for-byte.
 
 `LocalessClientService` is the single place the package calls `localessClient()`; the other services delegate to it. Prefer `LocalessContentService` for content so SSR hydration applies.
 

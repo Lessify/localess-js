@@ -47,6 +47,21 @@ export function resolveAsset(asset: ContentAsset, params?: AssetTransformParams)
   return getLocalessClient().assetLink(asset, params);
 }
 
+/**
+ * Resolves a {@link ContentAsset} to the URL for its stored bytes, served as an attachment,
+ * delegating to the initialized client's `assetDownloadLink` method.
+ *
+ * Replaces `resolveAsset(asset, { download: true })`, removed in v4.
+ *
+ * @example
+ * ```astro
+ * <a href={resolveAssetDownload(data.brochure)} download>Download</a>
+ * ```
+ */
+export function resolveAssetDownload(asset: ContentAsset): string {
+  return getLocalessClient().assetDownloadLink(asset);
+}
+
 declare global {
   var localessClientInstance: LocalessClient | undefined;
 }

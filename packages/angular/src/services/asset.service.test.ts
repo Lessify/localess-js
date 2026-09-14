@@ -32,4 +32,16 @@ describe('LocalessAssetService', () => {
       'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png?w=800&h=600'
     );
   });
+
+  it('builds a download URL', () => {
+    const service = createService();
+    expect(service.downloadLink('images/logo.png')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download');
+  });
+
+  it('accepts a ContentAsset object on the download helper', () => {
+    const service = createService();
+    const asset = { kind: 'ASSET', uri: 'images/logo.png' } as never;
+
+    expect(service.downloadLink(asset)).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download');
+  });
 });

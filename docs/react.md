@@ -563,6 +563,23 @@ const thumb    = resolveAsset(data.video, { w: 400, thumbnail: true });
 
 See `AssetTransformParams` table in [docs/client.md](client.md#asset-transform-parameters).
 
+### `resolveAssetDownload(asset)`
+
+The stored bytes as an attachment. Takes no params: the response never enters the image pipeline,
+and a transform parameter on that route is rejected by the API with a `400`.
+
+```typescript
+import { resolveAssetDownload } from "@localess/react";
+const saveFile = resolveAssetDownload(data.brochure);
+```
+
+**For the stored bytes inline, use `resolveAsset(asset)` with no params** — nothing is converted
+implicitly, so a bare asset URL already returns the uploaded file byte-for-byte.
+
+> **Removed in v4.** `resolveAsset(asset, { download: true })` and
+> `resolveAsset(asset, { f: 'original' })` were the old spellings; both are now rejected with a
+> `400`. To resize without converting, name the source format — `{ w: 400, f: 'jpeg' }`.
+
 ### Rich Text — `<LocalessRichText>` and `renderRichText(content, options?)`
 
 Renders Localess `ContentRichText` (Tiptap JSON) to a native React node tree — no TipTap at runtime, safe in SPA, SSR, and RSC. Built on `@localess/richtext` (see [docs/richtext.md](richtext.md)).

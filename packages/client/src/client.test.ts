@@ -532,6 +532,27 @@ describe('localessClient', () => {
     });
   });
 
+  describe('assetDownloadLink', () => {
+    it('builds a link from an asset URI string', () => {
+      const client = localessClient(baseOptions);
+      expect(client.assetDownloadLink('images/logo.png')).toBe(
+        'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download'
+      );
+    });
+
+    it('builds a link from a ContentAsset object', () => {
+      const client = localessClient(baseOptions);
+      expect(client.assetDownloadLink({ kind: 'ASSET', uri: 'images/logo.png' })).toBe(
+        'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download'
+      );
+    });
+
+    it('appends no query string', () => {
+      const client = localessClient(baseOptions);
+      expect(client.assetDownloadLink('images/logo.png')).not.toContain('?');
+    });
+  });
+
   it('logs debug information when debug is enabled', async () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     (fetch as any).mockResolvedValue(jsonResponse({}));
