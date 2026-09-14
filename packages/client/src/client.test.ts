@@ -532,6 +532,27 @@ describe('localessClient', () => {
     });
   });
 
+  describe('assetOriginalLink', () => {
+    it('builds a link from an asset URI string', () => {
+      const client = localessClient(baseOptions);
+      expect(client.assetOriginalLink('images/logo.png')).toBe(
+        'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/original'
+      );
+    });
+
+    it('builds a link from a ContentAsset object', () => {
+      const client = localessClient(baseOptions);
+      expect(client.assetOriginalLink({ kind: 'ASSET', uri: 'images/logo.png' })).toBe(
+        'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/original'
+      );
+    });
+
+    it('differs from assetLink, which returns a re-encoded rendition', () => {
+      const client = localessClient(baseOptions);
+      expect(client.assetOriginalLink('images/logo.png')).not.toBe(client.assetLink('images/logo.png'));
+    });
+  });
+
   describe('assetDownloadLink', () => {
     it('builds a link from an asset URI string', () => {
       const client = localessClient(baseOptions);

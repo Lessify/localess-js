@@ -1,4 +1,4 @@
-export { getLivePayload, getLocalessClient, resolveAsset, resolveAssetDownload } from './lib/helpers';
+export { getLivePayload, getLocalessClient, resolveAsset, resolveAssetDownload, resolveAssetOriginal } from './lib/helpers';
 export { localess, localessIntegration } from './lib/localess-integration';
 export { handleLocalessMessage } from './live-preview/handle-localess-message';
 export * from './models';

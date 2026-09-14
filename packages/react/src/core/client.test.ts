@@ -58,6 +58,15 @@ describe('client', () => {
     );
   });
 
+  it('resolveAssetOriginal builds the passthrough URL with no query string', async () => {
+    const state = await import('./client');
+    state.localessInit(baseOptions);
+
+    expect(state.resolveAssetOriginal({ kind: 'ASSET', uri: 'images/logo.png' } as any)).toBe(
+      'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/original'
+    );
+  });
+
   it('resolveAssetDownload builds the attachment URL with no query string', async () => {
     const state = await import('./client');
     state.localessInit(baseOptions);

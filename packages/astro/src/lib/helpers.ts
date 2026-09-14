@@ -48,6 +48,22 @@ export function resolveAsset(asset: ContentAsset, params?: AssetTransformParams)
 }
 
 /**
+ * Resolves a {@link ContentAsset} to the URL for its stored bytes exactly as uploaded, served
+ * inline, delegating to the initialized client's `assetOriginalLink` method.
+ *
+ * `resolveAsset` does **not** return these — a still raster is re-encoded at its format's default
+ * quality even with no parameters, so a bare asset URL is a rendition. Takes no transform params.
+ *
+ * @example
+ * ```astro
+ * <a href={resolveAssetOriginal(data.heroImage)}>View the original file</a>
+ * ```
+ */
+export function resolveAssetOriginal(asset: ContentAsset): string {
+  return getLocalessClient().assetOriginalLink(asset);
+}
+
+/**
  * Resolves a {@link ContentAsset} to the URL for its stored bytes, served as an attachment,
  * delegating to the initialized client's `assetDownloadLink` method.
  *

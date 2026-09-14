@@ -216,7 +216,7 @@ const url = client.assetLink(content.data.image, { w: 800, h: 600, f: 'webp', q:
 const url = client.assetLink('my-image.png', { w: 400 });
 ```
 
-### `assetDownloadLink(asset)`
+### `assetOriginalLink(asset)` / `assetDownloadLink(asset)`
 
 The stored bytes as an attachment, so the browser saves rather than displays them. Its own route
 rather than a transform parameter — the response never enters the image pipeline, so it takes no
@@ -230,9 +230,15 @@ const url = client.assetDownloadLink(content.data.file);
 const url = client.assetDownloadLink('brochure.pdf');
 ```
 
-**For the stored bytes inline, use `assetLink(asset)` with no params.** Nothing is converted
-implicitly, so a bare asset URL already returns the uploaded file byte-for-byte — there is no
-separate "original" method, because it would build a second URL for identical output.
+```typescript
+const url = client.assetOriginalLink(content.data.image);
+// Returns: https://my-localess.web.app/api/v1/spaces/{spaceId}/assets/{uri}/original
+```
+
+**`assetLink(asset)` does not return the uploaded file.** A still raster is re-encoded at its
+format's default quality even with no params, so a bare asset URL is a *rendition* — a q95 camera
+export measured 587 KB and came back 219 KB. `assetOriginalLink` is the only way to get the
+uploaded bytes.
 
 > **Removed in v4.** `assetLink(asset, { download: true })` and `assetLink(asset, { f: 'original' })`
 > were the old spellings; both are now rejected by the API with a `400`. To resize without
@@ -396,8 +402,9 @@ if (window.localess) {
 | `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'`  | Convert to this output format. **Nothing converts without it** — recommended for cutting transfer size. |
 | `thumbnail` | `boolean`                               | `true` → extract first frame from animated WebP/GIF or video (via FFmpeg).      |
 
-For the stored bytes as an attachment use [`assetDownloadLink`](#assetdownloadlinkasset); for them
-inline just omit every parameter. `download` and `f: 'original'` were removed in v4.
+Omitting every parameter still re-encodes a still raster at its format's default quality. For the
+uploaded bytes use `assetOriginalLink`, or `assetDownloadLink` to force a save. `download` and
+`f: 'original'` were removed in v4.
 
 SVG files are always passed through unchanged — `w`, `h`, `f` are ignored for SVG.
 ### `fit` — controlling the `w`+`h` crop

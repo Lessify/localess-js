@@ -18,11 +18,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   parameters — the response never enters the image pipeline, and passing one is rejected with a
   `400`.
 
-  `f: 'original'` simply goes away: **omit every parameter instead.** Nothing is converted
-  implicitly now, so a bare `assetLink(asset)` already returns the uploaded file byte-for-byte.
-  There is deliberately no `assetOriginalLink` — it would build a second URL for identical output.
+  `f: 'original'` also became a route: replace `assetLink(asset, { f: 'original' })` with
+  `assetOriginalLink(asset)`. React: `resolveAssetOriginal`. Angular:
+  `LocalessAssetService.originalLink()`. Astro: `resolveAssetOriginal`.
+
   To resize without converting, name the source format explicitly: `{ w: 400, f: 'jpeg' }`
   replaces `{ w: 400, f: 'original' }`.
+
+- **`assetLink(asset)` no longer returns the uploaded file.** A still raster is re-encoded at its
+  format's default quality even with no transform parameters — JPEG and WebP at 80, AVIF at 50,
+  PNG lossless. A q95 camera export measured 587 KB and came back 219 KB, a 63% saving with no
+  format change. Quality is normalised by the platform; format still only changes when you pass
+  `f`. GIF, SVG, video and animations are served as stored.
+
+  If you were relying on a bare asset URL for the exact uploaded bytes — archival, print,
+  downstream processing — switch to `assetOriginalLink`.
 
   TypeScript consumers get a compile error naming the replacement. JavaScript consumers keep
   compiling and get a `400` from the API instead, whose message says what to do.

@@ -309,6 +309,19 @@ export interface LocalessClient {
   assetLink(asset: ContentAsset | string, params?: AssetTransformParams): string;
 
   /**
+   * URL for the stored bytes of an asset exactly as uploaded, served inline.
+   *
+   * {@link LocalessClient.assetLink} does **not** return these: a still raster is re-encoded at
+   * its format's default quality even with no transform parameters, so a bare asset URL is a
+   * rendition. This is the only way to retrieve the original file — archival, print, downstream
+   * processing.
+   *
+   * Takes no transform parameters; passing one is rejected by the API with a `400`.
+   * @param asset{ContentAsset | string} - Asset object or its uri
+   */
+  assetOriginalLink(asset: ContentAsset | string): string;
+
+  /**
    * URL for the stored bytes of an asset, served as an attachment so the browser saves
    * rather than displays them.
    *
@@ -909,6 +922,11 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       const base = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${uri}`;
       const qs = buildAssetQueryString(params);
       return qs ? `${base}?${qs}` : base;
+    },
+
+    assetOriginalLink(asset: ContentAsset | string): string {
+      const uri = typeof asset === 'string' ? asset : asset.uri;
+      return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${uri}/original`;
     },
 
     assetDownloadLink(asset: ContentAsset | string): string {

@@ -82,16 +82,18 @@ export class PageComponent {
 ```typescript
 import { LocalessAssetService, LocalessClientService, LocalessTranslationService } from '@localess/angular';
 // assetService.link(asset | path, params?) → string
-// assetService.downloadLink(asset | path) → string — stored bytes, attachment, no transform
+// assetService.originalLink(asset | path) → string — uploaded bytes, inline, no transform
+// assetService.downloadLink(asset | path) → string — uploaded bytes, attachment, no transform
 // translationService.fetch('en', params?) → Promise<Translations>
 // clientService.getContentBySlug / getContentById / getLinks / getTranslations / assetLink — raw localessClient() calls, no TransferState
 ```
 
-`downloadLink` takes no transform params — the response never enters the image pipeline, and a
-transform parameter on that route is rejected by the API with a `400`. It replaces
-`link(asset, { download: true })`, removed in v4. For the stored bytes **inline**, call
-`link(asset)` with no params: nothing is converted implicitly, so a bare asset URL already returns
-the uploaded file byte-for-byte.
+`originalLink` and `downloadLink` take no transform params — neither enters the image pipeline, and
+a transform parameter on either route is rejected by the API with a `400`.
+
+**`link(asset)` does not return the uploaded file.** A still raster is re-encoded at its format's
+default quality even with no params, so a bare asset URL is a *rendition* — a q95 camera export
+measured 587 KB and came back 219 KB. `originalLink` is the only way to get the uploaded bytes.
 
 `LocalessClientService` is the single place the package calls `localessClient()`; the other services delegate to it. Prefer `LocalessContentService` for content so SSR hydration applies.
 

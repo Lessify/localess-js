@@ -255,6 +255,26 @@ export function resolveAsset(asset: ContentAsset, params?: AssetTransformParams)
 }
 
 /**
+ * Resolves a {@link ContentAsset} to the URL for its stored bytes exactly as uploaded, served
+ * inline.
+ *
+ * `resolveAsset` does **not** return these — a still raster is re-encoded at its format's default
+ * quality even with no parameters, so a bare asset URL is a rendition. This is the only way to
+ * retrieve the original file. Takes no transform params.
+ *
+ * @param asset - The asset reference object containing a `uri` field.
+ * @returns The fully qualified passthrough URL string.
+ *
+ * @example
+ * ```tsx
+ * <a href={resolveAssetOriginal(data.heroImage)}>View the original file</a>
+ * ```
+ */
+export function resolveAssetOriginal(asset: ContentAsset): string {
+  return `${_assetPathPrefix}${asset.uri}/original`;
+}
+
+/**
  * Resolves a {@link ContentAsset} to the URL for its stored bytes, served as an attachment
  * so the browser saves rather than displays them.
  *

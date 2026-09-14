@@ -5,16 +5,20 @@
  * ## Nothing is converted implicitly
  *
  * **`f` is the only thing that changes an image's format.** A URL built without it returns
- * the format that was uploaded, so a bare `assetLink(asset)` never puts the API through a
- * decode and re-encode at all.
+ * the format that was uploaded.
  *
  * **Passing `f` is the recommended way to cut transfer size** — `f: 'webp'` is typically
  * 25–35% smaller than the equivalent JPEG, and `f: 'avif'` usually smaller again. It is
  * opt-in rather than imposed because a format change is the developer's call.
  *
- * For the stored bytes untouched, build the URL with **no parameters at all** — a bare
- * `assetLink(asset)` already returns the uploaded file byte-for-byte. To force a browser
- * download instead of displaying it, use `assetDownloadLink`.
+ * ## Quality is normalised, though
+ *
+ * A still raster is **re-encoded at its format's default quality even with no parameters**, so a
+ * bare `assetLink(asset)` returns a *rendition*, not the uploaded file — a q95 camera export
+ * measured 587 KB and came back 219 KB. Animations, GIF, SVG and video are served as stored.
+ *
+ * For the uploaded bytes untouched use `assetOriginalLink`; to force a browser download instead
+ * of displaying it, use `assetDownloadLink`.
  *
  * @see https://docs.localess.io (Localess API — Asset Query Parameters)
  */
@@ -89,13 +93,13 @@ export type AssetTransformParams = {
    *
    * A resize without `f` re-encodes in the *source* format, so `{ w: 400 }` on a JPEG returns a
    * 400 px JPEG — the size changes, the format does not. For the stored bytes with no re-encode
-   * at all, pass no parameters.
+   * at all, use `assetOriginalLink`.
    *
    * Requesting a *lossless* format the source already is (`f: 'png'` on a PNG) is served as
    * a passthrough, since the re-encode would produce equivalent bytes.
    *
    * An unrecognised value is rejected by the API with `400`. `f: 'original'` was removed in
-   * v4 and is now rejected — omit the parameter instead.
+   * v4 and is now rejected — use `assetOriginalLink`.
    */
   f?: 'webp' | 'jpeg' | 'png' | 'avif';
   /**

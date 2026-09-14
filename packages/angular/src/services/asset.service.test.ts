@@ -33,6 +33,11 @@ describe('LocalessAssetService', () => {
     );
   });
 
+  it('builds an original passthrough URL', () => {
+    const service = createService();
+    expect(service.originalLink('images/logo.png')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/original');
+  });
+
   it('builds a download URL', () => {
     const service = createService();
     expect(service.downloadLink('images/logo.png')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download');
