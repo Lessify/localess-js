@@ -49,12 +49,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 > touching their code.
 
 - **No format is converted implicitly.** `f` is the only thing that changes an image's format — a
-  URL built without it returns the format that was uploaded, and never puts the API through a
-  decode and re-encode.
+  URL built without it returns the format that was uploaded. (It is still re-encoded at that
+  format's default quality; see the next entry.)
 
-  **Passing `f` is the recommended way to cut transfer size**: `f: 'webp'` is typically 25–35%
-  smaller than the equivalent JPEG, and `f: 'avif'` usually smaller again. It is opt-in rather than
-  imposed because a format change is the developer's call.
+  **Passing `f` is how you cut transfer size**, opt-in rather than imposed because a format change
+  is the developer's call. How much it saves is **content-dependent**: measured against mozjpeg
+  JPEG at the same default quality, a smooth photographic source gave `f: 'webp'` −20% and
+  `f: 'avif'` −63%, while a grainy one gave `f: 'webp'` **+84%** and `f: 'avif'` −37%.
+
+  So `f: 'avif'` is consistently smaller, at roughly 2.5× the encode time, while **`f: 'webp'` can
+  be larger than the JPEG it replaces** on noisy or textured content. Do not assume the usual
+  "WebP is 25–35% smaller" figure holds for your assets.
 
   A resize without `f` re-encodes in the *source* format — `{ w: 400 }` on a JPEG returns a 400 px
   JPEG. The size changes, the format does not.

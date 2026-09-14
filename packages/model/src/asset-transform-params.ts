@@ -7,9 +7,15 @@
  * **`f` is the only thing that changes an image's format.** A URL built without it returns
  * the format that was uploaded.
  *
- * **Passing `f` is the recommended way to cut transfer size** — `f: 'webp'` is typically
- * 25–35% smaller than the equivalent JPEG, and `f: 'avif'` usually smaller again. It is
- * opt-in rather than imposed because a format change is the developer's call.
+ * **Passing `f` is how you cut transfer size**, opt-in rather than imposed because a format
+ * change is the developer's call. How much it saves is **content-dependent**, and more so since
+ * JPEG output uses mozjpeg. Measured against mozjpeg JPEG at the same default quality:
+ * a smooth photographic source gave `webp` −20% and `avif` −63%; a grainy one gave `webp`
+ * **+84%** and `avif` −37%.
+ *
+ * So `avif` is consistently smaller (at ~2.5x the encode time), while **`webp` can be larger
+ * than the JPEG it replaces** on noisy or textured content. Measure your own assets rather than
+ * assuming the usual "WebP is 25–35% smaller" figure holds.
  *
  * ## Quality is normalised, though
  *
@@ -86,8 +92,9 @@ export type AssetTransformParams = {
    * Output format. Converts the image to the specified format.
    *
    * **Nothing is converted without this parameter** — omit it and the stored format is kept.
-   * Passing it is the recommended way to cut transfer size: `webp` is typically 25–35% smaller
-   * than the equivalent JPEG, and `avif` usually smaller again.
+   * Passing it is how you cut transfer size, but how much depends on the content: `avif` is
+   * consistently smaller, while `webp` can be *larger* than the mozjpeg JPEG it replaces on
+   * grainy sources. See the type-level docs above for measurements.
    *
    * Every value **encodes**: `f: 'jpeg'` on a JPEG source still re-encodes, at `q`.
    *
