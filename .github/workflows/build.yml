@@ -34,6 +34,12 @@ jobs:
       - name: Build all packages
         run: npm run build
 
+      # Inspects the tarballs npm would actually upload. The manifest checks above read
+      # package.json; this reads what ships, which is how @localess/angular went out as raw
+      # TypeScript with no entry points and still passed everything else.
+      - name: Pack smoke test
+        run: node scripts/pack-smoke-test.mjs
+
       # Runs the same suites as `npm test` and additionally enforces the coverage thresholds.
       - name: Test all packages with coverage thresholds
         run: npm run test:coverage

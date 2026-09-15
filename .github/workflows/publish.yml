@@ -75,6 +75,12 @@ jobs:
       - name: Verify publish manifests
         run: node scripts/verify-publish-manifests.mjs
 
+      # Inspects the tarballs npm would actually upload. The manifest checks above read
+      # package.json; this reads what ships, which is how @localess/angular went out as raw
+      # TypeScript with no entry points and still passed everything else.
+      - name: Pack smoke test
+        run: node scripts/pack-smoke-test.mjs
+
       - name: Publish all packages to npm
         run: |
           # Dependency order, not alphabetical: a dependent must never reach the registry before
@@ -149,6 +155,12 @@ jobs:
 
       - name: Verify publish manifests
         run: node scripts/verify-publish-manifests.mjs "$VERSION"
+
+      # Inspects the tarballs npm would actually upload. The manifest checks above read
+      # package.json; this reads what ships, which is how @localess/angular went out as raw
+      # TypeScript with no entry points and still passed everything else.
+      - name: Pack smoke test
+        run: node scripts/pack-smoke-test.mjs
 
       - name: Publish all packages to npm with tag 'dev'
         run: |
