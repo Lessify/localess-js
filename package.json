@@ -7,6 +7,20 @@
     "packages/*",
     "playgrounds/*"
   ],
+  "publishOrder": [
+    "packages/model",
+    "packages/live-preview",
+    "packages/richtext",
+    "packages/client",
+    "packages/schema",
+    "packages/react",
+    "packages/vue",
+    "packages/svelte",
+    "packages/cli",
+    "packages/angular",
+    "packages/astro",
+    "packages/nuxt"
+  ],
   "scripts": {
     "build": "npm run build:model && npm run build:live-preview && npm run build:richtext && npm run build:client && npm run build:schema && npm run build:react && npm run build:vue && npm run build:svelte && npm run build:cli && npm run build:angular && npm run build:astro && npm run build:nuxt",
     "build:angular": "npm run build --workspace=@localess/angular",
