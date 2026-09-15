@@ -4,6 +4,7 @@
     "entryFile": "src/public-api.ts"
   },
   "dest": "dist",
+  "assets": ["./SKILL.md"],
   "allowedNonPeerDependencies": [
     "@localess/*"
   ]

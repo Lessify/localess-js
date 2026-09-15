@@ -48,9 +48,22 @@ jobs:
       - name: Publish all packages to npm
         run: |
           for pkgdir in packages/*/; do
-            if ! grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
-              npm publish --access public --provenance --ignore-scripts --workspace "$pkgdir"
+            if grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
+              continue
             fi
+
+            # ng-packagr libraries are published from their build output: the generated
+            # manifest there carries `module`, `typings` and `exports`, which the source
+            # package.json does not. Publishing the source directory yields a tarball with no
+            # entry points at all, which cannot be imported.
+            publishdir="$pkgdir"
+            if [ -f "${pkgdir}ng-package.json" ]; then
+              dest=$(jq -r '.dest // "dist"' "${pkgdir}ng-package.json")
+              publishdir="${pkgdir}${dest#./}"
+            fi
+
+            echo "Publishing $pkgdir from $publishdir"
+            ( cd "$publishdir" && npm publish --access public --provenance --ignore-scripts )
           done
         shell: bash
 
@@ -95,17 +108,21 @@ jobs:
       - name: Publish all packages to npm with tag 'dev'
         run: |
           for pkgdir in packages/*/; do
-            if ! grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
-              echo "Navigating to $pkgdir to publish..."
-
-              # Step into the package directory
-              cd "$pkgdir"
-
-              # Publish locally from inside the package directory
-              npm publish --tag dev --access public --provenance --ignore-scripts
-
-              # Step back out to the root for the next iteration
-              cd - > /dev/null
+            if grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
+              continue
             fi
+
+            # ng-packagr libraries are published from their build output: the generated
+            # manifest there carries `module`, `typings` and `exports`, which the source
+            # package.json does not. Publishing the source directory yields a tarball with no
+            # entry points at all, which cannot be imported.
+            publishdir="$pkgdir"
+            if [ -f "${pkgdir}ng-package.json" ]; then
+              dest=$(jq -r '.dest // "dist"' "${pkgdir}ng-package.json")
+              publishdir="${pkgdir}${dest#./}"
+            fi
+
+            echo "Publishing $pkgdir from $publishdir"
+            ( cd "$publishdir" && npm publish --tag dev --access public --provenance --ignore-scripts )
           done
         shell: bash
