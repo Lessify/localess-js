@@ -222,6 +222,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- **`@localess/react`** — `resolveAssetOriginal` and `resolveAssetDownload` are now exported from
+  `@localess/react/ssr` and `@localess/react/rsc`, not only from the default export. `src/ssr/index.ts`
+  re-exports from `../core/client` with an explicit named list that predated both functions, and
+  `/rsc` re-exports `/ssr`, so the gap covered both.
+
+  This mattered because the `download` transform parameter was removed in the same release: an SSR or
+  App Router app had the old API gone and the replacement unreachable, leaving no way at all to build
+  a download or original-bytes link from the entry point Next.js uses.
+
 - **`@localess/angular`** — the `src` attribute of an `ngSrc` image no longer points at the
   untransformed original. Angular builds that attribute by calling the loader with **no width** (see
   `getRewrittenSrc`), for every image rather than only `fill` ones, and the old loader fell through
