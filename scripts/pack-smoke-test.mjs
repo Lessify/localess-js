@@ -52,6 +52,26 @@ function normalize(target) {
   return target.replace(/^\.\//, '');
 }
 
+/**
+ * Finds the `--json` array in npm's stdout.
+ *
+ * Anchoring on the first `[` is not enough: npm still forwards some output ahead of the JSON, and
+ * consola switches from `\u2139 Building` to `[info] ...` when it detects CI — so a run that parsed
+ * locally failed on a runner purely because the prefix gained a bracket.
+ */
+function parsePackReport(stdout) {
+  for (let index = stdout.indexOf('['); index !== -1; index = stdout.indexOf('[', index + 1)) {
+    try {
+      const parsed = JSON.parse(stdout.slice(index));
+      if (Array.isArray(parsed) && parsed[0]?.files) return parsed[0];
+    } catch {
+      // Not the start of the report — keep looking.
+    }
+  }
+
+  throw new Error(`npm pack produced no parseable --json report. Output began: ${stdout.slice(0, 80).trim()}`);
+}
+
 function collectTargets(node, label, out) {
   if (node == null) return;
   if (typeof node === 'string') {
@@ -99,14 +119,16 @@ export function declaredTargets(manifest) {
  * @returns {Set<string>} Package-relative paths in the tarball.
  */
 export function packedFiles(publishDir) {
-  const stdout = execFileSync('npm', ['pack', '--dry-run', '--json'], {
+  // --ignore-scripts for the same reason `npm publish` uses it: a `prepack` script would rebuild
+  // the package, so the smoke test would inspect an artifact the publish step never produces.
+  // It also keeps lifecycle logging out of the stdout we have to parse.
+  const stdout = execFileSync('npm', ['pack', '--dry-run', '--ignore-scripts', '--json'], {
     cwd: publishDir,
     encoding: 'utf-8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
-  const report = JSON.parse(stdout.slice(stdout.indexOf('[')))[0];
-  return new Set(report.files.map(file => file.path));
+  return new Set(parsePackReport(stdout).files.map(file => file.path));
 }
 
 /**
@@ -173,16 +195,18 @@ export function packSmokeTest(root) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const { problems, summary } = packSmokeTest(ROOT);
 
-  for (const { name, files, runtime, types } of summary) {
-    console.log(`  ${name.padEnd(24)} ${String(files).padStart(4)} files  ${runtime} entry  ${types} types`);
-  }
+  // Built as one string and written to a single stream: splitting the table across stdout and the
+  // errors across stderr lets a CI log interleave them, which reads as though the failure happened
+  // partway down the table.
+  const table = summary
+    .map(({ name, files, runtime, types }) => `  ${name.padEnd(24)} ${String(files).padStart(4)} files  ${runtime} entry  ${types} types`)
+    .join('\n');
 
   if (problems.length > 0) {
-    console.error(`\nRefusing to publish. ${problems.length} tarball problem(s):\n`);
-    for (const problem of problems) console.error(`  ${problem}`);
-    console.error('');
+    const report = problems.map(problem => `  ${problem}`).join('\n');
+    console.error(`${table}\n\nRefusing to publish. ${problems.length} tarball problem(s):\n\n${report}\n`);
     process.exit(1);
   }
 
-  console.log(`\nAll ${summary.length} tarballs are importable and complete.\n`);
+  console.log(`${table}\n\nAll ${summary.length} tarballs are importable and complete.\n`);
 }
