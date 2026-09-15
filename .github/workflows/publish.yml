@@ -52,6 +52,12 @@ jobs:
           echo "All packages clear to publish at ${VERSION}."
         shell: bash
 
+      # build.yml covers pull requests, but a direct push to main lands here with nothing having
+      # gated it, and published versions are immutable. Lint, build and test run inside the
+      # publishing job so the exact tree that reaches the registry is the one that passed.
+      - name: Lint
+        run: npm run lint
+
       # Package manifests carry `"@localess/*": "*"` in the repository; the exact version is
       # applied here. Must run before the build so ng-packagr copies the stamped values into
       # its generated manifest.
@@ -60,6 +66,9 @@ jobs:
 
       - name: Build all packages
         run: npm run build
+
+      - name: Test all packages
+        run: npm test
 
       - name: Verify publish manifests
         run: node scripts/verify-publish-manifests.mjs
@@ -113,6 +122,12 @@ jobs:
       - name: Verify package lists are current
         run: node scripts/verify-publish-order.mjs
 
+      # build.yml covers pull requests, but a direct push to main lands here with nothing having
+      # gated it, and published versions are immutable. Lint, build and test run inside the
+      # publishing job so the exact tree that reaches the registry is the one that passed.
+      - name: Lint
+        run: npm run lint
+
       - name: Set snapshot publish version
         run: |
           DATE=$(date +"%Y%m%d%H%M%S")
@@ -124,6 +139,9 @@ jobs:
 
       - name: Build all packages
         run: npm run build
+
+      - name: Test all packages
+        run: npm test
 
       - name: Verify publish manifests
         run: node scripts/verify-publish-manifests.mjs "$VERSION"
