@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 /**
+ * Bumps the release number in the root package.json.
+ *
  * Usage:
  *   node scripts/bump-version.mjs <patch|minor|major>
  *   npm run version:bump -- patch
+ *
+ * Package manifests under `packages/*` are not touched: their version and their `@localess/*`
+ * ranges are derived, and `scripts/set-publish-version.mjs` stamps them during publish.
  */
 
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -33,28 +38,6 @@ function bumpVersion(current, type) {
   }
 }
 
-function resolvePackageJsonPaths(root, workspaces) {
-  const paths = [];
-  for (const pattern of workspaces ?? []) {
-    if (pattern.endsWith('/*')) {
-      const base = resolve(root, pattern.slice(0, -2));
-      try {
-        const entries = readdirSync(base, { withFileTypes: true });
-        for (const entry of entries) {
-          if (entry.isDirectory()) {
-            paths.push(resolve(base, entry.name, 'package.json'));
-          }
-        }
-      } catch {
-        // Directory doesn't exist — skip
-      }
-    } else {
-      paths.push(resolve(root, pattern, 'package.json'));
-    }
-  }
-  return paths;
-}
-
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 const type = process.argv[2];
@@ -68,36 +51,8 @@ const rootPkg = readJson(rootPkgPath);
 const currentVersion = rootPkg.version;
 const newVersion = bumpVersion(currentVersion, type);
 
-const packageJsonPaths = [
-  rootPkgPath,
-  ...resolvePackageJsonPaths(ROOT, rootPkg.workspaces),
-];
+rootPkg.version = newVersion;
+writeJson(rootPkgPath, rootPkg);
 
-console.log(`\nBumping version: ${currentVersion} → ${newVersion} (${type})\n`);
-
-for (const pkgPath of packageJsonPaths) {
-  const relative = pkgPath.replace(ROOT + '\\', '').replace(ROOT + '/', '');
-  try {
-    const pkg = readJson(pkgPath);
-
-    if (pkg.version === undefined) {
-      console.log(`  skipped  ${relative}  (no version field)`);
-      continue;
-    }
-
-    const old = pkg.version;
-
-    if (old !== currentVersion) {
-      console.log(`  skipped  ${relative}  (version ${old} doesn't match ${currentVersion})`);
-      continue;
-    }
-
-    pkg.version = newVersion;
-    writeJson(pkgPath, pkg);
-    console.log(`  updated  ${relative}  ${old} → ${newVersion}`);
-  } catch {
-    console.log(`  missing  ${relative}  (file not found)`);
-  }
-}
-
-console.log(`\nDone. New version: ${newVersion}\n`);
+console.log(`\nBumped version: ${currentVersion} → ${newVersion} (${type})`);
+console.log(`Packages are stamped at publish time by scripts/set-publish-version.mjs.\n`);
