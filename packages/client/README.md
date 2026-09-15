@@ -199,11 +199,25 @@ const url = client.assetLink('my-image.png');
 // With transform params
 const thumb = client.assetLink(content.data.image, { w: 800, h: 600, f: 'webp', q: 90 });
 // .../assets/{uri}?w=800&h=600&q=90&f=webp
-
-// Force download
-const file = client.assetLink(content.data.file, { download: true });
-// .../assets/{uri}?download
 ```
+
+### `assetOriginalLink(asset)` and `assetDownloadLink(asset)`
+
+`assetLink` always returns a **rendition** — a still raster is re-encoded at its format's default quality even when you pass no transform parameters. These two serve the uploaded bytes untouched, and neither accepts transform parameters (passing one is rejected with a `400`):
+
+```ts
+// Served inline — archival, print, downstream processing
+const original = client.assetOriginalLink(content.data.file);
+// .../assets/{uri}/original
+
+// Served as an attachment, so the browser saves rather than displays
+const download = client.assetDownloadLink(content.data.file);
+// .../assets/{uri}/download
+```
+
+`assetDownloadLink` carries a non-ASCII asset name in an RFC 5987 `filename*` parameter with an ASCII-safe fallback, so an asset named in Cyrillic or CJK saves under its real name.
+
+> **Removed in v4.** `assetLink(asset, { download: true })` no longer works — the parameter is dropped from the query string. Use `assetDownloadLink(asset)`.
 
 #### `AssetTransformParams`
 
@@ -213,7 +227,7 @@ const file = client.assetLink(content.data.file, { download: true });
 | `h`         | `number`                              | Target height in pixels. With `w` → cover crop; without → scale proportionally                |
 | `q`         | `number` (1–100)                      | Output quality. Applies to JPEG, WebP, AVIF; ignored for PNG. Default: 85                    |
 | `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Convert to this output format                                                                 |
-| `download`  | `boolean`                             | Force a browser download (`Content-Disposition: form-data`)                                   |
+| `fit`       | `'cover' \| 'contain' \| 'inside' \| 'outside' \| 'fill'` | Fit mode, applied only when **both** `w` and `h` are set. API default is `cover` (crops); `inside` shrinks to fit |
 | `thumbnail` | `boolean`                             | Extract the first frame of animated WebP/GIF, or a video frame via FFmpeg, before resizing    |
 
 The standalone `buildAssetQueryString(params)` helper that produces this query string is also exported.

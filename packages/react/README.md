@@ -297,7 +297,7 @@ const syncEnabled = isSyncEnabled();
 
 ### `resolveAsset(asset, params?)`
 
-Resolves a `ContentAsset` object to a fully qualified URL (`{origin}/api/v1/spaces/{spaceId}/assets/{uri}`) using the `origin` and `spaceId` from `localessInit`. The optional `params` (`AssetTransformParams`: `w`, `h`, `q`, `f`, `download`, `thumbnail`) are appended as a query string.
+Resolves a `ContentAsset` object to a fully qualified URL (`{origin}/api/v1/spaces/{spaceId}/assets/{uri}`) using the `origin` and `spaceId` from `localessInit`. The optional `params` (`AssetTransformParams`: `w`, `h`, `q`, `f`, `fit`, `thumbnail`) are appended as a query string.
 
 ```tsx
 import { resolveAsset } from "@localess/react";
@@ -306,6 +306,19 @@ const Image = ({ data }) => (
   <img src={resolveAsset(data.image, { w: 800, f: 'webp' })} alt={data.imageAlt} />
 );
 ```
+
+### `resolveAssetOriginal(asset)` and `resolveAssetDownload(asset)`
+
+`resolveAsset` always returns a **rendition** — a still raster is re-encoded at its format's default quality even with no transform parameters. These two serve the uploaded bytes untouched, and neither accepts transform parameters:
+
+```tsx
+import { resolveAssetDownload, resolveAssetOriginal } from "@localess/react";
+
+<a href={resolveAssetOriginal(data.heroImage)}>View the original file</a>
+<a href={resolveAssetDownload(data.brochure)}>Download the brochure</a>
+```
+
+> **Removed in v4.** `resolveAsset(asset, { download: true })` no longer works — the parameter is dropped from the query string. Use `resolveAssetDownload(asset)`.
 
 ---
 
@@ -776,6 +789,7 @@ The table below shows which symbols are available in each runtime export.
 | `getComponent`                                         |         ✅         |           ✅           |           ✅           |
 | `getFallbackComponent`                                 |         ✅         |           ✅           |           ✅           |
 | `resolveAsset`                                         |         ✅         |           ✅           |           ✅           |
+| `resolveAssetOriginal` / `resolveAssetDownload`        |         ✅         |           ✅           |           ✅           |
 | `LocalessComponent`                                    |         ✅         |           ❌           |           ✅           |
 | `LocalessServerComponent` / `LocalessServerDocument`   |         ❌         |           ✅           |           ✅           |
 | `LocalessRichText` / `renderRichText`                  |         ✅         |           ✅           |           ✅           |
