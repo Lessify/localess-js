@@ -179,7 +179,20 @@ import { resolveAsset } from '@localess/astro';
 <img src={resolveAsset(data.heroImage, { w: 800 })} alt={data.title} />
 ```
 
-`resolveAsset(asset: ContentAsset, params?: AssetTransformParams)` delegates to the client's `assetLink`. A `ContentAsset` is `{ kind: 'ASSET', uri }` — it carries no alt text; take that from another field. Transform params include `w`, `h`, `q`, `f`, `download`, `thumbnail`.
+`resolveAsset(asset: ContentAsset, params?: AssetTransformParams)` delegates to the client's `assetLink`. A `ContentAsset` is `{ kind: 'ASSET', uri }` — it carries no alt text; take that from another field. Transform params are `w`, `h`, `q`, `f`, `fit`, `thumbnail`.
+
+`resolveAssetOriginal(asset)` and `resolveAssetDownload(asset)` delegate to `assetOriginalLink` and `assetDownloadLink`. `resolveAsset` always returns a rendition, re-encoded even with no params; `resolveAssetOriginal` is the only way to get the uploaded bytes. Neither takes transform params.
+
+```astro
+---
+import { resolveAssetDownload, resolveAssetOriginal } from '@localess/astro';
+---
+
+<a href={resolveAssetOriginal(data.heroImage)}>View the original file</a>
+<a href={resolveAssetDownload(data.brochure)}>Download the brochure</a>
+```
+
+> The `download` transform parameter was removed in v4; use `resolveAssetDownload` instead.
 
 ## Error handling
 

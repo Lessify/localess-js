@@ -99,16 +99,20 @@ const url = client.assetLink(content.data.image);
 const url = client.assetLink(content.data.image, { w: 800, h: 600, f: 'webp', q: 90 });
 // Returns: .../assets/{uri}?w=800&h=600&q=90&f=webp
 
-// Download
-const url = client.assetLink(content.data.file, { download: true });
-// Returns: .../assets/{uri}?download
+// Original bytes exactly as uploaded, served inline
+const url = client.assetOriginalLink(content.data.file);
+// Returns: .../assets/{uri}/original
+
+// Original bytes served as an attachment, so the browser saves rather than displays them
+const url = client.assetDownloadLink(content.data.file);
+// Returns: .../assets/{uri}/download
 
 // Accepts ContentAsset or raw URI string
 const url = client.assetLink('my-image.png', { w: 400 });
 
 // The query-string serialiser is exported standalone
 import { buildAssetQueryString } from "@localess/client";
-buildAssetQueryString({ w: 800, download: true }); // 'w=800&download'
+buildAssetQueryString({ w: 800, f: 'webp' }); // 'w=800&f=webp'
 ```
 
 #### AssetTransformParams
@@ -120,10 +124,18 @@ buildAssetQueryString({ w: 800, download: true }); // 'w=800&download'
 | `q`         | `number` (1–100)                      | Output quality. Applies to JPEG, WebP, AVIF. Ignored for PNG. Default: 85. |
 | `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Convert to this output format. Invalid → `400`.                             |
 | `fit`       | `'cover' \| 'contain' \| 'inside' \| 'outside' \| 'fill'` | Fit mode, applied only when **both** `w` and `h` are set. No client-side default — the API default is `cover` (crops). `inside` shrinks to fit without cropping and is usually what a thumbnail wants. Invalid → `400`. |
-| `download`  | `boolean`                             | `true` → force browser download (Content-Disposition: form-data).          |
 | `thumbnail` | `boolean`                             | `true` → extract first frame from animated WebP/GIF or video frame via FFmpeg. |
 
 SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
+
+`assetLink` always returns a **rendition** — a still raster is re-encoded at its format's default
+quality even when no transform parameters are given. `assetOriginalLink` is the only way to get the
+uploaded bytes back, for archival, print or downstream processing. Neither `assetOriginalLink` nor
+`assetDownloadLink` accepts transform parameters; passing one is rejected by the API with a `400`.
+
+> The `download` transform parameter was removed in v4. Use `assetDownloadLink(asset)` instead — it
+> also carries a non-ASCII asset name in an RFC 5987 `filename*` parameter, so the file saves under
+> its real name.
 
 ### Sync Script URL
 

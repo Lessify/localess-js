@@ -31,8 +31,8 @@ See `docs/model.md` in the repo (or the type table below) for the full list.
 | `Links` | `Record<string, ContentMetadata>` |
 | `References` | `Record<string, Content>` — field coverage depends on the producing endpoint |
 | `Assets` | `Record<string, AssetMetadata>` |
-| `AssetMetadata` | `{ id, name, extension, type, alt? }` |
-| `AssetTransformParams` | `{ w?, h?, q?, f?: 'webp' \| 'jpeg' \| 'png' \| 'avif', fit?: 'cover' \| 'contain' \| 'inside' \| 'outside' \| 'fill', download?, thumbnail? }` — `fit` applies only when **both** `w` and `h` are set |
+| `AssetMetadata` | `{ id, name, extension, type, size, alt?, width?, height?, duration? }` — `size` in bytes; `width`/`height` in pixels with EXIF orientation applied; `duration` in whole seconds for video and animated images |
+| `AssetTransformParams` | `{ w?, h?, q?, f?: 'webp' \| 'jpeg' \| 'png' \| 'avif', fit?: 'cover' \| 'contain' \| 'inside' \| 'outside' \| 'fill', thumbnail? }` — `fit` applies only when **both** `w` and `h` are set. The `download` parameter was removed in v4; use the client's `assetDownloadLink` |
 | `Translations` | `Record<string, string>` |
 
 ### Schema wire model (moved from `@localess/schema` — ADR 009)

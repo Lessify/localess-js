@@ -1,9 +1,9 @@
 name: Build Continues Integration
 
+# Pull requests only. Pushes to main and dev run the same lint/build/test/coverage steps inside
+# publish.yml, which has to gate on them anyway before it reaches the registry.
 on:
   pull_request:
-    branches: [ main, dev ]
-  push:
     branches: [ main, dev ]
 jobs:
   build:
@@ -34,8 +34,6 @@ jobs:
       - name: Build all packages
         run: npm run build
 
-      - name: Test all packages
-        run: npm test
-
-      - name: Test coverage
+      # Runs the same suites as `npm test` and additionally enforces the coverage thresholds.
+      - name: Test all packages with coverage thresholds
         run: npm run test:coverage

@@ -311,6 +311,24 @@ export class MyService {
 
 `SchemaComponent.assetUrl()` and the `llAsset` pipe use the same underlying logic (`LocalessClientService.assetLink()`) — all three are equivalent.
 
+### Original bytes and downloads
+
+`link()` always returns a **rendition** — a still raster is re-encoded at its format's default
+quality even with no transform parameters. Two further methods serve the uploaded bytes untouched,
+and neither takes transform parameters:
+
+```ts
+this.assetService.originalLink(asset); // served inline — archival, print, downstream processing
+this.assetService.downloadLink(asset); // served as an attachment, so the browser saves it
+```
+
+`LocalessClientService.assetOriginalLink()` / `assetDownloadLink()` are the equivalent methods on
+the client service.
+
+> The `download` transform parameter was removed in v4; use `downloadLink()` instead. It also
+> carries a non-ASCII asset name in an RFC 5987 `filename*` parameter, so the file saves under its
+> real name.
+
 ### Requesting a transformed asset (resize / format conversion)
 
 Pass an `AssetTransformParams` object as the second argument to request a resized image or a different output format:
@@ -326,7 +344,7 @@ assetService.link(asset, { w: 800, h: 600, q: 70, f: 'avif' });
 | `h` | `number` | Target height in pixels (combined with `w`, crops to cover the box) |
 | `q` | `number` | Output quality 1–100 (default 85; ignored for PNG) |
 | `f` | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Converts the output format |
-| `download` | `boolean` | Forces a browser download via `Content-Disposition` |
+| `fit` | `'cover' \| 'contain' \| 'inside' \| 'outside' \| 'fill'` | Fit mode, applied only when **both** `w` and `h` are set. The API default is `cover`, which crops; `inside` shrinks to fit without cropping |
 | `thumbnail` | `boolean` | Extracts the first frame of an animated/video asset before resizing |
 
 ---

@@ -564,7 +564,7 @@ Per-node/per-mark overrides are React components receiving the node's fields plu
 ## Asset Resolution
 
 ```typescript
-import { resolveAsset } from "@localess/react";
+import { resolveAsset, resolveAssetDownload, resolveAssetOriginal } from "@localess/react";
 import type { AssetTransformParams } from "@localess/react";
 
 // ContentAsset → full URL (no transform)
@@ -577,9 +577,22 @@ const imageUrl = resolveAsset(data.heroImage, { w: 800, h: 600, f: 'webp', q: 90
 
 // Thumbnail from video/animated image
 const thumb = resolveAsset(data.video, { w: 400, thumbnail: true });
+
+// Original bytes exactly as uploaded, served inline
+const originalUrl = resolveAssetOriginal(data.heroImage);
+// Returns: .../assets/{uri}/original
+
+// Original bytes served as an attachment, so the browser saves rather than displays them
+const downloadUrl = resolveAssetDownload(data.brochure);
+// Returns: .../assets/{uri}/download
 ```
 
 Set up automatically during `localessInit()` from `origin` + `spaceId`.
+
+`resolveAsset` always returns a **rendition** — a still raster is re-encoded at its format's default
+quality even with no transform parameters. `resolveAssetOriginal` is the only way to get the
+uploaded bytes back. Neither it nor `resolveAssetDownload` accepts transform parameters; passing one
+is rejected by the API with a `400`.
 
 #### AssetTransformParams
 
@@ -589,10 +602,14 @@ Set up automatically during `localessInit()` from `origin` + `spaceId`.
 | `h`         | `number`                              | Target height in pixels. With `w` → cover crop. Without → scale proportionally. |
 | `q`         | `number` (1–100)                      | Output quality. Applies to JPEG, WebP, AVIF. Ignored for PNG. Default: 85. |
 | `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Convert to this output format.                                              |
-| `download`  | `boolean`                             | `true` → force browser download (Content-Disposition: form-data).          |
+| `fit`       | `'cover' \| 'contain' \| 'inside' \| 'outside' \| 'fill'` | Fit mode, applied only when **both** `w` and `h` are set. The API default is `cover`, which crops; `inside` shrinks to fit without cropping. |
 | `thumbnail` | `boolean`                             | `true` → extract first frame from animated WebP/GIF or video frame via FFmpeg. |
 
 SVG files are always passed through unchanged. `w`/`h`/`f` are ignored for SVG.
+
+> The `download` transform parameter was removed in v4; use `resolveAssetDownload(asset)` instead.
+> It also carries a non-ASCII asset name in an RFC 5987 `filename*` parameter, so the file saves
+> under its real name.
 
 ---
 
