@@ -1,6 +1,6 @@
 {
   "name": "@localess/live-preview",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Framework-neutral Visual Editor bridge for Localess — sync script loading, editable attributes, and editor events.",
   "keywords": [
     "localess",

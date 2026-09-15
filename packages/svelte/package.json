@@ -1,6 +1,6 @@
 {
   "name": "@localess/svelte",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Svelte JavaScript/TypeScript SDK for Localess's API.",
   "keywords": [
     "localess",

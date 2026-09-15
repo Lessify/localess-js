@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [4.0.1] - 2026-09-15
+
+> **First complete v4 release.** `4.0.0` was published on 2026-09-05/06 for four packages only —
+> `@localess/model`, `@localess/schema`, `@localess/live-preview` and `@localess/nuxt` — by an
+> out-of-band run that did not reflect the finished v4 work, while the remaining eight packages
+> stayed on `3.4.x`. Those four `4.0.0` versions are deprecated on npm. The entries below are
+> relative to `4.0.0` and **do include breaking changes** despite the patch-level version, because
+> `4.0.0` was never a complete release. Install `4.0.1` or later.
+
 ### Breaking
 
 - **`AssetTransformParams` no longer accepts `download` or `f: 'original'`.**
@@ -143,14 +152,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- **`@localess/model`** — `AssetTransformParams['f']` accepts **`'original'`**: returns the stored
-  bytes byte-for-byte with an `inline` disposition, without forcing a download the way
-  `download: true` does. Use it for a full-quality lightbox, print, or downstream processing.
-  Composes with a resize — `{ w: 200, f: 'original' }` scales while keeping the source format.
-
-  Requesting a lossless format the source already is (`f: 'png'` on a PNG) is likewise served as a
-  passthrough, since the re-encode would produce equivalent bytes. Lossy formats deliberately still
-  re-encode: `f: 'jpeg'` on a JPEG compresses at `q`, which keeps the WebP escape hatch cheap.
+- **`@localess/model`** — requesting a *lossless* format the source already is (`f: 'png'` on a
+  PNG) is served as a passthrough, since the re-encode would produce equivalent bytes. Lossy
+  formats deliberately still re-encode: `f: 'jpeg'` on a JPEG compresses at `q`, which keeps the
+  WebP escape hatch cheap.
 
 - **`@localess/client`** — `buildAssetQueryString` now **throws a `TypeError`** for a `w`, `h` or
   `q` that the API would reject: a non-finite number, or a non-positive `w`/`h`. This surfaces the

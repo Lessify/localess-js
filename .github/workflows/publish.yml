@@ -42,6 +42,29 @@ jobs:
           done
         shell: bash
 
+      - name: Verify target versions are unpublished
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Checking npm for existing ${VERSION} releases..."
+          conflicts=()
+          for pkgdir in packages/*/; do
+            if grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
+              continue
+            fi
+            name=$(node -p "require('./${pkgdir}package.json').name")
+            if npm view "${name}@${VERSION}" version >/dev/null 2>&1; then
+              conflicts+=("${name}@${VERSION}")
+            fi
+          done
+          if [ ${#conflicts[@]} -gt 0 ]; then
+            echo "::error::Refusing to publish. These versions already exist on npm and are immutable:"
+            printf '::error::  %s\n' "${conflicts[@]}"
+            echo "::error::Bump the root package.json version (npm run version:patch) and retry."
+            exit 1
+          fi
+          echo "All packages clear to publish at ${VERSION}."
+        shell: bash
+
       - name: Build all packages
         run: npm run build
 

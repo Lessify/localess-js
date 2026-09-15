@@ -1,6 +1,6 @@
 {
   "name": "@localess/schema",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Programmatic schema definitions for Localess with TypeScript content type inference.",
   "keywords": [
     "localess",

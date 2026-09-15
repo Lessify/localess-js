@@ -1,6 +1,6 @@
 {
   "name": "@localess/astro",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "AstroJS integration for Localess's API.",
   "keywords": [
     "localess",
