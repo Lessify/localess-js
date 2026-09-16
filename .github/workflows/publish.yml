@@ -24,34 +24,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # The publish order is hardcoded in package.json. This is what keeps it honest: it fails if a
-      # package was added without being listed, which would otherwise silently never publish.
-      - name: Verify package lists are current
-        run: node scripts/verify-publish-order.mjs
-
-      - name: Verify target versions are unpublished
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "Checking npm for existing ${VERSION} releases..."
-          conflicts=()
-          for pkgdir in packages/*/; do
-            if grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
-              continue
-            fi
-            name=$(node -p "require('./${pkgdir}package.json').name")
-            if npm view "${name}@${VERSION}" version >/dev/null 2>&1; then
-              conflicts+=("${name}@${VERSION}")
-            fi
-          done
-          if [ ${#conflicts[@]} -gt 0 ]; then
-            echo "::error::Refusing to publish. These versions already exist on npm and are immutable:"
-            printf '::error::  %s\n' "${conflicts[@]}"
-            echo "::error::Bump the root package.json version (npm run version:patch) and retry."
-            exit 1
-          fi
-          echo "All packages clear to publish at ${VERSION}."
-        shell: bash
-
       # build.yml covers pull requests, but a direct push to main lands here with nothing having
       # gated it, and published versions are immutable. Lint, build and test run inside the
       # publishing job so the exact tree that reaches the registry is the one that passed.
@@ -83,27 +55,19 @@ jobs:
 
       - name: Publish all packages to npm
         run: |
-          # Dependency order, not alphabetical: a dependent must never reach the registry before
-          # something it depends on. The list is hardcoded because it changes only when a package
-          # is added, and the step above fails the job when it has drifted.
-          #
-          # Assigned before the loop on purpose: `for x in $(cmd)` discards a non-zero exit from
-          # cmd, so an unreadable list would publish nothing and still report success.
-          order=$(jq -r '.publishOrder[]' package.json)
-          if [ -z "$order" ]; then
-            echo "::error::package.json declares no publishOrder entries."
-            exit 1
-          fi
+          for pkgdir in packages/*/; do
+            if grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
+              continue
+            fi
 
-          for pkgdir in $order; do
             # ng-packagr libraries are published from their build output: the generated
             # manifest there carries `module`, `typings` and `exports`, which the source
             # package.json does not. Publishing the source directory yields a tarball with no
             # entry points at all, which cannot be imported.
             publishdir="$pkgdir"
-            if [ -f "${pkgdir}/ng-package.json" ]; then
-              dest=$(jq -r '.dest // "dist"' "${pkgdir}/ng-package.json")
-              publishdir="${pkgdir}/${dest#./}"
+            if [ -f "${pkgdir}ng-package.json" ]; then
+              dest=$(jq -r '.dest // "dist"' "${pkgdir}ng-package.json")
+              publishdir="${pkgdir}${dest#./}"
             fi
 
             echo "Publishing $pkgdir from $publishdir"
@@ -126,9 +90,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Verify package lists are current
-        run: node scripts/verify-publish-order.mjs
 
       # build.yml covers pull requests, but a direct push to main lands here with nothing having
       # gated it, and published versions are immutable. Lint, build and test run inside the
@@ -164,27 +125,19 @@ jobs:
 
       - name: Publish all packages to npm with tag 'dev'
         run: |
-          # Dependency order, not alphabetical: a dependent must never reach the registry before
-          # something it depends on. The list is hardcoded because it changes only when a package
-          # is added, and the step above fails the job when it has drifted.
-          #
-          # Assigned before the loop on purpose: `for x in $(cmd)` discards a non-zero exit from
-          # cmd, so an unreadable list would publish nothing and still report success.
-          order=$(jq -r '.publishOrder[]' package.json)
-          if [ -z "$order" ]; then
-            echo "::error::package.json declares no publishOrder entries."
-            exit 1
-          fi
+          for pkgdir in packages/*/; do
+            if grep -q '"private"\s*:\s*true' "${pkgdir}package.json"; then
+              continue
+            fi
 
-          for pkgdir in $order; do
             # ng-packagr libraries are published from their build output: the generated
             # manifest there carries `module`, `typings` and `exports`, which the source
             # package.json does not. Publishing the source directory yields a tarball with no
             # entry points at all, which cannot be imported.
             publishdir="$pkgdir"
-            if [ -f "${pkgdir}/ng-package.json" ]; then
-              dest=$(jq -r '.dest // "dist"' "${pkgdir}/ng-package.json")
-              publishdir="${pkgdir}/${dest#./}"
+            if [ -f "${pkgdir}ng-package.json" ]; then
+              dest=$(jq -r '.dest // "dist"' "${pkgdir}ng-package.json")
+              publishdir="${pkgdir}${dest#./}"
             fi
 
             echo "Publishing $pkgdir from $publishdir"

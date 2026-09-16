@@ -18,7 +18,7 @@
 import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { resolvePublishDir } from './verify-publish-manifests.mjs';
 
@@ -192,7 +192,7 @@ export function packSmokeTest(root) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { problems, summary } = packSmokeTest(ROOT);
 
   // Built as one string and written to a single stream: splitting the table across stdout and the
