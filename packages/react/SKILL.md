@@ -267,6 +267,8 @@ export function PageClient({ initialContent, locale }: { initialContent: Content
 
 `LocalessDocument` is a component alternative to the hook. It accepts the server-fetched `Content` object as `document` and manages live sync internally, delegating rendering to `LocalessComponent`. There are two implementations. `@localess/react/rsc`'s is a Server Component: it renders `LocalessComponent` server-side (overlaying any pending edit from the in-process live-edit cache) plus a hidden `'use client'` listener that forwards `input` / `change` / `save` / `publish` / `unpublish` events to a Server Action, which updates the cache and calls `revalidatePath`. The default export's (`@localess/react`) is a client-side component holding `document.data` in `useState` and subscribing to `input` / `change` via `localessSyncOnChange`; render it inside a `'use client'` file.
 
+The `/rsc` Server Action is a public endpoint and validates every call server-side: it is a no-op unless the server-side `localessInit()` set `enableSync: true`, the `id` was rendered by `/rsc`'s `LocalessDocument` with sync on, `type` is a known editor event, `path` is a same-site absolute path, and `data` (for `input`/`change`) is an object. With sync off, `LocalessDocument` ignores the live-edit cache. Keep `enableSync` off in production deployments — anyone who can reach a sync-enabled deployment can call the action for an id it has rendered.
+
 ```tsx
 // Server Component — pass the fetched content directly to LocalessDocument
 import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";

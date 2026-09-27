@@ -53,7 +53,7 @@ Output is byte-identical to TipTap's `generateHTML` with the CMS's extension
 list (enforced by a parity test), with one deliberate exception: link `href`
 values pass through `sanitizeUrl`, a protocol allowlist (`http:`, `https:`,
 `mailto:`, `tel:`, and scheme-less URLs). `javascript:`/`data:` hrefs become
-`""` instead of being escaped-but-kept.
+`""` instead of being escaped-but-kept. Before the scheme check, the href is normalized the way browsers parse URLs (leading/trailing control characters and spaces stripped, tabs and newlines removed), so obfuscated forms such as `java\tscript:` or `&#x09;`-encoded ones are caught too.
 
 The renderer never throws — `null`, `undefined`, or malformed input renders
 `''`. Text content is escaped `& < >`; attribute values `& " < >`.
@@ -256,7 +256,7 @@ differential test against `markdown-it` covers the supported subset only.
 
 Both parsers pass link hrefs through the same `sanitizeUrl` allowlist the renderer applies, so
 `javascript:` and `data:` become `""` while `http:`, `https:`, `mailto:`, `tel:` and scheme-less
-URLs survive. Parsing untrusted HTML is the more security-sensitive direction, so the check is
+URLs survive (including tab/newline/control-character-obfuscated schemes, which are normalized first). Parsing untrusted HTML is the more security-sensitive direction, so the check is
 applied on the way in as well as out — one allowlist, no second copy to drift.
 
 ### Round-tripping

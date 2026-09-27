@@ -33,7 +33,8 @@ const html = renderRichTextToHtml(data.body);
 - Output is byte-identical to TipTap's `generateHTML` for the Studio's
   extension set, except link `href`s pass a protocol allowlist
   (`http:`/`https:`/`mailto:`/`tel:`/scheme-less); `javascript:`/`data:`
-  hrefs become `""`.
+  hrefs become `""`, including obfuscated forms (`java\tscript:`, leading
+  control characters) — the href is normalized like a browser URL parser first.
 - Never throws; malformed input renders `''`.
 
 ## Supported node set
@@ -152,7 +153,7 @@ ordered lists (nested, `start`), fenced and indented code blocks, `**bold**`, `*
 Anything else goes through `unsupported` and is listed in the result — return the report to the
 caller, do not assume a clean parse. One warning per element type per parse, silent in production.
 
-Link hrefs pass the renderer's `sanitizeUrl` allowlist: `javascript:` and `data:` become `""`.
+Link hrefs pass the renderer's `sanitizeUrl` allowlist: `javascript:` and `data:` become `""`, including entity-encoded tab/newline/control-character obfuscations.
 
 Never throws except under `unsupported: 'throw'`; `null`, `undefined`, and `''` give an empty doc.
 

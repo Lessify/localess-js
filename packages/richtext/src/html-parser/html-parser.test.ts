@@ -163,6 +163,9 @@ describe('href sanitization', () => {
     ['JavaScript:alert(1)', ''],
     ['data:text/html;base64,PHA+', ''],
     ['vbscript:x', ''],
+    ['java&#x09;script:alert(1)', ''],
+    ['java&#10;script:alert(1)', ''],
+    ['&#x01;javascript:alert(1)', ''],
   ])('%s is emptied', (input, expected) => {
     expect(href(input)).toBe(expected);
   });

@@ -37,6 +37,19 @@ describe('sanitizeUrl', () => {
     expect(sanitizeUrl('vbscript:x')).toBe('');
     expect(sanitizeUrl('  javascript:alert(1)')).toBe('');
   });
+  it('strips dangerous schemes obfuscated with characters the URL parser removes', () => {
+    expect(sanitizeUrl('java\tscript:alert(1)')).toBe('');
+    expect(sanitizeUrl('java\nscript:alert(1)')).toBe('');
+    expect(sanitizeUrl('java\rscript:alert(1)')).toBe('');
+    expect(sanitizeUrl('\x01javascript:alert(1)')).toBe('');
+    expect(sanitizeUrl('\x00\x1f javascript:alert(1)')).toBe('');
+    expect(sanitizeUrl('j\ta\nv\ra\tscript:alert(1)')).toBe('');
+    expect(sanitizeUrl('data\t:text/html,<script>')).toBe('');
+  });
+  it('returns the URL as the browser would parse it', () => {
+    expect(sanitizeUrl('https://exa\tmple.com/pa\nth')).toBe('https://example.com/path');
+    expect(sanitizeUrl('\x01/path')).toBe('/path');
+  });
   it('returns empty string for empty input', () => {
     expect(sanitizeUrl('')).toBe('');
     expect(sanitizeUrl('   ')).toBe('');

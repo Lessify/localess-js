@@ -8,6 +8,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Security
+
+- **`@localess/richtext`: `sanitizeUrl` could be bypassed with obfuscated schemes (stored XSS).**
+  `java\tscript:…`, `java&#x09;script:…` (after HTML-parser entity decoding) and hrefs with leading
+  control characters were treated as scheme-less and passed through, while browsers strip those
+  characters and run them as `javascript:`. The href is now normalized like the WHATWG URL parser
+  (leading/trailing C0 control or space stripped, tab/newline removed) before the allowlist check,
+  and the normalized URL is returned. Affects every rich text HTML sink (Vue `v-html`, Svelte
+  `{@html}`, Astro `set:html`, Angular `llRichText` / `<ll-rich-text>`, React 17/18) and both parsers.
+- **`@localess/react/rsc`: the live-edit Server Action accepted calls from anyone.** Any client could
+  POST to `localessLiveEditAction` to overwrite what the next visitor saw for a document and trigger
+  `revalidatePath`, and grow the in-process cache with arbitrary ids. The action now rejects calls
+  unless the server-side `localessInit()` set `enableSync: true`, the `id` was rendered by `/rsc`'s
+  `LocalessDocument` with sync enabled, `type` is a known event, `path` is a same-site absolute path,
+  and `data` is an object. `LocalessDocument` no longer reads the live-edit cache when sync is off.
+
 ## [4.0.1] - 2026-09-15
 
 > **First complete v4 release.** `4.0.0` was published on 2026-09-05/06 for four packages only —

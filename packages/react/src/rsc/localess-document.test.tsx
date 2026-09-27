@@ -1,13 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+const isSyncConfiguredMock = vi.fn(() => false);
 vi.mock('../core/client', async importOriginal => {
   const actual = await importOriginal<typeof import('../core/client')>();
-  return { ...actual, getOrigin: () => 'https://cms.example.com', isSyncConfigured: () => false };
+  return { ...actual, getOrigin: () => 'https://cms.example.com', isSyncConfigured: () => isSyncConfiguredMock() };
 });
 
 import { localessInit } from '../core/client';
-import { clearLiveEdit, setLiveEdit } from './live-edit-cache';
+import { clearLiveEdit, isLiveEditable, setLiveEdit } from './live-edit-cache';
 import { LocalessDocument } from './localess-document';
 
 const baseOptions = { origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' };
@@ -18,6 +19,8 @@ function Page({ data }: any) {
 
 describe('LocalessDocument (rsc, Server-Action-driven)', () => {
   afterEach(() => {
+    cleanup();
+    isSyncConfiguredMock.mockReturnValue(false);
     clearLiveEdit('doc-1');
   });
 
@@ -30,12 +33,25 @@ describe('LocalessDocument (rsc, Server-Action-driven)', () => {
   });
 
   it('renders using the cached live edit, overlaid over document.data, when one exists for this id', () => {
+    isSyncConfiguredMock.mockReturnValue(true);
     localessInit({ ...baseOptions, components: { page: Page } });
     setLiveEdit('doc-1', { _schema: 'page', title: 'Live Edited' });
 
     render(<LocalessDocument document={{ id: 'doc-1', data: { _schema: 'page', title: 'Hello' } } as any} />);
 
     expect(screen.getByText('Live Edited')).toBeDefined();
+    expect(isLiveEditable('doc-1')).toBe(true);
+  });
+
+  it('ignores the live-edit cache and registers nothing when sync is not configured', () => {
+    localessInit({ ...baseOptions, components: { page: Page } });
+    setLiveEdit('doc-2', { _schema: 'page', title: 'Live Edited' });
+
+    render(<LocalessDocument document={{ id: 'doc-2', data: { _schema: 'page', title: 'Hello' } } as any} />);
+
+    expect(screen.queryByText('Live Edited')).toBeNull();
+    expect(isLiveEditable('doc-2')).toBe(false);
+    clearLiveEdit('doc-2');
   });
 
   it('consumes the cached live edit (one-shot) so a second render falls back to document.data', () => {

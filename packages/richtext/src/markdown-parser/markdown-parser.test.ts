@@ -174,6 +174,7 @@ describe('href sanitization', () => {
   it.each([
     ['javascript:alert(1)', ''],
     ['data:text/html,x', ''],
+    ['<java\tscript:alert(1)>', ''],
   ])('%s is emptied', (input, expected) => {
     expect(href(input)).toBe(expected);
   });

@@ -4,7 +4,7 @@ import { FONT_BOLD, FONT_NORMAL } from '../console';
 import { getOrigin, isSyncConfigured } from '../core/client';
 import { LocalessComponent } from '../core/components';
 import { Content, ContentData } from '../core/models';
-import { consumeLiveEdit } from './live-edit-cache';
+import { consumeLiveEdit, markLiveEditable } from './live-edit-cache';
 import { LiveEditListener } from './live-edit-listener';
 
 export type LocalessDocumentProps<T extends ContentData = ContentData> = {
@@ -40,13 +40,17 @@ export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>((
     );
   }
 
-  const liveData = consumeLiveEdit(document.id) as ContentData | undefined;
+  const enableSync = isSyncConfigured();
+  if (enableSync) {
+    markLiveEditable(document.id);
+  }
+  const liveData = enableSync ? (consumeLiveEdit(document.id) as ContentData | undefined) : undefined;
   const data = liveData ?? document.data;
 
   return (
     <>
       <LocalessComponent ref={ref} data={data} assets={document.assets} links={document.links} references={document.references} />
-      <LiveEditListener id={document.id} origin={getOrigin()} enableSync={isSyncConfigured()} />
+      <LiveEditListener id={document.id} origin={getOrigin()} enableSync={enableSync} />
     </>
   );
 });

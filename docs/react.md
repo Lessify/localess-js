@@ -207,6 +207,8 @@ export default async function HomePage({ params }) {
 }
 ```
 
+**Security:** a Server Action is a public endpoint, so `localessLiveEditAction` checks every call server-side and drops it unless (1) the **server-side** `localessInit()` set `enableSync: true`, (2) the `id` belongs to a document this server rendered via `/rsc`'s `LocalessDocument` with sync enabled, (3) `type` is a known editor event, (4) `path` is a same-site absolute path (starts with `/`, not `//`, no `\`, at most 2048 characters), and (5) `data` is an object for `input`/`change`. When sync is off, `LocalessDocument` also ignores the live-edit cache entirely. Keep `enableSync` off in production (e.g. `enableSync: process.env.NODE_ENV !== 'production'` or a preview-only env var): anyone who can reach a sync-enabled deployment can call the action for an id it has rendered.
+
 **Known limitation:** the live-edit cache is in-process memory (`globalThis`), matching how Storyblok's own React SDK implements the same mechanism. On a `default`-mode deployment that runs multiple serverless instances with no shared memory, a live edit may occasionally not appear until a subsequent edit lands on the same instance. This doesn't affect `standalone` deployments or local development (single process). If it matters for your setup, use a `standalone` deployment for live-editing sessions.
 
 **Requires a live server at request time — does not work under `output: 'export'`.** Use the default export's client-side `LocalessDocument` instead there; see "Client-Side Fallback for Static Export" below.

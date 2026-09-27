@@ -1,10 +1,30 @@
 declare global {
   var __localessLiveEditCache: Map<string, unknown> | undefined;
+  var __localessLiveEditableIds: Set<string> | undefined;
 }
 
 function getCache(): Map<string, unknown> {
   globalThis.__localessLiveEditCache = globalThis.__localessLiveEditCache ?? new Map<string, unknown>();
   return globalThis.__localessLiveEditCache;
+}
+
+function getLiveEditableIds(): Set<string> {
+  globalThis.__localessLiveEditableIds = globalThis.__localessLiveEditableIds ?? new Set<string>();
+  return globalThis.__localessLiveEditableIds;
+}
+
+/**
+ * Records that this server rendered a content item with live sync enabled, making its `id`
+ * eligible for {@link localessLiveEditAction}. The action rejects any other `id`, so a caller
+ * can't grow the cache with arbitrary keys. Called by `/rsc`'s `LocalessDocument`.
+ */
+export function markLiveEditable(id: string): void {
+  getLiveEditableIds().add(id);
+}
+
+/** Whether {@link markLiveEditable} has been called for this `id`. */
+export function isLiveEditable(id: string): boolean {
+  return getLiveEditableIds().has(id);
 }
 
 /**
