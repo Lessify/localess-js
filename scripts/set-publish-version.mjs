@@ -6,9 +6,9 @@
  *   node scripts/set-publish-version.mjs                     # use the root package.json version
  *   node scripts/set-publish-version.mjs 4.0.1-dev.20260915  # use an explicit snapshot version
  *
- * Package manifests are derived, not authored: `packages/*` carry `"@localess/*": "*"` in the
- * repository and the exact version is applied here, at publish time. The root `package.json`
- * version is the only place a release number is written by hand.
+ * `packages/*` carry `"@localess/*": "*"` in the repository and the exact range is applied here,
+ * at publish time. Package versions are kept in step with the root by `scripts/bump-version.mjs`;
+ * stamping them again here also covers snapshot versions.
  *
  * Run this immediately before building, so ng-packagr copies the stamped values into its
  * generated manifest.

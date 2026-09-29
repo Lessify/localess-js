@@ -1,6 +1,6 @@
 {
   "name": "localess-js",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "",
   "main": "index.js",
   "workspaces": [
@@ -25,6 +25,7 @@
     "version:patch": "node scripts/bump-version.mjs patch",
     "version:minor": "node scripts/bump-version.mjs minor",
     "version:major": "node scripts/bump-version.mjs major",
+    "test:scripts": "node --test \"scripts/*.test.mjs\"",
     "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"packages/*/src/**/*.{ts,tsx}\" --fix",
     "test": "npm test --workspace=@localess/client --workspace=@localess/live-preview --workspace=@localess/model --workspace=@localess/richtext --workspace=@localess/schema --workspace=@localess/react --workspace=@localess/vue --workspace=@localess/svelte --workspace=@localess/cli --workspace=@localess/angular --workspace=@localess/astro --workspace=@localess/nuxt --if-present",

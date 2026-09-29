@@ -28,6 +28,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Test release scripts
+        run: npm run test:scripts
+
       - name: Build all packages
         run: npm run build
 
