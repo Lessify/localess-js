@@ -4,7 +4,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { richTextFixtures } from '@localess/richtext/test-utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { LocalessRichTextPipe } from './rich-text.pipe';
+import { escapeAttr, escapeHtml, LocalessRichTextPipe, sanitizeUrl } from './rich-text.pipe';
 
 describe('LocalessRichTextPipe', () => {
   let pipe: LocalessRichTextPipe;
@@ -28,5 +28,13 @@ describe('LocalessRichTextPipe', () => {
     const input: any = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hi' }] }] };
     const html = unwrap(pipe.transform(input, { paragraph: ({ children }) => `<div class="rt-p">${children}</div>` }));
     expect(html).toBe('<div class="rt-p">Hi</div>');
+  });
+});
+
+describe('rich text helper re-exports', () => {
+  it('exposes the escaping and URL helpers for custom string renderers', () => {
+    expect(sanitizeUrl('javascript:alert(1)')).toBe('');
+    expect(escapeAttr('"')).toBe('&quot;');
+    expect(escapeHtml('<')).toBe('&lt;');
   });
 });

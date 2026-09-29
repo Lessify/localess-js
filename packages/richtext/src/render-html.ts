@@ -1,4 +1,4 @@
-import { processAttrs } from './attrs';
+import { processAttrs, sanitizeElement } from './attrs';
 import { escapeAttr, escapeHtml } from './escape';
 import { buildMarkTree, type MarkTreeSegment } from './marks';
 import type { LocalessRichTextInput, LocalessRichTextNode, LocalessRichTextRenderers } from './model';
@@ -50,7 +50,7 @@ function renderNode(node: LocalessRichTextNode, ctx: Ctx): string {
     const childRenderers = { ...ctx.renderers, [node.type]: undefined };
     const childCtx: Ctx = { renderers: childRenderers, warned: ctx.warned };
     const children = node.type === 'text' ? escapeHtml((node as any).text ?? '') : renderNodes((node as any).content ?? [], childCtx);
-    return custom({ ...(node as any), children, context: { renderers: childRenderers } });
+    return custom({ ...sanitizeElement(node as any), children, context: { renderers: childRenderers } });
   }
   if (node.type === 'text') {
     return renderSegments(buildMarkTree([node as any]), ctx);
@@ -87,7 +87,7 @@ function renderSegments(segments: MarkTreeSegment[], ctx: Ctx): string {
     const children = renderSegments(segment.children, ctx);
     const custom = ctx.renderers?.[segment.mark.type];
     if (custom) {
-      out += custom({ ...(segment.mark as any), children, context: { renderers: ctx.renderers } });
+      out += custom({ ...sanitizeElement(segment.mark as any), children, context: { renderers: ctx.renderers } });
       continue;
     }
     const spec = MARK_RENDER_MAP[segment.mark.type];

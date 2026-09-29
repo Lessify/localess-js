@@ -69,6 +69,9 @@ renderRichTextToHtml(data.body, {
 `children` arrives pre-rendered. `props.context.renderers` has the current
 type unset — pass it to a nested `renderRichTextToHtml` call to re-render your
 own node without infinite recursion.
+A custom `link` renderer receives `attrs.href` already passed through
+`sanitizeUrl`. The returned string is trusted HTML, so escape what you
+interpolate: `escapeAttr` for attribute values, `escapeHtml` for text.
 
 Renderer props (`LocalessRichTextRendererProps<TOut>`): `type`, `attrs?`,
 `text?`, `marks?`, `content?`, `children`, `context: { renderers? }`, `_key?`.
@@ -88,7 +91,9 @@ The helpers encode the algorithms once so walkers are mechanical translations:
 { attrMap })` (attribute normalization; React passes `{ class: 'className' }`),
 `NODE_RENDER_MAP` / `MARK_RENDER_MAP` / `resolveHeadingTag` (default table;
 `null` entry = transparent, missing key = unknown), `escapeHtml` /
-`escapeAttr` / `sanitizeUrl` (escaping and URL allowlist).
+`escapeAttr` / `sanitizeUrl` (escaping and URL allowlist), `sanitizeElement(element)`
+(pass every node/mark through it before invoking a custom renderer, so overrides
+never receive an unsanitized link `href`).
 See `@localess/react`'s `src/core/richtext.ts` for the reference walker.
 
 ## Test fixtures
@@ -107,7 +112,7 @@ never weaken an assertion to `toContain`.
 ```typescript
 // @localess/richtext
 export { renderRichTextToHtml }                                        // HTML string renderer
-export { normalizeInput, buildMarkTree, marksEqual, processAttrs }     // walker helpers
+export { normalizeInput, buildMarkTree, marksEqual, processAttrs, sanitizeElement } // walker helpers
 export { escapeHtml, escapeAttr, sanitizeUrl }                         // escaping / URL policy
 export { NODE_RENDER_MAP, MARK_RENDER_MAP, resolveHeadingTag }         // default render table
 export type {

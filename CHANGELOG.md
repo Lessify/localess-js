@@ -17,6 +17,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   (leading/trailing C0 control or space stripped, tab/newline removed) before the allowlist check,
   and the normalized URL is returned. Affects every rich text HTML sink (Vue `v-html`, Svelte
   `{@html}`, Astro `set:html`, Angular `llRichText` / `<ll-rich-text>`, React 17/18) and both parsers.
+- **Rich text: custom `link` renderers received the raw, unsanitized `href`.** Every renderer
+  (`@localess/richtext`'s `renderRichTextToHtml` and the React and Vue walkers) spread the stored
+  mark into the override's props, bypassing the `sanitizeUrl` allowlist that the built-in `<a>`
+  applies — so the documented `link: ({ attrs }) => <Link href={attrs.href}>` pattern emitted
+  `javascript:` hrefs from content stored as Tiptap JSON. Overrides now receive the mark with
+  `attrs.href` already sanitized, via the new `sanitizeElement` helper in `@localess/richtext`.
+  `sanitizeUrl` is now re-exported from `@localess/react` (and `/ssr`, `/rsc`); `escapeHtml`,
+  `escapeAttr` and `sanitizeUrl` from `@localess/vue`, `@localess/svelte`, `@localess/astro` and
+  `@localess/angular`, for custom string renderers, which must still escape what they interpolate.
 - **`@localess/react/rsc`: the live-edit Server Action accepted calls from anyone.** Any client could
   POST to `localessLiveEditAction` to overwrite what the next visitor saw for a document and trigger
   `revalidatePath`, and grow the in-process cache with arbitrary ids. The action now rejects calls

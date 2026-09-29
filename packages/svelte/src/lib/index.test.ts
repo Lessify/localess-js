@@ -12,5 +12,8 @@ describe('@localess/svelte public API', () => {
     expect(pkg.localessSync).toBeDefined();
     expect(pkg.LocalessRichText).toBeDefined();
     expect(pkg.LocalessApiError).toBeDefined();
+    expect(pkg.sanitizeUrl('javascript:alert(1)')).toBe('');
+    expect(pkg.escapeAttr('"')).toBe('&quot;');
+    expect(pkg.escapeHtml('<')).toBe('&lt;');
   });
 });

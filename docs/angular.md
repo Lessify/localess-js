@@ -189,6 +189,8 @@ For rich text there is also a component — `<ll-rich-text>` (`LocalessRichText`
 <ll-rich-text [content]="data().body" [renderers]="myRenderers" />
 ```
 
+A custom `link` renderer receives an already-sanitized `attrs.href`, but a string renderer must still escape what it interpolates: use `escapeAttr` for attribute values and `escapeHtml` for text (both re-exported, with `sanitizeUrl`).
+
 ## Asset Transform Parameters
 
 Pipe the `llAsset` pipe with transform params for image resizing:
@@ -286,7 +288,7 @@ Visual Editor sync still works on a static host: Angular ships a live applicatio
 
 ## Full Export Surface
 
-`src/public-api.ts` exports: `LocalessDocument`, `LocalessRichText`, `SchemaComponent`, `ContentDirective`, `ContentIdDirective`, `ContentSchemaDirective`, `ContentFieldDirective`, `LocalessComponentDirective`, `provideLocaless`, `LocalessOptions`, `withLocalessComponents`, `isComponentLoader`, `LocalessComponentsMap`, `LocalessComponentLoader`, `AnySchemaComponent`, `LOCALESS_COMPONENTS`, `LOCALESS_FALLBACK_COMPONENT`, `LOCALESS_CONFIG`, `LocalessConfig`, `defaultConfig`, `LOCALESS_SYNC_READY`, `AssetPipe`, `LinkPipe`, `LocalessRichTextPipe`, `SafeHtmlPipe`, `LocalessAssetService`, `LocalessClientService`, `LocalessComponentResolver`, `LocalessContentService`, `LocalessSyncService`, `LocalessTranslationService`, the `models` barrel (type-only re-exports from `@localess/model`, `@localess/client`, `@localess/richtext`), the `utils` barrel (`buildAssetQueryString`, `findLink`, `isBrowser`, `isIframe`, `loadLocalessSync`), and `export * from '@localess/client'` (so `LocalessApiError`, `localessClient`, etc. are available from `@localess/angular`).
+`src/public-api.ts` exports: `LocalessDocument`, `LocalessRichText`, `SchemaComponent`, `ContentDirective`, `ContentIdDirective`, `ContentSchemaDirective`, `ContentFieldDirective`, `LocalessComponentDirective`, `provideLocaless`, `LocalessOptions`, `withLocalessComponents`, `isComponentLoader`, `LocalessComponentsMap`, `LocalessComponentLoader`, `AnySchemaComponent`, `LOCALESS_COMPONENTS`, `LOCALESS_FALLBACK_COMPONENT`, `LOCALESS_CONFIG`, `LocalessConfig`, `defaultConfig`, `LOCALESS_SYNC_READY`, `AssetPipe`, `LinkPipe`, `LocalessRichTextPipe` (plus `escapeHtml`, `escapeAttr`, `sanitizeUrl` re-exported from `@localess/richtext` alongside it), `SafeHtmlPipe`, `LocalessAssetService`, `LocalessClientService`, `LocalessComponentResolver`, `LocalessContentService`, `LocalessSyncService`, `LocalessTranslationService`, the `models` barrel (type-only re-exports from `@localess/model`, `@localess/client`, `@localess/richtext`), the `utils` barrel (`buildAssetQueryString`, `findLink`, `isBrowser`, `isIframe`, `loadLocalessSync`), and `export * from '@localess/client'` (so `LocalessApiError`, `localessClient`, etc. are available from `@localess/angular`).
 
 ## Build Requirement
 

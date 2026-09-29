@@ -37,3 +37,13 @@ export function processAttrs(type: string, attrs: Record<string, any> | undefine
   }
   return out;
 }
+
+/**
+ * Returns the node/mark a custom renderer receives: for `link`, a copy whose `href` has passed
+ * {@link sanitizeUrl}; every other element is returned unchanged. Applied by every Localess
+ * renderer before invoking an override, so custom `link` renderers never see a raw href.
+ */
+export function sanitizeElement<T extends { type: string; attrs?: Record<string, any> | null }>(element: T): T {
+  if (element.type !== 'link' || !element.attrs || element.attrs.href === null || element.attrs.href === undefined) return element;
+  return { ...element, attrs: { ...element.attrs, href: sanitizeUrl(String(element.attrs.href)) } };
+}

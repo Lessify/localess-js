@@ -12,5 +12,8 @@ describe('@localess/vue public API', () => {
     expect(pkg.useLocalessSync).toBeDefined();
     expect(pkg.useLocalessRichText).toBeDefined();
     expect(pkg.LocalessApiError).toBeDefined();
+    expect(pkg.sanitizeUrl('javascript:alert(1)')).toBe('');
+    expect(pkg.escapeAttr('"')).toBe('&quot;');
+    expect(pkg.escapeHtml('<')).toBe('&lt;');
   });
 });

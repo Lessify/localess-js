@@ -77,6 +77,14 @@ describe('renderRichTextToHtml', () => {
     expect(html).toBe('<p><b class="loud">x</b></p>');
   });
 
+  it('passes a sanitized href to custom link renderers', () => {
+    const link = { type: 'link', attrs: { href: 'java\tscript:alert(1)' } };
+    const html = renderRichTextToHtml(doc(p(t('x', [link]))), {
+      renderers: { link: ({ attrs, children }) => `<a class="app" href="${attrs.href}">${children}</a>` },
+    });
+    expect(html).toBe('<p><a class="app" href="">x</a></p>');
+  });
+
   it('prevents infinite loops: a custom renderer can re-render its node via props.context', () => {
     const html = renderRichTextToHtml(doc({ type: 'heading', attrs: { level: 2 }, content: [t('T')] }), {
       renderers: {

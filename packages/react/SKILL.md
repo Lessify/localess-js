@@ -559,7 +559,7 @@ Per-node/per-mark overrides are React components receiving the node's fields plu
 
 `renderRichText(content, options?)` is the function form returning `ReactNode`.
 
-**Supported elements:** headings (h1–h6), paragraphs, bold, italic, strikethrough, underline, ordered/unordered lists, code, code blocks, links. Link `href`s pass a protocol allowlist (`javascript:`/`data:` stripped). Unknown node types are skipped with a dev-only warning unless a renderer for that type string is provided.
+**Supported elements:** headings (h1–h6), paragraphs, bold, italic, strikethrough, underline, ordered/unordered lists, code, code blocks, links. Link `href`s pass a protocol allowlist (`javascript:`/`data:` stripped) — also the `attrs.href` a custom `link` renderer receives, so it is safe to use directly. `sanitizeUrl(url)` applies the same allowlist to URLs you build yourself. Unknown node types are skipped with a dev-only warning unless a renderer for that type string is provided.
 
 ---
 
@@ -742,6 +742,7 @@ export { LocalessComponent }        // Dynamic schema-to-component renderer (for
 export { LocalessDocument }         // Client-side schema renderer + built-in input/change sync (needs a 'use client' boundary)
 export { LocalessRichText }         // Rich text component (content, renderers?)
 export { renderRichText }           // Rich text → React nodes
+export { sanitizeUrl }              // Rich text link-href allowlist (re-exported from @localess/richtext)
 export { resolveAsset }             // ContentAsset → full URL (+ optional AssetTransformParams)
 
 // Hooks
@@ -780,7 +781,7 @@ export { localessClient }           // raw @localess/client factory, for build-t
 export { getComponent, getFallbackComponent }
 export { LocalessServerComponent }  // Dynamic schema-to-component renderer, server-safe, no data-ll-* attrs
 export { LocalessServerDocument }   // Schema renderer, no sync — server-safe
-export { LocalessRichText, renderRichText, resolveAsset, findLink }
+export { LocalessRichText, renderRichText, sanitizeUrl, resolveAsset, findLink }
 export { localessEditable, localessEditableField, isBrowser, isServer, isIframe, loadLocalessSync, buildAssetQueryString }
 export { LocalessApiError }
 export type { LocalessServerComponentProps, LocalessServerDocumentProps }

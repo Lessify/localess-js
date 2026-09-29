@@ -1,3 +1,7 @@
+<script module lang="ts">
+  export { escapeAttr, escapeHtml, sanitizeUrl } from '@localess/richtext';
+</script>
+
 <script lang="ts">
   import {
     type LocalessRichTextInput,

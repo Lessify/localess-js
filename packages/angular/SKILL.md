@@ -527,7 +527,7 @@ import { LocalessRichTextPipe } from '@localess/angular';
 <div [innerHTML]="data.body | llRichText"></div>
 ```
 
-The pipe accepts `LocalessRichTextInput` (a doc, node, node array, `ContentRichText`, or `null`/`undefined` → empty). An optional argument passes per-node string renderers (`LocalessRichTextRenderers<string>`): `data.body | llRichText:renderers`. Supports paragraphs, headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links; link `href`s are sanitized (`javascript:`/`data:` stripped).
+The pipe accepts `LocalessRichTextInput` (a doc, node, node array, `ContentRichText`, or `null`/`undefined` → empty). An optional argument passes per-node string renderers (`LocalessRichTextRenderers<string>`): `data.body | llRichText:renderers`. Supports paragraphs, headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links; link `href`s are sanitized (`javascript:`/`data:` stripped), including the `attrs.href` a custom `link` renderer receives. Renderers return HTML that is trusted as-is, so escape what you interpolate: `escapeAttr` for attribute values, `escapeHtml` for text (both exported, with `sanitizeUrl`).
 
 ### `<ll-rich-text>` — Rich Text component
 
@@ -630,6 +630,7 @@ Everything below is exported from `@localess/angular` alongside the APIs above.
 | `LocalessComponentsMap`, `LocalessComponentLoader`, `AnySchemaComponent` | types | Registry map, lazy loader, and `Type<SchemaComponent<any>>` component type. |
 | `isComponentLoader(entry)` | function | Type guard distinguishing a lazy loader from a component class. |
 | `findLink`, `buildAssetQueryString`, `isBrowser`, `isIframe`, `loadLocalessSync` | functions | Utilities re-exported from `@localess/client`. |
+| `escapeHtml`, `escapeAttr`, `sanitizeUrl` | functions | Escaping and link-href allowlist for custom rich text string renderers, re-exported from `@localess/richtext`. |
 | `Content`, `ContentData`, `ContentDataSchema`, `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText`, `Links`, `References`, `Assets`, `Translations`, `AssetTransformParams`, `ContentFetchParams`, `LinksFetchParams`, `TranslationFetchParams`, `EventToAppType`, `EventToAppOf`, `LocalessRichTextInput`, `LocalessRichTextDocument`, `LocalessRichTextNode`, `LocalessRichTextMark`, … | types | Domain-model types re-exported from `@localess/model`, `@localess/client`, and `@localess/richtext`. |
 
 The package also re-exports the full `@localess/client` surface (`export * from '@localess/client'`), so `LocalessApiError`, `localessClient`, and every client type are importable from `@localess/angular` without adding `@localess/client` as a direct dependency.

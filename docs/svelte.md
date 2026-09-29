@@ -113,7 +113,7 @@ Built on `@localess/richtext` (see [docs/richtext.md](richtext.md)) — no TipTa
 <LocalessRichText content={data.body} />
 ```
 
-The `content` prop is a `LocalessRichTextInput` (a `ContentRichText` field value, a rich text document/node/node array, or `null`/`undefined`); output is an HTML string rendered via `{@html}`. String-based per-node overrides: `<LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<div class="prose">${children}</div>` }} />`.
+The `content` prop is a `LocalessRichTextInput` (a `ContentRichText` field value, a rich text document/node/node array, or `null`/`undefined`); output is an HTML string rendered via `{@html}`. String-based per-node overrides: `<LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<div class="prose">${children}</div>` }} />`. A custom `link` renderer receives an already-sanitized `attrs.href`, but a string renderer must still escape what it interpolates: use `escapeAttr` for attribute values and `escapeHtml` for text (both re-exported, with `sanitizeUrl`).
 
 ## SSR with SvelteKit
 
@@ -162,6 +162,7 @@ SvelteKit's own `data`-prop serialization hydrates the server-fetched result to 
 | `localessEditableField(name)` | Function | Applies `data-ll-field`, spread onto an element |
 | `localessSync(event)` | Function | Visual Editor bridge event subscription, returns a `Readable` |
 | `LocalessRichText` | Component | Renders a rich text field (`content`, `renderers?` props), reactive via `$derived` |
+| `escapeHtml`, `escapeAttr`, `sanitizeUrl` | Functions | Escaping and link-href allowlist for custom string renderers, re-exported from `@localess/richtext` |
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |
 | `LocalessComponentProps`, `LocalessDocumentProps`, `LocalessSchemaProps`, `LocalessSvelteInitOptions` | Types | Local prop/option types |
 | `LocalessClient`, `LocalessClientOptions`, `EventToAppOf`, `EventToAppType` | Types | Re-exported from `@localess/client` |

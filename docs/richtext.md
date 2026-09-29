@@ -63,10 +63,12 @@ The renderer never throws — `null`, `undefined`, or malformed input renders
 Every node and mark type can be overridden per render call:
 
 ```ts
+import { escapeAttr, renderRichTextToHtml } from '@localess/richtext';
+
 const html = renderRichTextToHtml(data.body, {
   renderers: {
     heading: ({ attrs, children }) => `<h${attrs.level} class="title">${children}</h${attrs.level}>`,
-    link: ({ attrs, children }) => `<a class="app-link" href="${attrs.href}">${children}</a>`,
+    link: ({ attrs, children }) => `<a class="app-link" href="${escapeAttr(attrs.href)}">${children}</a>`,
   },
 });
 ```
@@ -80,6 +82,13 @@ The contract:
   since marks never contain themselves.)
 - A custom `text` renderer receives the HTML-escaped text as `children`, and
   adjacent-mark merging is bypassed for that render.
+- A custom `link` renderer receives the mark with `attrs.href` already passed
+  through `sanitizeUrl` (via `sanitizeElement`), so it never sees a
+  `javascript:`/`data:` href. Every renderer — HTML, React, Vue — applies this.
+- String renderers return trusted HTML: escape everything you interpolate
+  (`escapeAttr` for attribute values, `escapeHtml` for text). Each framework
+  package re-exports `sanitizeUrl` (react) or `escapeHtml`/`escapeAttr`/`sanitizeUrl`
+  (vue, svelte, astro, angular) so consumers never import `@localess/richtext` directly.
 - Renderers keyed by unknown type strings are the hook for future node types.
 
 ## Helpers for walker authors
@@ -93,6 +102,7 @@ the same pure helpers, so all renderers stay semantically identical:
 | `buildMarkTree(textNodes)` | merges adjacent text nodes sharing outer marks into one `MarkTreeSegment[]` wrapper tree (ProseMirror-serializer semantics: one `<a>` per link span) |
 | `marksEqual(a, b)` | deep mark equality (type + attrs) used by `buildMarkTree` |
 | `processAttrs(type, attrs, { attrMap? })` | single attribute-normalization point (link sanitization + TipTap emission order); `attrMap: { class: 'className' }` for React |
+| `sanitizeElement(element)` | the node/mark a custom renderer receives — a `link` copy with a sanitized `href`, anything else unchanged; call it before every override |
 | `NODE_RENDER_MAP` / `MARK_RENDER_MAP` / `resolveHeadingTag` | the declarative default render table (`RichTextRenderSpec` entries; `null` = transparent, missing key = unknown type) |
 | `escapeHtml` / `escapeAttr` / `sanitizeUrl` | escaping and URL policy |
 

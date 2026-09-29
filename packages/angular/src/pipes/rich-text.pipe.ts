@@ -2,6 +2,8 @@ import { inject, Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { type LocalessRichTextInput, type LocalessRichTextRenderers, renderRichTextToHtml } from '@localess/richtext';
 
+export { escapeAttr, escapeHtml, sanitizeUrl } from '@localess/richtext';
+
 /**
  * Converts a Localess rich text field to sanitizer-trusted HTML, synchronously.
  * The HTML is generated and escaped by `@localess/richtext` (never sourced from

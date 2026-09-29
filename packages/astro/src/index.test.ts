@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { isBrowser, isIframe, localess, LocalessApiError, localessEditable, localessIntegration, toCamelCase } from './index';
+import {
+  escapeAttr,
+  escapeHtml,
+  isBrowser,
+  isIframe,
+  localess,
+  LocalessApiError,
+  localessEditable,
+  localessIntegration,
+  sanitizeUrl,
+  toCamelCase,
+} from './index';
 
 describe('index barrel', () => {
   it('re-exports the localess integration factory under both names', () => {
@@ -14,6 +25,12 @@ describe('index barrel', () => {
     expect(typeof isIframe).toBe('function');
     expect(typeof localessEditable).toBe('function');
     expect(typeof toCamelCase).toBe('function');
+  });
+
+  it('re-exports the rich text escaping and URL helpers for custom string renderers', () => {
+    expect(sanitizeUrl('javascript:alert(1)')).toBe('');
+    expect(escapeAttr('"')).toBe('&quot;');
+    expect(escapeHtml('<')).toBe('&lt;');
   });
 
   it('re-exports LocalessApiError as a constructible class, not erased as a type-only export', () => {

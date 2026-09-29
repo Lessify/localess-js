@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { processAttrs } from './attrs';
+import { processAttrs, sanitizeElement } from './attrs';
 
 describe('processAttrs', () => {
   it('returns {} for undefined attrs and for heading (level is consumed by the tag)', () => {
@@ -33,5 +33,24 @@ describe('processAttrs', () => {
     expect(processAttrs('codeBlock', { language: 'ts' }, { attrMap: { class: 'className' } })).toEqual({
       className: 'language-ts',
     });
+  });
+});
+
+describe('sanitizeElement', () => {
+  it('returns a link copy with a sanitized href, leaving the input untouched', () => {
+    const mark = { type: 'link', attrs: { href: 'java\tscript:alert(1)', target: '_blank' } };
+    expect(sanitizeElement(mark)).toEqual({ type: 'link', attrs: { href: '', target: '_blank' } });
+    expect(mark.attrs.href).toBe('java\tscript:alert(1)');
+  });
+  it('keeps allowlisted hrefs', () => {
+    expect(sanitizeElement({ type: 'link', attrs: { href: 'https://x.com' } }).attrs?.href).toBe('https://x.com');
+  });
+  it('returns non-link elements and links without an href as-is', () => {
+    const bold = { type: 'bold' };
+    const noHref = { type: 'link', attrs: { href: null } };
+    const custom = { type: 'button', attrs: { href: 'javascript:alert(1)' } };
+    expect(sanitizeElement(bold)).toBe(bold);
+    expect(sanitizeElement(noHref)).toBe(noHref);
+    expect(sanitizeElement(custom)).toBe(custom);
   });
 });

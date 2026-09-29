@@ -7,8 +7,11 @@ import {
   NODE_RENDER_MAP,
   normalizeInput,
   processAttrs,
+  sanitizeElement,
 } from '@localess/richtext';
 import React, { type ComponentType, type ReactNode } from 'react';
+
+export { sanitizeUrl } from '@localess/richtext';
 
 const REACT_ATTR_MAP = { class: 'className' };
 
@@ -66,7 +69,7 @@ function renderNode(node: LocalessRichTextNodeWithKey, ctx: Ctx): ReactNode {
     const childRenderers = { ...ctx.renderers, [node.type]: undefined };
     const childCtx: Ctx = { renderers: childRenderers, warned: ctx.warned };
     const children = node.type === 'text' ? (node as any).text : renderNodes(((node as any).content ?? []) as any, childCtx);
-    return React.createElement(custom, { key, ...(node as any), context: { renderers: childRenderers } }, children);
+    return React.createElement(custom, { key, ...sanitizeElement(node as any), context: { renderers: childRenderers } }, children);
   }
   if (node.type === 'text') {
     return renderSegments(buildMarkTree([node as any]), ctx, key ?? 'text');
@@ -100,7 +103,7 @@ function renderSegments(segments: MarkTreeSegment[], ctx: Ctx, keyPrefix: string
     const children = renderSegments(segment.children, ctx, key);
     const custom = ctx.renderers?.[segment.mark.type];
     if (custom) {
-      return React.createElement(custom, { key, ...(segment.mark as any), context: { renderers: ctx.renderers } }, children);
+      return React.createElement(custom, { key, ...sanitizeElement(segment.mark as any), context: { renderers: ctx.renderers } }, children);
     }
     const spec = MARK_RENDER_MAP[segment.mark.type];
     if (!spec) {

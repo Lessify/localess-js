@@ -1,5 +1,7 @@
 import {
   buildMarkTree,
+  escapeAttr,
+  escapeHtml,
   type LocalessRichTextInput,
   type LocalessRichTextNodeWithKey,
   type LocalessRichTextRenderers,
@@ -9,6 +11,8 @@ import {
   normalizeInput,
   processAttrs,
   renderRichTextToHtml,
+  sanitizeElement,
+  sanitizeUrl,
 } from '@localess/richtext';
 import { type Component, createTextVNode, Fragment, h, type VNodeChild } from 'vue';
 
@@ -24,7 +28,7 @@ interface Ctx {
   warned: Set<string>;
 }
 
-export { type LocalessRichTextInput, type LocalessRichTextRenderers, renderRichTextToHtml };
+export { escapeAttr, escapeHtml, type LocalessRichTextInput, type LocalessRichTextRenderers, renderRichTextToHtml, sanitizeUrl };
 
 /**
  * Renders a Localess rich text field to Vue VNodes.
@@ -70,7 +74,7 @@ function renderNode(node: LocalessRichTextNodeWithKey, ctx: Ctx): VNodeChild {
     const childCtx: Ctx = { renderers: childRenderers, warned: ctx.warned };
     const children =
       node.type === 'text' ? [createTextVNode((node as any).text ?? '')] : renderNodes(((node as any).content ?? []) as any, childCtx);
-    return h(custom as any, { key, ...(node as any), context: { renderers: childRenderers } }, { default: () => children });
+    return h(custom as any, { key, ...sanitizeElement(node as any), context: { renderers: childRenderers } }, { default: () => children });
   }
   if (node.type === 'text') {
     return h(Fragment, { key }, renderSegments(buildMarkTree([node as any]), ctx, key ?? 'text'));
@@ -104,7 +108,11 @@ function renderSegments(segments: MarkTreeSegment[], ctx: Ctx, keyPrefix: string
     const children = renderSegments(segment.children, ctx, key);
     const custom = ctx.renderers?.[segment.mark.type];
     if (custom) {
-      return h(custom as any, { key, ...(segment.mark as any), context: { renderers: ctx.renderers } }, { default: () => children });
+      return h(
+        custom as any,
+        { key, ...sanitizeElement(segment.mark as any), context: { renderers: ctx.renderers } },
+        { default: () => children }
+      );
     }
     const spec = MARK_RENDER_MAP[segment.mark.type];
     if (!spec) {

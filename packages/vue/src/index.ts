@@ -25,5 +25,13 @@ export type {
 export { LocalessApiError } from './models';
 export * from './plugin/localess-plugin';
 export * from './plugin/localess-symbol';
-export { type LocalessVueRichTextOptions, type LocalessVueRichTextRenderers, renderRichText, renderRichTextToHtml } from './richtext';
+export {
+  escapeAttr,
+  escapeHtml,
+  type LocalessVueRichTextOptions,
+  type LocalessVueRichTextRenderers,
+  renderRichText,
+  renderRichTextToHtml,
+  sanitizeUrl,
+} from './richtext';
 export { localessEditable, localessEditableField, normalizeComponentKey } from './utils';

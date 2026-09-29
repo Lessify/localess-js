@@ -183,6 +183,7 @@ const props = defineProps<LocalessSchemaProps<Article>>();
 - `useLocalessRichText(doc, options?)` → reactive `ComputedRef<VNodeChild>`. Accepts a plain value, a `Ref`, or a getter.
 - `useLocalessRichTextHtml(doc, options?)` → `ComputedRef<string>` for `v-html` bindings.
 - Per-node overrides: `renderers` (`LocalessVueRichTextRenderers`) maps type names to Vue components; children arrive as the default slot, and the node/mark's own fields (`type`, `attrs`, `text`, `marks`, ...) plus `context.renderers` arrive as props. Override components should declare the props they consume (or set `inheritAttrs: false`) to avoid attribute fallthrough. `useLocalessRichTextHtml`/`renderRichTextToHtml` instead take string-returning renderers (`({ children, attrs }) => string`).
+- A custom `link` renderer receives an already-sanitized `attrs.href` (`javascript:`/`data:` become `""`). String renderers must still escape what they interpolate: `escapeAttr` for attribute values, `escapeHtml` for text (both re-exported, with `sanitizeUrl`).
 
 ---
 
@@ -275,6 +276,7 @@ export { useLocalessRichTextHtml }  // Tiptap JSON -> HTML string (reactive, for
 export { LocalessRichText }         // Rich text component (content, renderers?)
 export { renderRichText }           // One-shot Tiptap JSON -> VNodes
 export { renderRichTextToHtml }     // One-shot Tiptap JSON -> HTML string (re-exported from @localess/richtext)
+export { escapeHtml, escapeAttr, sanitizeUrl } // Escaping + link-href allowlist for string renderers (re-exported from @localess/richtext)
 
 // Error handling (re-exported from @localess/client)
 export { LocalessApiError }

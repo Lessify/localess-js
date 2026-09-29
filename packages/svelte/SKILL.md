@@ -177,6 +177,15 @@ Per-node overrides are string-based renderers (`renderers?: LocalessRichTextRend
 <LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<p class="prose">${children}</p>` }} />
 ```
 
+A custom `link` renderer receives an already-sanitized `attrs.href`, but a string renderer must still escape what it interpolates: use `escapeAttr` for attribute values and `escapeHtml` for text (both re-exported, with `sanitizeUrl`).
+
+```svelte
+<script>
+  import { escapeAttr, LocalessRichText } from '@localess/svelte';
+  const renderers = { link: ({ attrs, children }) => `<a class="app-link" href="${escapeAttr(attrs.href)}">${children}</a>` };
+</script>
+```
+
 ---
 
 ## SSR with SvelteKit
@@ -232,6 +241,7 @@ export { localessEditableField }    // Field-level data-ll-field attribute, spre
 // Reactivity
 export { localessSync }             // Visual Editor bridge event subscription, returns a Readable
 export { LocalessRichText }         // Rich text component (content, renderers?), reactive via $derived
+export { escapeHtml, escapeAttr, sanitizeUrl } // Escaping + link-href allowlist for string renderers (re-exported from @localess/richtext)
 
 // Error handling (re-exported from @localess/client)
 export { LocalessApiError }

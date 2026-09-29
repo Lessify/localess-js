@@ -109,6 +109,8 @@ The `content` prop accepts a `ContentRichText` field value, a rich text document
 <LocalessRichText :content="data.body" :renderers="{ link: AppLink }" />
 ```
 
+A custom `link` component receives an already-sanitized `attrs.href` (`javascript:`/`data:` become `""`). String renderers passed to `useLocalessRichTextHtml`/`renderRichTextToHtml` must still escape what they interpolate — `escapeAttr`, `escapeHtml`, and `sanitizeUrl` are re-exported for that.
+
 ## SSR with Nuxt
 
 `@localess/vue` is rendering-only — SSR data-fetching goes through Nuxt's own server conventions, calling `localessClient` (re-exported from `@localess/vue`, never `@localess/client` directly) with a **secret** token in a server-only file:
@@ -159,6 +161,7 @@ Nuxt's own payload transfer hydrates the server-fetched result to the client —
 | `useLocalessRichTextHtml(doc, options?)` | Composable | Tiptap JSON → HTML string for `v-html`, returns `ComputedRef<string>` |
 | `renderRichText(content, options?)` | Function | One-shot Tiptap JSON → VNodes |
 | `renderRichTextToHtml(content, options?)` | Function | One-shot Tiptap JSON → HTML string, re-exported from `@localess/richtext` |
+| `escapeHtml`, `escapeAttr`, `sanitizeUrl` | Functions | Escaping and link-href allowlist for custom string renderers, re-exported from `@localess/richtext` |
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |
 | `localessClient(options)` | Function | Re-exported from `@localess/client` — raw client factory for server-only SSR use, outside the `Localess` plugin's singleton lifecycle |
 | `LocalessComponentProps`, `LocalessDocumentProps`, `LocalessSchemaProps`, `LocalessVueRichTextOptions`, `LocalessVueRichTextRenderers` | Types | Local prop/option types |

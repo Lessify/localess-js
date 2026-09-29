@@ -40,6 +40,22 @@ describe('vue overrides', () => {
     const input = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hi' }] }] };
     expect(renderedHtml(input, { paragraph: Custom })).toBe('<div class="rt-p">Hi</div>');
   });
+
+  it('passes a sanitized href to a custom link component', () => {
+    const AppLink = {
+      props: ['type', 'attrs', 'context'],
+      render() {
+        return h('a', { class: 'app', href: (this as any).attrs.href }, (this as any).$slots.default?.());
+      },
+    };
+    const input = {
+      type: 'doc',
+      content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Go', marks: [{ type: 'link', attrs: { href: 'javascript:alert(1)' } }] }] },
+      ],
+    };
+    expect(renderedHtml(input, { link: AppLink })).toBe('<p><a class="app" href="">Go</a></p>');
+  });
 });
 
 describe('LocalessRichText component', () => {

@@ -2,7 +2,7 @@ export { getLivePayload, getLocalessClient, resolveAsset, resolveAssetDownload, 
 export { localess, localessIntegration } from './lib/localess-integration';
 export { handleLocalessMessage } from './live-preview/handle-localess-message';
 export * from './models';
-export { renderLocalessRichTextToHtml, renderRichTextToHtml } from './richtext';
+export { escapeAttr, escapeHtml, renderLocalessRichTextToHtml, renderRichTextToHtml, sanitizeUrl } from './richtext';
 export { toCamelCase } from './utils/to-camel-case';
 // Documented pass-through: consumers import everything from '@localess/astro'.
 export { LocalessApiError, localessClient } from '@localess/client';

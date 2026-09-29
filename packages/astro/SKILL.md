@@ -167,7 +167,7 @@ Props: `content: LocalessRichTextInput` (a rich text document, node, or node arr
 <LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<p class="prose">${children}</p>` }} />
 ```
 
-`renderRichTextToHtml(content, { renderers? })` and its alias `renderLocalessRichTextToHtml` are exported from `@localess/astro` for standalone rendering. Link `href`s pass a protocol allowlist (`javascript:`/`data:` become empty); unknown node types are skipped with a warning (silenced when `NODE_ENV === 'production'`) unless a renderer for that type is provided.
+`renderRichTextToHtml(content, { renderers? })` and its alias `renderLocalessRichTextToHtml` are exported from `@localess/astro` for standalone rendering. Link `href`s pass a protocol allowlist (`javascript:`/`data:` become empty); unknown node types are skipped with a warning (silenced when `NODE_ENV === 'production'`) unless a renderer for that type is provided. A custom `link` renderer receives an already-sanitized `attrs.href`, but a string renderer must still escape what it interpolates: use `escapeAttr` for attribute values and `escapeHtml` for text (both re-exported, with `sanitizeUrl`).
 
 ## Assets
 
@@ -228,7 +228,7 @@ import FallbackComponent from '@localess/astro/FallbackComponent.astro';
 
 Everything else imports from the default entry point (`@localess/astro`) — never from `@localess/client` or `@localess/richtext` directly:
 
-- Integration and helpers: `localess`/`localessIntegration`, `getLocalessClient`, `getLivePayload`, `resolveAsset`, `handleLocalessMessage`, `toCamelCase`, `renderRichTextToHtml`/`renderLocalessRichTextToHtml`.
+- Integration and helpers: `localess`/`localessIntegration`, `getLocalessClient`, `getLivePayload`, `resolveAsset`, `handleLocalessMessage`, `toCamelCase`, `renderRichTextToHtml`/`renderLocalessRichTextToHtml`, and the string-renderer helpers `escapeHtml`/`escapeAttr`/`sanitizeUrl`.
 - Browser-safe sync utilities: `loadLocalessSync`, `localessEditable`, `localessEditableField`, `isBrowser`, `isIframe`.
 - Errors: `LocalessApiError`.
 - `localessClient` — server-only factory, re-exported for the integration's generated `virtual:localess-init` module; in app code use `getLocalessClient()` instead.
