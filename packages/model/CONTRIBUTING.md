@@ -2,8 +2,8 @@
 
 Shared domain-model types. **Zero dependencies** — `package.json` has no
 `dependencies` key at all, and that is load-bearing (ADR 002, ADR 009):
-`@localess/client`, `@localess/richtext`, `@localess/schema`, every
-framework package, and `@localess/cli` all depend on this package, so it
+`@localess/client`, `@localess/richtext`, `@localess/schema`,
+`@localess/live-preview`, every framework package, and `@localess/cli` all depend on this package, so it
 must never depend on any of them (or on anything else).
 
 ## Module map

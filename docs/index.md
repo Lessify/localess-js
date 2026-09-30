@@ -9,39 +9,42 @@ This monorepo contains the official JavaScript/TypeScript SDKs for the Localess 
 | `@localess/model` | Shared domain-model types, zero dependencies of any kind | — |
 | `@localess/richtext` | Framework-neutral rich text model + renderer, zero external dependencies | `@localess/model` |
 | `@localess/schema` | Programmatic schema definitions with TypeScript content type inference, zero external dependencies | `@localess/model` |
-| `@localess/client` | Core server-side SDK | `@localess/model` |
-| `@localess/react` | React integration: components, hooks, rich text, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext` |
-| `@localess/angular` | Angular integration: components, directives, pipes, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext` |
-| `@localess/astro` | Astro integration: native components, Visual Editor sync via reload or in-place live preview, dev toolbar | `@localess/client`, `@localess/model`, `@localess/richtext` |
-| `@localess/vue` | Vue integration: plugin, components, composables, Vite plugin, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext` |
-| `@localess/svelte` | Svelte integration: context init, components, action, stores, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext` |
+| `@localess/live-preview` | Framework-neutral Visual Editor bridge (sync script loading, `data-ll-*` attributes, editor events, sync controller), zero external dependencies | `@localess/model` |
+| `@localess/client` | Core server-side SDK | `@localess/model`, `@localess/live-preview` (deprecated re-exports only — ADR 013) |
+| `@localess/react` | React integration: components, hooks, rich text, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext`, `@localess/live-preview` |
+| `@localess/angular` | Angular integration: components, directives, pipes, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext`, `@localess/live-preview` |
+| `@localess/astro` | Astro integration: native components, Visual Editor sync via reload or in-place live preview, dev toolbar | `@localess/client`, `@localess/model`, `@localess/richtext`, `@localess/live-preview` |
+| `@localess/vue` | Vue integration: plugin, components, composables, Vite plugin, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext`, `@localess/live-preview` |
+| `@localess/nuxt` | Nuxt module wrapping `@localess/vue`: config-driven setup, public/secret token split, component auto-registration, server client | `@localess/vue` (ADR 011) |
+| `@localess/svelte` | Svelte integration: context init, components, action, stores, Visual Editor sync | `@localess/client`, `@localess/model`, `@localess/richtext`, `@localess/live-preview` |
 | `@localess/cli` | CLI for translations, type generation, and schema pull/push | `@localess/client`, `@localess/model`, `@localess/schema` |
 
-`@localess/client`, `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, `@localess/svelte`, and `@localess/cli` never depend on each other. `@localess/model` depends on nothing; `@localess/richtext` and `@localess/schema` depend only on `@localess/model`, so the three form a root tier with no dependencies outside it.
+`@localess/client`, `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, `@localess/svelte`, and `@localess/cli` never depend on each other; the one sanctioned exception is `@localess/nuxt` → `@localess/vue` (a host-framework wrapper, ADR 011). `@localess/model` depends on nothing; `@localess/richtext` and `@localess/schema` depend only on `@localess/model`, so the three form a root tier with no dependencies outside it. `@localess/live-preview` also depends only on `@localess/model`.
 
 **Requirements:** Node.js >= 24.0.0, npm >= 10.
 
 ## Hard Rules — Never Violate
 
-1. **`@localess/client` is server-side only, with one exception.** It requires an API token; a *secret* token must never reach browser bundles, React Client Components, Angular browser code, or any client-side code. The exception is Localess's *public* tokens (read-only, published content and translations only), which are safe client-side and are used by `@localess/react`'s client-side `LocalessDocument` fallback for static export, `@localess/angular`'s `provideLocaless` (token type follows the rendering mode), `@localess/vue`, and `@localess/svelte`. `@localess/cli` and `@localess/astro` still treat their token as secret-only. → [ADR 001](decisions/001-server-side-only.md)
+1. **`@localess/client` is server-side only, with one exception.** It requires an API token; a *secret* token must never reach browser bundles, React Client Components, Angular browser code, or any client-side code. The exception is Localess's *public* tokens (read-only, published content and translations only), which are safe client-side and are used by `@localess/react`'s client-side `LocalessDocument` fallback for static export, `@localess/angular`'s `provideLocaless` (token type follows the rendering mode), `@localess/vue`, `@localess/svelte`, and `@localess/nuxt` (its `token` is public; the secret goes in `serverToken`). `@localess/cli` and `@localess/astro` still treat their token as secret-only. → [ADR 001](decisions/001-server-side-only.md)
 
-2. **`@localess/model` has zero dependencies of any kind; `@localess/client`, `@localess/richtext`, and `@localess/schema` depend on `@localess/model` alone.** `packages/model/package.json` has no `dependencies` key at all. `packages/client/package.json`, `packages/richtext/package.json`, and `packages/schema/package.json` each have exactly one `dependencies` entry, `@localess/model` — never add anything else. All four stay zero-*external*-dependency (no npm package outside this monorepo). `devDependencies` are fine. → [ADR 002](decisions/002-zero-production-deps.md), [ADR 007](decisions/007-shared-richtext-package.md), [ADR 008](decisions/008-schema-package.md), [ADR 009](decisions/009-shared-model-package.md)
+2. **`@localess/model` has zero dependencies of any kind; `@localess/richtext`, `@localess/schema`, and `@localess/live-preview` depend on `@localess/model` alone; `@localess/client` depends on `@localess/model` and `@localess/live-preview`.** `packages/model/package.json` has no `dependencies` key at all. `packages/richtext/package.json`, `packages/schema/package.json`, and `packages/live-preview/package.json` each have exactly one `dependencies` entry, `@localess/model`; `packages/client/package.json` has exactly two, `@localess/model` and `@localess/live-preview` — never add anything else. All five stay zero-*external*-dependency (no npm package outside this monorepo). `devDependencies` are fine. → [ADR 002](decisions/002-zero-production-deps.md), [ADR 007](decisions/007-shared-richtext-package.md), [ADR 008](decisions/008-schema-package.md), [ADR 009](decisions/009-shared-model-package.md), [ADR 013](decisions/013-live-preview-package.md)
 
-3. **Package boundaries.** `@localess/client` depends on `@localess/model`. `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, and `@localess/svelte` depend on `@localess/client`, `@localess/model`, and `@localess/richtext`; `@localess/cli` depends on `@localess/client`, `@localess/model`, and `@localess/schema`. They never depend on each other. → [ADR 005](decisions/005-package-boundary-discipline.md), [ADR 007](decisions/007-shared-richtext-package.md), [ADR 008](decisions/008-schema-package.md), [ADR 009](decisions/009-shared-model-package.md)
+3. **Package boundaries.** `@localess/live-preview` depends on `@localess/model`. `@localess/client` depends on `@localess/model` and `@localess/live-preview`. `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, and `@localess/svelte` depend on `@localess/client`, `@localess/model`, `@localess/richtext`, and `@localess/live-preview`; `@localess/cli` depends on `@localess/client`, `@localess/model`, and `@localess/schema`. They never depend on each other — except `@localess/nuxt` → `@localess/vue`, the one sanctioned host-framework-wrapper edge. → [ADR 005](decisions/005-package-boundary-discipline.md), [ADR 007](decisions/007-shared-richtext-package.md), [ADR 008](decisions/008-schema-package.md), [ADR 009](decisions/009-shared-model-package.md), [ADR 011](decisions/011-nuxt-module-depends-on-vue.md), [ADR 013](decisions/013-live-preview-package.md)
 
-4. **Upstream check.** When changing `@localess/client`'s public API (add/remove/rename methods or types), check whether `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, `@localess/svelte`, and `@localess/cli` consume the changed surface and update them.
+4. **Upstream check.** When changing `@localess/client`'s public API (add/remove/rename methods or types), check whether `@localess/react`, `@localess/angular`, `@localess/astro`, `@localess/vue`, `@localess/svelte`, and `@localess/cli` consume the changed surface and update them (and `@localess/nuxt`, through `@localess/vue`).
 
 5. **SKILL.md sync.** When changing a package's public API, options, or behavior, update `packages/<name>/SKILL.md`. These files ship inside the npm packages for downstream AI agents.
 
 ## Build & Test
 
 ```bash
-# Build all packages (model, richtext, client, schema, react, vue, svelte, cli, angular, astro)
+# Build all packages (model, live-preview, richtext, client, schema, react, vue, svelte, cli, angular, astro, nuxt)
 npm run build
 
 # Build individual packages
 npm run build:model     # build before running client/richtext/schema tests
 npm run build:richtext   # build before running framework package tests
+npm run build:live-preview  # build before build:client
 npm run build:client
 npm run build:schema     # build before running @localess/cli tests
 npm run build:react
@@ -50,6 +53,7 @@ npm run build:svelte
 npm run build:cli
 npm run build:angular
 npm run build:astro
+npm run build:nuxt      # requires build:vue first
 
 # Run Angular / AnalogJS playgrounds
 npm run start:angular-ssr
@@ -66,7 +70,8 @@ npx vitest run packages/cli/src/commands/login/login.test.ts  # single file
 ```
 
 Build tools per package:
-- `@localess/model`, `@localess/client`, `@localess/richtext`, `@localess/schema`, `@localess/react`, `@localess/vue`, `@localess/astro`, `@localess/cli`: **Vite library mode** (`vite.config.mts`) → CJS + ESM + types
+- `@localess/model`, `@localess/client`, `@localess/richtext`, `@localess/live-preview`, `@localess/schema`, `@localess/react`, `@localess/vue`, `@localess/astro`: **Vite library mode** (`vite.config.mts`) → CJS + ESM + types
+- `@localess/cli`: **Vite library mode** (`vite.config.mts`) → ESM-only (`dist/index.mjs`) + types — a CLI executable, not a library (ADR 004)
 - `@localess/svelte`: **`svelte-package`** (ESM-only) for the library surface, gated by a `svelte-check` typecheck step
 - `@localess/angular`: **ng-packagr via Angular CLI** (`ng-package.json`, single `entryFile: src/public-api.ts`) → `dist/` with a unified entry (`fesm2022/`, `types/`) — no `/browser` or `/server` split
 - `@localess/nuxt`: **`@nuxt/module-builder`** (`build.config.ts`) → `dist/module.mjs` plus an unbundled `dist/runtime/` shipped as-is — Nuxt modules need their own entry format, so Vite library mode does not apply (see ADR 011)

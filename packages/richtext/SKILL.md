@@ -115,6 +115,7 @@ export { renderRichTextToHtml }                                        // HTML s
 export { normalizeInput, buildMarkTree, marksEqual, processAttrs, sanitizeElement } // walker helpers
 export { escapeHtml, escapeAttr, sanitizeUrl }                         // escaping / URL policy
 export { NODE_RENDER_MAP, MARK_RENDER_MAP, resolveHeadingTag }         // default render table
+export { RichTextParseError }                                          // also on the parser subpaths
 export type {
   LocalessRichTextDocument, LocalessRichTextNode, LocalessRichTextNodeWithKey,
   LocalessRichTextMark, LocalessRichTextLinkAttrs, LocalessRichTextElement,
@@ -122,7 +123,14 @@ export type {
   LocalessRichTextRenderer, LocalessRichTextRenderers, LocalessRichTextRendererProps,
   LocalessRichTextHtmlOptions, NormalizeInputOptions, ProcessAttrsOptions,
   RichTextRenderSpec, MarkTreeSegment, MarkTreeText, MarkTreeMark,
+  RichTextParseOptions, RichTextParseResult, RichTextUnsupportedPolicy, RichTextUnsupportedReport,
 }
+
+// @localess/richtext/html-parser, @localess/richtext/markdown-parser
+export { parseHtmlToRichText }       // html-parser
+export { parseMarkdownToRichText }   // markdown-parser
+export { RichTextParseError }
+export type { RichTextParseOptions, RichTextParseResult, RichTextUnsupportedPolicy, RichTextUnsupportedReport }
 
 // @localess/richtext/test-utils
 export { richTextFixtures }

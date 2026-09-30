@@ -187,6 +187,8 @@ component is reflected without a restart. Never registered in a production build
 | default module | `@localess/nuxt` | Nuxt module |
 | `ModuleOptions` | `@localess/nuxt` | type |
 | `useLocalessServerClient()` | `#localess/server` | function |
+| `useLocalessServerClient()` | `@localess/nuxt/server` | function (same export, package subpath) |
+| `PublicModuleOptions`, `PrivateModuleOptions` | `@localess/nuxt` | type — the `runtimeConfig.public.localess` / `runtimeConfig.localess` shapes |
 
 ## Component naming strategies
 

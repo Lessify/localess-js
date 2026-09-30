@@ -12,6 +12,8 @@ SDK packages that ship runtime dependencies impose those dependencies on every c
 
 This is a deliberate constraint, not an oversight. Do not add runtime dependencies to resolve convenience problems.
 
+*Update:* `dependencies` is no longer empty — it now holds exactly two internal, zero-dependency workspace packages, `@localess/model` ([ADR 009](009-shared-model-package.md)) and `@localess/live-preview` ([ADR 013](013-live-preview-package.md)). The zero-*external*-dependency constraint is unchanged.
+
 ## Consequences
 
 **For contributors:**

@@ -1,6 +1,6 @@
 # Contributing to @localess/cli
 
-CLI tool built with Commander.js. Entry point: `src/index.ts` (shebang + `program.parse`), which loads the `Command` tree from `src/program.ts`. `program.ts` registers the five top-level commands (`login`, `logout`, `schema`, `translation`, `type`) and the `preAction`/`postAction` hooks that run the npm update check (`src/version-check.ts`). All commands live under `src/commands/`. The published binary is `localess` (`bin` in `package.json`).
+CLI tool built with Commander.js. Entry point: `src/index.ts` (shebang + `program.parseAsync`), which loads the `Command` tree from `src/program.ts`. `program.ts` registers the five top-level commands (`login`, `logout`, `schema`, `translation`, `type`) and the `preAction`/`postAction` hooks that run the platform compatibility check (`src/platform-version.ts`, in `preAction` — exits `1` on a confirmed incompatibility) and the npm update check (`src/version-check.ts`). All commands live under `src/commands/`. The published binary is `localess` (`bin` in `package.json`).
 
 ## Importing from `@localess/client` or `@localess/model`
 
@@ -12,7 +12,7 @@ Command-specific business-logic utilities (diffing, loading, emitting — not th
 
 1. **Subcommand-local** — used by exactly one subcommand: lives inside that subcommand's own folder, `commands/<group>/<subcommand>/<name>.ts` (+ co-located `<name>.test.ts`). E.g. `commands/schema/pull/emitter.ts`, `commands/type/generate/generator.ts`.
 2. **Group-shared** — used by 2+ subcommands within the same command group: lives directly in the group folder, sibling to the subcommand folders, `commands/<group>/<name>.ts`. E.g. `commands/schema/diff-schemas.ts`, `loader.ts`, `schema-lib.ts` (shared by `diff/`, `push/`, and/or `validate/`); `commands/translation/diff-translations.ts` (`diffTranslations` for `diff/` and `push/`, plus `reconcileTranslationDiff`/`printTranslationDiffMismatches` used by `push/` — promoted here once `push` started reusing it alongside `diff/`).
-3. **Package-shared** — used across 2+ command groups, or cross-cutting infra: stays at `src/` root (`utils.ts`, `file.ts`, `session.ts`, `client.ts`, `version-check.ts`, `models/`). This tier is also where the `@localess/client`/`@localess/model` import-boundary files live (see above) — no change to that rule. E.g. `diff-report.ts` (`printDiffReport` — the grouped/colored diff printer shared by `translation diff`/`push` and `schema diff`/`push`; it returns `{ created, updated, stale, drift }` so the caller decides the exit code).
+3. **Package-shared** — used across 2+ command groups, or cross-cutting infra: stays at `src/` root (`utils.ts`, `file.ts`, `session.ts`, `client.ts`, `version-check.ts`, `platform-version.ts`, `models/`). This tier is also where the `@localess/client`/`@localess/model` import-boundary files live (see above) — no change to that rule. E.g. `diff-report.ts` (`printDiffReport` — the grouped/colored diff printer shared by `translation diff`/`push` and `schema diff`/`push`; it returns `{ created, updated, stale, drift }` so the caller decides the exit code).
 
 Don't import a sibling subcommand's local utility across folders — promote it to the group folder first. If a group-shared utility later gains a consumer in another group, promote it again to `src/` root.
 
@@ -56,7 +56,7 @@ await schemaValidateCommand.parseAsync(['validate', entry], { from: 'user' });
 await schemaCommand.parseAsync(['validate', entry], { from: 'user' });
 ```
 
-The schema subcommand tests (`schema/validate/validate.test.ts`, `schema/push/push.test.ts`, `schema/diff/diff.test.ts`, `schema/pull/pull.test.ts`) and `type/type.test.ts` drive the parent command. The translation tests (`translation/{pull,push,diff}/*.test.ts`) and `login/login.test.ts` instead call `parseAsync` on the leaf command with only that command's own arguments (e.g. `translationPushCommand.parseAsync(['en', '-p', 'file.json'], { from: 'user' })`). Either is fine — just never mix the two by passing the subcommand's name to the leaf.
+The schema subcommand tests (`schema/validate/validate.test.ts`, `schema/push/push.test.ts`, `schema/diff/diff.test.ts`, `schema/pull/pull.test.ts`) and `type/type.test.ts` drive the parent command, as does `translation/diff/diff.test.ts` (via `translationCommand`). The other translation tests (`translation/{pull,push}/*.test.ts`) and `login/login.test.ts` instead call `parseAsync` on the leaf command with only that command's own arguments (e.g. `translationPushCommand.parseAsync(['en', '-p', 'file.json'], { from: 'user' })`). Either is fine — just never mix the two by passing the subcommand's name to the leaf.
 
 ## Session / Credentials
 
@@ -122,6 +122,8 @@ import { myCommand } from './commands/my-command';
 program.addCommand(myCommand);
 ```
 
+**3. Declare its minimum platform version in `COMMAND_REQUIREMENTS` (`src/platform-version.ts`)**, keyed by the full command path (`'my-command'`, or e.g. `'translation my-sub'` for a subcommand); use `null` if it never talks to the platform. `platform-version.matrix.test.ts` walks the Commander tree and fails on a missing or stale entry — this applies to new subcommands too.
+
 ## Adding a Subcommand
 
 Group related operations under a parent command (e.g. `translation push`, `translation pull`). Subcommand-only helper functions go inside the subcommand's own folder alongside `index.ts`; see "Utility Placement" above before reaching into a sibling subcommand's file.
@@ -165,6 +167,8 @@ export const translationCommand = new Command('translation')
   .addCommand(translationDiffCommand)
   .addCommand(translationMySubCommand); // add here
 ```
+
+**3. Add `'translation my-sub'` to `COMMAND_REQUIREMENTS` in `src/platform-version.ts`** (see step 3 of "Adding a New Top-Level Command").
 
 If the subcommand compares local vs. remote state, reuse `printDiffReport` from `src/diff-report.ts` (accept `-a, --all` to include unchanged entries) so the output matches `translation diff`/`schema diff`, and exit `1` on drift when the command is read-only.
 

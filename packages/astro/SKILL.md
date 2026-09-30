@@ -39,7 +39,11 @@ export default defineConfig({
 | `version` | `'draft'` | published | Fetch the latest draft instead of published content. |
 | `debug` | `boolean` | `false` | Client debug logging. |
 | `cacheTTL` | `number \| false` | `300` | Client response cache TTL in seconds; `false` disables caching. |
+| `timeoutMs` | `number \| false` | `15000` | Per-attempt request timeout in ms; `false` disables it. |
+| `retry` | `LocalessRetryOptions \| false` | `{ attempts: 3, baseDelayMs: 300, maxDelayMs: 5000 }` | Retry policy for failed requests; `false` disables retrying. |
+| `fetchInit` | `LocalessFetchInit` | — | Merged into every `fetch` call; bypasses the client cache. (`fetch` and `cache` are not accepted — they can't survive the options' `JSON.stringify` into `virtual:localess-init`.) |
 | `componentsDir` | `string` | `'src'` | Directory scanned for schema components (`<componentsDir>/**/*.astro`). |
+| `componentNaming` | `ComponentNamingStrategy` | `'exact'` | How registry keys and `_schema` are normalized before matching. Strategy names only, no custom function. |
 | `components` | schema key → component path (relative to `componentsDir`) | — | Explicit map merged with auto-discovery. See "Component registry". |
 | `enableFallbackComponent` | `boolean` | `false` | Render a fallback component for unknown schema keys instead of throwing. |
 | `customFallbackComponent` | `string` | built-in `FallbackComponent.astro` | Path (relative to `componentsDir`) to your own fallback component. |
@@ -75,11 +79,11 @@ import LocalessComponent from '@localess/astro/LocalessComponent.astro';
 {data.body.map(item => <LocalessComponent data={item} links={links} references={references} assets={assets} />)}
 ```
 
-`LocalessComponent`'s props are `LocalessComponentProps`: `data: ContentData` (required — throws if missing), optional `links: Links`, `references: References`, `assets: Assets`, plus any extra props. It resolves the component registered for `toCamelCase(data._schema)` (falling back to the fallback component when enabled, otherwise throwing) and renders it with `data`/`links`/`references`/`assets`, the `localessEditable(data)` attributes (`data-ll-id`, `data-ll-schema`), and the extra props spread onto it.
+`LocalessComponent`'s props are `LocalessComponentProps`: `data: ContentData` (required — throws if missing), optional `links: Links`, `references: References`, `assets: Assets`, plus any extra props. It resolves the component registered for `data._schema`, normalized through the `componentNaming` strategy (falling back to the fallback component when enabled, otherwise throwing) and renders it with `data`/`links`/`references`/`assets`, the `localessEditable(data)` attributes (`data-ll-id`, `data-ll-schema`), and the extra props spread onto it.
 
 ## Component registry
 
-Components auto-register from `<componentsDir>/**/*.astro` (default `componentsDir: 'src'`, so `src/**/*.astro`), keyed by file name — `HeroSection.astro` registers as `heroSection`. Merge in an explicit map via the `components` option; values are component paths relative to `componentsDir` (the `.astro` extension is optional):
+Components auto-register from `<componentsDir>/**/*.astro` (default `componentsDir: 'src'`, so `src/**/*.astro`), keyed by file name — under the default `componentNaming: 'exact'`, `HeroSection.astro` registers as `HeroSection`. Merge in an explicit map via the `components` option; values are component paths relative to `componentsDir` (the `.astro` extension is optional):
 
 ```js
 localess({
@@ -89,7 +93,7 @@ localess({
 });
 ```
 
-A mapped path that doesn't resolve throws at build time, unless `enableFallbackComponent` is `true`, in which case the entry is skipped. Both the registry key and `_schema` are compared through `toCamelCase()` — a file named `HeroSection.astro` matches `_schema: 'hero-section'` automatically.
+A mapped path that doesn't resolve throws at build time, unless `enableFallbackComponent` is `true`, in which case the entry is skipped. Both the registry key and `_schema` are compared through the `componentNaming` strategy — under the default `'exact'` they must match verbatim; set `componentNaming: 'camelCase'` (or another strategy) so a file named `HeroSection.astro` matches `_schema: 'hero-section'`.
 
 ## Writing components
 
@@ -228,11 +232,11 @@ import FallbackComponent from '@localess/astro/FallbackComponent.astro';
 
 Everything else imports from the default entry point (`@localess/astro`) — never from `@localess/client` or `@localess/richtext` directly:
 
-- Integration and helpers: `localess`/`localessIntegration`, `getLocalessClient`, `getLivePayload`, `resolveAsset`, `handleLocalessMessage`, `toCamelCase`, `renderRichTextToHtml`/`renderLocalessRichTextToHtml`, and the string-renderer helpers `escapeHtml`/`escapeAttr`/`sanitizeUrl`.
+- Integration and helpers: `localess`/`localessIntegration`, `getLocalessClient`, `getLivePayload`, `resolveAsset`, `resolveAssetOriginal`, `resolveAssetDownload`, `handleLocalessMessage`, `normalizeComponentKey`, `toCamelCase` (deprecated), `renderRichTextToHtml`/`renderLocalessRichTextToHtml`, and the string-renderer helpers `escapeHtml`/`escapeAttr`/`sanitizeUrl`.
 - Browser-safe sync utilities: `loadLocalessSync`, `localessEditable`, `localessEditableField`, `isBrowser`, `isIframe`.
 - Errors: `LocalessApiError`.
 - `localessClient` — server-only factory, re-exported for the integration's generated `virtual:localess-init` module; in app code use `getLocalessClient()` instead.
-- Types: `LocalessOptions`, `LocalessComponentProps`, `LocalessSchemaProps`, `LocalessClient`, `LocalessSync`, `EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`; model types `Content`, `ContentData`, `ContentDataSchema`, `ContentDataField`, `ContentMetadata`, `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText`, `Assets`, `AssetMetadata`, `AssetTransformParams`, `Links`, `References`; rich text types `LocalessRichTextInput`, `LocalessRichTextDocument`, `LocalessRichTextNode`, `LocalessRichTextMark`.
+- Types: `LocalessOptions`, `LocalessComponentProps`, `LocalessSchemaProps`, `LocalessClient`, `LocalessClientOptions`, `ComponentNamingStrategy`, `LocalessSync`, `EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`; model types `Content`, `ContentData`, `ContentDataSchema`, `ContentDataField`, `ContentMetadata`, `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText`, `Assets`, `AssetMetadata`, `AssetTransformParams`, `Links`, `References`; rich text types `LocalessRichTextInput`, `LocalessRichTextDocument`, `LocalessRichTextNode`, `LocalessRichTextMark`.
 
 The `@localess/astro/middleware` and `@localess/astro/toolbarApp` subpaths exist for the integration's own `addMiddleware`/`addDevToolbarApp` entrypoints — you don't import them yourself.
 

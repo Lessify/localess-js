@@ -131,13 +131,13 @@ export type ContentData = InferContentData<typeof config>;
 export type PageContent = InferContent<typeof Page, typeof config>;
 ```
 
-`PageContent` now has `title: string`, `buttons: ButtonContent[]`, and `type: 'primary' | 'secondary'` on each button — the enum narrowed to a literal union, resolved through the nesting. Change `minLength` in the schema and nothing breaks; rename a field and every call site fails to compile.
+`PageContent` now has `title?: string`, `buttons?: ButtonContent[]`, and `type: 'primary' | 'secondary'` on each button — the enum narrowed to a literal union, resolved through the nesting. Change `minLength` in the schema and nothing breaks; rename a field and every call site fails to compile.
 
 Use it with the client:
 
 ```ts
 const content = await client.getContentBySlug<PageContent>('home', { locale: 'en' });
-content.data.buttons[0].type; // 'primary' | 'secondary'
+content.data.buttons?.[0].type; // 'primary' | 'secondary' | undefined
 ```
 
 `InferEnum<typeof ButtonType>` gives you the value union on its own.

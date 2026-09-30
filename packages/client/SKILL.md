@@ -4,7 +4,7 @@
 
 `@localess/client` is the **core JavaScript/TypeScript SDK** for the Localess headless CMS. It is a **server-side-only** library — never import it in browser/client-side code. A **secret** API token must never be exposed client-side. Localess also issues **public tokens** (read-only, published content and translations only) that are safe client-side, but only through a framework package's own client-side primitives (currently `@localess/react`, `@localess/angular`, `@localess/vue`, and `@localess/svelte`) — never by importing `@localess/client` in the browser. `@localess/cli` and `@localess/astro` have not been reworked for public tokens; treat their token as secret-only.
 
-**Zero external dependencies** — its only dependency is the in-monorepo, itself-zero-dependency `@localess/model` package, whose data-model types (`Content`, `ContentAsset`, `ContentLink`, `Locale`, `Space`, `Translations`, …) it re-exports unchanged. Requires Node.js >= 24.0.0.
+**Zero external dependencies** — its only dependencies are the in-monorepo `@localess/model` package, whose data-model types (`Content`, `ContentAsset`, `ContentLink`, `Locale`, `Space`, `Translations`, …) it re-exports unchanged, and `@localess/live-preview`, used solely for deprecated Visual Editor re-exports. Requires Node.js >= 24.0.0.
 
 ---
 
@@ -121,7 +121,7 @@ buildAssetQueryString({ w: 800, f: 'webp' }); // 'w=800&f=webp'
 |-------------|---------------------------------------|-----------------------------------------------------------------------------|
 | `w`         | `number`                              | Target width in pixels. With `h` → governed by `fit`. Without → scale proportionally. |
 | `h`         | `number`                              | Target height in pixels. With `w` → governed by `fit`. Without → scale proportionally. |
-| `q`         | `number` (1–100)                      | Output quality. Applies to JPEG, WebP, AVIF. Ignored for PNG. Default: 85. |
+| `q`         | `number` (1–100)                      | Output quality. Omit it and each encoder uses its own default (JPEG/WebP 80, AVIF 50); PNG ignores it. Must be a whole number — otherwise `TypeError`. |
 | `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Convert to this output format. Invalid → `400`.                             |
 | `fit`       | `'cover' \| 'contain' \| 'inside' \| 'outside' \| 'fill'` | Fit mode, applied only when **both** `w` and `h` are set. No client-side default — the API default is `cover` (crops). `inside` shrinks to fit without cropping and is usually what a thumbnail wants. Invalid → `400`. |
 | `thumbnail` | `boolean`                             | `true` → extract first frame from animated WebP/GIF or video frame via FFmpeg. |
@@ -174,6 +174,9 @@ returns no URL — use `assetLink()`.
 A deleted target is **silently omitted** from the map and the request still succeeds, so a missing
 key means "could not resolve", not "not used".
 
+All three params types (`ContentFetchParams`, `TranslationFetchParams`, `LinksFetchParams`) also
+accept `fetchInit?: LocalessFetchInit` and `signal?: AbortSignal` — see Resilience and Pluggable cache.
+
 ## Translation Fetch Parameters (`TranslationFetchParams`)
 
 | Parameter | Type                   | Default     | Description                               |
@@ -221,8 +224,8 @@ Always wrap calls in `try`/`catch` (or handle rejection) — the promise never s
 ## Caching
 
 - Default: in-memory TTL cache, **5 minutes** (300,000 ms)
-- Cache key = full request URL (includes all parameters)
-- `cacheTTL: false` always disables caching, regardless of other options
+- Cache key = request URL with the `token` param removed and the remaining params sorted
+- `cacheTTL: false` disables the built-in cache; a supplied `cache` option takes precedence over `cacheTTL`
 - Implementations are exported: `TTLCache` (default; expired entries are dropped on access), `NoCache` (used for `cacheTTL: false`), and a plain unbounded `Cache`, all implementing `ICache<V>` (`set`/`get`/`has`)
 
 ### Resilience
@@ -268,6 +271,8 @@ The cache is in-memory and instance-bound — each `localessClient()` instance h
 ---
 
 ## Visual Editor Integration
+
+> **Deprecated here.** `loadLocalessSync`, `localessEditable`, `localessEditableField`, `isBrowser`/`isServer`/`isIframe` and the sync event types now live in `@localess/live-preview`; `@localess/client` re-exports them only for back-compat and will drop them in a future major. Import from `@localess/live-preview` (or your framework package) in new code.
 
 ### Inject Sync Script
 
@@ -357,6 +362,10 @@ interface AssetMetadata {
   extension: string;
   type: string;
   alt?: string;
+  width?: number;    // px, EXIF orientation applied
+  height?: number;
+  size: number;      // bytes
+  duration?: number; // whole seconds, video/animated images
 }
 
 // Content metadata (also the value type of Links)
@@ -430,6 +439,8 @@ interface Space {
 
 ## Environment Safety Utilities
 
+Deprecated re-exports from `@localess/live-preview` — prefer importing them from there.
+
 ```typescript
 import { isBrowser, isServer, isIframe } from "@localess/client";
 
@@ -473,18 +484,25 @@ isIframe()   // true if running inside an iframe (browser only)
 export { localessClient }                          // Client factory
 export { LocalessApiError }                        // Thrown for non-2xx API responses (status, statusText, url, body, hint)
 export { LocalessNetworkError }                    // Thrown when the API can't be reached (origin, url, hint, cause)
-export { localessEditable, localessEditableField } // Visual editor helpers
-export { loadLocalessSync }                        // Sync script injector
-export { isBrowser, isServer, isIframe }           // Environment utilities
 export { buildAssetQueryString }                   // Asset query string serialiser
 export { findLink }                                // Resolves a ContentLink against a Links map
 export { Cache, NoCache, TTLCache }                 // Cache implementations (ICache) backing `cacheTTL`
-export type {
-  LocalessClient, LocalessClientOptions,
-  ContentFetchParams, LinksFetchParams, TranslationFetchParams,
-  LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType,
-  ICache,
+export { localessCacheTags, LOCALESS_CACHE_TAG }   // Cache-tag convention for framework caching / webhooks
+export {                                           // Component-registry key matching, shared by framework packages
+  normalizeComponentKey, createComponentIndex, formatComponentKeyCollisions,
+  splitComponentWords, DEFAULT_COMPONENT_NAMING,
 }
+export type {
+  LocalessClient, LocalessClientOptions, LocalessFetchInit, LocalessRetryOptions,
+  ContentFetchParams, LinksFetchParams, TranslationFetchParams,
+  ICache, LocalessCacheTarget,
+  ComponentNaming, ComponentNamingStrategy, ComponentIndex, ComponentKeyCollision,
+}
+// Deprecated re-exports from @localess/live-preview — import from there instead:
+export { localessEditable, localessEditableField } // Visual editor helpers
+export { loadLocalessSync }                        // Sync script injector
+export { isBrowser, isServer, isIframe }           // Environment utilities
+export type { LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType }
 // Re-exported from @localess/model (every type it exports):
 export type {
   Content, ContentData, ContentDataSchema, ContentDataField,

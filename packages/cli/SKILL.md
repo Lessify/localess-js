@@ -553,7 +553,7 @@ If you want to commit generated types while still ignoring credentials, you can 
 |-------------------------------------|--------------------------|----------------------|------------------------------------------------------|
 | `.localess/credentials.json`        | `localess login`         | `0o600` (owner only) | Persisted auth credentials                           |
 | `.localess/localess.d.ts`           | `localess type generate` | Standard             | Generated TypeScript types (path via `-p, --path`)   |
-| `schemas/<schema-id>.ts`, `schemas/index.ts` | `localess schema pull` | Standard       | Generated `@localess/schema` definitions (dir via `-p, --path`; each file starts with the pull marker comment) |
+| `schemas/<kebab-case-id>.ts`, `schemas/index.ts` | `localess schema pull` | Standard       | Generated `@localess/schema` definitions (dir via `-p, --path`; each file starts with the pull marker comment) |
 | `.gitignore` (appends `.localess`)  | `localess login`         | Standard             | Keeps credentials out of version control             |
 
 ---

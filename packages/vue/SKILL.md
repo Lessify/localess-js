@@ -265,6 +265,7 @@ export { LocalessComponent }        // Dynamic schema-to-component renderer
 export { LocalessDocument }         // Wraps LocalessComponent with automatic Visual Editor live sync
 export { localessEditable }         // Block-level data-ll-id/data-ll-schema attributes
 export { localessEditableField }    // Field-level data-ll-field attribute
+export { normalizeComponentKey }    // Applies a component naming strategy to a key (re-exported from @localess/client)
 
 // Composables
 export { useLocaless }              // Returns the injected LocalessClient
@@ -285,7 +286,7 @@ export { LocalessApiError }
 export { localessClient }
 
 // Types (re-exported from @localess/client)
-export type { LocalessClient, LocalessClientOptions, EventToAppOf, EventToAppType }
+export type { LocalessClient, LocalessClientOptions, EventToAppOf, EventToAppType, ComponentNaming, ComponentNamingStrategy }
 
 // Types (local)
 export type { LocalessComponentProps, LocalessDocumentProps, LocalessSchemaProps }
@@ -298,6 +299,7 @@ export type { Content, ContentData, ContentDataSchema, Assets, Links, References
 ```typescript
 // @localess/vue/vite
 export { localess }                              // Vite plugin factory
+export type { LocalessOptions }                  // { componentsDir?, components?, componentNaming? }
 export { VIRTUAL_LOCALESS_VUE_COMPONENTS_MODULE_ID } // 'virtual:localess-vue-components'
 ```
 
@@ -314,8 +316,6 @@ export { VIRTUAL_LOCALESS_VUE_COMPONENTS_MODULE_ID } // 'virtual:localess-vue-co
 
 Applied to **both** the registry key and `data._schema`. Collisions under a non-`exact` strategy log
 a warning and keep the first registration.
-
-Also accepts a custom `(name: string) => string`, applied to both sides.
 
 A **Vite-plugin option only** — `localess({ componentsDir, componentNaming })` from `@localess/vue/vite`.
 Not an option on the `Localess` plugin: a hand-written `components` map has keys you already control,

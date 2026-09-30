@@ -119,8 +119,6 @@ formatting must change, change it to match `generateHTML` everywhere.
 
 ## Per-framework usage
 
-### React (`@localess/react`)
-
 Each framework package imports `@localess/richtext` only from its designated
 file(s) (react `src/core/richtext.ts`, vue `src/richtext.ts`, svelte
 `src/lib/components/LocalessRichText.svelte`, astro `src/richtext.ts`, angular

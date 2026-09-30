@@ -35,7 +35,7 @@ they need through their own public API.
 | `Links` | Key-value map of content id → `ContentMetadata` |
 | `References` | Key-value map of content id → `Content`. Which fields a value carries depends on the endpoint that produced the map — see e.g. `ContentFetchParams.resolveReference` |
 | `Assets` | Key-value map of asset id → `AssetMetadata` |
-| `AssetMetadata` | Resolved asset metadata (`id`, `name`, `extension`, `type`, `alt?`) |
+| `AssetMetadata` | Resolved asset metadata (`id`, `name`, `extension`, `type`, `size`, `alt?`, `width?`, `height?`, `duration?`) |
 | `AssetTransformParams` | Optional image-transform query parameters for asset URLs |
 | `Translations` | Key-value map of translation id → translated string |
 

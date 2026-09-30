@@ -1,12 +1,12 @@
 # Contributing to @localess/svelte
 
-Svelte 5 integration layer. Depends on `@localess/client`, `@localess/model`, and `@localess/richtext`. Components never fetch data — they accept content as props.
+Svelte 5 integration layer. Depends on `@localess/client`, `@localess/model`, `@localess/richtext`, and `@localess/live-preview`. Components never fetch data — they accept content as props.
 
 `@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples) must only ever import from `@localess/svelte` — never `@localess/client` directly. If something from `@localess/client` isn't re-exported yet, add it to `src/lib/index.ts`'s re-exports rather than telling consumers to import `@localess/client` themselves.
 
 **`src/lib/models/index.ts`, `src/lib/utils/index.ts`, and `src/lib/client.ts` are the only files allowed to import from `@localess/client`.** Each has one job:
 - `models/index.ts` — every `@localess/client` **type** the package needs, plus `LocalessApiError` (a class, but consumed in type position via `catch`/`instanceof`, so it lives with the domain model). It is also the only file importing `@localess/model` (domain types: `Content`, `ContentData`, `Assets`, `Links`, `References`, ...) and the richtext model types. `models/options.ts` additionally defines `LocalessSvelteInitOptions` (extends `LocalessClientOptions` with `components`/`fallbackComponent`/`enableSync`) — it imports `LocalessClientOptions` from `@localess/client` directly since it's part of the `models/` boundary role, same as `@localess/react`'s `core/models/options.ts`. Other sibling files (e.g. `models/components.ts`) hold package-specific derived types built from what `models/index.ts` already re-exports, and import from `./index` instead.
-- `utils/index.ts` — every `@localess/client` plain **function** the package needs (`isBrowser`, `isIframe`, `loadLocalessSync`, `localessEditable`, `localessEditableField`, `findLink`, `isServer`). Not `localessClient` — see below.
+- `utils/index.ts` — every plain **function** the package needs: `findLink` from `@localess/client`, plus `createSyncController`, `isBrowser`, `isIframe`, `isServer`, `localessEditable`, `localessEditableField` from `@localess/live-preview` (the only file importing `@localess/live-preview`). Not `localessClient` — see below.
 - `client.ts` — the one place that calls `localessClient(...)` and wraps it in the singleton (client instance + component registry + Visual Editor sync state) that the rest of the package reads through `localessInit()`/`getLocalessClient()`. `localessClient` is a callable factory, not a type or a stateless helper, so it's imported here directly rather than re-exported through `models` or `utils`.
 
 Every other file in this package — including `index.ts` — imports what it needs from `./models`/`../models`, `./utils`/`../utils`, or `./client`/`../client` instead (adjust relative depth as needed). When a new file needs something from `@localess/client` that none of the three re-exports yet, add it to whichever matches. This keeps the client-package boundary auditable at three well-known files instead of scattered across every component/store/action.
@@ -40,7 +40,7 @@ export function myStore(): Readable<unknown> {
 ```
 
 Rules:
-- Subscribe via `localessSyncOn(event, callback)` / `localessSyncOnChange(callback)` from `../client`, not `window.localess?.on()` directly — it wraps the `isSyncEnabled()` check and the `localessSyncReady()` wait (avoiding a race where `window.localess` isn't set yet), and narrows the callback's event type.
+- Subscribe via `localessSyncOn(event, callback)` / `localessSyncOnChange(callback)` from `../client`, not `window.localess?.on()` directly — it wraps the `isSyncEnabled()` check and the sync controller's `ready()` wait (avoiding a race where `window.localess` isn't set yet), and narrows the callback's event type.
 - `window.localess` has no `.off()` method — the store's unsubscribe function can be a no-op.
 
 **2. Export from `src/lib/index.ts`.**
@@ -60,7 +60,7 @@ Rules:
 ## Hard Constraints
 
 - **No data fetching in components.** `<LocalessComponent>`, `<LocalessDocument>`, and consumer components accept content (`data`, `assets`, `links`, `references`, or the full `document`) as props only.
-- **No dependency on `@localess/react`, `@localess/angular`, `@localess/vue`, or `@localess/cli`.** ADR 005 — depend only on `@localess/client`, `@localess/model`, and `@localess/richtext`.
+- **No dependency on `@localess/react`, `@localess/angular`, `@localess/vue`, or `@localess/cli`.** ADR 005 — depend only on `@localess/client`, `@localess/model`, `@localess/richtext`, and `@localess/live-preview`.
 - **No secret token anywhere in this package.** Only a public (read-only) token flows through `localessInit`.
 - **`localessInit()` must be called during component initialization**, not inside `onMount`, an event handler, or a `+layout.ts` — Svelte's `setContext` requires it.
 

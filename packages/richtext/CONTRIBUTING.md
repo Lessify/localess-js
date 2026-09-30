@@ -15,11 +15,14 @@ zero-dependency (ADR 007, extended by ADR 009). TipTap appears only in
 | `src/render-map.ts` | declarative default render table (`NODE_RENDER_MAP`, `MARK_RENDER_MAP`, `resolveHeadingTag`) |
 | `src/normalize.ts` | input flattening + opt-in `_key` injection |
 | `src/marks.ts` | `buildMarkTree` — adjacent-mark merging (ProseMirror serializer semantics) |
-| `src/attrs.ts` | `processAttrs` — single attribute-normalization point |
+| `src/attrs.ts` | `processAttrs` — single attribute-normalization point; `sanitizeElement` — sanitized node/mark handed to custom renderers |
 | `src/escape.ts` | `escapeHtml`, `escapeAttr`, `sanitizeUrl` |
 | `src/render-html.ts` | reference HTML renderer with overrides + loop prevention |
+| `src/parse-common.ts` | parser options/result types, `RichTextParseError`, the unsupported-element tracker |
+| `src/html-parser/` | `parseHtmlToRichText` (tokenizer + model builder), published as the subpath export `./html-parser` |
+| `src/markdown-parser/` | `parseMarkdownToRichText` (block + inline parsers), published as the subpath export `./markdown-parser` |
 | `src/test-utils/fixtures.ts` | shared fixture corpus (`richTextFixtures`, `RichTextFixture`), published as the subpath export `./test-utils` via `src/test-utils/index.ts` |
-| `src/index.ts` | barrel — `export *` from every module above except `test-utils`, so new exports in those files are public automatically |
+| `src/index.ts` | barrel — `export *` from every module above except `test-utils` and the two parser directories, so new exports in those files are public automatically |
 
 Every module has a sibling `*.test.ts`; `src/fixtures.test.ts` runs the corpus
 against `renderRichTextToHtml` and `src/tiptap-parity.test.ts` runs the
@@ -66,10 +69,10 @@ npm run build:richtext
 npm run build
 ```
 
-`vite.config.mts` builds two library entries: `src/index.ts` →
-`dist/index.{js,mjs,d.ts}` and `src/test-utils/index.ts` →
-`dist/test-utils/index.{js,mjs,d.ts}`, wired to the `.` and `./test-utils`
-`exports` in `package.json`. Framework packages' tests import the fixtures
+`vite.config.mts` builds four library entries: `src/index.ts` →
+`dist/index.{js,mjs,d.ts}`, and `src/{test-utils,html-parser,markdown-parser}/index.ts` →
+`dist/{test-utils,html-parser,markdown-parser}/index.{js,mjs,d.ts}`, wired to the `.`,
+`./test-utils`, `./html-parser` and `./markdown-parser` `exports` in `package.json`. Framework packages' tests import the fixtures
 from `@localess/richtext/test-utils`, so this package must be built before
 running theirs.
 

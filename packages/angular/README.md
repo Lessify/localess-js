@@ -131,7 +131,7 @@ provideLocaless({
 | `cacheTTL` | `number \| false` | — | Response cache TTL in seconds (default 300); `false` disables caching |
 | `debug` | `boolean` | — | When `true`, logs internal activity to the console |
 
-`provideLocaless()` also registers Angular's built-in `IMAGE_LOADER` provider so that `NgOptimizedImage` automatically appends `?w=<width>` to Localess asset URLs for responsive image optimization.
+`provideLocaless()` also registers Angular's built-in `IMAGE_LOADER` provider so that `NgOptimizedImage` automatically appends `?w=<width>` to Localess asset URLs for responsive image optimization, plus any `AssetTransformParams` passed via `[loaderParams]` (Angular's derived height is never sent — pass `h` via `loaderParams` to request a box).
 
 `provideLocaless()` accepts optional trailing **features**, the same pattern as `provideRouter()`/`provideHttpClient()`. Today there's one: [`withLocalessComponents()`](#component-registry--dynamic-rendering).
 
@@ -372,8 +372,8 @@ The base class declares four signal inputs:
 | Input | Type | Description |
 |---|---|---|
 | `data` | `input.required<T>()` | The schema data object (required) |
-| `links` | `input<Links>()` | Map of content ID → slug, used by `findLink()` |
-| `references` | `input<References>()` | Map of resolved `ContentReference` objects |
+| `links` | `input<Links>()` | Map of content ID → `ContentMetadata` (incl. `fullSlug`), used by `findLink()` |
+| `references` | `input<References>()` | Map of content ID → resolved `Content` |
 | `assets` | `input<Assets>()` | Map of asset metadata |
 
 ```ts
@@ -520,7 +520,7 @@ import { LocalessRichTextPipe } from '@localess/angular';
 <div [innerHTML]="data.body | llRichText"></div>
 ```
 
-The pipe accepts `LocalessRichTextInput` (a doc, node, node array, `ContentRichText`, or `null`/`undefined` → empty). An optional argument passes per-node string renderers (`LocalessRichTextRenderers<string>`): `data.body | llRichText:renderers`. Supports paragraphs, headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links; link `href`s are sanitized (`javascript:`/`data:` stripped).
+The pipe accepts `LocalessRichTextInput` (a doc, node, node array, `ContentRichText`, or `null`/`undefined` → empty). An optional argument passes per-node string renderers (`LocalessRichTextRenderers<string>`): `data.body | llRichText:renderers`. Supports paragraphs, headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links; link `href`s are sanitized (`javascript:`/`data:` stripped), including the `attrs.href` a custom `link` renderer receives. Renderers return HTML that is trusted as-is, so escape what you interpolate: `escapeAttr` for attribute values, `escapeHtml` for text (both exported, with `sanitizeUrl`).
 
 ### `<ll-rich-text>` — Rich Text component
 
@@ -590,7 +590,7 @@ If you render with `<ll-document>`, none of this is needed — it subscribes to 
 
 ## Angular Image Optimization
 
-`provideLocaless()` automatically registers Angular's `IMAGE_LOADER` provider. When you use `NgOptimizedImage` (`ngSrc`) with a Localess asset URL, Angular appends `?w=<requested-width>` to the URL, enabling server-side image resizing:
+`provideLocaless()` automatically registers Angular's `IMAGE_LOADER` provider. When you use `NgOptimizedImage` (`ngSrc`) with a Localess asset URL, Angular appends `?w=<requested-width>` to the URL, enabling server-side image resizing. Other `AssetTransformParams` (`q`, `f`, `fit`, `thumbnail`, `h`) can be passed per image via `[loaderParams]`; Angular's own width wins over a `w` there, and its derived height is deliberately not sent (sending both `w` and `h` would switch to a `fit` crop):
 
 ```html
 <img
@@ -612,7 +612,7 @@ Everything below is exported from `@localess/angular` alongside the APIs above.
 
 | Export | Kind | Description |
 |---|---|---|
-| `LocalessClientService` | service | Thin DI wrapper around `localessClient()` built from `LOCALESS_CONFIG`: `getLinks()`, `getContentBySlug()`, `getContentById()`, `getTranslations()`, `assetLink()`. No `TransferState` hydration — prefer `LocalessContentService` for content. |
+| `LocalessClientService` | service | Thin DI wrapper around `localessClient()` built from `LOCALESS_CONFIG`: `getLinks()`, `getContentBySlug()`, `getContentById()`, `getTranslations()`, `assetLink()`, `assetOriginalLink()`, `assetDownloadLink()`. No `TransferState` hydration — prefer `LocalessContentService` for content. |
 | `LocalessComponentResolver` | service | Resolves `_schema` keys against the registry: `has(key)`, `resolve(key): Promise<Type<SchemaComponent> \| null>` (cached; falls back to the fallback component). Used by `[llComponent]`. |
 | `LOCALESS_CONFIG`, `LocalessConfig` | token / type | The resolved provider configuration (same shape as `LocalessOptions`). |
 | `LocalessOptions` | type | The `provideLocaless()` options object. |
@@ -620,7 +620,8 @@ Everything below is exported from `@localess/angular` alongside the APIs above.
 | `LOCALESS_COMPONENTS`, `LOCALESS_FALLBACK_COMPONENT` | tokens | Registry and fallback tokens populated by `withLocalessComponents()`. |
 | `LocalessComponentsMap`, `LocalessComponentLoader`, `AnySchemaComponent` | types | Registry map, lazy loader, and `Type<SchemaComponent<any>>` component type. |
 | `isComponentLoader(entry)` | function | Type guard distinguishing a lazy loader from a component class. |
-| `findLink`, `buildAssetQueryString`, `isBrowser`, `isIframe`, `loadLocalessSync` | functions | Utilities re-exported from `@localess/client`. |
-| `Content`, `ContentData`, `ContentDataSchema`, `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText`, `Links`, `References`, `Assets`, `Translations`, `AssetTransformParams`, `ContentFetchParams`, `LinksFetchParams`, `TranslationFetchParams`, `EventToAppType`, `EventToAppOf`, `LocalessRichTextInput`, `LocalessRichTextDocument`, `LocalessRichTextNode`, `LocalessRichTextMark`, … | types | Domain-model types re-exported from `@localess/model`, `@localess/client`, and `@localess/richtext`. |
+| `findLink`, `buildAssetQueryString`, `isBrowser`, `isIframe`, `loadLocalessSync` | functions | Utilities re-exported from `@localess/client` (`findLink`, `buildAssetQueryString`) and `@localess/live-preview` (`isBrowser`, `isIframe`, `loadLocalessSync`). |
+| `escapeHtml`, `escapeAttr`, `sanitizeUrl` | functions | Escaping and link-href allowlist for custom rich text string renderers, re-exported from `@localess/richtext`. |
+| `Content`, `ContentData`, `ContentDataSchema`, `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText`, `Links`, `References`, `Assets`, `Translations`, `AssetTransformParams`, `ContentFetchParams`, `LinksFetchParams`, `TranslationFetchParams`, `EventToAppType`, `EventToAppOf`, `LocalessRichTextInput`, `LocalessRichTextDocument`, `LocalessRichTextNode`, `LocalessRichTextMark`, … | types | Domain-model types re-exported from `@localess/model`, `@localess/client`, `@localess/live-preview` (`EventToAppType`, `EventToAppOf`), and `@localess/richtext`. |
 
 The package also re-exports the full `@localess/client` surface (`export * from '@localess/client'`), so `LocalessApiError`, `localessClient`, and every client type are importable from `@localess/angular` without adding `@localess/client` as a direct dependency.

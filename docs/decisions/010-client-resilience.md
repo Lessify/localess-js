@@ -24,7 +24,9 @@ Retries, timeouts, and cancellation are **on by default**.
 
 ADR 002 and rule 3 in `CLAUDE.md`: `@localess/client` has exactly one `dependencies` entry,
 `@localess/model`, and that does not change. `ky`, `p-retry`, and `exponential-backoff` were all
-rejected on that basis alone.
+rejected on that basis alone. (*Update:* since [ADR 013](013-live-preview-package.md) there are
+exactly two entries, `@localess/model` and `@localess/live-preview` — both internal and
+zero-external-dependency.)
 
 The cost is low. Node ≥ 24 and every edge runtime provide `AbortSignal.timeout` and
 `AbortSignal.any`, so signal composition is a few lines rather than a vendored implementation. The

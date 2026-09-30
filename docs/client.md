@@ -4,7 +4,7 @@ Core JavaScript/TypeScript SDK for the Localess headless CMS.
 
 **Server-side only** — never import it in browser code. A **secret** API token must never reach the browser; use the client in Next.js Server Components, API routes, `getServerSideProps`, Remix loaders, etc. Localess also issues **public tokens** (read-only, published content and translations only) that are safe client-side, but only through a framework package's client-side primitives (currently `@localess/react`, `@localess/angular`, `@localess/vue`, and `@localess/svelte`) — never by importing `@localess/client` directly in the browser. `@localess/cli` and `@localess/astro` are still secret-token-only. → [ADR 001](decisions/001-server-side-only.md)
 
-**Zero external dependencies** — its only dependency is the in-monorepo, itself-zero-dependency `@localess/model` package, whose data-model types it re-exports unchanged. Node.js >= 24.0.0. → [ADR 002](decisions/002-zero-production-deps.md), [ADR 009](decisions/009-shared-model-package.md)
+**Zero external dependencies** — its only dependencies are the in-monorepo `@localess/model` package, whose data-model types it re-exports unchanged, and `@localess/live-preview`, used solely for the deprecated Visual Editor re-exports. Node.js >= 24.0.0. → [ADR 002](decisions/002-zero-production-deps.md), [ADR 009](decisions/009-shared-model-package.md), [ADR 013](decisions/013-live-preview-package.md)
 
 ## Installation
 
@@ -297,7 +297,9 @@ deleted, it is omitted from the map and the request still succeeds. A missing ke
 "could not resolve", not "not used" — compare against the document's own id list if you need to
 tell the two apart.
 
-`getTranslations` takes `TranslationFetchParams` (`version` only). `getLinks` takes `LinksFetchParams`:
+All three params types also accept `fetchInit` (see [Framework caching](#framework-caching-and-the-bypass-rule)) and `signal` (see [Cancellation](#cancellation)).
+
+`getTranslations` takes `TranslationFetchParams` (`version`, plus `fetchInit`/`signal`). `getLinks` takes `LinksFetchParams`:
 
 | Parameter         | Type                     | Description                                                      |
 |-------------------|--------------------------|------------------------------------------------------------------|
@@ -331,7 +333,7 @@ try {
 
 ## Caching
 
-Default: in-memory TTL cache, **5 minutes** (300 seconds). Cache key = full request URL. Instance-bound — one cache per `localessClient()` call. The implementations (`TTLCache`, `NoCache`, `Cache`) and the `ICache` interface are exported. → [ADR 003](decisions/003-ttl-cache-design.md)
+Default: in-memory TTL cache, **5 minutes** (300 seconds). Cache key = request URL with the `token` param removed and the remaining params sorted. Instance-bound — one cache per `localessClient()` call (unless you pass a shared `cache`). The implementations (`TTLCache`, `NoCache`, `Cache`) and the `ICache` interface are exported. → [ADR 003](decisions/003-ttl-cache-design.md)
 
 ```typescript
 localessClient({ cacheTTL: 60 })    // 1 min — frequently updated content
@@ -340,6 +342,8 @@ localessClient({ cacheTTL: false }) // Disabled — always fresh (use in draft/p
 ```
 
 ## Visual Editor Helpers
+
+> **Deprecated.** `loadLocalessSync`, `localessEditable`, `localessEditableField`, `isBrowser`/`isServer`/`isIframe` and the sync event types now live in `@localess/live-preview`; `@localess/client` only re-exports them for back-compat and will drop them in a future major. Import from `@localess/live-preview` (or your framework package) instead. → [ADR 013](decisions/013-live-preview-package.md)
 
 ### `loadLocalessSync(origin)`
 
@@ -429,6 +433,8 @@ asset `fit` support; older deployments ignore the parameter.
 
 ## Environment Utilities
 
+Deprecated re-exports from `@localess/live-preview` — see [Visual Editor Helpers](#visual-editor-helpers).
+
 ```typescript
 import { isBrowser, isServer, isIframe } from "@localess/client";
 
@@ -453,7 +459,6 @@ interface Content<T extends ContentData> extends ContentMetadata {
 
 // References reuses Content. What a value carries depends on the endpoint —
 // for resolveReference the three collections are always absent. See above.
-}
 
 interface ContentMetadata {
   id: string; name: string; kind: 'FOLDER' | 'DOCUMENT';
@@ -462,7 +467,10 @@ interface ContentMetadata {
 }
 
 interface Assets { [id: string]: AssetMetadata }
-interface AssetMetadata { id: string; name: string; extension: string; type: string; alt?: string }
+interface AssetMetadata {
+  id: string; name: string; extension: string; type: string; alt?: string;
+  width?: number; height?: number; size: number; duration?: number;
+}
 
 // Base fields every content data object has
 interface ContentDataSchema {
@@ -489,18 +497,25 @@ interface Space  { id: string; name: string; locales: Locale[]; localeFallback: 
 export { localessClient }
 export { LocalessApiError }
 export { LocalessNetworkError }
-export { localessEditable, localessEditableField }
-export { loadLocalessSync }
-export { isBrowser, isServer, isIframe }
 export { buildAssetQueryString }
 export { findLink }
 export { Cache, NoCache, TTLCache }
+export { localessCacheTags, LOCALESS_CACHE_TAG }
+export {
+  normalizeComponentKey, createComponentIndex, formatComponentKeyCollisions,
+  splitComponentWords, DEFAULT_COMPONENT_NAMING,
+} // ADR 012 — shared by the framework packages
 export type {
-  LocalessClient, LocalessClientOptions,
+  LocalessClient, LocalessClientOptions, LocalessFetchInit, LocalessRetryOptions,
   ContentFetchParams, LinksFetchParams, TranslationFetchParams,
-  LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType,
-  ICache,
+  ICache, LocalessCacheTarget,
+  ComponentNaming, ComponentNamingStrategy, ComponentIndex, ComponentKeyCollision,
 }
+// Deprecated re-exports from @localess/live-preview (ADR 013):
+export { localessEditable, localessEditableField }
+export { loadLocalessSync }
+export { isBrowser, isServer, isIframe }
+export type { LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType }
 // Re-exported from @localess/model (everything it exports):
 export type {
   Content, ContentData, ContentDataSchema, ContentDataField,
@@ -519,5 +534,5 @@ export type {
 ## Common Mistakes
 
 - **Importing in browser code.** Any file that runs in the browser (React Client Component, `useEffect`, client-side bundle) must never import `@localess/client`. Use `@localess/react` hooks or RSC patterns instead. The only browser-safe exports are the token-free helpers (`isBrowser`, `isServer`, `isIframe`, `loadLocalessSync`, `localessEditable`, `localessEditableField`) and the sync event types.
-- **Adding production dependencies.** The package has zero external deps by design. Never add anything beyond `@localess/model` to `dependencies` in `packages/client/package.json`.
+- **Adding production dependencies.** The package has zero external deps by design. Never add anything beyond `@localess/model` and `@localess/live-preview` to `dependencies` in `packages/client/package.json`.
 - **Using milliseconds for `cacheTTL`.** `cacheTTL` is in **seconds** (`300` = 5 minutes), not milliseconds.

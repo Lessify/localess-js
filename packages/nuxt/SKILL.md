@@ -48,6 +48,7 @@ All set under the `localess` key in `nuxt.config.ts`.
 | `serverToken` | `string?` | — | **Secret** token. Server-only, never bundled. |
 | `componentsDir` | `string?` | `'~/components/localess'` | Scanned for `.vue` components. |
 | `componentNaming` | strategy name | `'exact'` | How `_schema` is matched to a component key. |
+| `devtools` | `boolean?` | `true` | Registers the Localess Nuxt DevTools tab (dev only). |
 | `components` | `Record<string, string>?` | `{}` | Explicit schema-key → path overrides, relative to `componentsDir`. Suffix `#ExportName` for a named export. Win over discovered entries. |
 | `enableSync` | `boolean?` | `false` | Loads the Visual Editor sync script. |
 | `debug` | `boolean?` | `false` | Logs client requests. |
@@ -98,8 +99,8 @@ default `exact` strategy, naming the file after the schema is all that is needed
 Applied to **both** the registry key and `data._schema`. Collisions under a non-`exact` strategy log
 a warning and keep the first registration.
 
-`@localess/nuxt` serializes options into `runtimeConfig`, so this accepts the strategy names only,
-not a custom function.
+Applied when the registry is generated at build time — it never reaches `runtimeConfig` — so this
+accepts the strategy names only, not a custom function.
 
 Explicit overrides win:
 
@@ -135,7 +136,8 @@ server process lifetime, so its in-memory cache is shared across requests; safe 
 uses the same token and so has identical permissions.
 
 Throws if `serverToken` is unset, or if called in the browser — both with messages naming the cause.
-The `#localess/server` alias is registered in both the app and Nitro graphs.
+The `#localess/server` alias is registered in both the app and Nitro graphs; the same export is also
+available as `@localess/nuxt/server`.
 
 ## Rendering content
 

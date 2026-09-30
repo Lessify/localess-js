@@ -12,10 +12,10 @@ Publishing only ESM breaks legacy tooling. Publishing only CJS breaks Next.js Ap
 
 ## Decision
 
-`@localess/client` and `@localess/react` publish both formats from the same source via Vite library mode (`vite.config.ts`) with `vite-plugin-dts`:
+`@localess/client` and `@localess/react` publish both formats from the same source via Vite library mode (`vite.config.mts`) with `vite-plugin-dts`:
 
 ```ts
-// vite.config.ts
+// vite.config.mts
 build: {
   lib: {
     entry: resolve(__dirname, 'src/index.ts'),
@@ -45,6 +45,8 @@ Output:
 `@localess/cli` is ESM-only (`formats: ['es']`, single `index.mjs` output) because it is a CLI executable, not a library — its `package.json` `exports`/`main`/`bin` all point to `dist/index.mjs` with no CJS fallback.
 
 `@localess/angular` is out of scope for this ADR — it builds with ng-packagr (Angular CLI) following the Angular Package Format, not Vite, and is ESM-only per Angular's own conventions.
+
+*Update:* the same dual-format Vite setup now also covers `@localess/model`, `@localess/richtext`, `@localess/live-preview`, `@localess/schema`, `@localess/vue`, and `@localess/astro`. Two more packages are ESM-only: `@localess/svelte` (`svelte-package`) and `@localess/nuxt` (`@nuxt/module-builder`, see [ADR 011](011-nuxt-module-depends-on-vue.md)).
 
 ## Consequences
 

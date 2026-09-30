@@ -60,6 +60,11 @@ const client = localessClient({
 | `version`         | `'draft'`         | ❌        | `'published'` | Default content version to fetch                                                                                                                                                                            |
 | `debug`           | `boolean`         | ❌        | `false`       | Enable debug logging                                                                                                                                                                                        |
 | `cacheTTL`        | `number \| false` | ❌        | `300`         | Cache TTL in **seconds** (default: 5 minutes). Set `false` to disable caching entirely                                                                                                                      |
+| `timeoutMs`       | `number \| false` | ❌        | `15000`       | Per-attempt request timeout in milliseconds; `false` waits indefinitely |
+| `retry`           | `LocalessRetryOptions \| false` | ❌ | `{ attempts: 3, baseDelayMs: 300, maxDelayMs: 5000 }` | Retry policy for network failures and `retryStatuses` (default `[408, 429, 500, 502, 503, 504]`); `false` disables |
+| `fetch`           | `typeof fetch`    | ❌        | global `fetch` | Replacement `fetch` implementation (instrumentation, tests, custom runtimes) |
+| `cache`           | `ICache<unknown>` | ❌        | —             | Custom cache (methods may return promises); when set, `cacheTTL` is ignored |
+| `fetchInit`       | `LocalessFetchInit` | ❌      | —             | Framework `fetch` options (`next`, `cache`) merged into every request; a request carrying them bypasses the client cache, and `next` without `tags` gets generated cache tags (`localessCacheTags`) |
 
 ---
 
@@ -104,6 +109,10 @@ const content = await client.getContentById<Page>('FRnIT7CUABoRCdSVVGGs', {
 | `resolveReference` | `boolean`  | `false`        | Resolve content references inline             |
 | `resolveLink`      | `boolean`  | `false`        | Resolve content links inline                  |
 | `resolveAsset`     | `boolean`  | `false`        | Resolve content assets inline                 |
+| `fetchInit`        | `LocalessFetchInit` | —     | Per-call framework `fetch` options, merged over the client's |
+| `signal`           | `AbortSignal` | —           | Abort this request (never retried)            |
+
+`getLinks` and `getTranslations` params also accept `fetchInit` and `signal`.
 
 ---
 
@@ -157,8 +166,8 @@ const draft = await client.getTranslations('en', { version: 'draft' });
 
 `getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` reject instead of returning empty data when the request fails.
 
-- A non-2xx HTTP response rejects with a `LocalessApiError`, which exposes `status`, `statusText`, `url` (with the token redacted), `body` (the API's parsed response body, if any — object, string, or `undefined`), and `hint` (a status-specific explanation, e.g. for 401/403/404/429/5xx; on 401/403 it links to the space's token settings page, and any `message`/`status`/`code`/`details` fields in the response body are folded in).
-- A request that never reached the API (DNS failure, connection refused, etc.) rejects with a `LocalessNetworkError`, exposing `origin`, `url` (redacted), `hint`, and `cause` (the underlying error).
+- A non-2xx HTTP response rejects with a `LocalessApiError`, which exposes `status`, `statusText`, `url` (with the token redacted), `body` (the API's parsed response body, if any — object, string, or `undefined`), and `hint` (a status-specific explanation, e.g. for 401/403/404/429/5xx; on 401/403 it links to the space's token settings page, and any `message`/`status`/`code`/`details` fields in the response body are folded in), plus `attempts` (requests issued before giving up).
+- A request that never reached the API (DNS failure, connection refused, etc.) rejects with a `LocalessNetworkError`, exposing `origin`, `url` (redacted), `hint`, `cause` (the underlying error), and `attempts`.
 - Both are also logged via `console.error` as a boxed, human-readable summary before being thrown.
 
 ```ts
@@ -225,7 +234,7 @@ const download = client.assetDownloadLink(content.data.file);
 |-------------|---------------------------------------|-----------------------------------------------------------------------------------------------|
 | `w`         | `number`                              | Target width in pixels. With `h` → cover crop; without → scale proportionally                 |
 | `h`         | `number`                              | Target height in pixels. With `w` → cover crop; without → scale proportionally                |
-| `q`         | `number` (1–100)                      | Output quality. Applies to JPEG, WebP, AVIF; ignored for PNG. Default: 85                    |
+| `q`         | `number` (1–100)                      | Output quality. Omit it and each encoder uses its own default (JPEG/WebP 80, AVIF 50); ignored for PNG |
 | `f`         | `'webp' \| 'jpeg' \| 'png' \| 'avif'` | Convert to this output format                                                                 |
 | `fit`       | `'cover' \| 'contain' \| 'inside' \| 'outside' \| 'fill'` | Fit mode, applied only when **both** `w` and `h` are set. API default is `cover` (crops); `inside` shrinks to fit |
 | `thumbnail` | `boolean`                             | Extract the first frame of animated WebP/GIF, or a video frame via FFmpeg, before resizing    |
@@ -235,6 +244,8 @@ The standalone `buildAssetQueryString(params)` helper that produces this query s
 ---
 
 ## Visual Editor Integration
+
+> **Deprecated here.** `loadLocalessSync`, `localessEditable`, `localessEditableField`, `isBrowser`/`isServer`/`isIframe` and the sync event types now live in [`@localess/live-preview`](../live-preview); `@localess/client` re-exports them only for back-compat and will remove them in a future major. `syncScriptUrl()` stays on the client.
 
 ### `loadLocalessSync(origin)`
 
@@ -307,7 +318,7 @@ if (window.localess) {
 }
 ```
 
-The `LocalessSync` interface (`on`, `onChange`) and the event types (`EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) are exported, and `Window.localess` is declared globally by this package. There is no `off()` method — subscribe once.
+The `LocalessSync` interface (`on`, `onChange`) and the event types (`EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) are re-exported (deprecated) from `@localess/live-preview`, which declares `Window.localess` globally. There is no `off()` method — subscribe once.
 
 ### Available Event Types
 
@@ -340,7 +351,7 @@ const client = localessClient({ origin, spaceId, token, cacheTTL: 600 });
 const client = localessClient({ origin, spaceId, token, cacheTTL: false });
 ```
 
-The cache key is the full request URL (including all query parameters). The cache implementations backing this option — `TTLCache` (default), `NoCache` (used for `cacheTTL: false`), and a plain `Cache` — plus the `ICache` interface are exported.
+The cache key is the request URL with the `token` param removed and the remaining params sorted. The cache implementations backing this option — `TTLCache` (default), `NoCache` (used for `cacheTTL: false`), and a plain `Cache` — plus the `ICache` interface are exported.
 
 > **Note:** The cache is in-memory and instance-bound. In multi-process deployments (e.g. Next.js parallel build workers), each process has its own independent cache. → [ADR 003](../../docs/decisions/003-ttl-cache-design.md)
 
@@ -354,6 +365,7 @@ All types below are defined in `@localess/model` and re-exported unchanged by `@
 
 ```ts
 interface Content<T extends ContentData> extends ContentMetadata {
+  locale: string;           // Locale actually served, after any fallback
   data?: T;
   links?: Links;            // Populated when resolveLink: true
   references?: References; // Populated when resolveReference: true
@@ -449,6 +461,10 @@ interface AssetMetadata {
   extension: string;
   type: string;
   alt?: string;
+  width?: number;    // px, EXIF orientation applied
+  height?: number;
+  size: number;      // bytes
+  duration?: number; // whole seconds, video/animated images
 }
 ```
 

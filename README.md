@@ -27,33 +27,37 @@ Keeping all packages together in one repository ensures that shared types and in
 
 | Package                                   | Version | Description                                                                                                              |
 |-------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------|
-| [`@localess/model`](packages/model)       | 4.0.0   | Shared domain-model types (content, assets, links, references, rich text, locales, spaces, translations, schemas). Zero dependencies. |
-| [`@localess/client`](packages/client)     | 4.0.0   | Core JavaScript/TypeScript SDK. Fetch content, translations, and assets from the Localess API. **Server-side only**, unless used with a public token. |
-| [`@localess/richtext`](packages/richtext) | 4.0.0   | Framework-neutral rich text model and HTML renderer for Localess's TipTap JSON content. Zero dependencies.               |
-| [`@localess/schema`](packages/schema)     | 4.0.0   | Programmatic schema definitions (`defineSchema`, `defineEnum`, `defineField`, `defineConfig`) with TypeScript content type inference. Zero dependencies. |
-| [`@localess/react`](packages/react)       | 4.0.0   | React integration (incl. Next.js, React Router, TanStack Start). Dynamic component mapping, rich text, Visual Editor sync. |
-| [`@localess/angular`](packages/angular)   | 4.0.0   | Angular integration. Components, directives, pipes, services, and Visual Editor sync.                                     |
-| [`@localess/vue`](packages/vue)           | 4.0.0   | Vue 3 integration (incl. Nuxt). Plugin, components, composables, Vite plugin, and Visual Editor sync.                    |
-| [`@localess/svelte`](packages/svelte)     | 4.0.0   | Svelte 5 integration (incl. SvelteKit). Context init, components, actions, stores, and Visual Editor sync.               |
-| [`@localess/astro`](packages/astro)       | 4.0.0   | Astro integration. Astro Integration entry, native `.astro` components, and Visual Editor live preview.                  |
-| [`@localess/cli`](packages/cli)           | 4.0.0   | Command-line interface. Manage translations, generate TypeScript types, and pull/push/diff/validate schemas.             |
+| [`@localess/model`](packages/model)       | 4.0.2   | Shared domain-model types (content, assets, links, references, rich text, locales, spaces, translations, schemas). Zero dependencies. |
+| [`@localess/client`](packages/client)     | 4.0.2   | Core JavaScript/TypeScript SDK. Fetch content, translations, and assets from the Localess API. **Server-side only**, unless used with a public token. |
+| [`@localess/richtext`](packages/richtext) | 4.0.2   | Framework-neutral rich text model and HTML renderer for Localess's TipTap JSON content. Zero dependencies.               |
+| [`@localess/live-preview`](packages/live-preview) | 4.0.2 | Framework-neutral Visual Editor bridge: sync script loading, `data-ll-*` editable attributes, editor events, sync controller. Used by every framework package. |
+| [`@localess/schema`](packages/schema)     | 4.0.2   | Programmatic schema definitions (`defineSchema`, `defineEnum`, `defineField`, `defineConfig`) with TypeScript content type inference. Zero dependencies. |
+| [`@localess/react`](packages/react)       | 4.0.2   | React integration (incl. Next.js, React Router, TanStack Start). Dynamic component mapping, rich text, Visual Editor sync. |
+| [`@localess/angular`](packages/angular)   | 4.0.2   | Angular integration. Components, directives, pipes, services, and Visual Editor sync.                                     |
+| [`@localess/vue`](packages/vue)           | 4.0.2   | Vue 3 integration (incl. Nuxt). Plugin, components, composables, Vite plugin, and Visual Editor sync.                    |
+| [`@localess/nuxt`](packages/nuxt)         | 4.0.2   | Nuxt module wrapping `@localess/vue`. Config-driven setup, public/secret token split, component auto-registration, server client. |
+| [`@localess/svelte`](packages/svelte)     | 4.0.2   | Svelte 5 integration (incl. SvelteKit). Context init, components, actions, stores, and Visual Editor sync.               |
+| [`@localess/astro`](packages/astro)       | 4.0.2   | Astro integration. Astro Integration entry, native `.astro` components, and Visual Editor live preview.                  |
+| [`@localess/cli`](packages/cli)           | 4.0.2   | Command-line interface. Manage translations, generate TypeScript types, and pull/push/diff/validate schemas.             |
 
 ### Package Dependency Graph
 
 ```
                        ┌──▶ @localess/model
-@localess/react   ─────┼──▶ @localess/client ──▶ @localess/model
+@localess/react   ─────┼──▶ @localess/client ──▶ @localess/model, @localess/live-preview
 @localess/angular ─────┤
 @localess/vue     ─────┼──▶ @localess/richtext ──▶ @localess/model
 @localess/svelte  ─────┤
-@localess/astro   ─────┘
+@localess/astro   ─────┴──▶ @localess/live-preview ──▶ @localess/model
+
+@localess/nuxt    ────────▶ @localess/vue
 
                        ┌──▶ @localess/model
-@localess/cli     ─────┼──▶ @localess/client ──▶ @localess/model
+@localess/cli     ─────┼──▶ @localess/client ──▶ @localess/model, @localess/live-preview
                        └──▶ @localess/schema ──▶ @localess/model
 ```
 
-`@localess/model` is the root of the graph and depends on nothing. `@localess/client`, `@localess/richtext`, and `@localess/schema` depend only on `@localess/model`. The framework packages depend on `@localess/client`, `@localess/model`, and `@localess/richtext`; `@localess/cli` depends on `@localess/client`, `@localess/model`, and `@localess/schema`. Dependent packages never depend on each other. See [`docs/decisions/`](docs/decisions/) for the reasoning behind these boundaries.
+`@localess/model` is the root of the graph and depends on nothing. `@localess/richtext`, `@localess/schema`, and `@localess/live-preview` depend only on `@localess/model`; `@localess/client` depends on `@localess/model` and `@localess/live-preview`. The framework packages depend on `@localess/client`, `@localess/model`, `@localess/richtext`, and `@localess/live-preview`; `@localess/cli` depends on `@localess/client`, `@localess/model`, and `@localess/schema`. Dependent packages never depend on each other, with one sanctioned exception: `@localess/nuxt` wraps `@localess/vue`. See [`docs/decisions/`](docs/decisions/) for the reasoning behind these boundaries.
 
 ---
 
@@ -263,10 +267,12 @@ localess-js/
 │   ├── model/           # @localess/model
 │   ├── client/          # @localess/client
 │   ├── richtext/        # @localess/richtext
+│   ├── live-preview/    # @localess/live-preview
 │   ├── schema/          # @localess/schema
 │   ├── react/           # @localess/react
 │   ├── angular/         # @localess/angular
 │   ├── vue/             # @localess/vue
+│   ├── nuxt/            # @localess/nuxt
 │   ├── svelte/          # @localess/svelte
 │   ├── astro/           # @localess/astro
 │   └── cli/             # @localess/cli
@@ -297,11 +303,12 @@ npm install
 
 ```bash
 # Build all packages in dependency order
-# (model, richtext, client, schema, react, vue, svelte, cli, angular, astro)
+# (model, live-preview, richtext, client, schema, react, vue, svelte, cli, angular, astro, nuxt)
 npm run build
 
 # Build individual packages
 npm run build:model
+npm run build:live-preview
 npm run build:richtext
 npm run build:client
 npm run build:schema
@@ -311,9 +318,10 @@ npm run build:svelte
 npm run build:cli
 npm run build:angular
 npm run build:astro
+npm run build:nuxt
 ```
 
-`@localess/model` must be built before running the client, richtext, or schema tests; `@localess/richtext` before the framework package tests; `@localess/schema` before the CLI tests.
+`@localess/model` must be built before running the client, richtext, or schema tests; `@localess/live-preview` before building `@localess/client`; `@localess/richtext` before the framework package tests; `@localess/schema` before the CLI tests; `@localess/vue` before building `@localess/nuxt`.
 
 ### Run Tests
 
@@ -359,10 +367,12 @@ Each package ships a `SKILL.md` file that directs AI coding agents (GitHub Copil
 | `@localess/model`     | [`packages/model/SKILL.md`](packages/model/SKILL.md)         |
 | `@localess/client`    | [`packages/client/SKILL.md`](packages/client/SKILL.md)       |
 | `@localess/richtext`  | [`packages/richtext/SKILL.md`](packages/richtext/SKILL.md)   |
+| `@localess/live-preview` | [`packages/live-preview/SKILL.md`](packages/live-preview/SKILL.md) |
 | `@localess/schema`    | [`packages/schema/SKILL.md`](packages/schema/SKILL.md)       |
 | `@localess/react`     | [`packages/react/SKILL.md`](packages/react/SKILL.md)         |
 | `@localess/angular`   | [`packages/angular/SKILL.md`](packages/angular/SKILL.md)     |
 | `@localess/vue`       | [`packages/vue/SKILL.md`](packages/vue/SKILL.md)             |
+| `@localess/nuxt`      | [`packages/nuxt/SKILL.md`](packages/nuxt/SKILL.md)           |
 | `@localess/svelte`    | [`packages/svelte/SKILL.md`](packages/svelte/SKILL.md)       |
 | `@localess/astro`     | [`packages/astro/SKILL.md`](packages/astro/SKILL.md)         |
 | `@localess/cli`       | [`packages/cli/SKILL.md`](packages/cli/SKILL.md)             |

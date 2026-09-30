@@ -319,18 +319,20 @@ localess schema validate ./schemas/index.ts
 localess schema validate ./schemas/index.ts --format json   # machine-readable, for CI
 ```
 
-### `localess schema pull [--path <dir>]`
+### `localess schema pull [--path <dir>] [--print-width <n>]`
 
 Fetches the space's schemas and (re)generates one TypeScript definition file per schema (kebab-case file name, e.g. `HeroBlock` → `hero-block.ts`) plus `index.ts` (a `defineConfig()` call) into `--path` (default `schemas`). Repeatable and safe to re-run — only ever overwrites/deletes files it previously generated (marked with a header comment); a same-named hand-written file without that marker is skipped and reported, and never overwritten.
 
 ```bash
 localess schema pull
 localess schema pull --path src/schemas
+localess schema pull --print-width 100   # match your own .prettierrc printWidth
 ```
 
 - Every field is emitted wrapped in `defineField(...)` (imported from `@localess/schema` alongside `defineSchema`), not as a bare object literal, so hand-edits to a pulled file still get `defineField`'s excess-property checking. Schemas with no fields import only `defineSchema`; `ENUM` schemas use `defineEnum`.
 - Cross-schema references (`OPTION`/`OPTIONS` `source`, `SCHEMA`/`SCHEMAS` `schemas`) that point at another pulled schema become `import { X } from './x'` statements and by-value refs; ids not present in the pulled set stay plain strings.
-- Output is deterministic — the same server state produces byte-identical files.
+- A `defineField(...)` call wraps to one property per line once it would exceed `--print-width` columns (default `80`, Prettier's default) — set it to match your project's `printWidth`.
+- Output is deterministic — the same server state (and `--print-width`) produces byte-identical files.
 
 ### `localess schema diff <entry>`
 
@@ -371,6 +373,10 @@ localess schema push ./schemas/index.ts --delete -y # sync, skip the deletion co
 > `localess login` appends `.localess` to `.gitignore` automatically. If you want to commit generated types, refine that entry to `.localess/credentials.json` afterwards.
 
 ---
+
+## Platform Compatibility Check
+
+The CLI and the Localess platform are released in lockstep. Before each command that talks to the platform, the CLI reads `<origin>/assets/version.json` and blocks the command (exit `1`, before any API call) if the platform's major version differs from the CLI's or the platform is below the command's minimum (currently `4.0.0` for every platform-facing command). `login`, `logout`, and `schema validate` are exempt. The check is skipped silently when no credentials are configured or the version can't be determined (non-2xx, unreachable, malformed, or a 3-second timeout). Set `LOCALESS_SKIP_VERSION_CHECK` to any value to bypass it.
 
 ## Update Notifications
 

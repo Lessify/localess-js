@@ -1,6 +1,6 @@
 # Contributing to @localess/astro
 
-Astro integration layer. Depends on `@localess/client`, `@localess/model`, and `@localess/richtext` (plus `camelcase` and `morphdom`). Components never fetch data — they accept server-fetched data as props, same rule as `@localess/react`.
+Astro integration layer. Depends on `@localess/client`, `@localess/model`, `@localess/richtext`, and `@localess/live-preview` (plus `morphdom`). Components never fetch data — they accept server-fetched data as props, same rule as `@localess/react`.
 
 ## Package boundaries
 
@@ -8,12 +8,12 @@ Astro integration layer. Depends on `@localess/client`, `@localess/model`, and `
 
 **The client-import boundary.** This package follows `CLAUDE.md` rule 7. Exactly two locations import `@localess/client` directly, and `src/import-boundary.test.ts` fails the build if a third appears:
 
-- `src/index.ts` — the public re-exports (`localessClient`, `LocalessApiError`, `loadLocalessSync`, `localessEditable`, `localessEditableField`, `isBrowser`, `isIframe`, and the sync event types). This is the sanctioned pass-through to consumers, and it is **load-bearing**: the generated `virtual:localess-init` module imports `localessClient` from `@localess/astro`, so this re-export must not be "cleaned up". There is a test asserting the generated code never references `@localess/client`.
-- `src/models/**` — the models module. `src/models/index.ts` re-exports the client types the package needs (`EventToApp`, `LocalessClient`, `LocalessClientOptions`); `src/models/client.ts` builds `LocalessOptions` on top of `LocalessClientOptions`. **Model types come from `@localess/model`**, never via the client's re-export — the guard test checks this separately.
+- `src/index.ts` — the public re-exports (`localessClient` and `LocalessApiError` from `@localess/client`; `loadLocalessSync`, `localessEditable`, `localessEditableField`, `isBrowser`, `isIframe`, and the sync event types from `@localess/live-preview`). This is the sanctioned pass-through to consumers, and it is **load-bearing**: the generated `virtual:localess-init` module imports `localessClient` from `@localess/astro`, so this re-export must not be "cleaned up". There is a test asserting the generated code never references `@localess/client`.
+- `src/models/**` — the models module. `src/models/index.ts` re-exports what the package needs from the client (`ComponentNamingStrategy`, `LocalessClient`, `LocalessClientOptions` types, plus the `normalizeComponentKey` function) and `EventToApp` from `@localess/live-preview`; `src/models/client.ts` builds `LocalessOptions` on top of `LocalessClientOptions`. **Model types come from `@localess/model`**, never via the client's re-export — the guard test checks this separately.
 
-Everything else reaches the client through `'../models'` (types) or `'../'` (functions). Note the package uses two of rule 7's three roles: there is no `utils` module and no client file, because there is no `localessClient(...)` call in TypeScript source — the client is constructed inside the generated `virtual:localess-init` module. The `.astro` components import `localessEditable`/`toCamelCase` from `'../'` and types from `'../models'`.
+Everything else reaches the client through `'../models'` (types, plus `normalizeComponentKey`) or `'../'` (functions). Note the package uses two of rule 7's three roles: there is no `utils` module and no client file, because there is no `localessClient(...)` call in TypeScript source — the client is constructed inside the generated `virtual:localess-init` module. The `.astro` components import `localessEditable`/`normalizeComponentKey` from `'../'` and types from `'../models'`.
 
-For `@localess/richtext` (ADR 007), exactly two files import it: **`src/richtext.ts`** (the pass-through re-export of `renderRichTextToHtml`, its `renderLocalessRichTextToHtml` alias, and the `LocalessRichTextInput`/`LocalessRichTextRenderers`/`LocalessRichTextHtmlOptions` types; `LocalessRichText.astro` imports through `../richtext`) and **`src/models/index.ts`** (richtext model *types* only). Note that `src/index.ts` only re-exports the two functions from `./richtext`, so `LocalessRichTextRenderers`/`LocalessRichTextHtmlOptions` are not currently part of the public surface.
+For `@localess/richtext` (ADR 007), exactly two files import it: **`src/richtext.ts`** (the pass-through re-export of `renderRichTextToHtml`, its `renderLocalessRichTextToHtml` alias, the `escapeHtml`/`escapeAttr`/`sanitizeUrl` helpers, and the `LocalessRichTextInput`/`LocalessRichTextRenderers`/`LocalessRichTextHtmlOptions` types; `LocalessRichText.astro` imports through `../richtext`) and **`src/models/index.ts`** (richtext model *types* only). Note that `src/index.ts` only re-exports the functions from `./richtext`, so `LocalessRichTextRenderers`/`LocalessRichTextHtmlOptions` are not currently part of the public surface.
 
 ## Adding a New Component
 

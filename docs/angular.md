@@ -85,7 +85,7 @@ import { LocalessAssetService, LocalessClientService, LocalessTranslationService
 // assetService.originalLink(asset | path) → string — uploaded bytes, inline, no transform
 // assetService.downloadLink(asset | path) → string — uploaded bytes, attachment, no transform
 // translationService.fetch('en', params?) → Promise<Translations>
-// clientService.getContentBySlug / getContentById / getLinks / getTranslations / assetLink — raw localessClient() calls, no TransferState
+// clientService.getContentBySlug / getContentById / getLinks / getTranslations / assetLink / assetOriginalLink / assetDownloadLink — raw localessClient() calls, no TransferState
 ```
 
 `originalLink` and `downloadLink` take no transform params — neither enters the image pipeline, and
@@ -116,7 +116,7 @@ provideLocaless(
 );
 ```
 
-`provideLocaless()` accepts features as trailing arguments (same pattern as `provideRouter()`). `withLocalessComponents` is the only one today. Besides `LOCALESS_CONFIG` and the services, `provideLocaless()` registers `LocalessComponentResolver` (resolves and caches registry lookups, invoking a lazy loader once per key), `LOCALESS_SYNC_READY` (a `Promise<void>` for the sync script load, which begins once the app is stable), and Angular's `IMAGE_LOADER` (appends `?w=<width>` to Localess asset URLs for `NgOptimizedImage`). Other options: `version: 'draft'`, `debug`, `enableSync`, `cacheTTL` (seconds, default 300, `false` disables). It throws if `origin`, `spaceId`, or `token` is empty.
+`provideLocaless()` accepts features as trailing arguments (same pattern as `provideRouter()`). `withLocalessComponents` is the only one today. Besides `LOCALESS_CONFIG` and the services, `provideLocaless()` registers `LocalessComponentResolver` (resolves and caches registry lookups, invoking a lazy loader once per key), `LOCALESS_SYNC_READY` (a `Promise<void>` for the sync script load, which begins once the app is stable), and Angular's `IMAGE_LOADER` (appends `?w=<width>`, plus any `AssetTransformParams` from `[loaderParams]`, to Localess asset URLs for `NgOptimizedImage`; Angular's derived height is never sent). Other options: `version: 'draft'`, `debug`, `enableSync`, `cacheTTL` (seconds, default 300, `false` disables). It throws if `origin`, `spaceId`, or `token` is empty.
 
 ```html
 <!-- top-level: renders a full Content response, wires up Visual Editor sync internally -->
@@ -288,7 +288,7 @@ Visual Editor sync still works on a static host: Angular ships a live applicatio
 
 ## Full Export Surface
 
-`src/public-api.ts` exports: `LocalessDocument`, `LocalessRichText`, `SchemaComponent`, `ContentDirective`, `ContentIdDirective`, `ContentSchemaDirective`, `ContentFieldDirective`, `LocalessComponentDirective`, `provideLocaless`, `LocalessOptions`, `withLocalessComponents`, `isComponentLoader`, `LocalessComponentsMap`, `LocalessComponentLoader`, `AnySchemaComponent`, `LOCALESS_COMPONENTS`, `LOCALESS_FALLBACK_COMPONENT`, `LOCALESS_CONFIG`, `LocalessConfig`, `defaultConfig`, `LOCALESS_SYNC_READY`, `AssetPipe`, `LinkPipe`, `LocalessRichTextPipe` (plus `escapeHtml`, `escapeAttr`, `sanitizeUrl` re-exported from `@localess/richtext` alongside it), `SafeHtmlPipe`, `LocalessAssetService`, `LocalessClientService`, `LocalessComponentResolver`, `LocalessContentService`, `LocalessSyncService`, `LocalessTranslationService`, the `models` barrel (type-only re-exports from `@localess/model`, `@localess/client`, `@localess/richtext`), the `utils` barrel (`buildAssetQueryString`, `findLink`, `isBrowser`, `isIframe`, `loadLocalessSync`), and `export * from '@localess/client'` (so `LocalessApiError`, `localessClient`, etc. are available from `@localess/angular`).
+`src/public-api.ts` exports: `LocalessDocument`, `LocalessRichText`, `SchemaComponent`, `ContentDirective`, `ContentIdDirective`, `ContentSchemaDirective`, `ContentFieldDirective`, `LocalessComponentDirective`, `provideLocaless`, `LocalessOptions`, `withLocalessComponents`, `isComponentLoader`, `LocalessComponentsMap`, `LocalessComponentLoader`, `AnySchemaComponent`, `LOCALESS_COMPONENTS`, `LOCALESS_FALLBACK_COMPONENT`, `LOCALESS_CONFIG`, `LocalessConfig`, `defaultConfig`, `LOCALESS_SYNC_READY`, `AssetPipe`, `LinkPipe`, `LocalessRichTextPipe` (plus `escapeHtml`, `escapeAttr`, `sanitizeUrl` re-exported from `@localess/richtext` alongside it), `SafeHtmlPipe`, `LocalessAssetService`, `LocalessClientService`, `LocalessComponentResolver`, `LocalessContentService`, `LocalessSyncService`, `LocalessTranslationService`, the `models` barrel (type-only re-exports from `@localess/model`, `@localess/client`, `@localess/live-preview`, `@localess/richtext`), the `utils` barrel (`buildAssetQueryString`, `findLink` from `@localess/client`; `isBrowser`, `isIframe`, `loadLocalessSync` from `@localess/live-preview`), and `export * from '@localess/client'` (so `LocalessApiError`, `localessClient`, etc. are available from `@localess/angular`).
 
 ## Build Requirement
 

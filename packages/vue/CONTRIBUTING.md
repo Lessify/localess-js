@@ -1,12 +1,12 @@
 # Contributing to @localess/vue
 
-Vue 3 integration layer. Depends on `@localess/client`, `@localess/model`, and `@localess/richtext`. Components never fetch data — they accept content as props.
+Vue 3 integration layer. Depends on `@localess/client`, `@localess/model`, `@localess/richtext`, and `@localess/live-preview`. Components never fetch data — they accept content as props.
 
 `@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples) must only ever import from `@localess/vue` — never `@localess/client` directly. If something from `@localess/client` isn't re-exported yet, add it to `src/index.ts`'s re-exports rather than telling consumers to import `@localess/client` themselves.
 
 **`src/models/index.ts`, `src/utils/index.ts`, and `src/client.ts` are the only files allowed to import from `@localess/client` directly.** Each has one job:
 - `models/index.ts` — every `@localess/client` **type** the package needs, plus `LocalessApiError` (a class, but consumed in type position via `catch`/`instanceof`, so it lives with the domain model). It is also the only file importing `@localess/model` (domain types: `Content`, `ContentData`, `Assets`, `Links`, `References`, ...) and the richtext model types. Sibling `models/components.ts` holds the package-specific prop types (`LocalessComponentProps`, `LocalessDocumentProps`, `LocalessSchemaProps`) built from what the barrel already re-exports, and imports from `../models` rather than any `@localess/*` package.
-- `utils/index.ts` — every `@localess/client` plain **function** the package needs (`isBrowser`, `isIframe`, `loadLocalessSync`, `localessEditable`, `localessEditableField`). Not `localessClient` — see below.
+- `utils/index.ts` — every plain **function** the package needs: `normalizeComponentKey` from `@localess/client`, plus `createSyncController`, `isBrowser`, `isIframe`, `localessEditable`, `localessEditableField` from `@localess/live-preview` (the only file importing `@localess/live-preview`). Not `localessClient` — see below.
 - `client.ts` — the one place that calls `localessClient(...)` and wraps it in the singleton (client instance + component registry + Visual Editor sync state) that the rest of the package reads through `localessInit()`/`getLocalessClient()`. `localessClient` is a callable factory, not a type or a stateless helper, so it's imported here directly rather than re-exported through `models` or `utils`. `client.ts` also re-exports `localessClient` itself (raw, unwrapped) — `index.ts` re-exports that in turn, so SSR consumer code (e.g. a Nuxt server route) can build its own client instance with a secret token, outside the `Localess` plugin's singleton lifecycle, without ever importing `@localess/client` directly. See "SSR with Nuxt" in `docs/vue.md`.
 
 Every other file in this package — including `index.ts` — imports what it needs from `./models`/`../models`, `./utils`/`../utils`, or `./client`/`../client` (relative path per file depth) instead. When a new file needs something from `@localess/client` that none of the three re-exports yet, add it to whichever matches. This keeps the client-package boundary auditable at three well-known files instead of scattered across every component/composable.
@@ -28,7 +28,7 @@ export function useMyComposable(param: string) {
 ```
 
 Rules:
-- Subscribe via `localessSyncOn(event, callback)` / `localessSyncOnChange(callback)` from `../client`, not `window.localess?.on()` directly — it wraps the `isSyncEnabled()` check and the `localessSyncReady()` wait (avoiding a race where `window.localess` isn't set yet), and narrows the callback's event type.
+- Subscribe via `localessSyncOn(event, callback)` / `localessSyncOnChange(callback)` from `../client`, not `window.localess?.on()` directly — it wraps the `isSyncEnabled()` check and the sync-script ready wait (via `@localess/live-preview`'s `createSyncController`, avoiding a race where `window.localess` isn't set yet), and narrows the callback's event type.
 - `window.localess` has no `.off()` method — do not attempt cleanup.
 - Never fetch data eagerly at module scope — only inside the composable body, so it re-runs per component instance.
 
@@ -40,7 +40,7 @@ Rules:
 
 ## Editable Attributes Are Plain Functions, Not Directives
 
-This package ships no Vue directives. `localessEditable(data)` and `localessEditableField(name)` are the `@localess/client` functions re-exported through `src/utils/index.ts` and `src/index.ts`; consumers bind their returned attribute objects with `v-bind`, and `<LocalessComponent>` does the same internally (`v-bind="localessEditable(data)"`). The earlier `vLocalessEditable` directive (`src/directives/`) was removed in favour of this — one function shape shared with every other framework package, no per-framework directive API to keep in sync.
+This package ships no Vue directives. `localessEditable(data)` and `localessEditableField(name)` are the `@localess/live-preview` functions re-exported through `src/utils/index.ts` and `src/index.ts`; consumers bind their returned attribute objects with `v-bind`, and `<LocalessComponent>` does the same internally (`v-bind="localessEditable(data)"`). The earlier `vLocalessEditable` directive (`src/directives/`) was removed in favour of this — one function shape shared with every other framework package, no per-framework directive API to keep in sync.
 
 If a directive ever becomes genuinely necessary, put it in `src/directives/<name>.ts` typed as `ObjectDirective<HTMLElement, T>` (not the broader `Directive` union — that type loses the `mounted`/`updated` hook properties on the binding when accessed externally, e.g. in tests), export it from `src/index.ts`, and document it in `packages/vue/SKILL.md`.
 
@@ -58,7 +58,7 @@ Rules:
 ## Hard Constraints
 
 - **No data fetching in components.** `<LocalessComponent>`, `<LocalessDocument>`, and consumer components accept content (`data`, `assets`, `links`, `references`, or the full `document`) as props only.
-- **No dependency on `@localess/react`, `@localess/angular`, `@localess/svelte`, or `@localess/cli`.** ADR 005 — depend only on `@localess/client`, `@localess/model`, and `@localess/richtext`.
+- **No dependency on `@localess/react`, `@localess/angular`, `@localess/svelte`, or `@localess/cli`.** ADR 005 — depend only on `@localess/client`, `@localess/model`, `@localess/richtext`, and `@localess/live-preview`.
 - **No secret token anywhere in this package.** Only a public (read-only) token flows through `Localess` (and the internal `localessInit` it calls) or `localess()` (the Vite plugin).
 - **`localessInit`, `getLocalessClient`, and `LocalessVueInitOptions` are internal.** Only the `Localess` plugin, `useLocaless()`, and `LOCALESS_INJECTION_KEY` are public — `src/index.ts` re-exports just `localessClient` from `client.ts`.
 

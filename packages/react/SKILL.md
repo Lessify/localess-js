@@ -10,7 +10,7 @@
 - **Rich text** rendering from Tiptap JSON format
 - **Asset URL** resolution
 
-**Peer dependencies:** React 17, 18, or 19 + react-dom.
+**Peer dependencies:** React 17, 18, or 19 + react-dom. `next` (13–16) is an optional peer, used only by `/rsc`'s live-edit Server Action (`next/cache`).
 
 **Export variants:**
 
@@ -83,8 +83,9 @@ TanStack Start / React Router v7 / Remix Vite, plus the `LocalessOptions`
 (plugin options) and `LocalessInitOptions` types. Options: `origin`, `spaceId`,
 `token` (all required — `localess()` throws if any is missing); optional
 `version: 'draft'`, `cacheTTL`, `debug`, `enableSync` (forwarded to
-`localessInit`); `componentsDir` (default `'src'`); and `components`
-(`Record<schemaKey, path>`, paths relative to `componentsDir`). It generates two virtual
+`localessInit`); `componentsDir` (default `'src'`); `components`
+(`Record<schemaKey, path>`, paths relative to `componentsDir`); and `componentNaming`
+(default `'exact'` — see "componentNaming" below). It generates two virtual
 modules: `virtual:localess-components` (auto-registers every `.tsx`/`.jsx`
 file under `componentsDir` by filename verbatim (`Page.tsx` -> `Page`); how that
 key is matched to `data._schema` is the `componentNaming` option, merged with explicit
@@ -744,15 +745,21 @@ export { LocalessRichText }         // Rich text component (content, renderers?)
 export { renderRichText }           // Rich text → React nodes
 export { sanitizeUrl }              // Rich text link-href allowlist (re-exported from @localess/richtext)
 export { resolveAsset }             // ContentAsset → full URL (+ optional AssetTransformParams)
+export { resolveAssetOriginal }     // ContentAsset → .../original (uploaded bytes, inline)
+export { resolveAssetDownload }     // ContentAsset → .../download (uploaded bytes, attachment)
 
 // Hooks
 export { useLocaless }              // Client-side content fetching with sync support
 
 // Utilities (re-exported from @localess/client)
 export { findLink }                 // ContentLink → URL string
+export { buildAssetQueryString }
+export { normalizeComponentKey, createComponentIndex, formatComponentKeyCollisions }
+
+// Utilities (re-exported from @localess/live-preview)
 export { localessEditable, localessEditableField }
 export { isBrowser, isServer, isIframe }
-export { loadLocalessSync, buildAssetQueryString }
+export { loadLocalessSync, createSyncController }
 
 // Error handling (re-exported from @localess/client)
 export { LocalessApiError }         // Thrown by getContentBySlug/getContentById on a non-2xx response; check .status
@@ -781,8 +788,9 @@ export { localessClient }           // raw @localess/client factory, for build-t
 export { getComponent, getFallbackComponent }
 export { LocalessServerComponent }  // Dynamic schema-to-component renderer, server-safe, no data-ll-* attrs
 export { LocalessServerDocument }   // Schema renderer, no sync — server-safe
-export { LocalessRichText, renderRichText, sanitizeUrl, resolveAsset, findLink }
+export { LocalessRichText, renderRichText, sanitizeUrl, resolveAsset, resolveAssetOriginal, resolveAssetDownload, findLink }
 export { localessEditable, localessEditableField, isBrowser, isServer, isIframe, loadLocalessSync, buildAssetQueryString }
+export { normalizeComponentKey, createComponentIndex, formatComponentKeyCollisions, createSyncController }
 export { LocalessApiError }
 export type { LocalessServerComponentProps, LocalessServerDocumentProps }
 // Same shared types as the default export (no isSyncConfigured / getOrigin)
@@ -817,8 +825,6 @@ declare module 'virtual:localess-components' {}
 
 Applied to **both** the registry key and `data._schema`. Collisions under a non-`exact` strategy log
 a warning and keep the first registration.
-
-Also accepts a custom `(name: string) => string`, applied to both sides.
 
 A **Vite-plugin option only** — `localess({ componentsDir, componentNaming })`. It is not an option
 on `localessInit()`: a hand-written `components` map has keys you already control, so matching there

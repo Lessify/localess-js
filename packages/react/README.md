@@ -751,7 +751,7 @@ export default function PageClient({ initialContent, locale }) {
 
 ## Vite Plugin (SSR Frameworks)
 
-`@localess/react/vite` exports `localess(options)` for Vite-based SSR frameworks (TanStack Start, React Router v7 framework mode, Remix Vite). It returns two Vite plugins providing `virtual:localess-components` (auto-registers every `.tsx`/`.jsx` under `componentsDir` — default `'src'` — by kebab-cased filename, merged with explicit `components` path overrides, `'./File.tsx#ExportName'` for named exports) and `virtual:localess-init` (a generated `localessInit()` call with that registry, identical on the SSR and client graphs). `origin`, `spaceId`, and `token` are required; `version`, `cacheTTL`, `debug`, and `enableSync` are passed through to `localessInit`.
+`@localess/react/vite` exports `localess(options)` for Vite-based SSR frameworks (TanStack Start, React Router v7 framework mode, Remix Vite). It returns two Vite plugins providing `virtual:localess-components` (auto-registers every `.tsx`/`.jsx` under `componentsDir` — default `'src'` — by filename verbatim (`Page.tsx` → `'Page'`; matching against `data._schema` is controlled by the `componentNaming` option, default `'exact'`), merged with explicit `components` path overrides, `'./File.tsx#ExportName'` for named exports) and `virtual:localess-init` (a generated `localessInit()` call with that registry, identical on the SSR and client graphs). `origin`, `spaceId`, and `token` are required; `version`, `cacheTTL`, `debug`, and `enableSync` are passed through to `localessInit`.
 
 ```ts
 // vite.config.ts
@@ -792,7 +792,7 @@ The table below shows which symbols are available in each runtime export.
 | `resolveAssetOriginal` / `resolveAssetDownload`        |         ✅         |           ✅           |           ✅           |
 | `LocalessComponent`                                    |         ✅         |           ❌           |           ✅           |
 | `LocalessServerComponent` / `LocalessServerDocument`   |         ❌         |           ✅           |           ✅           |
-| `LocalessRichText` / `renderRichText`                  |         ✅         |           ✅           |           ✅           |
+| `LocalessRichText` / `renderRichText` / `sanitizeUrl`  |         ✅         |           ✅           |           ✅           |
 | `findLink`                                             |         ✅         |           ✅           |           ✅           |
 | `isServer`                                             |         ✅         |           ✅           |           ✅           |
 | `loadLocalessSync` / `buildAssetQueryString`           |         ✅         |           ✅           |           ✅           |
@@ -804,7 +804,7 @@ The table below shows which symbols are available in each runtime export.
 | `localessEditable` / `localessEditableField`           |         ✅         |           ✅           |           ✅           |
 | `isBrowser` / `isIframe`                               |         ✅         |           ✅           |           ✅           |
 | `isSyncEnabled` / `localessSyncOn` / `localessSyncOnChange` / `localessSyncReady` |         ✅         |           ❌           |           ✅           |
-| `isSyncConfigured`                                     |         ✅         |           ❌           |           ❌           |
+| `isSyncConfigured` / `getOrigin`                       |         ✅         |           ❌           |           ❌           |
 | Sync event types (`LocalessSync`, `EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) |         ✅         |           ✅           |           ✅           |
 
 `@localess/react/vite` exports `localess` plus the `LocalessOptions` (plugin options) and `LocalessInitOptions` types; `@localess/react/vite/virtual-modules` contains only ambient `declare module` declarations.

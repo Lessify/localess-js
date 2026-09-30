@@ -32,7 +32,7 @@ No-ops outside a browser and outside the Visual Editor iframe. Concurrent caller
 ## Sync controller
 
 ```ts
-const sync = createSyncController();
+const sync: SyncController = createSyncController();
 sync.init(origin, enableSync);   // records the flag, starts loading when enabled
 sync.isEnabled();                // enabled AND in a browser AND framed
 sync.isConfigured();             // the raw flag, ungated
@@ -55,7 +55,8 @@ isBrowser(); isServer(); isIframe();
 ## Events
 
 `EventToApp` covers `save`, `publish`, `unpublish`, `pong`, `input`, `change`, `enterSchema`,
-`hoverSchema`, `leaveSchema`. `EventToAppOf<T>` narrows the callback payload, so subscribing to
+`hoverSchema`, `leaveSchema`; `EventToAppType` is the string union of those names and
+`EventCallback` is `(event: EventToApp) => void`. `EventToAppOf<T>` narrows the callback payload, so subscribing to
 `'input' | 'change'` types `event.data`. `LocalessSync` is the `window.localess` contract.
 
 ## Testing

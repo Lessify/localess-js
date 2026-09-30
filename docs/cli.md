@@ -52,7 +52,7 @@ Credentials are resolved in this priority order:
 1. **Environment variables** (highest priority — recommended for CI/CD; all three must be set)
 2. **`.localess/credentials.json`** in the current working directory (file-based — for local development)
 
-Every command that talks to the API accepts `-v, --verbose` to print client debug output (request URLs, statuses). Commands that need credentials exit `1` with `Not logged in` when neither source is available.
+Every command that talks to the API accepts `-v, --verbose` to print client debug output (request URLs, statuses). Commands that need credentials exit `1` with `Not logged in` when neither source is available. After any command, the CLI checks the npm registry (3-second timeout, failures ignored) and prints an "Update available" box if a newer `@localess/cli` exists (pre-release installs also check the `dev` tag; a newer stable release wins).
 
 ## Platform Compatibility Check
 
@@ -382,7 +382,7 @@ localess translation push en --path ./locales/en.json
 |---|---|---|---|
 | `.localess/credentials.json` | `localess login` | `0o600` (owner only) | Persisted auth credentials |
 | `.localess/localess.d.ts` | `localess type generate` | Standard | Generated TypeScript types (path via `-p, --path`) |
-| `schemas/<schema-id>.ts`, `schemas/index.ts` | `localess schema pull` | Standard | Generated `@localess/schema` definitions (dir via `-p, --path`; each file starts with the pull marker comment) |
+| `schemas/<kebab-case-id>.ts`, `schemas/index.ts` | `localess schema pull` | Standard | Generated `@localess/schema` definitions (dir via `-p, --path`; each file starts with the pull marker comment) |
 
 ## .gitignore Notes
 

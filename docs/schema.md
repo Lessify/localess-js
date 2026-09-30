@@ -95,7 +95,7 @@ Types (all `export type`):
 | Inference | `InferContentData`, `InferContent`, `InferEnum` |
 | Validation | `ValidationIssue`, `ValidationResult` |
 | Wire model (re-exported from `@localess/model`) | `SchemaType`, `SchemaFieldKind`, `AssetFileType`, `SchemaEnumValue`, `SchemaFieldBase`, `SchemaField`, `SchemaFieldText`, `SchemaFieldTextarea`, `SchemaFieldRichText`, `SchemaFieldMarkdown`, `SchemaFieldNumber`, `SchemaFieldColor`, `SchemaFieldDate`, `SchemaFieldDateTime`, `SchemaFieldBoolean`, `SchemaFieldOption`, `SchemaFieldOptions`, `SchemaFieldLink`, `SchemaFieldReference`, `SchemaFieldReferences`, `SchemaFieldAsset`, `SchemaFieldAssets`, `SchemaFieldSchema`, `SchemaFieldSchemas`, `SchemaComponentExport`, `SchemaEnumExport`, `SchemaExport` |
-| Content values (re-exported from `@localess/model`) | `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText` |
+| Content values (re-exported from `@localess/model`) | `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText` — `src/index.ts` also ends with `export * from '@localess/model'`, so every other model type (`Content`, `Locale`, `Space`, `Translations`, …) is importable from here too |
 
 ## Type Inference
 

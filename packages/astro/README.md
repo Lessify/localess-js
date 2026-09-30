@@ -64,7 +64,7 @@ Every `.astro` file under `componentsDir` is registered automatically, keyed by 
 |---|---|---|
 | `componentsDir` | `'src'` | Directory scanned for schema components |
 | `componentNaming` | `'exact'` | How filenames map to schema ids |
-| `enableFallbackComponent` | `false` | Render a placeholder for unregistered schemas instead of nothing |
+| `enableFallbackComponent` | `false` | Render a placeholder for unregistered schemas instead of throwing |
 | `customFallbackComponent` | — | Your own placeholder component |
 | `enableSync` | `false` | Visual Editor live sync |
 | `livePreview` | `false` | Draft payload delivery via `getLivePayload` |

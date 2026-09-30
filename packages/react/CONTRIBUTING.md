@@ -1,12 +1,12 @@
 # Contributing to @localess/react
 
-React integration layer. Depends on `@localess/client`, `@localess/model`, and `@localess/richtext`. Components never fetch data — they accept server-fetched data as props.
+React integration layer. Depends on `@localess/client`, `@localess/model`, `@localess/richtext`, and `@localess/live-preview`. Components never fetch data — they accept server-fetched data as props.
 
 `@localess/client` is an implementation detail of this package. Consumer-facing code (playgrounds, docs, examples — including `vite.config.ts`/`react-router.config.ts`-style build scripts that need a standalone client for tasks like prerender-path enumeration) must only ever import from `@localess/react` or one of its subpath exports (`@localess/react/ssr`, `@localess/react/rsc`, `@localess/react/vite`, `@localess/react/vite/virtual-modules`) — never `@localess/client` directly. If something from `@localess/client` isn't re-exported yet, add it to the appropriate export surface's re-exports (`src/index.ts` for the SPA export, `src/ssr/index.ts` for server-only) rather than telling consumers to import `@localess/client` themselves.
 
 **`src/core/models/`, `src/core/utils/`, and `src/core/client.ts` are the only places allowed to import from `@localess/client` directly.** Each has one job:
 - `core/models/` — every `@localess/client` **type** the package needs, plus `LocalessApiError` (a class, but consumed in type position via `catch`/`instanceof`, so it lives with the domain model). `core/models/index.ts` also re-exports the domain-model types from `@localess/model` (`Content`, `ContentData`, `Assets`, `Links`, …) and the rich text model types from `@localess/richtext`. `core/models/options.ts` additionally defines the React-specific `LocalessOptions` type (extends `LocalessClientOptions` with `components`/`fallbackComponent`/`enableSync`) and `AnyLocalessComponent`; `core/models/localess-schema-props.ts` defines `LocalessSchemaProps`, the props contract for registered schema components.
-- `core/utils/` — every `@localess/client` plain **function** the package needs (`isBrowser`, `isIframe`, `findLink`, `loadLocalessSync`, `localessEditable`, `localessEditableField`, `buildAssetQueryString`, `isServer`). Not `localessClient` — see below.
+- `core/utils/` — every `@localess/client` plain **function** the package needs (`findLink`, `buildAssetQueryString`, `normalizeComponentKey`, `createComponentIndex`, `formatComponentKeyCollisions`). Not `localessClient` — see below. It is also the only boundary to `@localess/live-preview` (ADR 013): `isBrowser`, `isIframe`, `isServer`, `loadLocalessSync`, `localessEditable`, `localessEditableField`, `createSyncController`.
 - `core/client.ts` — the one place that calls `localessClient(...)` and wraps it in the singleton (client instance + component registry + Visual Editor sync state) that the rest of the package reads through `localessInit()`/`getLocalessClient()`. `localessClient` is a callable factory, not a type or a stateless helper, so it's imported here directly rather than re-exported through `core/models` or `core/utils`.
 
 Every other file in this package — including the public entry points (`index.ts`, `src/ssr/index.ts`, `src/rsc/index.ts`) — imports the types/values it needs from `./core/models`, `./core/utils`, or `./core/client` (relative path per file depth) instead. When a new file needs something from `@localess/client` that none of the three re-exports yet, add it to whichever matches. (`src/vite/` imports nothing from `@localess/client` — the generated `virtual:localess-init` code imports `localessInit` from `@localess/react` as a string.)
@@ -169,6 +169,6 @@ npm run build:react
 npm run build
 ```
 
-Config: `vite.config.mts` (library mode, `preserveModules`, `rollup-preserve-directives` keeps `'use client'` / `'use server'` in the output). Externals: `react`, `react-dom`, `@localess/client`, `@localess/richtext`, `next/cache`, `vite`.
+Config: `vite.config.mts` (library mode, `preserveModules`, `rollup-preserve-directives` keeps `'use client'` / `'use server'` in the output). Externals: `react`, `react-dom`, `react/jsx-runtime`, `@localess/client`, `@localess/richtext`, `next/cache`, `vite`.
 
 Output (CJS `.js` + ESM `.mjs` + `.d.ts` for each): `dist/index`, `dist/ssr/index`, `dist/rsc/index`, `dist/vite/index`, `dist/vite/virtual-modules`, plus one chunk per source module under `dist/core/`, `dist/ssr/`, `dist/rsc/`, `dist/vite/`.

@@ -49,13 +49,15 @@ const html = renderRichTextToHtml(content.data.content);
 
 ### Overriding a node type
 
-Pass `renderers` to replace how one type is rendered — node types and mark types alike. A renderer receives the node's own `attrs`, `text` and `marks` plus its already-rendered `children`, so you only describe the wrapper:
+Pass `renderers` to replace how one type is rendered — node types and mark types alike. A renderer receives the node's own `attrs`, `text` and `marks` plus its already-rendered `children`, so you only describe the wrapper. A custom `link` renderer receives an already-sanitized `href`; the returned string is trusted HTML, so escape what you interpolate (`escapeAttr` / `escapeHtml`):
 
 ```ts
+import { escapeAttr, renderRichTextToHtml } from '@localess/richtext';
+
 const html = renderRichTextToHtml(content.data.content, {
   renderers: {
     heading: ({ attrs, children }) => `<h${attrs?.level} class="font-bold">${children}</h${attrs?.level}>`,
-    link: ({ attrs, children }) => `<a href="${attrs?.href}" rel="noopener">${children}</a>`,
+    link: ({ attrs, children }) => `<a href="${escapeAttr(attrs?.href ?? '')}" rel="noopener">${children}</a>`,
   },
 });
 ```

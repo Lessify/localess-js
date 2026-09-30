@@ -22,6 +22,8 @@ For React apps otherwise, always fetch Localess data in Server Components, `getS
 
 **Exception — the browser-safe utility surface.** A small set of exports carry no token and are safe (and meant) to run in the browser: `isBrowser`, `isIframe`, `loadLocalessSync`, `localessEditable`, `localessEditableField`, and the sync event types (`LocalessSync`, `EventToApp`, `EventCallback`, `EventToAppType`). These exist in `@localess/client` because they're the framework-agnostic primitives every SDK (`@localess/react`, `@localess/angular`, `@localess/astro`) needs identically — duplicating them per-framework would be the real inconsistency. Framework packages re-export them as-is rather than reimplementing them.
 
+*Update ([ADR 013](013-live-preview-package.md), 2026-09-06):* this browser-safe surface has moved to `@localess/live-preview` — `packages/client/src/` no longer contains `sync.ts`/`editable.ts`, and `@localess/client` only keeps `@deprecated` re-exports of these symbols. *Update ([ADR 011](011-nuxt-module-depends-on-vue.md)):* `@localess/nuxt` also implements the public-token exception, via separate `token` (public) and `serverToken` (secret) options.
+
 ## Consequences
 
 **For contributors:**

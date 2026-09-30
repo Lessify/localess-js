@@ -1,6 +1,6 @@
 # Contributing to @localess/client
 
-Core SDK. Server-side only (ADR 001 — secret tokens never reach the browser; public-token client-side use is implemented in the framework packages, never by importing this package in the browser). Zero external dependencies (depends only on the shared, itself-zero-dependency `@localess/model` package for data-model types). Node.js >= 24.0.0.
+Core SDK. Server-side only (ADR 001 — secret tokens never reach the browser; public-token client-side use is implemented in the framework packages, never by importing this package in the browser). Zero external dependencies (depends only on the in-monorepo `@localess/model` package for data-model types, and on `@localess/live-preview` solely for deprecated Visual Editor re-exports — ADR 013). Node.js >= 24.0.0.
 
 ## Module map
 
@@ -8,13 +8,13 @@ Core SDK. Server-side only (ADR 001 — secret tokens never reach the browser; p
 |---|---|
 | `src/client.ts` | `localessClient` factory, `LocalessClient` interface, option/param types, `LocalessApiError` / `LocalessNetworkError`, hint computation, boxed console error output |
 | `src/cache.ts` | `ICache`, `Cache`, `NoCache`, `TTLCache` |
-| `src/editable.ts` | `localessEditable`, `localessEditableField` (Visual Editor `data-ll-*` attributes) |
-| `src/sync.ts` | `loadLocalessSync` (Visual Editor sync script injector) |
+| `src/cache-tags.ts` | `localessCacheTags`, `LOCALESS_CACHE_TAG`, `LocalessCacheTarget` (framework cache-tag convention) |
+| `src/component-naming.ts` | `ComponentNaming` / `ComponentNamingStrategy`, `normalizeComponentKey`, `createComponentIndex`, `formatComponentKeyCollisions`, `splitComponentWords`, `DEFAULT_COMPONENT_NAMING` (shared by the framework packages — ADR 012) |
 | `src/models/index.ts` | `export * from '@localess/model'` — the only place model types enter this package |
-| `src/utils/` | `buildAssetQueryString`, `findLink`, `isBrowser` / `isServer` / `isIframe` |
-| `src/index.ts` | barrel plus the sync event types (`LocalessSync`, `EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) and the global `Window.localess` declaration |
+| `src/utils/` | `buildAssetQueryString`, `findLink` |
+| `src/index.ts` | barrel plus **deprecated** re-exports from `@localess/live-preview` (`loadLocalessSync`, `localessEditable`, `localessEditableField`, `isBrowser` / `isServer` / `isIframe`, and the types `LocalessSync`, `EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) — ADR 013 |
 
-Every module has a sibling `*.test.ts` (vitest). Build `@localess/model` first (`npm run build:model`) before running this package's tests.
+Tests are sibling `*.test.ts` files (vitest); `client.ts` is split across `client.test.ts`, `client.cache.test.ts` and `client.resilience.test.ts`. Build `@localess/model` first (`npm run build:model`) before running this package's tests.
 
 ## Adding a New API Method
 
@@ -39,7 +39,7 @@ export type AssetsFetchParams = {
 
 **3. Implement the method in the `localessClient` factory return object in `src/client.ts`:**
 
-Follow the exact same pattern as existing methods — build the URL, then delegate to the shared `fetchJson<T>(url, methodLabel)` helper (defined once per client instance, above the returned object), which handles the cache check, the fetch, non-2xx/network error handling (as `LocalessApiError`/`LocalessNetworkError`), and storing the result in cache:
+Follow the exact same pattern as existing methods — build the URL, then delegate to the shared `fetchJson<T>(url, methodLabel, signal?, fetchInit?)` helper (defined once per client instance, above the returned object), which handles the cache check, timeout/retry, the fetch, non-2xx/network error handling (as `LocalessApiError`/`LocalessNetworkError`), and storing the result in cache:
 
 ```typescript
 async getAssets(params?: AssetsFetchParams): Promise<Assets> {
@@ -79,8 +79,8 @@ domain shape (rare — check with the maintainer before doing this).
 
 - **No React imports.** No `react` in any import.
 - **No CLI logic.** No `commander`, `inquirer`, or filesystem imports.
-- **No `dependencies` beyond `@localess/model`.** Never add anything else to `dependencies` in `package.json`. Use `devDependencies` for build tools only.
-- **Server-side only.** Never use `window`, `document`, or browser globals — **except** inside the browser-safe, token-free utility surface (`src/sync.ts`, `src/editable.ts`, `src/utils/platform.util.ts`), which exists specifically to be called from the browser by the framework packages (ADR 001).
+- **No `dependencies` beyond `@localess/model` and `@localess/live-preview`.** Never add anything else to `dependencies` in `package.json`. Use `devDependencies` for build tools only.
+- **Server-side only.** Never use `window`, `document`, or browser globals (ADR 001). Browser-only Visual Editor code lives in `@localess/live-preview`, not here (ADR 013).
 - **Never log the token.** Every URL that reaches `console.error` or an error object goes through `redactToken()` first.
 
 ## Build

@@ -86,7 +86,7 @@ At least one is required. Set only `serverToken` and client-side fetching is dis
 
 ## Fetching on the server
 
-`useLocalessServerClient()` is available in any server route, from the auto-imported `#localess/server`:
+`useLocalessServerClient()` is available in any server route, imported from the `#localess/server` alias:
 
 ```ts
 // server/api/content.ts

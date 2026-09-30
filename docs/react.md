@@ -2,7 +2,7 @@
 
 React integration layer for Localess. Builds on `@localess/client` and adds a component registry, Visual Editor sync, rich text rendering, and asset resolution.
 
-**Peer dependencies:** React 17, 18, or 19 + react-dom.
+**Peer dependencies:** React 17, 18, or 19 + react-dom. `next` (13–16) is an optional peer, used only by `/rsc`'s live-edit Server Action (`next/cache`).
 
 ## Export Variants
 
@@ -295,8 +295,8 @@ For that bare import to type-check, add the ambient declarations to your tsconfi
 `localess(options)` takes `LocalessOptions`: `origin`, `spaceId`, `token`
 (required — it throws if any is missing), optional `version: 'draft'`,
 `cacheTTL`, `debug`, `enableSync` (all forwarded verbatim to the generated
-`localessInit()`), `componentsDir` (default `'src'`), and `components`
-(`Record<schemaKey, path>`). It returns two Vite plugins
+`localessInit()`), `componentsDir` (default `'src'`), `components`
+(`Record<schemaKey, path>`), and `componentNaming` (default `'exact'`). It returns two Vite plugins
 (`vite-plugin-localess-components`, `vite-plugin-localess-init`).
 
 `virtual:localess-init` resolves to the same `localessInit()` call regardless
@@ -306,8 +306,8 @@ is auto-registered under its filename verbatim (`Page.tsx` -> `'Page'`). How tha
 key is matched to `data._schema` is the `componentNaming` option — see
 *Component naming strategies* below. `components`
 overrides take an exact key (no case transformation) and a file path relative
-to `componentsDir`, for cases where the schema key doesn't match a
-kebab-cased filename, or the file lives outside `componentsDir`. A bare path
+to `componentsDir`, for cases where the schema key doesn't match the
+filename, or the file lives outside `componentsDir`. A bare path
 assumes a default export; suffix it with `#ExportName` (e.g.
 `'./HeroOverride.tsx#HeroOverride'`) to import a named export instead.
 
@@ -567,7 +567,7 @@ See `AssetTransformParams` table in [docs/client.md](client.md#asset-transform-p
 
 ### `resolveAssetOriginal(asset)` / `resolveAssetDownload(asset)`
 
-The stored bytes as an attachment. Takes no params: the response never enters the image pipeline,
+The stored bytes, inline (`resolveAssetOriginal`) or as an attachment (`resolveAssetDownload`). Takes no params: the response never enters the image pipeline,
 and a transform parameter on that route is rejected by the API with a `400`.
 
 ```typescript
@@ -630,11 +630,13 @@ export { localessInit, getLocalessClient, getOrigin }
 export { getComponent, getFallbackComponent }
 export { isSyncEnabled, isSyncConfigured, localessSyncReady, localessSyncOn, localessSyncOnChange }
 export { LocalessComponent, LocalessDocument, LocalessRichText }   // LocalessDocument here = client-side, useState-based
-export { renderRichText, sanitizeUrl, resolveAsset }             // sanitizeUrl re-exported from @localess/richtext
+export { renderRichText, sanitizeUrl }                           // sanitizeUrl re-exported from @localess/richtext
+export { resolveAsset, resolveAssetOriginal, resolveAssetDownload }
 export { useLocaless }
-export { findLink, loadLocalessSync, buildAssetQueryString }        // re-exported from @localess/client
-export { localessEditable, localessEditableField }                  // re-exported from @localess/client
-export { isBrowser, isServer, isIframe }                             // re-exported from @localess/client
+export { findLink, buildAssetQueryString }                           // re-exported from @localess/client
+export { normalizeComponentKey, createComponentIndex, formatComponentKeyCollisions } // re-exported from @localess/client
+export { localessEditable, localessEditableField, loadLocalessSync } // re-exported from @localess/live-preview
+export { isBrowser, isServer, isIframe, createSyncController }       // re-exported from @localess/live-preview
 export { LocalessApiError }                          // re-exported from @localess/client; thrown by getContentBySlug/getContentById on a non-2xx response
 export type { LocalessClient, LocalessClientOptions, LocalessOptions, AnyLocalessComponent }
 export type { LocalessComponentProps, LocalessDocumentProps, LocalessRichTextProps, LocalessSchemaProps, UseLocalessOptions }
@@ -647,9 +649,11 @@ export type { LocalessRichTextDocument, LocalessRichTextInput, LocalessRichTextM
 export type { LocalessSync, EventToApp, EventToAppOf, EventCallback, EventToAppType }
 
 // @localess/react/ssr — no sync functions, no hooks, no client-side LocalessDocument
-export { localessInit, getLocalessClient, localessClient, getComponent, getFallbackComponent, resolveAsset }
+export { localessInit, getLocalessClient, localessClient, getComponent, getFallbackComponent }
+export { resolveAsset, resolveAssetOriginal, resolveAssetDownload }
 export { LocalessServerComponent, LocalessServerDocument, LocalessRichText, renderRichText, sanitizeUrl }
 export { findLink, loadLocalessSync, buildAssetQueryString, localessEditable, localessEditableField, isBrowser, isServer, isIframe }
+export { normalizeComponentKey, createComponentIndex, formatComponentKeyCollisions, createSyncController }
 export { LocalessApiError }
 export type { LocalessServerComponentProps, LocalessServerDocumentProps /* + all shared types above */ }
 
@@ -702,10 +706,6 @@ Under any strategy other than `exact`, two files that normalize to the same key 
 `hero-banner` in one directory) collide; the SDK logs a warning naming both and keeps the first.
 
 See [ADR 012](decisions/012-component-naming-strategies.md).
-
-This package also accepts a custom `(name: string) => string`. It is applied to **both** sides, so it
-must converge — a function that only adds a prefix will not match, because the registry key gets the
-prefix too.
 
 ### Where to set it
 

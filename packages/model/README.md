@@ -73,7 +73,7 @@ To get `PageContent` inferred from your schema definitions instead of writing it
 
 | Type | Shape |
 |---|---|
-| `Content<T>` | The response envelope: `id`, `name`, `slug`, `fullSlug`, `parentSlug`, `kind`, timestamps, and `data: T` |
+| `Content<T>` | The response envelope: `id`, `name`, `slug`, `fullSlug`, `parentSlug`, `kind`, `locale`, timestamps, `data?: T`, and optional `links`/`references`/`assets` maps |
 | `ContentData` | A content block — always has `_id` and `_schema`, plus your schema's fields |
 | `ContentDataSchema` | Just the `_id` / `_schema` pair every block carries |
 | `ContentAsset` | `{ kind: 'ASSET'; uri: string }` — a reference to an uploaded file |

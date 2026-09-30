@@ -165,7 +165,7 @@ The two helpers are used differently, which is easy to trip over:
 
 ## Visual Editor sync
 
-With `enableSync: true` and the page running inside the Visual Editor iframe, `<LocalessDocument>` re-renders on every keystroke. The sync stores are exported if you need to react to editor events yourself.
+With `enableSync: true` and the page running inside the Visual Editor iframe, `<LocalessDocument>` re-renders on every keystroke. The `localessSync` store is exported if you need to react to editor events yourself.
 
 ---
 

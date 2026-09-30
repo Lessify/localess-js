@@ -47,7 +47,7 @@ const content = await client.getContentBySlug('home');
 Registration always goes through the `components: { schemaKey: Component }` option of `app.use(Localess, {...})`. Two ways to build that map:
 
 1. **Manual** — import your components and pass the map yourself.
-2. **Vite plugin** — `@localess/vue/vite`'s `localess({ componentsDir, components })` auto-globs a folder's `.vue` files into `virtual:localess-vue-components`, keyed by **filename verbatim** (`Page.vue` -> `Page`). Matching that key to `data._schema` is the `componentNaming` option's job at lookup time (see *Component naming strategies* below), not this plugin's. Its `components` option adds explicit path overrides (relative to `componentsDir`, `#ExportName` suffix for a named export); those win over globbed entries on key collision.
+2. **Vite plugin** — `@localess/vue/vite`'s `localess({ componentsDir, components })` auto-globs a folder's `.vue` files into `virtual:localess-vue-components`, keyed by **filename verbatim** (`Page.vue` -> `Page`). Matching that key to `data._schema` is governed by this plugin's `componentNaming` option (see *Component naming strategies* below). Its `components` option adds explicit path overrides (relative to `componentsDir`, `#ExportName` suffix for a named export); those win over globbed entries on key collision.
 
 ```typescript
 // vite.config.ts
@@ -154,6 +154,7 @@ Nuxt's own payload transfer hydrates the server-fetched result to the client —
 | `LocalessDocument` | Component | Wraps `LocalessComponent` and re-renders on Visual Editor sync events |
 | `localessEditable(data)` | Function | Applies `data-ll-id`/`data-ll-schema`, bound onto an element |
 | `localessEditableField(name)` | Function | Applies `data-ll-field`, bound onto an element |
+| `normalizeComponentKey(name, naming?)` | Function | Applies a component naming strategy to a key, re-exported from `@localess/client` |
 | `useLocaless()` | Composable | Returns the injected `LocalessClient` |
 | `useLocalessSync(event)` | Composable | Visual Editor bridge event subscription, returns a `Ref` |
 | `LocalessRichText` | Component | Renders a rich text field to native VNodes (`content`, `renderers?` props) |
@@ -165,9 +166,10 @@ Nuxt's own payload transfer hydrates the server-fetched result to the client —
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |
 | `localessClient(options)` | Function | Re-exported from `@localess/client` — raw client factory for server-only SSR use, outside the `Localess` plugin's singleton lifecycle |
 | `LocalessComponentProps`, `LocalessDocumentProps`, `LocalessSchemaProps`, `LocalessVueRichTextOptions`, `LocalessVueRichTextRenderers` | Types | Local prop/option types |
-| `LocalessClient`, `LocalessClientOptions`, `EventToAppOf`, `EventToAppType` | Types | Re-exported from `@localess/client` |
+| `LocalessClient`, `LocalessClientOptions`, `EventToAppOf`, `EventToAppType`, `ComponentNaming`, `ComponentNamingStrategy` | Types | Re-exported from `@localess/client` |
 | `Content`, `ContentData`, `ContentDataSchema`, `Assets`, `Links`, `References` | Types | Re-exported from `@localess/model` |
 | `@localess/vue/vite`'s `localess(options)` | Vite plugin factory | Component auto-registration |
+| `@localess/vue/vite`'s `LocalessOptions` | Type | `localess()` options: `componentsDir?` (default `'src'`), `components?`, `componentNaming?` (default `'exact'`) |
 | `@localess/vue/vite`'s `VIRTUAL_LOCALESS_VUE_COMPONENTS_MODULE_ID` | Constant | `'virtual:localess-vue-components'` |
 
 See `packages/vue/SKILL.md` for the full usage guide (also shipped inside the npm package).

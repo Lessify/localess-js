@@ -37,7 +37,9 @@ One shared, configurable strategy, applied to **both sides** of the comparison.
 `normalizeComponentKey(name, naming)` lives in `@localess/client` — which already hosts the
 cross-framework helpers (`localessEditable`, `isBrowser`, `loadLocalessSync`), is depended on by
 every framework package, and has zero external dependencies. Each package re-exports it through its
-own `models`/`utils` barrel per rule 7.
+own `models`/`utils` barrel per rule 7. (*Update:* `localessEditable`, `isBrowser`, and
+`loadLocalessSync` have since moved to `@localess/live-preview` — [ADR 013](013-live-preview-package.md);
+`normalizeComponentKey` itself still lives in `packages/client/src/component-naming.ts`.)
 
 Built-in strategies:
 

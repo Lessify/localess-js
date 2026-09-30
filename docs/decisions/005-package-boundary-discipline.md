@@ -2,6 +2,8 @@
 
 ## Context
 
+*Update:* the graph below is the original three-package one. It has since grown to twelve packages — see [ADR 007](007-shared-richtext-package.md), [ADR 008](008-schema-package.md), [ADR 009](009-shared-model-package.md), [ADR 011](011-nuxt-module-depends-on-vue.md), [ADR 013](013-live-preview-package.md), and rule 4 in `CLAUDE.md` for the current graph. The rule that dependent packages never depend on each other still holds, with the one exception ADR 011 describes.
+
 This monorepo contains three packages. Their dependency relationships must be carefully controlled:
 
 - `@localess/react` needs the core client types and API methods.

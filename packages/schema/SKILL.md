@@ -82,7 +82,7 @@ Everything below is `export type` — importable with `import type { ... } from 
 | Inference (from `infer.ts`) | `InferContentData`, `InferContent`, `InferEnum` |
 | Validation (from `validate.ts`) | `ValidationIssue` (`{ severity: 'error' \| 'warning'; code; path; message }`), `ValidationResult` (`{ ok; issues }`) |
 | Wire model (re-exported from `@localess/model`) | `SchemaType`, `SchemaFieldKind`, `AssetFileType`, `SchemaEnumValue`, `SchemaFieldBase`, `SchemaField`, the 18 per-kind interfaces (`SchemaFieldText`, `SchemaFieldTextarea`, `SchemaFieldRichText`, `SchemaFieldMarkdown`, `SchemaFieldNumber`, `SchemaFieldColor`, `SchemaFieldDate`, `SchemaFieldDateTime`, `SchemaFieldBoolean`, `SchemaFieldOption`, `SchemaFieldOptions`, `SchemaFieldLink`, `SchemaFieldReference`, `SchemaFieldReferences`, `SchemaFieldAsset`, `SchemaFieldAssets`, `SchemaFieldSchema`, `SchemaFieldSchemas`), `SchemaComponentExport`, `SchemaEnumExport`, `SchemaExport` |
-| Content values (re-exported from `@localess/model`) | `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText` |
+| Content values (re-exported from `@localess/model`) | `ContentAsset`, `ContentLink`, `ContentReference`, `ContentRichText` — plus every other `@localess/model` type (`Content`, `Locale`, `Space`, `Translations`, …), since `src/index.ts` ends with `export * from '@localess/model'` |
 
 ## `defineField`
 
@@ -178,7 +178,7 @@ schema in the config is checked, not just the first. Rules and their `code`:
 | `field/schema-ref-is-enum` | ...and that schema must be `ROOT` or `NODE`, not `ENUM`. |
 
 `validate` does not check for stray properties from the wrong field kind —
-use `defineField` for that (below). Duplicate field names and duplicate
+use `defineField` for that (above). Duplicate field names and duplicate
 schema ids are not validation issues either: `defineSchema`/`defineConfig`
 throw on them as programming errors.
 
