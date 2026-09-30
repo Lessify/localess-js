@@ -19,11 +19,11 @@ import { readFile } from '../../../file';
 import { getSession } from '../../../session';
 import { translationPushCommand } from './index';
 
-function mockClient(overrides: { getTranslations?: ReturnType<typeof vi.fn>; updateTranslations?: ReturnType<typeof vi.fn> } = {}) {
-  const getTranslations = overrides.getTranslations ?? vi.fn().mockResolvedValue({});
-  const updateTranslations = overrides.updateTranslations ?? vi.fn().mockResolvedValue({ message: 'Updated 1 translation', ids: ['1'] });
-  vi.mocked(localessCliClient).mockReturnValue({ getTranslations, updateTranslations } as unknown as ReturnType<typeof localessCliClient>);
-  return { getTranslations, updateTranslations };
+function mockClient(overrides: { updateTranslations?: ReturnType<typeof vi.fn> } = {}) {
+  const updateTranslations =
+    overrides.updateTranslations ?? vi.fn().mockResolvedValue({ message: 'Updated 1 translation', ids: ['nav.home'] });
+  vi.mocked(localessCliClient).mockReturnValue({ updateTranslations } as unknown as ReturnType<typeof localessCliClient>);
+  return { updateTranslations };
 }
 
 describe('translationPushCommand', () => {
@@ -102,7 +102,6 @@ describe('translationPushCommand', () => {
     });
     vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
     const { updateTranslations } = mockClient({
-      getTranslations: vi.fn().mockResolvedValue({ 'nav.home': 'Old' }),
       updateTranslations: vi.fn().mockResolvedValue({ message: 'Preview', dryRun: true }),
     });
 
@@ -152,15 +151,23 @@ describe('translationPushCommand', () => {
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
-  it('exits with code 1 when the client fails to push translations', async () => {
+  function loggedIn(file: Record<string, string>) {
     vi.mocked(getSession).mockResolvedValue({
       isLoggedIn: true,
       origin: 'https://cms.example.com',
       space: 'space-1',
       token: 'token-123',
     });
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
-    mockClient({ getTranslations: vi.fn().mockRejectedValue(new Error('network down')) });
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(file));
+  }
+
+  function logLines(logSpy: { mock: { calls: unknown[][] } }): string[] {
+    return logSpy.mock.calls.map(call => call.join(' '));
+  }
+
+  it('exits with code 1 when the client fails to push translations', async () => {
+    loggedIn({ 'nav.home': 'Home' });
+    mockClient({ updateTranslations: vi.fn().mockRejectedValue(new Error('network down')) });
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('exit');
@@ -172,162 +179,130 @@ describe('translationPushCommand', () => {
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
-  describe('prediction mismatch warning', () => {
-    it('warns when a predicted key is not reported by the server (add-missing)', async () => {
-      vi.mocked(getSession).mockResolvedValue({
-        isLoggedIn: true,
-        origin: 'https://cms.example.com',
-        space: 'space-1',
-        token: 'token-123',
-      });
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.fresh': 'Fresh' }));
-      mockClient({ updateTranslations: vi.fn().mockResolvedValue({ message: 'Added 0 translation(s)', ids: [] }) });
+  describe('result output', () => {
+    it('prints the pushed keys with a pluralized summary', async () => {
+      loggedIn({ 'nav.fresh': 'Fresh' });
+      mockClient({ updateTranslations: vi.fn().mockResolvedValue({ message: 'Added 1 translation', ids: ['nav.fresh'] }) });
       const logSpy = vi.spyOn(console, 'log');
 
       await translationPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' });
 
-      const logs = logSpy.mock.calls.map(call => call.join(' '));
-      expect(logs.some(line => line.includes('Prediction mismatch'))).toBe(true);
-      expect(logs.some(line => line.includes('nav.fresh: predicted "create", server reported "unaffected"'))).toBe(true);
+      const logs = logLines(logSpy);
+      expect(logs.some(line => line.includes('Added 1 translation in locale "en".'))).toBe(true);
+      expect(logs.some(line => line.includes('+ nav.fresh'))).toBe(true);
     });
 
-    it('does not warn when the server result matches the local prediction', async () => {
-      vi.mocked(getSession).mockResolvedValue({
-        isLoggedIn: true,
-        origin: 'https://cms.example.com',
-        space: 'space-1',
-        token: 'token-123',
+    it('reports a dry run as what would happen', async () => {
+      loggedIn({ 'nav.fresh': 'Fresh', 'nav.other': 'Other' });
+      mockClient({
+        updateTranslations: vi
+          .fn()
+          .mockResolvedValue({ message: '[DryRun] Would add 2 translations', ids: ['nav.fresh', 'nav.other'], dryRun: true }),
       });
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.fresh': 'Fresh' }));
-      mockClient({ updateTranslations: vi.fn().mockResolvedValue({ message: 'Added 1 translation(s)', ids: ['nav.fresh'] }) });
+      const logSpy = vi.spyOn(console, 'log');
+
+      await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '--dry-run'], { from: 'user' });
+
+      const logs = logLines(logSpy);
+      expect(logs.some(line => line.includes('Dry run: would add 2 translations in locale "en":'))).toBe(true);
+      expect(logs.some(line => line.includes('Successfully pushed'))).toBe(false);
+    });
+
+    it('reports when there is nothing to push', async () => {
+      loggedIn({ 'nav.home': 'Home' });
+      mockClient({ updateTranslations: vi.fn().mockResolvedValue({ message: 'No translations to add', ids: [] }) });
       const logSpy = vi.spyOn(console, 'log');
 
       await translationPushCommand.parseAsync(['en', '-p', 'translations.json'], { from: 'user' });
 
-      const logs = logSpy.mock.calls.map(call => call.join(' '));
-      expect(logs.some(line => line.includes('Prediction mismatch'))).toBe(false);
+      expect(logLines(logSpy).some(line => line.includes('No translations to add for locale "en".'))).toBe(true);
     });
   });
 
   describe('--type update-existing', () => {
-    it('prompts for confirmation when keys differ, and proceeds when confirmed', async () => {
-      vi.mocked(getSession).mockResolvedValue({
-        isLoggedIn: true,
-        origin: 'https://cms.example.com',
-        space: 'space-1',
-        token: 'token-123',
+    it('previews via a server dry run, prompts, and pushes when confirmed', async () => {
+      loggedIn({ 'nav.home': 'Home page' });
+      const { updateTranslations } = mockClient({
+        updateTranslations: vi.fn().mockResolvedValue({ message: 'Updated 1 translation', ids: ['nav.home'] }),
       });
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home page' }));
-      const { updateTranslations } = mockClient({ getTranslations: vi.fn().mockResolvedValue({ 'nav.home': 'Home' }) });
       confirmMock.mockResolvedValue(true);
 
       await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'update-existing'], { from: 'user' });
 
+      expect(updateTranslations).toHaveBeenNthCalledWith(1, 'en', 'update-existing', { 'nav.home': 'Home page' }, true);
       expect(confirmMock).toHaveBeenCalledTimes(1);
-      expect(updateTranslations).toHaveBeenCalledWith('en', 'update-existing', { 'nav.home': 'Home page' }, undefined);
+      expect(updateTranslations).toHaveBeenNthCalledWith(2, 'en', 'update-existing', { 'nav.home': 'Home page' }, undefined);
     });
 
     it('aborts without pushing when the user declines confirmation', async () => {
-      vi.mocked(getSession).mockResolvedValue({
-        isLoggedIn: true,
-        origin: 'https://cms.example.com',
-        space: 'space-1',
-        token: 'token-123',
+      loggedIn({ 'nav.home': 'Home page' });
+      const { updateTranslations } = mockClient({
+        updateTranslations: vi.fn().mockResolvedValue({ message: '[DryRun] Would update 1 translation', ids: ['nav.home'], dryRun: true }),
       });
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home page' }));
-      const { updateTranslations } = mockClient({ getTranslations: vi.fn().mockResolvedValue({ 'nav.home': 'Home' }) });
       confirmMock.mockResolvedValue(false);
       const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
 
       await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'update-existing'], { from: 'user' });
 
       expect(exitSpy).toHaveBeenCalledWith(1);
-      expect(updateTranslations).not.toHaveBeenCalled();
+      expect(updateTranslations).toHaveBeenCalledTimes(1);
+      expect(updateTranslations).toHaveBeenCalledWith('en', 'update-existing', { 'nav.home': 'Home page' }, true);
     });
 
-    it('skips the confirmation prompt when --yes is passed', async () => {
-      vi.mocked(getSession).mockResolvedValue({
-        isLoggedIn: true,
-        origin: 'https://cms.example.com',
-        space: 'space-1',
-        token: 'token-123',
-      });
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home page' }));
-      const { updateTranslations } = mockClient({ getTranslations: vi.fn().mockResolvedValue({ 'nav.home': 'Home' }) });
+    it('skips the preview and confirmation when --yes is passed', async () => {
+      loggedIn({ 'nav.home': 'Home page' });
+      const { updateTranslations } = mockClient();
 
       await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'update-existing', '-y'], { from: 'user' });
 
       expect(confirmMock).not.toHaveBeenCalled();
+      expect(updateTranslations).toHaveBeenCalledTimes(1);
       expect(updateTranslations).toHaveBeenCalledWith('en', 'update-existing', { 'nav.home': 'Home page' }, undefined);
     });
 
-    it('skips the confirmation prompt entirely when nothing differs', async () => {
-      vi.mocked(getSession).mockResolvedValue({
-        isLoggedIn: true,
-        origin: 'https://cms.example.com',
-        space: 'space-1',
-        token: 'token-123',
+    it('does not prompt or push when nothing differs', async () => {
+      loggedIn({ 'nav.home': 'Home' });
+      const { updateTranslations } = mockClient({
+        updateTranslations: vi.fn().mockResolvedValue({ message: 'No translations to update', ids: [], dryRun: true }),
       });
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
-      const { updateTranslations } = mockClient({ getTranslations: vi.fn().mockResolvedValue({ 'nav.home': 'Home' }) });
+      const logSpy = vi.spyOn(console, 'log');
 
       await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'update-existing'], { from: 'user' });
 
       expect(confirmMock).not.toHaveBeenCalled();
-      expect(updateTranslations).toHaveBeenCalledWith('en', 'update-existing', { 'nav.home': 'Home' }, undefined);
+      expect(updateTranslations).toHaveBeenCalledTimes(1);
+      expect(logLines(logSpy).some(line => line.includes('No translations to update for locale "en".'))).toBe(true);
     });
   });
 
   describe('--type delete-missing', () => {
-    it('prompts for confirmation when the remote has stale keys, and proceeds when confirmed', async () => {
-      vi.mocked(getSession).mockResolvedValue({
-        isLoggedIn: true,
-        origin: 'https://cms.example.com',
-        space: 'space-1',
-        token: 'token-123',
+    it('lists the keys to delete, prompts, and pushes when confirmed', async () => {
+      loggedIn({ 'nav.home': 'Home' });
+      const { updateTranslations } = mockClient({
+        updateTranslations: vi.fn().mockResolvedValue({ message: 'Deleted 1 translation', ids: ['nav.old'] }),
       });
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
-      const { updateTranslations } = mockClient({ getTranslations: vi.fn().mockResolvedValue({ 'nav.home': 'Home', 'nav.old': 'Old' }) });
       confirmMock.mockResolvedValue(true);
+      const logSpy = vi.spyOn(console, 'log');
 
       await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'delete-missing'], { from: 'user' });
 
-      expect(confirmMock).toHaveBeenCalledTimes(1);
-      expect(updateTranslations).toHaveBeenCalledWith('en', 'delete-missing', { 'nav.home': 'Home' }, undefined);
+      expect(logLines(logSpy).some(line => line.includes('- nav.old'))).toBe(true);
+      expect(confirmMock).toHaveBeenCalledWith(expect.objectContaining({ message: 'Delete 1 translation from Localess?' }));
+      expect(updateTranslations).toHaveBeenNthCalledWith(2, 'en', 'delete-missing', { 'nav.home': 'Home' }, undefined);
     });
 
     it('aborts without pushing when the user declines confirmation', async () => {
-      vi.mocked(getSession).mockResolvedValue({
-        isLoggedIn: true,
-        origin: 'https://cms.example.com',
-        space: 'space-1',
-        token: 'token-123',
+      loggedIn({ 'nav.home': 'Home' });
+      const { updateTranslations } = mockClient({
+        updateTranslations: vi.fn().mockResolvedValue({ message: '[DryRun] Would delete 1 translation', ids: ['nav.old'], dryRun: true }),
       });
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
-      const { updateTranslations } = mockClient({ getTranslations: vi.fn().mockResolvedValue({ 'nav.home': 'Home', 'nav.old': 'Old' }) });
       confirmMock.mockResolvedValue(false);
       const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
 
       await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'delete-missing'], { from: 'user' });
 
       expect(exitSpy).toHaveBeenCalledWith(1);
-      expect(updateTranslations).not.toHaveBeenCalled();
-    });
-
-    it('skips the confirmation prompt when nothing is stale', async () => {
-      vi.mocked(getSession).mockResolvedValue({
-        isLoggedIn: true,
-        origin: 'https://cms.example.com',
-        space: 'space-1',
-        token: 'token-123',
-      });
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ 'nav.home': 'Home' }));
-      const { updateTranslations } = mockClient({ getTranslations: vi.fn().mockResolvedValue({ 'nav.home': 'Home' }) });
-
-      await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'delete-missing'], { from: 'user' });
-
-      expect(confirmMock).not.toHaveBeenCalled();
-      expect(updateTranslations).toHaveBeenCalledWith('en', 'delete-missing', { 'nav.home': 'Home' }, undefined);
+      expect(updateTranslations).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -17,6 +17,7 @@ export enum TranslationFileFormat {
 
 export type TranslationUpdateResponse = {
   message: string;
+  /** Translation keys the push type wrote (or, on a dry run, would write). */
   ids?: string[];
   dryRun?: boolean;
 };

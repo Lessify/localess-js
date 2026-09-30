@@ -3,23 +3,37 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 
 import { localessCliClient } from '../../../client';
-import { printDiffReport } from '../../../diff-report';
 import { readFile } from '../../../file';
 import { LocalessApiError, TranslationFileFormat, Translations, TranslationUpdateType } from '../../../models';
 import { zLocaleTranslationsSchema, zTranslationUpdateTypeSchema } from '../../../models';
 import { getSession } from '../../../session';
 import { nestedObjectToFlat } from '../../../utils';
-import { diffTranslations, printTranslationDiffMismatches, reconcileTranslationDiff } from '../diff-translations';
 
 export type TranslationsPushOptions = {
   path: string;
   format: TranslationFileFormat;
   type: TranslationUpdateType;
   dryRun?: boolean;
-  all?: boolean;
   yes?: boolean;
   verbose?: boolean;
 };
+
+const PUSH_TYPE_LABELS: Record<TranslationUpdateType, { verb: string; past: string; symbol: string; color: (text: string) => string }> = {
+  [TranslationUpdateType.ADD_MISSING]: { verb: 'add', past: 'Added', symbol: '+', color: chalk.green },
+  [TranslationUpdateType.UPDATE_EXISTING]: { verb: 'update', past: 'Updated', symbol: '~', color: chalk.yellow },
+  [TranslationUpdateType.DELETE_MISSING]: { verb: 'delete', past: 'Deleted', symbol: '-', color: chalk.red },
+};
+
+function pluralize(count: number): string {
+  return `${count} translation${count === 1 ? '' : 's'}`;
+}
+
+function printKeys(ids: string[], type: TranslationUpdateType): void {
+  const { symbol, color } = PUSH_TYPE_LABELS[type];
+  for (const id of ids) {
+    console.log(color(`  ${symbol} ${id}`));
+  }
+}
 
 export const translationPushCommand = new Command('push')
   .argument('<locale>', 'Locale to push')
@@ -32,12 +46,13 @@ export const translationPushCommand = new Command('push')
     TranslationUpdateType.ADD_MISSING
   )
   .option('--dry-run', 'Preview changes without applying them to Localess')
-  .option('-a, --all', 'Also print unchanged keys in the preview')
   .option('-y, --yes', 'Skip the confirmation prompt for update-existing/delete-missing')
   .option('-v, --verbose', 'Print verbose debug output')
   .action(async (locale: string, options: TranslationsPushOptions) => {
-    console.log('Pushing translations with arguments:', locale);
-    console.log('Pushing translations with options:', options);
+    if (options.verbose) {
+      console.log('Pushing translations with arguments:', locale);
+      console.log('Pushing translations with options:', options);
+    }
     if (!zTranslationUpdateTypeSchema.safeParse(options.type).success) {
       console.error('Invalid type provided. Possible values are :', Object.values(TranslationUpdateType));
       process.exit(1);
@@ -76,72 +91,42 @@ export const translationPushCommand = new Command('push')
       console.error('Invalid translations file format:', pResult.error);
       process.exit(1);
     }
-    console.log('Pushing translations to Localess with locale:', locale, 'and type:', options.type);
+
+    const { verb, past } = PUSH_TYPE_LABELS[options.type];
     try {
-      const remote = await client.getTranslations(locale, { version: 'draft' });
-      const entries = diffTranslations(translationValues, remote);
-      printDiffReport(
-        entries.map(item => ({ label: item.key, status: item.status })),
-        { all: options.all, noun: 'translation' }
-      );
-
-      const created = entries.filter(item => item.status === 'create').length;
-      const updated = entries.filter(item => item.status === 'update').length;
-      const stale = entries.filter(item => item.status === 'stale').length;
-
-      if (options.type === TranslationUpdateType.ADD_MISSING) {
-        console.log(
-          created > 0
-            ? chalk.green(`\n--type add-missing: only the ${created} new key(s) above will be pushed; existing keys are left untouched.`)
-            : chalk.dim('\nNo new keys — nothing to add.')
-        );
-      } else if (options.type === TranslationUpdateType.UPDATE_EXISTING) {
-        if (updated === 0) {
-          console.log(chalk.dim('\nNo existing keys differ — nothing to update.'));
-        } else {
-          console.log(chalk.yellow(`\n--type update-existing will overwrite ${updated} key(s) in Localess with your local values.`));
-          if (!options.yes && !options.dryRun) {
-            const proceed = await confirm({
-              message: `Any edits made to these keys in Localess since your last pull will be lost. Continue?`,
-              default: false,
-            });
-            if (!proceed) {
-              console.log('Aborted.');
-              process.exit(1);
-              return;
-            }
-          }
+      const needsConfirmation = options.type !== TranslationUpdateType.ADD_MISSING && !options.yes && !options.dryRun;
+      if (needsConfirmation) {
+        const {ids} = (await client.updateTranslations(locale, options.type, translationValues, true));
+        if (!ids || ids.length === 0) {
+          console.log(chalk.dim(`No translations to ${verb} for locale "${locale}".`));
+          return;
         }
-      } else if (options.type === TranslationUpdateType.DELETE_MISSING) {
-        if (stale === 0) {
-          console.log(chalk.dim('\nNo keys are absent locally — nothing to delete.'));
-        } else {
-          console.log(chalk.red(`\n--type delete-missing will delete ${stale} key(s) from Localess absent from your local file.`));
-          if (!options.yes && !options.dryRun) {
-            const proceed = await confirm({
-              message: `Delete
-              ${stale} key(s) from Localess?`,
-              default: false,
-            });
-            if (!proceed) {
-              console.log('Aborted.');
-              process.exit(1);
-              return;
-            }
-          }
+        console.log(`This will ${verb} ${pluralize(ids.length)} in locale "${locale}":`);
+        printKeys(ids, options.type);
+        const proceed = await confirm({
+          message:
+            options.type === TranslationUpdateType.UPDATE_EXISTING
+              ? `Overwrite ${pluralize(ids.length)} in Localess? Edits made in Localess since your last pull will be lost.`
+              : `Delete ${pluralize(ids.length)} from Localess?`,
+          default: false,
+        });
+        if (!proceed) {
+          console.log('Aborted.');
+          process.exit(1);
+          return;
         }
       }
 
-      const response = await client.updateTranslations(locale, options.type, translationValues, options.dryRun);
-      if (response.dryRun) {
-        console.log('\nDry run results:');
+      const {ids} = await client.updateTranslations(locale, options.type, translationValues, options.dryRun);
+      if (!ids || ids.length === 0) {
+        console.log(chalk.dim(`No translations to ${verb} for locale "${locale}".`));
+      } else if (options.dryRun) {
+        console.log(`Dry run: would ${verb} ${pluralize(ids.length)} in locale "${locale}":`);
+        printKeys(ids, options.type);
+      } else {
+        console.log(chalk.green(`${past} ${pluralize(ids.length)} in locale "${locale}".`));
+        if (!needsConfirmation) printKeys(ids, options.type);
       }
-      console.log('\nSuccessfully pushed translations to Localess');
-      console.log('Summary:', response.message);
-      if (response.ids) {
-        console.log('Updated translation IDs:', response.ids);
-      }
-      printTranslationDiffMismatches(reconcileTranslationDiff(entries, options.type, response));
     } catch (error) {
       if (!(error instanceof LocalessApiError)) {
         console.error('Failed to push translations to Localess:', error);

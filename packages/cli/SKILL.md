@@ -109,9 +109,9 @@ Recommended for **CI/CD pipelines** — no `localess login` step needed.
 
 ### Push Translations
 
-Upload a local JSON translation file to Localess. Before pushing, fetches the remote **draft** translations and prints the same grouped/colored diff report as `translation diff` (`Create`/`Update`/`Stale` sections, unchanged collapsed into a count by default — `-a, --all` lists them), plus a one-line note on what the selected `--type` will actually do. `update-existing` and `delete-missing` prompt for confirmation before applying (skippable with `-y, --yes`, or automatically skipped under `--dry-run` or when there's nothing to do); `add-missing` never prompts since it's additive-only.
+Upload a local JSON translation file to Localess. Prints only the keys the selected `--type` acts on, as `+`/`~`/`-` lines under a summary such as `Added 1 translation in locale "en".` or, with `--dry-run`, `Dry run: would add 1 translation in locale "en":` (`No translations to add for locale "en".` when there is nothing to do). It does not print a full diff; use `translation diff` for that. `update-existing` and `delete-missing` first ask the server for a dry run, list the affected keys and prompt for confirmation (skippable with `-y, --yes`, automatically skipped under `--dry-run`, and nothing is pushed when the dry run reports no keys); `add-missing` never prompts since it is additive-only. Declining the prompt prints `Aborted.` and exits `1`.
 
-After a successful push, prints the server's `message` and (if present) the affected `ids`, then reconciles the pre-push diff against those ids and prints a `⚠ Prediction mismatch (local preview vs server result)` block (without failing) listing any key whose predicted status didn't match what the server actually did — e.g. a concurrent change made between the preview and the push. Since each push type performs exactly one operation, a key is expected in the response only if its predicted status matches that type (`add-missing`→`create`, `update-existing`→`update`, `delete-missing`→`stale`); skipped entirely when the response carries no `ids`. Each line reads `<key>: predicted "<create|update|unchanged|stale>", server reported "<affected|unaffected>"`.
+The server responds with `{ message, ids, dryRun? }`, where `ids` lists only the keys the push type wrote (or would write).
 
 ```bash
 localess translation push <locale> --path <file> [options]
@@ -131,7 +131,6 @@ localess translation push <locale> --path <file> [options]
 | `-f, --format <format>` | `flat`        | File format: `flat` or `nested`                                           |
 | `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing`, `update-existing`, `delete-missing`       |
 | `--dry-run`             | `false`       | Preview changes without applying them (also skips the confirmation prompt) |
-| `-a, --all`             | `false`       | Also print unchanged keys in the preview                                  |
 | `-y, --yes`             | `false`       | Skip the confirmation prompt for `update-existing`/`delete-missing`       |
 | `-v, --verbose`         | `false`       | Print verbose debug output                                                |
 

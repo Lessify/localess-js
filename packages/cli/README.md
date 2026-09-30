@@ -104,9 +104,9 @@ localess logout
 
 ### `localess translation push <locale>`
 
-Push a local JSON translation file to your Localess space. Only keys present in the file are affected, based on the selected update type. Before applying anything, fetches the remote **draft** translations and prints the same grouped/colored diff report as `translation diff` (`Create`/`Update`/`Stale` sections; unchanged keys collapsed into a count unless `-a`/`--all`), plus a note on what the selected `--type` will do. `update-existing` and `delete-missing` prompt for confirmation first (skippable with `-y`/`--yes`, or auto-skipped under `--dry-run` or when there's nothing to do); `add-missing` never prompts.
+Upload a local JSON translation file to Localess. Prints only the keys the selected `--type` acts on, as `+`/`~`/`-` lines under a summary such as `Added 1 translation in locale "en".` or, with `--dry-run`, `Dry run: would add 1 translation in locale "en":` (`No translations to add for locale "en".` when there is nothing to do). It does not print a full diff; use `translation diff` for that. `update-existing` and `delete-missing` first ask the server for a dry run, list the affected keys and prompt for confirmation (skippable with `-y, --yes`, automatically skipped under `--dry-run`, and nothing is pushed when the dry run reports no keys); `add-missing` never prompts since it is additive-only. Declining the prompt prints `Aborted.` and exits `1`.
 
-After the push, prints the server's summary `message` and (if present) the affected translation `ids`, then reconciles the pre-push diff against those ids and prints a `⚠ Prediction mismatch` warning (without failing) for any key whose predicted status doesn't match what the server actually did — e.g. a concurrent edit made in Localess between the preview and the push. Skipped when the response carries no `ids`.
+The server responds with `{ message, ids, dryRun? }`, where `ids` lists only the keys the push type wrote (or would write).
 
 ```bash
 localess translation push <locale> --path <file> [options]
@@ -126,7 +126,6 @@ localess translation push <locale> --path <file> [options]
 | `-f, --format <format>` | `flat`        | File format: `flat` or `nested`                                           |
 | `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing`, `update-existing`, or `delete-missing`    |
 | `--dry-run`             | `false`       | Preview changes without applying them (also skips the confirmation prompt) |
-| `-a, --all`             | `false`       | Also print unchanged keys in the preview                                  |
 | `-y, --yes`             | `false`       | Skip the confirmation prompt for `update-existing`/`delete-missing`       |
 | `-v, --verbose`         | `false`       | Print verbose debug output                                                |
 
