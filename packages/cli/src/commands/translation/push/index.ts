@@ -96,7 +96,7 @@ export const translationPushCommand = new Command('push')
     try {
       const needsConfirmation = options.type !== TranslationUpdateType.ADD_MISSING && !options.yes && !options.dryRun;
       if (needsConfirmation) {
-        const {ids} = (await client.updateTranslations(locale, options.type, translationValues, true));
+        const { ids } = await client.updateTranslations(locale, options.type, translationValues, true);
         if (!ids || ids.length === 0) {
           console.log(chalk.dim(`No translations to ${verb} for locale "${locale}".`));
           return;
@@ -117,7 +117,7 @@ export const translationPushCommand = new Command('push')
         }
       }
 
-      const {ids} = await client.updateTranslations(locale, options.type, translationValues, options.dryRun);
+      const { ids } = await client.updateTranslations(locale, options.type, translationValues, options.dryRun);
       if (!ids || ids.length === 0) {
         console.log(chalk.dim(`No translations to ${verb} for locale "${locale}".`));
       } else if (options.dryRun) {
