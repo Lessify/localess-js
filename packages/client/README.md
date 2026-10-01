@@ -322,17 +322,17 @@ The `LocalessSync` interface (`on`, `onChange`) and the event types (`EventToApp
 
 ### Available Event Types
 
-| Event         | Payload                                       | Description                                     |
-|---------------|-----------------------------------------------|-------------------------------------------------|
-| `input`       | `{ type: 'input', data: any }`                | Fired while a field is being edited (real-time) |
-| `change`      | `{ type: 'change', data: any }`               | Fired after a field value is confirmed          |
-| `save`        | `{ type: 'save' }`                            | Fired when content is saved                     |
-| `publish`     | `{ type: 'publish' }`                         | Fired when content is published                 |
-| `unpublish`   | `{ type: 'unpublish' }`                       | Fired when content is unpublished               |
-| `pong`        | `{ type: 'pong' }`                            | Heartbeat response from the editor              |
-| `enterSchema` | `{ type: 'enterSchema', id, schema, field? }` | Fired when entering a schema element            |
-| `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }` | Fired when hovering over a schema element       |
-| `leaveSchema` | `{ type: 'leaveSchema' }`                     | Fired when leaving a schema element             |
+| Event         | Payload                                              | Description                                                                  |
+|---------------|------------------------------------------------------|------------------------------------------------------------------------------|
+| `input`       | `{ type: 'input', data: any }`                       | Fired while a field is being edited (real-time)                              |
+| `change`      | `{ type: 'change', data: any }`                      | Fired after a field value is confirmed                                       |
+| `save`        | `{ type: 'save' }`                                   | Fired when content is saved                                                  |
+| `publish`     | `{ type: 'publish' }`                                | Fired when content is published                                              |
+| `unpublish`   | `{ type: 'unpublish' }`                              | Fired when content is unpublished                                            |
+| `pong`        | `{ type: 'pong' }`                                   | Heartbeat response from the editor                                           |
+| `enterSchema` | `{ type: 'enterSchema', id, schema, field?, root? }` | Fired when entering a schema element; `root` is `true` for the document root |
+| `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }`        | Fired when hovering over a schema element                                    |
+| `leaveSchema` | `{ type: 'leaveSchema' }`                            | Fired when leaving a schema element                                          |
 
 ---
 

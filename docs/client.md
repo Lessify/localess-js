@@ -384,17 +384,17 @@ if (window.localess) {
 }
 ```
 
-| Event         | Payload                                       | When                                  |
-|---------------|-----------------------------------------------|---------------------------------------|
-| `input`       | `{ type: 'input', data: any }`                | User typing in a field (real-time)    |
-| `change`      | `{ type: 'change', data: any }`               | Field value confirmed                 |
-| `save`        | `{ type: 'save' }`                            | Content saved                         |
-| `publish`     | `{ type: 'publish' }`                         | Content published                     |
-| `unpublish`   | `{ type: 'unpublish' }`                       | Content unpublished                   |
-| `pong`        | `{ type: 'pong' }`                            | Editor heartbeat response             |
-| `enterSchema` | `{ type: 'enterSchema', id, schema, field? }` | Editor cursor enters a schema block   |
-| `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }` | Editor cursor hovers a schema block   |
-| `leaveSchema` | `{ type: 'leaveSchema' }`                     | Editor cursor leaves a schema block   |
+| Event         | Payload                                              | When                                                                        |
+|---------------|------------------------------------------------------|-----------------------------------------------------------------------------|
+| `input`       | `{ type: 'input', data: any }`                       | User typing in a field (real-time)                                          |
+| `change`      | `{ type: 'change', data: any }`                      | Field value confirmed                                                       |
+| `save`        | `{ type: 'save' }`                                   | Content saved                                                               |
+| `publish`     | `{ type: 'publish' }`                                | Content published                                                           |
+| `unpublish`   | `{ type: 'unpublish' }`                              | Content unpublished                                                         |
+| `pong`        | `{ type: 'pong' }`                                   | Editor heartbeat response                                                   |
+| `enterSchema` | `{ type: 'enterSchema', id, schema, field?, root? }` | Editor cursor enters a schema block; `root` is `true` for the document root |
+| `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }`        | Editor cursor hovers a schema block                                         |
+| `leaveSchema` | `{ type: 'leaveSchema' }`                            | Editor cursor leaves a schema block                                         |
 
 ## Asset Transform Parameters
 

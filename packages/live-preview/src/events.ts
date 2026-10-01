@@ -9,7 +9,11 @@ export type EventToApp =
   | { type: 'leaveSchema' }
   | { type: 'input'; data: any }
   | { type: 'change'; data: any }
-  | { type: 'enterSchema'; id: string; schema: string; field?: string }
+  /**
+   * The editor opened a schema block in its form. `root` is `true` when it went back to the
+   * document root, which the sync script treats as clearing the selection.
+   */
+  | { type: 'enterSchema'; id: string; schema: string; field?: string; root?: boolean }
   | { type: 'hoverSchema'; id: string; schema: string; field?: string };
 
 export type EventCallback = (event: EventToApp) => void;
