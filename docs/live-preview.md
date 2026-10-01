@@ -41,7 +41,7 @@ sync.isEnabled();                // enabled AND in a browser AND framed
 sync.isConfigured();             // the raw flag, ungated
 sync.isDebug();                  // the debug flag forwarded to the script
 sync.ready();                    // resolves when loaded, or immediately
-sync.on(event, cb);              // no-op unless usable
+sync.on(event, cb);              // no-op unless usable; returns an unsubscribe function
 sync.onChange(cb);
 ```
 

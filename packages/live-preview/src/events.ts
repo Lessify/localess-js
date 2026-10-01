@@ -25,10 +25,17 @@ export type EventCallback = (event: EventToApp) => void;
  */
 export type EventToAppOf<T extends EventToAppType> = Extract<EventToApp, { type: T }>;
 
+/** Removes a subscription. Safe to call more than once. */
+export type Unsubscribe = () => void;
+
 /** The bridge object the sync script installs on `window`. */
 export interface LocalessSync {
-  onChange: (callback: (event: EventToAppOf<'change' | 'input'>) => void) => void;
-  on: <T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void) => void;
+  /** Subscribes to `input` and `change`. */
+  onChange: (callback: (event: EventToAppOf<'change' | 'input'>) => void) => Unsubscribe;
+  /** Subscribes to one or more editor events. */
+  on: <T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void) => Unsubscribe;
+  /** Removes a callback added with `on` or `onChange`. */
+  off: <T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void) => void;
 }
 
 declare global {

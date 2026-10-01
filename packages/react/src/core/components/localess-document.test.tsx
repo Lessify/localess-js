@@ -46,6 +46,19 @@ describe('LocalessDocument', () => {
     expect(screen.getByText('Updated')).toBeDefined();
   });
 
+  it('removes its sync subscription on unmount', () => {
+    localessInit({ ...baseOptions, components: { page: Page } });
+    const unsubscribe = vi.fn();
+    (localessSyncOnChange as Mock).mockReturnValueOnce(unsubscribe);
+
+    const { unmount } = render(
+      <LocalessDocument document={{ _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />
+    );
+    unmount();
+
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
   it('renders an inline error when document.data is missing', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
 

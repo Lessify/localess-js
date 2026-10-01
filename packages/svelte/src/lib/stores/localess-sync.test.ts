@@ -11,4 +11,23 @@ describe('localessSync store', () => {
     expect(get(store)).toBeUndefined();
     expect(spy).toHaveBeenCalledWith('input', expect.any(Function));
   });
+
+  it('holds one sync subscription while read, and releases it after the last reader leaves', () => {
+    let active = 0;
+    vi.spyOn(state, 'localessSyncOn').mockImplementation(() => {
+      active++;
+      return () => active--;
+    });
+    const store = localessSync('save');
+
+    const stopA = store.subscribe(() => {});
+    const stopB = store.subscribe(() => {});
+    expect(active).toBe(1);
+    stopA();
+    stopB();
+    expect(active).toBe(0);
+
+    store.subscribe(() => {})();
+    expect(active).toBe(0);
+  });
 });

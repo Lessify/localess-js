@@ -493,10 +493,10 @@ export function PageClient({ initialContent }) {
   useEffect(() => {
     // No-op unless isSyncEnabled(); waits for localessSyncReady() internally.
     // `event` is narrowed to the 'input' | 'change' variant (has `data`).
-    localessSyncOn(['input', 'change'], (event) => {
+    // Returns the unsubscribe function, so React removes the listener on unmount.
+    return localessSyncOn(['input', 'change'], (event) => {
       setPageData(event.data);
     });
-    // No cleanup — window.localess has no .off() method
   }, []);
 
   return (
@@ -620,7 +620,7 @@ For a standalone client outside the singleton (build-time path enumeration), use
 - `isSyncEnabled()` — `true` only when `enableSync: true` was passed to `localessInit`, code is running in the browser, and the page is inside the Visual Editor iframe.
 - `isSyncConfigured()` (default export only) — the raw `enableSync` flag without that gating. Read it server-side and pass it down as a prop when a Client Component (a separate module graph) needs to know.
 - `localessSyncReady()` — resolves once the sync script has loaded (immediately when sync is off); never rejects.
-- `localessSyncOn(event | event[], callback)` / `localessSyncOnChange(callback)` — subscribe to `window.localess` events; both no-op unless `isSyncEnabled()` and await `localessSyncReady()` internally. Event types: `input`, `change`, `save`, `publish`, `unpublish`, `pong`, `enterSchema`, `hoverSchema`, `leaveSchema`.
+- `localessSyncOn(event | event[], callback)` / `localessSyncOnChange(callback)` — subscribe to `window.localess` events; both no-op unless `isSyncEnabled()` and await `localessSyncReady()` internally, and return an unsubscribe function (also safe before the script has loaded) to return from `useEffect`. Event types: `input`, `change`, `save`, `publish`, `unpublish`, `pong`, `enterSchema`, `hoverSchema`, `leaveSchema`.
 
 ## Exports Reference
 

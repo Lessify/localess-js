@@ -210,15 +210,17 @@ Set `enableSync: !environment.production` in `provideLocaless()`. `LocalessSyncS
 > The sync script load is deferred to `ApplicationRef.whenStable()` via `provideAppInitializer`, rather than started when `provideLocaless()` runs. The script hooks every `[data-ll-id]` element as soon as the editor pongs, and `LocalessComponentDirective` destroys and recreates its server-rendered DOM once `LocalessComponentResolver` resolves the component — so with an eager load, a lazily registered schema whose loader settled during that handshake ended up unhooked and unclickable in the editor for the rest of the session. `LocalessComponentResolver` wraps each lazy loader in a `PendingTasks` task, so `whenStable()` waits for it under zoneless change detection as well as with zone.js (which also makes SSR serialization wait for lazily registered schemas).
 
 ```typescript
-import { ContentData, LocalessSyncService } from '@localess/angular';
+import { ContentData, localessSyncEvent, LocalessSyncService } from '@localess/angular';
 
 @Component({ ... })
-export class PageComponent implements OnInit {
+export class PageComponent {
   liveData = signal<ContentData | undefined>(undefined);
+  readonly lastSaved = localessSyncEvent(['save', 'publish']); // latest event as a signal
 
   private readonly sync = inject(LocalessSyncService);
 
-  ngOnInit() {
+  constructor() {
+    // In an injection context, so both are removed when the component is destroyed.
     this.sync.onChange(event => this.liveData.set(event.data)); // `input` + `change` events
     this.sync.on(['save', 'publish'], event => console.info(event.type));
   }
@@ -227,7 +229,8 @@ export class PageComponent implements OnInit {
 
 - `enabled()` — `true` only when `enableSync: true`, running in the browser, and inside the Visual Editor iframe.
 - `ready()` — `Promise<void>` resolving once `window.localess` is available (immediately if sync is disabled; never rejects).
-- `on(event | event[], callback)` — subscribe to any `EventToAppType`: `save`, `publish`, `unpublish`, `pong`, `input`, `change`, `enterSchema`, `hoverSchema`, `leaveSchema`; callback narrowed via `EventToAppOf<T>`.
+- `on(event | event[], callback, destroyRef?)` — subscribe to any `EventToAppType`: `save`, `publish`, `unpublish`, `pong`, `input`, `change`, `enterSchema`, `hoverSchema`, `leaveSchema`; callback narrowed via `EventToAppOf<T>`. Returns an unsubscribe function. Cleanup is automatic when called in an injection context (the caller's `DestroyRef`); elsewhere pass `destroyRef` or call the returned function.
+- `localessSyncEvent(event | event[])` — standalone function, injection context only: the latest event as a `Signal`, removed with its context.
 - `onChange(callback)` — shorthand for `on(['input', 'change'], callback)`.
 
 `on`/`onChange` are no-ops when `enabled()` is false and wait for `ready()` internally.

@@ -202,16 +202,15 @@ export function localessSyncReady(): Promise<void> {
  *
  * @param event - A single event type or array of event types to subscribe to.
  * @param callback - Called with the event, narrowed to the variant(s) matching `event`.
+ * @returns A function that removes the subscription — return it from `useEffect`.
  *
  * @example
  * ```ts
- * useEffect(() => {
- *   localessSyncOn(['input', 'change'], event => setContentData(event.data));
- * }, []);
+ * useEffect(() => localessSyncOn(['input', 'change'], event => setContentData(event.data)), []);
  * ```
  */
-export function localessSyncOn<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): void {
-  _sync.on(event, callback);
+export function localessSyncOn<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): () => void {
+  return _sync.on(event, callback);
 }
 
 /**
@@ -225,16 +224,15 @@ export function localessSyncOn<T extends EventToAppType>(event: T | T[], callbac
  * No-op if sync isn't enabled or usable in the current context (see {@link isSyncEnabled}).
  *
  * @param callback - Called with the `input`/`change` event.
+ * @returns A function that removes the subscription — return it from `useEffect`.
  *
  * @example
  * ```ts
- * useEffect(() => {
- *   localessSyncOnChange(event => setContentData(event.data));
- * }, []);
+ * useEffect(() => localessSyncOnChange(event => setContentData(event.data)), []);
  * ```
  */
-export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): void {
-  _sync.onChange(callback);
+export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): () => void {
+  return _sync.onChange(callback);
 }
 
 export function getOrigin() {

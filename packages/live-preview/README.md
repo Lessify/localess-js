@@ -67,7 +67,8 @@ sync.init(origin, enableSync);
 
 await sync.ready();
 
-sync.onChange(event => {
+// Each returns an unsubscribe function — also safe to call before the script has loaded.
+const unsubscribe = sync.onChange(event => {
   // Fired on `change` and `input` — re-render with event.data
 });
 

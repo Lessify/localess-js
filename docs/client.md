@@ -379,8 +379,9 @@ if (window.localess) {
     setPageData(event.data);
   });
   // Shorthand for the same subscription
-  window.localess.onChange((event) => setPageData(event.data));
-  // No .off() method — subscribe once
+  const unsubscribe = window.localess.onChange((event) => setPageData(event.data));
+  // `on`/`onChange` return an unsubscribe function; `off(event, callback)` does the same
+  unsubscribe();
 }
 ```
 

@@ -57,6 +57,19 @@ describe('LocalessDocument', () => {
     expect(wrapper.text()).toContain('Updated');
   });
 
+  it('removes its sync subscription on unmount', () => {
+    setComponentsForTest({ page: TitleProbe });
+    const unsubscribe = vi.fn();
+    vi.spyOn(client, 'localessSyncOnChange').mockReturnValue(unsubscribe);
+
+    const wrapper = mount(LocalessDocument, {
+      props: { document: { _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },
+    });
+    wrapper.unmount();
+
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
   it('renders an inline error when document.data is missing', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
 

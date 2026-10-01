@@ -1,4 +1,4 @@
-import type { EventToAppOf, EventToAppType } from './events';
+import type { EventToAppOf, EventToAppType, LocalessSync, Unsubscribe } from './events';
 import { isBrowser, isIframe } from './platform';
 import { loadLocalessSync } from './sync';
 
@@ -36,10 +36,13 @@ export interface SyncController {
   isDebug(): boolean;
   /** Resolves once the script has loaded, or immediately when sync is off. */
   ready(): Promise<void>;
-  /** Subscribes to one or more editor events. No-op when sync is unusable. */
-  on<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): void;
-  /** Subscribes to `change` and `input`. No-op when sync is unusable. */
-  onChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): void;
+  /**
+   * Subscribes to one or more editor events. No-op when sync is unusable.
+   * The returned function removes the subscription, and also works before the script has loaded.
+   */
+  on<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): Unsubscribe;
+  /** Subscribes to `change` and `input`. Same semantics as {@link on}. */
+  onChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): Unsubscribe;
   /** @internal Resets state between test cases. */
   reset(): void;
 }
@@ -52,6 +55,22 @@ export function createSyncController(): SyncController {
 
   const ready = (): Promise<void> => promise ?? Promise.resolve();
   const isEnabled = () => enabled && isBrowser() && isIframe();
+
+  /** Attaches once the script is ready; unsubscribing before that cancels the attach. */
+  const subscribe = (attach: (sync: LocalessSync) => Unsubscribe): Unsubscribe => {
+    if (!isEnabled()) return () => undefined;
+    let cancelled = false;
+    let detach: Unsubscribe | undefined;
+    ready().then(() => {
+      if (cancelled || !window.localess) return;
+      detach = attach(window.localess);
+    });
+    return () => {
+      cancelled = true;
+      detach?.();
+      detach = undefined;
+    };
+  };
 
   return {
     init(origin, enableSync, debug) {
@@ -67,16 +86,10 @@ export function createSyncController(): SyncController {
     isDebug: () => debugEnabled,
     ready,
     on(event, callback) {
-      if (!isEnabled()) return;
-      ready().then(() => {
-        window.localess?.on(event, callback);
-      });
+      return subscribe(sync => sync.on(event, callback));
     },
     onChange(callback) {
-      if (!isEnabled()) return;
-      ready().then(() => {
-        window.localess?.onChange(callback);
-      });
+      return subscribe(sync => sync.onChange(callback));
     },
     reset() {
       enabled = false;

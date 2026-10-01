@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { assertInInjectionContext, DestroyRef, inject, Injectable, type Signal, signal } from '@angular/core';
 
 import { LOCALESS_CONFIG, LOCALESS_SYNC_READY } from '../localess.config';
 import type { EventToAppOf, EventToAppType } from '../models';
@@ -10,15 +10,28 @@ import { isBrowser, isIframe } from '../utils';
  * Self-sufficient: `enabled()` already accounts for browser + Visual Editor iframe context, so
  * callers don't need to separately check `isPlatformBrowser`/`isIframe` before using it.
  *
+ * Subscriptions made in an injection context (a constructor or field initializer) are removed
+ * automatically when that component, directive or service is destroyed. Anywhere else (e.g.
+ * `ngOnInit`), pass a `DestroyRef` or call the returned function.
+ *
  * @example
  * ```ts
- * export class SlugComponent implements OnInit {
+ * export class SlugComponent {
  *   private readonly sync = inject(LocalessSyncService);
  *   liveContent = signal<ContentData | undefined>(undefined);
  *
- *   ngOnInit(): void {
+ *   constructor() {
  *     this.sync.onChange(event => this.liveContent.set(event.data));
  *   }
+ * }
+ * ```
+ *
+ * @example Outside an injection context
+ * ```ts
+ * private readonly destroyRef = inject(DestroyRef);
+ *
+ * ngOnInit(): void {
+ *   this.sync.onChange(event => this.liveContent.set(event.data), this.destroyRef);
  * }
  * ```
  */
@@ -54,12 +67,11 @@ export class LocalessSyncService {
    *
    * @param event - A single event type or array of event types to subscribe to.
    * @param callback - Called with the event, narrowed to the variant(s) matching `event`.
+   * @param destroyRef - Removes the subscription when destroyed; defaults to the caller's injection context.
+   * @returns A function that removes the subscription, also before the script has loaded.
    */
-  on<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): void {
-    if (!this.enabled()) return;
-    this.ready().then(() => {
-      window.localess?.on(event, callback);
-    });
+  on<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void, destroyRef?: DestroyRef): () => void {
+    return this.subscribe(sync => sync.on(event, callback), destroyRef);
   }
 
   /**
@@ -72,11 +84,61 @@ export class LocalessSyncService {
    * No-op if sync isn't enabled or usable in the current context (see {@link enabled}).
    *
    * @param callback - Called with the `input`/`change` event.
+   * @param destroyRef - Removes the subscription when destroyed; defaults to the caller's injection context.
+   * @returns A function that removes the subscription, also before the script has loaded.
    */
-  onChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): void {
-    if (!this.enabled()) return;
-    this.ready().then(() => {
-      window.localess?.onChange(callback);
-    });
+  onChange(callback: (event: EventToAppOf<'change' | 'input'>) => void, destroyRef?: DestroyRef): () => void {
+    return this.subscribe(sync => sync.onChange(callback), destroyRef);
   }
+
+  private subscribe(attach: (sync: NonNullable<Window['localess']>) => () => void, destroyRef = injectionContextDestroyRef()): () => void {
+    if (!this.enabled()) return () => undefined;
+    let cancelled = false;
+    let detach: (() => void) | undefined;
+    this.ready().then(() => {
+      if (cancelled || !window.localess) return;
+      detach = attach(window.localess);
+    });
+    const removeDestroyHook = destroyRef?.onDestroy(() => unsubscribe());
+    const unsubscribe = () => {
+      if (cancelled) return;
+      cancelled = true;
+      detach?.();
+      detach = undefined;
+      removeDestroyHook?.();
+    };
+    return unsubscribe;
+  }
+}
+
+/**
+ * The caller's `DestroyRef` when called from an injection context, otherwise `undefined`.
+ * Angular has no public "am I in an injection context" check; `inject()` throws outside one.
+ */
+function injectionContextDestroyRef(): DestroyRef | undefined {
+  try {
+    return inject(DestroyRef);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The latest Visual Editor event of the given type(s) as a signal, `undefined` until the first one.
+ *
+ * Must be called in an injection context; the subscription is removed when that context is
+ * destroyed. The Angular counterpart of Vue's `useLocalessSync` and Svelte's `localessSync` store.
+ *
+ * @example
+ * ```ts
+ * export class PageComponent {
+ *   readonly saved = localessSyncEvent('save');
+ * }
+ * ```
+ */
+export function localessSyncEvent<T extends EventToAppType>(event: T | T[]): Signal<EventToAppOf<T> | undefined> {
+  assertInInjectionContext(localessSyncEvent);
+  const latest = signal<EventToAppOf<T> | undefined>(undefined);
+  inject(LocalessSyncService).on(event, e => latest.set(e));
+  return latest.asReadonly();
 }

@@ -39,6 +39,7 @@ export class LocalessDocument<T extends ContentData = ContentData> {
   readonly contentData = linkedSignal<ContentData | undefined>(() => this.document().data);
 
   constructor() {
+    // Called in the constructor, so the subscription is removed when this component is destroyed.
     this.sync.onChange(event => this.contentData.set(event.data));
 
     effect(() => {

@@ -39,10 +39,12 @@ export function isSyncEnabled(): boolean {
   return _sync.isEnabled();
 }
 
-export function localessSyncOn<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): void {
-  _sync.on(event, callback);
+/** Subscribes to Visual Editor sync event(s). Returns a function that removes the subscription. */
+export function localessSyncOn<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): () => void {
+  return _sync.on(event, callback);
 }
 
-export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): void {
-  _sync.onChange(callback);
+/** Subscribes to `input` and `change`. Returns a function that removes the subscription. */
+export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): () => void {
+  return _sync.onChange(callback);
 }

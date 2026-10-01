@@ -132,7 +132,7 @@ describe('createSyncController', () => {
   it('does not subscribe when sync is unusable', () => {
     // Not framed, so sync is configured but unusable — the bridge must not be touched.
     const on = vi.fn();
-    window.localess = { on, onChange: vi.fn() };
+    window.localess = { on, onChange: vi.fn(), off: vi.fn() };
     const sync = createSyncController();
     sync.init('https://cms.example.com', true);
 
@@ -152,7 +152,7 @@ describe('createSyncController', () => {
     // already-loaded early return and skip the path under test.
     const script = document.getElementById(SCRIPT_ID);
     expect(script).not.toBeNull();
-    window.localess = { on, onChange: vi.fn() };
+    window.localess = { on, onChange: vi.fn(), off: vi.fn() };
     script!.dispatchEvent(new Event('load'));
 
     const callback = vi.fn();
@@ -169,13 +169,53 @@ describe('createSyncController', () => {
 
     const script = document.getElementById(SCRIPT_ID);
     expect(script).not.toBeNull();
-    window.localess = { on: vi.fn(), onChange };
+    window.localess = { on: vi.fn(), onChange, off: vi.fn() };
     script!.dispatchEvent(new Event('load'));
 
     const callback = vi.fn();
     sync.onChange(callback);
 
     await vi.waitFor(() => expect(onChange).toHaveBeenCalledWith(callback));
+  });
+
+  it('unsubscribes through the script once attached', async () => {
+    enterEditorFrame();
+    const detach = vi.fn();
+    const on = vi.fn(() => detach);
+    const sync = createSyncController();
+    sync.init('https://cms.example.com', true);
+    window.localess = { on, onChange: vi.fn(), off: vi.fn() };
+    document.getElementById(SCRIPT_ID)!.dispatchEvent(new Event('load'));
+
+    const unsubscribe = sync.on('save', vi.fn());
+    await vi.waitFor(() => expect(on).toHaveBeenCalled());
+    unsubscribe();
+    unsubscribe();
+
+    expect(detach).toHaveBeenCalledTimes(1);
+  });
+
+  it('never attaches when unsubscribed before the script has loaded', async () => {
+    enterEditorFrame();
+    const on = vi.fn(() => vi.fn());
+    const onChange = vi.fn(() => vi.fn());
+    const sync = createSyncController();
+    sync.init('https://cms.example.com', true);
+
+    sync.on('save', vi.fn())();
+    sync.onChange(vi.fn())();
+    window.localess = { on, onChange, off: vi.fn() };
+    document.getElementById(SCRIPT_ID)!.dispatchEvent(new Event('load'));
+    await sync.ready();
+
+    expect(on).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('returns a harmless unsubscribe when sync is unusable', () => {
+    const sync = createSyncController();
+
+    expect(() => sync.on('save', vi.fn())()).not.toThrow();
   });
 
   it('logs rather than throws when the script fails to load', async () => {

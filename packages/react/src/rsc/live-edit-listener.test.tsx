@@ -31,10 +31,12 @@ function mockWindowLocaless() {
   (window as any).localess = {
     on: (_types: string[], cb: LocalessEventListener) => {
       listeners.push(cb);
+      return () => listeners.splice(listeners.indexOf(cb), 1);
     },
   };
   return {
     emit: (event: { type: string; data?: unknown }) => listeners.forEach(cb => cb(event)),
+    listenerCount: () => listeners.length,
   };
 }
 
@@ -84,6 +86,23 @@ describe('LiveEditListener', () => {
         data: { title: 'Updated' },
       })
     );
+  });
+
+  it('stops calling the action after unmount, e.g. on client-side navigation', async () => {
+    enterEditorFrame();
+    const bridge = mockWindowLocaless();
+    const { unmount } = render(<LiveEditListener id="doc-1" origin="https://cms.example.com" enableSync={true} />);
+    completeScriptLoad();
+    await vi.waitFor(() => expect(bridge.listenerCount()).toBe(1));
+    bridge.emit({ type: 'change', data: { title: 'First' } });
+    await vi.waitFor(() => expect(localessLiveEditActionMock).toHaveBeenCalledTimes(1));
+
+    unmount();
+    bridge.emit({ type: 'change', data: { title: 'Second' } });
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(bridge.listenerCount()).toBe(0);
+    expect(localessLiveEditActionMock).toHaveBeenCalledTimes(1);
   });
 
   it('does not subscribe when enableSync is false', async () => {

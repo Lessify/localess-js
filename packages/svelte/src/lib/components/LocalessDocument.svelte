@@ -23,11 +23,11 @@
     }
   });
 
-  $effect(() => {
+  $effect(() =>
     localessSyncOnChange(event => {
       contentData = event.data;
-    });
-  });
+    })
+  );
 </script>
 
 {#if contentData}

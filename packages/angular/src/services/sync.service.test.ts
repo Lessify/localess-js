@@ -1,8 +1,9 @@
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
 import { LOCALESS_CONFIG, LOCALESS_SYNC_READY, LocalessConfig } from '../localess.config';
-import { LocalessSyncService } from './sync.service';
+import { localessSyncEvent, LocalessSyncService } from './sync.service';
 
 describe('LocalessSyncService', () => {
   const baseConfig: LocalessConfig = {
@@ -67,5 +68,142 @@ describe('LocalessSyncService', () => {
     service.onChange(callback);
 
     expect(callback).not.toHaveBeenCalled();
+  });
+
+  describe('subscriptions', () => {
+    const originalTop = window.top;
+    let listeners: Map<string, Set<(event: unknown) => void>>;
+    let on: ReturnType<typeof vi.fn<(types: string | string[], callback: (event: unknown) => void) => () => void>>;
+    let detach: ReturnType<typeof vi.fn<() => void>>;
+
+    beforeEach(() => {
+      // Inside the Visual Editor frame, with a script that records what is attached.
+      Object.defineProperty(window, 'top', { value: {}, configurable: true });
+      listeners = new Map();
+      detach = vi.fn<() => void>();
+      on = vi.fn((types: string | string[], callback: (event: unknown) => void) => {
+        const list = Array.isArray(types) ? types : [types];
+        list.forEach(type => (listeners.get(type) ?? listeners.set(type, new Set()).get(type)!).add(callback));
+        return () => {
+          detach();
+          list.forEach(type => listeners.get(type)?.delete(callback));
+        };
+      });
+      window.localess = {
+        on,
+        onChange: (callback: (event: unknown) => void) => on(['input', 'change'], callback),
+        off: vi.fn(),
+      } as unknown as NonNullable<Window['localess']>;
+    });
+
+    afterEach(() => {
+      Object.defineProperty(window, 'top', { value: originalTop, configurable: true });
+      delete window.localess;
+    });
+
+    const emit = (event: { type: string }) => listeners.get(event.type)?.forEach(callback => callback(event));
+    const settle = () => new Promise(resolve => setTimeout(resolve));
+
+    it('returns a function that removes the subscription', async () => {
+      const service = createService({ ...baseConfig, enableSync: true });
+      const callback = vi.fn();
+
+      const unsubscribe = service.on('save', callback);
+      await settle();
+      emit({ type: 'save' });
+      unsubscribe();
+      unsubscribe();
+      emit({ type: 'save' });
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(detach).toHaveBeenCalledTimes(1);
+    });
+
+    it('never attaches when unsubscribed before the script is ready', async () => {
+      let ready!: () => void;
+      const service = createService({ ...baseConfig, enableSync: true }, new Promise<void>(resolve => (ready = resolve)));
+
+      service.onChange(vi.fn())();
+      ready();
+      await settle();
+
+      expect(on).not.toHaveBeenCalled();
+    });
+
+    it('removes a subscription made in a constructor when the component is destroyed', async () => {
+      const callback = vi.fn();
+      @Component({ template: '', changeDetection: ChangeDetectionStrategy.OnPush })
+      class ConstructorSubscriber {
+        constructor() {
+          inject(LocalessSyncService).onChange(callback);
+        }
+      }
+      createService({ ...baseConfig, enableSync: true });
+      const fixture = TestBed.createComponent(ConstructorSubscriber);
+      await settle();
+      emit({ type: 'input' });
+
+      fixture.destroy();
+      emit({ type: 'change' });
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(detach).toHaveBeenCalledTimes(1);
+    });
+
+    it('removes a subscription made outside an injection context when the given destroyRef is destroyed', async () => {
+      const callback = vi.fn();
+      @Component({ template: '', changeDetection: ChangeDetectionStrategy.OnPush })
+      class OnInitSubscriber implements OnInit {
+        private readonly sync = inject(LocalessSyncService);
+        private readonly destroyRef = inject(DestroyRef);
+
+        ngOnInit(): void {
+          this.sync.on('save', callback, this.destroyRef);
+        }
+      }
+      createService({ ...baseConfig, enableSync: true });
+      const fixture = TestBed.createComponent(OnInitSubscriber);
+      fixture.detectChanges();
+      await settle();
+
+      fixture.destroy();
+      emit({ type: 'save' });
+
+      expect(callback).not.toHaveBeenCalled();
+      expect(detach).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps a subscription made outside an injection context until it is removed', async () => {
+      const service = createService({ ...baseConfig, enableSync: true });
+      const callback = vi.fn();
+
+      service.on('save', callback);
+      await settle();
+      TestBed.resetTestingModule();
+      emit({ type: 'save' });
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it('localessSyncEvent() exposes the latest event as a signal and cleans up with its component', async () => {
+      @Component({ template: '', changeDetection: ChangeDetectionStrategy.OnPush })
+      class SignalReader {
+        readonly saved = localessSyncEvent(['save', 'publish']);
+      }
+      createService({ ...baseConfig, enableSync: true });
+      const fixture = TestBed.createComponent(SignalReader);
+      expect(fixture.componentInstance.saved()).toBeUndefined();
+      await settle();
+
+      emit({ type: 'publish' });
+      expect(fixture.componentInstance.saved()).toEqual({ type: 'publish' });
+
+      fixture.destroy();
+      expect(detach).toHaveBeenCalledTimes(1);
+    });
+
+    it('localessSyncEvent() must be called in an injection context', () => {
+      expect(() => localessSyncEvent('save')).toThrow();
+    });
   });
 });

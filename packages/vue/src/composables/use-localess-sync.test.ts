@@ -17,4 +17,19 @@ describe('useLocalessSync', () => {
     mount(Comp);
     expect(spy).toHaveBeenCalledWith('input', expect.any(Function));
   });
+
+  it('removes the subscription when the component unmounts', () => {
+    const unsubscribe = vi.fn();
+    vi.spyOn(state, 'localessSyncOn').mockReturnValue(unsubscribe);
+    const Comp = defineComponent({
+      setup() {
+        useLocalessSync('save');
+        return () => h('div');
+      },
+    });
+
+    mount(Comp).unmount();
+
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
 });

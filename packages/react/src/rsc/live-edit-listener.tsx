@@ -23,10 +23,11 @@ export function LiveEditListener({ id, origin, enableSync, debug }: LiveEditList
   useEffect(() => {
     if (!(enableSync && isBrowser() && isIframe())) return;
     let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
 
     loadLocalessSync(origin, { debug }).then(() => {
       if (cancelled) return;
-      window.localess?.on(['input', 'change', 'save', 'publish', 'unpublish'], async event => {
+      unsubscribe = window.localess?.on(['input', 'change', 'save', 'publish', 'unpublish'], async event => {
         try {
           const { localessLiveEditAction } = await import('./live-edit-action');
           await localessLiveEditAction({
@@ -43,6 +44,7 @@ export function LiveEditListener({ id, origin, enableSync, debug }: LiveEditList
 
     return () => {
       cancelled = true;
+      unsubscribe?.();
     };
   }, [id, origin, enableSync, debug]);
 

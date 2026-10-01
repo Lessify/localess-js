@@ -565,7 +565,7 @@ The script is injected once the application is stable (`ApplicationRef.whenStabl
 Inject `LocalessSyncService` and use `onChange()` — it already covers the `enabled()` check (browser + Visual Editor iframe) and the `ready()` wait:
 
 ```ts
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { LocalessSyncService } from '@localess/angular';
 
 @Component({
@@ -573,14 +573,31 @@ import { LocalessSyncService } from '@localess/angular';
   standalone: true,
   templateUrl: './slug.component.html',
 })
-export class SlugComponent implements OnInit {
+export class SlugComponent {
   private sync = inject(LocalessSyncService);
   liveContent = signal<ContentData | undefined>(undefined);
 
-  ngOnInit(): void {
+  constructor() {
+    // Subscribed in an injection context, so it is removed when the component is destroyed.
     this.sync.onChange(event => this.liveContent.set(event.data));
   }
 }
+```
+
+**Cleanup.** A subscription made in an injection context (constructor or field initializer) is removed automatically when that component, directive or service is destroyed. Elsewhere — `ngOnInit`, a callback — pass a `DestroyRef`, or call the function `on()`/`onChange()` return:
+
+```ts
+private readonly destroyRef = inject(DestroyRef);
+
+ngOnInit(): void {
+  this.sync.onChange(event => this.liveContent.set(event.data), this.destroyRef);
+}
+```
+
+For just the latest event as a signal, use `localessSyncEvent(event)` in an injection context — it cleans up the same way:
+
+```ts
+readonly saved = localessSyncEvent(['save', 'publish']); // Signal<EventToAppOf<'save' | 'publish'> | undefined>
 ```
 
 `onChange(callback)` is shorthand for `on(['input', 'change'], callback)`: the `input` event fires on every keystroke, `change` fires when the editor saves. Render `liveContent()` instead of the server-fetched data when it is set, to give authors a live preview.

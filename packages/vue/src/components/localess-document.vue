@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, watchEffect } from 'vue';
+import { onMounted, onScopeDispose, ref, watch, watchEffect } from 'vue';
 
 import { localessSyncOnChange } from '../client';
 import { ContentData, LocalessDocumentProps} from '../models';
@@ -21,11 +21,13 @@ watch(
   }
 );
 
+let unsubscribe: (() => void) | undefined;
 onMounted(() => {
-  localessSyncOnChange(event => {
+  unsubscribe = localessSyncOnChange(event => {
     contentData.value = event.data;
   });
 });
+onScopeDispose(() => unsubscribe?.());
 
 watchEffect(() => {
   if (!contentData.value) {

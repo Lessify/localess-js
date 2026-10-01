@@ -37,6 +37,19 @@ describe('LocalessDocument', () => {
     expect(screen.getByText('Updated')).toBeInTheDocument();
   });
 
+  it('removes its sync subscription on unmount', () => {
+    localessInit({ ...baseOptions, components: { page: TitleProbe as any } });
+    const unsubscribe = vi.fn();
+    vi.spyOn(state, 'localessSyncOnChange').mockReturnValue(unsubscribe);
+
+    const { unmount } = render(LocalessDocument, {
+      document: { _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any,
+    });
+    unmount();
+
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
   it('re-renders with the new content when the document prop changes (e.g. client-side navigation to a new slug)', async () => {
     localessInit({ ...baseOptions, components: { page: TitleProbe as any } });
 

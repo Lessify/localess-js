@@ -60,11 +60,13 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
  */
 export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({ document }, ref) => {
   const [contentData, setContentData] = useState(document.data);
-  useEffect(() => {
-    localessSyncOnChange(event => {
-      setContentData(event.data);
-    });
-  }, []);
+  useEffect(
+    () =>
+      localessSyncOnChange(event => {
+        setContentData(event.data);
+      }),
+    []
+  );
 
   if (!contentData) {
     console.error('LocalessDocument property %cdocument.data%c is not provided.', FONT_BOLD, FONT_NORMAL);

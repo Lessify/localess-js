@@ -60,11 +60,15 @@ export const useLocaless = <T extends ContentData = ContentData>(
   }
 
   useEffect(() => {
+    let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
     async function loadDocument() {
       try {
         const document = await client.getContentBySlug<T>(normalizedSlug, options);
         setDocument(document);
-        localessSyncOn(['input', 'change'], event => {
+        // The effect may have been cleaned up while the fetch was in flight.
+        if (cancelled) return;
+        unsubscribe = localessSyncOn(['input', 'change'], event => {
           setDocument({ ...document, data: event.data });
         });
       } catch (error) {
@@ -72,6 +76,10 @@ export const useLocaless = <T extends ContentData = ContentData>(
       }
     }
     loadDocument();
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
     // `options` is compared by value (JSON) instead of by reference: callers that pass an
     // inline object literal (the common case) would otherwise get a new reference on every
     // render, re-triggering this effect and causing an infinite fetch/render loop.

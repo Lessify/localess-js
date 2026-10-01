@@ -451,11 +451,11 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
-    // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant
-    localessSyncOn(['input', 'change'], (event) => {
+    // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant.
+    // Returns the unsubscribe function, so React removes the listener on unmount.
+    return localessSyncOn(['input', 'change'], (event) => {
       setPageData(event.data);
     });
-    // No cleanup needed: window.localess has no .off() method
   }, []);
 
   return (
@@ -484,7 +484,7 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
 
 > `window.localess` only exposes `.on()` and `.onChange()` — there is no `.off()` method.
 
-`localessSyncOn(event, callback)` wraps `.on()`; `localessSyncOnChange(callback)` wraps `.onChange()` — equivalent to `localessSyncOn(['input', 'change'], callback)`, firing only for content-change events (`callback` receives the `input`/`change` variant, not the full `EventToApp` union). Both handle the `isSyncEnabled()` check and the `localessSyncReady()` wait internally. `localessSyncReady()` resolves once the sync script has loaded (immediately if sync is not enabled) and never rejects.
+`localessSyncOn(event, callback)` wraps `.on()`; `localessSyncOnChange(callback)` wraps `.onChange()` — equivalent to `localessSyncOn(['input', 'change'], callback)`, firing only for content-change events (`callback` receives the `input`/`change` variant, not the full `EventToApp` union). Both handle the `isSyncEnabled()` check and the `localessSyncReady()` wait internally. Both return an unsubscribe function — return it from `useEffect` so the listener is removed on unmount. `localessSyncReady()` resolves once the sync script has loaded (immediately if sync is not enabled) and never rejects.
 
 ---
 
@@ -611,11 +611,11 @@ export function PageClientManual({
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
-    // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant
-    localessSyncOn(['input', 'change'], (event) => {
+    // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant.
+    // Returns the unsubscribe function, so React removes the listener on unmount.
+    return localessSyncOn(['input', 'change'], (event) => {
       setPageData(event.data);
     });
-    // No cleanup needed: window.localess has no .off() method
   }, []);
 
   return (

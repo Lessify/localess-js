@@ -318,7 +318,7 @@ if (window.localess) {
 }
 ```
 
-The `LocalessSync` interface (`on`, `onChange`) and the event types (`EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) are re-exported (deprecated) from `@localess/live-preview`, which declares `Window.localess` globally. There is no `off()` method — subscribe once.
+The `LocalessSync` interface (`on`, `onChange`) and the event types (`EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) are re-exported (deprecated) from `@localess/live-preview`, which declares `Window.localess` globally. `on()` and `onChange()` return a function that removes the subscription; `off(event, callback)` removes one directly.
 
 ### Available Event Types
 
