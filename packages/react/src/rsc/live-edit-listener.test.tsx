@@ -6,6 +6,7 @@ vi.mock('./live-edit-action', () => ({ localessLiveEditAction: localessLiveEditA
 
 import { resetSyncForTest } from '@localess/live-preview';
 
+import * as utils from '../core/utils';
 import { LiveEditListener } from './live-edit-listener';
 
 type LocalessEventListener = (event: { type: string; data?: unknown }) => void;
@@ -54,17 +55,20 @@ describe('LiveEditListener', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('loads the sync script in debug mode only when debug is set', () => {
+  it('passes debug through to the sync script loader', () => {
     enterEditorFrame();
-    const { unmount } = render(<LiveEditListener id="doc-1" origin="https://cms.example.com" enableSync={true} />);
-    expect(document.getElementById(SCRIPT_ID)!.hasAttribute('data-debug')).toBe(false);
-    unmount();
-    resetSyncForTest();
-    document.getElementById(SCRIPT_ID)?.remove();
+    // Spied rather than run: with JavaScript loading disabled, happy-dom fails a real script load
+    // synchronously, and that rejection would go unhandled.
+    const load = vi.spyOn(utils, 'loadLocalessSync').mockResolvedValue();
 
+    const { unmount } = render(<LiveEditListener id="doc-1" origin="https://cms.example.com" enableSync={true} />);
+    unmount();
     render(<LiveEditListener id="doc-1" origin="https://cms.example.com" enableSync={true} debug={true} />);
 
-    expect(document.getElementById(SCRIPT_ID)!.getAttribute('data-debug')).toBe('true');
+    expect(load.mock.calls).toEqual([
+      ['https://cms.example.com', { debug: undefined }],
+      ['https://cms.example.com', { debug: true }],
+    ]);
   });
 
   it('calls localessLiveEditAction with id, current pathname, event type, and data on a change event', async () => {
