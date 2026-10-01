@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../console';
-import { getOrigin, isSyncConfigured } from '../core/client';
+import { getOrigin, isSyncConfigured, isSyncDebug } from '../core/client';
 import { LocalessComponent } from '../core/components';
 import { Content, ContentData } from '../core/models';
 import { consumeLiveEdit, markLiveEditable } from './live-edit-cache';
@@ -50,7 +50,7 @@ export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>((
   return (
     <>
       <LocalessComponent ref={ref} data={data} assets={document.assets} links={document.links} references={document.references} />
-      <LiveEditListener id={document.id} origin={getOrigin()} enableSync={enableSync} />
+      <LiveEditListener id={document.id} origin={getOrigin()} enableSync={enableSync} debug={isSyncDebug()} />
     </>
   );
 });

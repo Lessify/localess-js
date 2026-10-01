@@ -71,6 +71,21 @@ describe('provideLocaless', () => {
     // what matters is that it was not reached until stability, and that it resolves.
     await expect(syncReady).resolves.toBeUndefined();
   });
+
+  it('passes debug through to the sync script', async () => {
+    vi.spyOn(window, 'top', 'get').mockReturnValue({} as Window);
+    TestBed.configureTestingModule({
+      providers: [
+        provideLocaless({ ...validOptions, enableSync: true, debug: true }),
+        { provide: ApplicationRef, useValue: { whenStable: () => Promise.resolve() } },
+      ],
+    });
+
+    TestBed.inject(LOCALESS_SYNC_READY);
+
+    await vi.waitFor(() => expect(document.getElementById('localess-js-sync')?.getAttribute('data-debug')).toBe('true'));
+    document.getElementById('localess-js-sync')?.remove();
+  });
 });
 
 describe('provideLocaless — IMAGE_LOADER', () => {

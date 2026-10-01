@@ -86,6 +86,13 @@ describe('state', () => {
     expect(isSyncEnabled()).toBe(true);
   });
 
+  it('localessInit passes debug through to the sync script', () => {
+    enterEditorFrame();
+    localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true, debug: true });
+
+    expect(document.getElementById(SCRIPT_ID)!.getAttribute('data-debug')).toBe('true');
+  });
+
   it('localessInit logs an error when the sync script fails to load', async () => {
     enterEditorFrame();
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);

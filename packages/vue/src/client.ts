@@ -22,7 +22,7 @@ export function localessInit(options: LocalessVueInitOptions): LocalessClient {
   _client = localessClient(restOptions);
   _components = components || {};
   _fallbackComponent = fallbackComponent;
-  _sync.init(restOptions.origin, enableSync);
+  _sync.init(restOptions.origin, enableSync, restOptions.debug);
   return _client;
 }
 

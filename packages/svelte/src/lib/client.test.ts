@@ -82,6 +82,13 @@ describe('client', () => {
     expect(isSyncEnabled()).toBe(true);
   });
 
+  it('localessInit passes debug through to the sync script', () => {
+    enterEditorFrame();
+    localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true, debug: true });
+
+    expect(syncScript()!.getAttribute('data-debug')).toBe('true');
+  });
+
   it('localessSyncOn subscribes via window.localess once sync is ready', async () => {
     enterEditorFrame();
     localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });

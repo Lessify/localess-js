@@ -123,6 +123,20 @@ describe('client', () => {
     expect(state.isSyncEnabled()).toBe(false);
   });
 
+  it('isSyncDebug reflects the debug option when sync is enabled', async () => {
+    const state = await import('./client');
+    state.localessInit({ ...baseOptions, enableSync: true, debug: true });
+
+    expect(state.isSyncDebug()).toBe(true);
+  });
+
+  it('isSyncDebug is false by default', async () => {
+    const state = await import('./client');
+    state.localessInit({ ...baseOptions, enableSync: true });
+
+    expect(state.isSyncDebug()).toBe(false);
+  });
+
   it('localessSyncReady resolves even when sync was never enabled', async () => {
     const state = await import('./client');
     state.localessInit(baseOptions);

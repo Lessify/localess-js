@@ -18,7 +18,7 @@ export interface SyncController {
    * Records the `enableSync` flag and starts loading the script when enabled.
    * A load failure is logged, never thrown — the app works without live editing.
    */
-  init(origin: string, enableSync: boolean | undefined): void;
+  init(origin: string, enableSync: boolean | undefined, debug?: boolean): void;
   /**
    * `true` when sync is enabled **and** usable here: in a browser, inside the
    * Visual Editor iframe. Callers need no further environment checks.
@@ -32,6 +32,8 @@ export interface SyncController {
    * {@link isEnabled} from a client component where it was never set.
    */
   isConfigured(): boolean;
+  /** The `debug` flag passed to {@link init}, forwarded to the sync script. */
+  isDebug(): boolean;
   /** Resolves once the script has loaded, or immediately when sync is off. */
   ready(): Promise<void>;
   /** Subscribes to one or more editor events. No-op when sync is unusable. */
@@ -45,21 +47,24 @@ export interface SyncController {
 /** Creates an independent {@link SyncController}. */
 export function createSyncController(): SyncController {
   let enabled = false;
+  let debugEnabled = false;
   let promise: Promise<void> | undefined;
 
   const ready = (): Promise<void> => promise ?? Promise.resolve();
   const isEnabled = () => enabled && isBrowser() && isIframe();
 
   return {
-    init(origin, enableSync) {
+    init(origin, enableSync, debug) {
       if (!enableSync) return;
       enabled = true;
-      promise = loadLocalessSync(origin).catch(error => {
+      debugEnabled = debug === true;
+      promise = loadLocalessSync(origin, { debug: debugEnabled }).catch(error => {
         console.error('[Localess] Failed to load sync script.', error);
       });
     },
     isEnabled,
     isConfigured: () => enabled,
+    isDebug: () => debugEnabled,
     ready,
     on(event, callback) {
       if (!isEnabled()) return;
@@ -75,6 +80,7 @@ export function createSyncController(): SyncController {
     },
     reset() {
       enabled = false;
+      debugEnabled = false;
       promise = undefined;
     },
   };

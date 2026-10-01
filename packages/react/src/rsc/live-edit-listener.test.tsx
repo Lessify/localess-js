@@ -52,6 +52,19 @@ describe('LiveEditListener', () => {
     expect(container.innerHTML).toBe('');
   });
 
+  it('loads the sync script in debug mode only when debug is set', () => {
+    enterEditorFrame();
+    const { unmount } = render(<LiveEditListener id="doc-1" origin="https://cms.example.com" enableSync={true} />);
+    expect(document.getElementById(SCRIPT_ID)!.hasAttribute('data-debug')).toBe(false);
+    unmount();
+    resetSyncForTest();
+    document.getElementById(SCRIPT_ID)?.remove();
+
+    render(<LiveEditListener id="doc-1" origin="https://cms.example.com" enableSync={true} debug={true} />);
+
+    expect(document.getElementById(SCRIPT_ID)!.getAttribute('data-debug')).toBe('true');
+  });
+
   it('calls localessLiveEditAction with id, current pathname, event type, and data on a change event', async () => {
     enterEditorFrame();
     enterEditorFrame();

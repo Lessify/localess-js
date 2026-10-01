@@ -9,6 +9,8 @@ export type LiveEditListenerProps = {
   id: string;
   origin: string;
   enableSync: boolean;
+  /** Turns on the sync script's debug mode. */
+  debug?: boolean;
 };
 
 /**
@@ -17,12 +19,12 @@ export type LiveEditListenerProps = {
  * on each one, instead of holding any client-side state or component registry.
  * Renders nothing.
  */
-export function LiveEditListener({ id, origin, enableSync }: LiveEditListenerProps) {
+export function LiveEditListener({ id, origin, enableSync, debug }: LiveEditListenerProps) {
   useEffect(() => {
     if (!(enableSync && isBrowser() && isIframe())) return;
     let cancelled = false;
 
-    loadLocalessSync(origin).then(() => {
+    loadLocalessSync(origin, { debug }).then(() => {
       if (cancelled) return;
       window.localess?.on(['input', 'change', 'save', 'publish', 'unpublish'], async event => {
         try {
@@ -42,7 +44,7 @@ export function LiveEditListener({ id, origin, enableSync }: LiveEditListenerPro
     return () => {
       cancelled = true;
     };
-  }, [id, origin, enableSync]);
+  }, [id, origin, enableSync, debug]);
 
   return null;
 }

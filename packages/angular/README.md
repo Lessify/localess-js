@@ -129,7 +129,7 @@ provideLocaless({
 | `version` | `'draft'` | — | Fetch draft content; omit for published |
 | `enableSync` | `boolean` | — | When `true`, injects the Visual Editor sync script into the page |
 | `cacheTTL` | `number \| false` | — | Response cache TTL in seconds (default 300); `false` disables caching |
-| `debug` | `boolean` | — | When `true`, logs internal activity to the console |
+| `debug` | `boolean` | — | When `true`, logs internal activity to the console, and turns on the Visual Editor sync script's snackbars and logs |
 
 `provideLocaless()` also registers Angular's built-in `IMAGE_LOADER` provider so that `NgOptimizedImage` automatically appends `?w=<width>` to Localess asset URLs for responsive image optimization, plus any `AssetTransformParams` passed via `[loaderParams]` (Angular's derived height is never sent — pass `h` via `loaderParams` to request a box).
 

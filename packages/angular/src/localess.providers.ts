@@ -79,7 +79,7 @@ export function provideLocaless(options: LocalessOptions, ...features: LocalessF
       appStable = resolve;
     });
     syncReady = stable
-      .then(() => loadLocalessSync(options.origin))
+      .then(() => loadLocalessSync(options.origin, { debug: options.debug }))
       .catch(error => {
         console.error('[Localess] Failed to load sync script.', error);
       });

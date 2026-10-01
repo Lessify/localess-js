@@ -93,6 +93,42 @@ describe('createSyncController', () => {
     expect(sync.isEnabled()).toBe(true);
   });
 
+  it('leaves the script in quiet mode unless debug is on', () => {
+    enterEditorFrame();
+    const sync = createSyncController();
+    sync.init('https://cms.example.com', true);
+
+    expect(document.getElementById(SCRIPT_ID)!.hasAttribute('data-debug')).toBe(false);
+    expect(sync.isDebug()).toBe(false);
+  });
+
+  it('turns on the script debug mode when init is given debug', () => {
+    enterEditorFrame();
+    const sync = createSyncController();
+    sync.init('https://cms.example.com', true, true);
+
+    expect(document.getElementById(SCRIPT_ID)!.getAttribute('data-debug')).toBe('true');
+    expect(sync.isDebug()).toBe(true);
+  });
+
+  it('logs the script load only in debug mode', async () => {
+    enterEditorFrame();
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    const quiet = createSyncController();
+    quiet.init('https://cms.example.com', true);
+    document.getElementById(SCRIPT_ID)!.dispatchEvent(new Event('load'));
+    await quiet.ready();
+    expect(info).not.toHaveBeenCalled();
+
+    resetSyncForTest();
+    document.getElementById(SCRIPT_ID)!.remove();
+    const debug = createSyncController();
+    debug.init('https://cms.example.com', true, true);
+    document.getElementById(SCRIPT_ID)!.dispatchEvent(new Event('load'));
+    await debug.ready();
+    expect(info).toHaveBeenCalledWith('Localess Sync Script loaded');
+  });
+
   it('does not subscribe when sync is unusable', () => {
     // Not framed, so sync is configured but unusable — the bridge must not be touched.
     const on = vi.fn();
@@ -174,10 +210,11 @@ describe('createSyncController', () => {
 
   it('reset clears state', () => {
     const sync = createSyncController();
-    sync.init('https://cms.example.com', true);
+    sync.init('https://cms.example.com', true, true);
 
     sync.reset();
 
     expect(sync.isConfigured()).toBe(false);
+    expect(sync.isDebug()).toBe(false);
   });
 });

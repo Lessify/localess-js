@@ -4,6 +4,14 @@ const JS_SYNC_ID = 'localess-js-sync';
 
 let syncPromise: Promise<void> | undefined;
 
+export interface LoadLocalessSyncOptions {
+  /**
+   * Turns on the sync script's debug mode (`data-debug` on its `<script>` tag): its snackbars in
+   * the preview and its console logging. Off by default, so content editors see neither.
+   */
+  debug?: boolean;
+}
+
 /**
  * Loads the Localess Visual Editor sync script and resolves once `window.localess`
  * is available.
@@ -17,9 +25,10 @@ let syncPromise: Promise<void> | undefined;
  * No-ops outside a browser, and outside the Visual Editor iframe — sync has no
  * meaning there. Concurrent callers share one promise.
  * @param {string} origin Fully qualified origin of the Localess deployment, with protocol.
+ * @param {LoadLocalessSyncOptions} options Optional; `debug` enables the script's debug mode.
  * @return {Promise<void>} resolves when the script has loaded.
  */
-export function loadLocalessSync(origin: string): Promise<void> {
+export function loadLocalessSync(origin: string, options: LoadLocalessSyncOptions = {}): Promise<void> {
   if (isServer()) {
     return Promise.resolve();
   }
@@ -52,10 +61,15 @@ export function loadLocalessSync(origin: string): Promise<void> {
     script.type = 'text/javascript';
     script.src = `${origin}/scripts/sync-v1.js`;
     script.async = true;
+    if (options.debug) {
+      script.setAttribute('data-debug', 'true');
+    }
 
     script.onerror = error => reject(error);
     script.onload = () => {
-      console.info('Localess Sync Script loaded');
+      if (options.debug) {
+        console.info('Localess Sync Script loaded');
+      }
       resolve();
     };
 

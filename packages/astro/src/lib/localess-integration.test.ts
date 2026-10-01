@@ -65,6 +65,19 @@ describe('localessIntegration', () => {
     expect(addMiddleware).toHaveBeenCalledWith(expect.objectContaining({ entrypoint: '@localess/astro/middleware', order: 'pre' }));
   });
 
+  it('passes debug through to the injected sync script loader', () => {
+    const quiet = runConfigSetup(localessIntegration({ ...baseOptions, enableSync: true }));
+    const debug = runConfigSetup(localessIntegration({ ...baseOptions, enableSync: true, debug: true }));
+    const pageScript = (injectScript: typeof quiet.injectScript) =>
+      injectScript.mock.calls
+        .filter(([stage]) => stage === 'page')
+        .map(([, code]) => code)
+        .join('\n');
+
+    expect(pageScript(quiet.injectScript)).toContain('{ debug: false }');
+    expect(pageScript(debug.injectScript)).toContain('{ debug: true }');
+  });
+
   it('throws when livePreview is true but output is not server', () => {
     const integration = localessIntegration({ ...baseOptions, livePreview: true });
 

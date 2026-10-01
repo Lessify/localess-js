@@ -67,7 +67,7 @@ export function localessInit(options: LocalessOptions): LocalessClient {
 
   _components = components || {};
   _fallbackComponent = fallbackComponent;
-  _sync.init(restOptions.origin, enableSync);
+  _sync.init(restOptions.origin, enableSync, restOptions.debug);
   return _client;
 }
 
@@ -152,6 +152,18 @@ export function isSyncEnabled(): boolean {
  */
 export function isSyncConfigured(): boolean {
   return _sync.isConfigured();
+}
+
+/**
+ * Whether the Visual Editor sync script runs in debug mode.
+ *
+ * Like {@link isSyncConfigured}, readable on the server, so `/rsc`'s `LocalessDocument` can
+ * pass it down to its client-only listener.
+ *
+ * @returns The `debug` value passed to `localessInit` when sync is enabled, defaulting to `false`.
+ */
+export function isSyncDebug(): boolean {
+  return _sync.isDebug();
 }
 
 /**

@@ -25,7 +25,7 @@ Spread these onto the elements the editor should be able to select. No configura
 ## Sync script
 
 ```ts
-loadLocalessSync(origin: string): Promise<void>
+loadLocalessSync(origin: string, options?: { debug?: boolean }): Promise<void>
 ```
 
 `origin` is an explicit argument, not read from configuration. The script is served by the Localess
@@ -34,13 +34,17 @@ app talks to — which is why this package needs no config object and no `@local
 
 No-ops outside a browser and outside the Visual Editor iframe. Concurrent callers share one load.
 
+`debug: true` sets `data-debug` on the script tag, turning on the script's snackbars in the preview and
+its console logging. Without it the script stays quiet apart from one `console.info` on connect.
+
 ## Sync controller
 
 ```ts
 const sync: SyncController = createSyncController();
-sync.init(origin, enableSync);   // records the flag, starts loading when enabled
+sync.init(origin, enableSync, debug?); // records the flags, starts loading when enabled
 sync.isEnabled();                // enabled AND in a browser AND framed
 sync.isConfigured();             // the raw flag, ungated
+sync.isDebug();                  // the debug flag forwarded to the script
 sync.ready();                    // resolves when loaded, or immediately
 sync.on(event, cb);              // no-op unless usable
 sync.onChange(cb);

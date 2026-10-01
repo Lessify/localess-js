@@ -110,7 +110,7 @@ export function localessIntegration(options: LocalessOptions): AstroIntegration 
             `
               import { loadLocalessSync, handleLocalessMessage } from "@localess/astro";
               window.__localessSpaceId = ${JSON.stringify(spaceId)};
-              loadLocalessSync(${JSON.stringify(origin)}).then(() => {
+              loadLocalessSync(${JSON.stringify(origin)}, { debug: ${JSON.stringify(debug === true)} }).then(() => {
                 window.localess?.on(['save', 'publish', 'unpublish', 'input', 'change'], handleLocalessMessage);
               });
             `
@@ -122,7 +122,7 @@ export function localessIntegration(options: LocalessOptions): AstroIntegration 
             `
               import { loadLocalessSync } from "@localess/astro";
               let reloadTimeout;
-              loadLocalessSync(${JSON.stringify(origin)}).then(() => {
+              loadLocalessSync(${JSON.stringify(origin)}, { debug: ${JSON.stringify(debug === true)} }).then(() => {
                 window.localess?.onChange(() => {
                   clearTimeout(reloadTimeout);
                   reloadTimeout = setTimeout(() => window.location.reload(), ${RELOAD_DEBOUNCE_MS});

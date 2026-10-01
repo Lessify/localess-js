@@ -37,7 +37,7 @@ export default defineConfig({
 | `spaceId` | `string` | — | Space ID. Not a secret — also used to validate live-preview requests. |
 | `token` | `string` | — | API token. **Secret** — see below. |
 | `version` | `'draft'` | published | Fetch the latest draft instead of published content. |
-| `debug` | `boolean` | `false` | Client debug logging. |
+| `debug` | `boolean` | `false` | Client debug logging; also turns on the Visual Editor sync script's snackbars and console logs. |
 | `cacheTTL` | `number \| false` | `300` | Client response cache TTL in seconds; `false` disables caching. |
 | `timeoutMs` | `number \| false` | `15000` | Per-attempt request timeout in ms; `false` disables it. |
 | `retry` | `LocalessRetryOptions \| false` | `{ attempts: 3, baseDelayMs: 300, maxDelayMs: 5000 }` | Retry policy for failed requests; `false` disables retrying. |
