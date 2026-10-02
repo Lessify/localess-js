@@ -169,7 +169,7 @@ Note the imports come from `@localess/vue`, not from this package. Nested blocks
 
 ## Visual Editor sync
 
-With `enableSync: true` and the page running inside the Visual Editor iframe, `<LocalessDocument>` re-renders on every keystroke. `localessEditable` / `localessEditableField` supply the attributes that let an author click a block in the preview and land on the right field.
+With `enableSync: true` and the page running inside the Visual Editor iframe, `<LocalessDocument>` re-renders on every keystroke for its own document (matched by `document.id`). `localessEditable` / `localessEditableField` supply the attributes that let an author click a block in the preview and land on the right field.
 
 ---
 

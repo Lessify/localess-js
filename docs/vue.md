@@ -86,6 +86,8 @@ const latest = useLocalessSync(['input', 'change']);
 </script>
 ```
 
+`LocalessDocument` applies only events whose `documentId` matches its `document.id`; `useLocalessSync` doesn't filter, so compare `latest.value?.documentId` to your content's `id` before using its `data`.
+
 ## Rich Text Rendering
 
 Built on `@localess/richtext` (see [docs/richtext.md](richtext.md)) — no TipTap at runtime. The `<LocalessRichText>` component renders native VNodes:

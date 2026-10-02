@@ -6,30 +6,20 @@ import {resolveLocaleAndSlug} from '@/shared/utils/route.ts';
 
 const {locale, slug} = resolveLocaleAndSlug(Astro.params.path);
 
-const preview = await getLivePayload(Astro);
 let document: Content;
-if (preview.data) {
-  document = {
-    createdAt: "",
-    fullSlug: slug,
-    id: "",
-    kind: 'DOCUMENT',
-    name: "",
-    parentSlug: "",
-    slug: "",
-    updatedAt: "",
-    data: preview.data
-  };
-} else {
-  try {
-    document = await getLocalessClient().getContentBySlug(slug, {locale});
-  } catch (error) {
-    if (error instanceof LocalessApiError && error.status === 404) {
-      Astro.response.status = 404;
-      return Astro.rewrite('/404');
-    }
-    throw error;
+try {
+  document = await getLocalessClient().getContentBySlug(slug, {locale});
+} catch (error) {
+  if (error instanceof LocalessApiError && error.status === 404) {
+    Astro.response.status = 404;
+    return Astro.rewrite('/404');
   }
+  throw error;
+}
+// While the Visual Editor is editing this document, render its unsaved draft instead.
+const preview = await getLivePayload(Astro, document.id);
+if (preview.data) {
+  document = {...document, data: preview.data};
 }
 ---
 

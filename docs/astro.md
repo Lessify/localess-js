@@ -136,15 +136,15 @@ Two tiers, mutually exclusive (`livePreview` wins when both are set):
 - `enableSync: true` — loads the Localess sync script from `origin`, then on any `input`/`change` event debounces (~500ms) and reloads the page. Works under both SSR and static output.
 - `livePreview: true` — SSR-only (`output: 'server'`; the integration throws at config-setup time otherwise). `save`/`publish`/`unpublish` reload; `input`/`change` debounce (~500ms), POST the updated content to the current page, and `morphdom`-patch the response into the live DOM, keyed by `data-ll-id` (preserving the sync script's snackbar container and the editor's `ll-hover-highlight` class, which the server HTML knows nothing about). The integration wires this up for you: it injects a page script that calls `handleLocalessMessage` and registers `live-preview/middleware.ts` as `@localess/astro/middleware` (`order: 'pre'`), which accepts a preview POST only when it is same-origin (`Sec-Fetch-Site: same-origin`) and its body's `spaceId` matches the one passed to `localess()`.
 
-With `livePreview`, read the draft payload in page frontmatter with `getLivePayload(Astro)` and prefer it over a fresh fetch. The payload carries only `data` (no `links`/`references`/`assets`), and is empty on ordinary requests:
+With `livePreview`, fetch the content in page frontmatter, then overlay the draft from `getLivePayload(Astro, documentId)`. The preview POST body carries the edited `documentId`, and `getLivePayload` returns the draft only when it matches the id you pass — so pass the rendered document's `id`, and a page rendering several documents (or one reached by clicking a link inside the preview) won't pick up another document's edits. The payload carries only `data` (no `links`/`references`/`assets`), and is empty on ordinary requests:
 
 ```astro
 ---
 import { getLivePayload, getLocalessClient } from '@localess/astro';
 import LocalessComponent from '@localess/astro/LocalessComponent.astro';
 
-const preview = await getLivePayload(Astro);
 const content = await getLocalessClient().getContentBySlug('home');
+const preview = await getLivePayload(Astro, content.id);
 const data = preview.data ?? content.data;
 ---
 

@@ -129,7 +129,7 @@ Rendering logic:
 Accepts the full `Content<T>` as `document`, delegates rendering to `LocalessComponent` (passing `data`, `assets`, `links`, `references`), and adds live sync. Does not fetch content — pass server-preloaded data as props. There are two implementations:
 
 - **`@localess/react/rsc`** — a Server Component. Live sync is driven by a Server Action (see "How `/rsc` Live Sync Works"). Use this in Next.js App Router.
-- **`@localess/react`** — a client-side component: holds `document.data` in `useState` and subscribes to `input`/`change` via `localessSyncOnChange` when `enableSync` is active. It calls React hooks, so render it inside a `'use client'` boundary.
+- **`@localess/react`** — a client-side component: holds `document.data` in `useState` and subscribes to `input`/`change` via `localessSyncOnChange` when `enableSync` is active, applying only events whose `documentId` matches its own `document.id`. It calls React hooks, so render it inside a `'use client'` boundary.
 
 ```tsx
 import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";
@@ -141,7 +141,7 @@ return <LocalessDocument document={content} />;
 
 ### `useLocaless<T>` hook — client fetch + live sync
 
-Fetches content by slug on the client and subscribes to Visual Editor sync events.
+Fetches content by slug on the client and subscribes to Visual Editor sync events, applying only those whose `documentId` matches the fetched document's `id`.
 
 ```typescript
 useLocaless<T extends ContentData = ContentData>(
@@ -187,7 +187,7 @@ Always preload data server-side and pass it as props — the page renders immedi
 
 ### How `/rsc` Live Sync Works
 
-`LocalessDocument` from `/rsc` is a Server Component. Live editing is driven by a Server Action shipped inside the SDK: a small `'use client'` listener (rendered by `LocalessDocument`, given `document.id`, the configured `origin`, and the raw `enableSync` flag via `isSyncConfigured()`) loads the sync script when running inside the Visual Editor iframe and calls the action on every `input`, `change`, `save`, `publish`, and `unpublish` event. On `input`/`change` the action stashes the edited data in an in-process cache keyed by `Content.id`; on `save`/`publish`/`unpublish` it clears that entry (the API is the source of truth again). It then calls `next/cache`'s `revalidatePath` (only when `process.env.NEXT_RUNTIME` is set), and Next.js refreshes the Server Component tree — `LocalessDocument` consumes the cached edit (one-shot) and re-renders using the server's own component registry. **No client-side component registration is needed** — `localessInit({ components })` once, server-side, is enough:
+`LocalessDocument` from `/rsc` is a Server Component. Live editing is driven by a Server Action shipped inside the SDK: a small `'use client'` listener (rendered by `LocalessDocument`, given `document.id`, the configured `origin`, and the raw `enableSync` flag via `isSyncConfigured()`) loads the sync script when running inside the Visual Editor iframe and calls the action on every `input`, `change`, `save`, `publish`, and `unpublish` event whose `documentId` matches that `document.id` (events for other documents on the page are ignored). On `input`/`change` the action stashes the edited data in an in-process cache keyed by `Content.id`; on `save`/`publish`/`unpublish` it clears that entry (the API is the source of truth again). It then calls `next/cache`'s `revalidatePath` (only when `process.env.NEXT_RUNTIME` is set), and Next.js refreshes the Server Component tree — `LocalessDocument` consumes the cached edit (one-shot) and re-renders using the server's own component registry. **No client-side component registration is needed** — `localessInit({ components })` once, server-side, is enough:
 
 ```tsx
 import { getLocalessClient, LocalessDocument, localessInit } from "@localess/react/rsc";
@@ -495,9 +495,9 @@ export function PageClient({ initialContent }) {
     // `event` is narrowed to the 'input' | 'change' variant (has `data`).
     // Returns the unsubscribe function, so React removes the listener on unmount.
     return localessSyncOn(['input', 'change'], (event) => {
-      setPageData(event.data);
+      if (event.documentId === initialContent.id) setPageData(event.data);
     });
-  }, []);
+  }, [initialContent.id]);
 
   return (
     <main {...localessEditable(pageData)}>

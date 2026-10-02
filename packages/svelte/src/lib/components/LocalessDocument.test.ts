@@ -18,7 +18,7 @@ describe('LocalessDocument', () => {
   it('renders the registered component using document.data', () => {
     localessInit({ ...baseOptions, components: { page: TitleProbe as any } });
 
-    render(LocalessDocument, { document: { _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any });
+    render(LocalessDocument, { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any });
 
     expect(screen.getByText('Hello')).toBeInTheDocument();
   });
@@ -27,14 +27,27 @@ describe('LocalessDocument', () => {
     localessInit({ ...baseOptions, components: { page: TitleProbe as any } });
     const spy = vi.spyOn(state, 'localessSyncOnChange');
 
-    render(LocalessDocument, { document: { _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any });
+    render(LocalessDocument, { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any });
     expect(screen.getByText('Hello')).toBeInTheDocument();
 
     const [callback] = spy.mock.calls[0];
-    callback({ type: 'change', data: { _schema: 'page', title: 'Updated' } } as any);
+    callback({ type: 'change', documentId: 'c1', data: { _schema: 'page', title: 'Updated' } } as any);
     await tick();
 
     expect(screen.getByText('Updated')).toBeInTheDocument();
+  });
+
+  it('ignores edits to another document on the same page', async () => {
+    localessInit({ ...baseOptions, components: { page: TitleProbe as any } });
+    const spy = vi.spyOn(state, 'localessSyncOnChange');
+
+    render(LocalessDocument, { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any });
+
+    const [callback] = spy.mock.calls[0];
+    callback({ type: 'change', documentId: 'header', data: { _schema: 'page', title: 'Header' } } as any);
+    await tick();
+
+    expect(screen.getByText('Hello')).toBeInTheDocument();
   });
 
   it('removes its sync subscription on unmount', () => {
@@ -58,7 +71,7 @@ describe('LocalessDocument', () => {
     });
     expect(screen.getByText('Home')).toBeInTheDocument();
 
-    await rerender({ document: { _id: 'c2', _schema: 'page', data: { _schema: 'page', title: 'About' } } as any });
+    await rerender({ document: { id: 'c2', _schema: 'page', data: { _schema: 'page', title: 'About' } } as any });
 
     expect(screen.getByText('About')).toBeInTheDocument();
   });
@@ -66,7 +79,7 @@ describe('LocalessDocument', () => {
   it('renders an inline error when document.data is missing', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    render(LocalessDocument, { document: { _id: 'c1', _schema: 'page' } as any });
+    render(LocalessDocument, { document: { id: 'c1', _schema: 'page' } as any });
 
     expect(screen.getByText(/document\.data/)).toBeInTheDocument();
   });

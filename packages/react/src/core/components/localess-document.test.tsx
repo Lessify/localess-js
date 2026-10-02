@@ -27,7 +27,7 @@ describe('LocalessDocument', () => {
   it('renders the registered component using document.data', () => {
     localessInit({ ...baseOptions, components: { page: Page } });
 
-    render(<LocalessDocument document={{ _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
+    render(<LocalessDocument document={{ id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
 
     expect(screen.getByText('Hello')).toBeDefined();
   });
@@ -35,15 +35,28 @@ describe('LocalessDocument', () => {
   it('re-renders with updated content when the sync subscription fires an input/change event', () => {
     localessInit({ ...baseOptions, components: { page: Page } });
 
-    render(<LocalessDocument document={{ _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
+    render(<LocalessDocument document={{ id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
     expect(screen.getByText('Hello')).toBeDefined();
 
     const [syncCallback] = (localessSyncOnChange as Mock).mock.calls[0];
     act(() => {
-      syncCallback({ data: { _schema: 'page', title: 'Updated' } });
+      syncCallback({ documentId: 'c1', data: { _schema: 'page', title: 'Updated' } });
     });
 
     expect(screen.getByText('Updated')).toBeDefined();
+  });
+
+  it('ignores edits to another document on the same page', () => {
+    localessInit({ ...baseOptions, components: { page: Page } });
+
+    render(<LocalessDocument document={{ id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
+
+    const [syncCallback] = (localessSyncOnChange as Mock).mock.calls[0];
+    act(() => {
+      syncCallback({ documentId: 'header', data: { _schema: 'page', title: 'Header' } });
+    });
+
+    expect(screen.getByText('Hello')).toBeDefined();
   });
 
   it('removes its sync subscription on unmount', () => {
@@ -52,7 +65,7 @@ describe('LocalessDocument', () => {
     (localessSyncOnChange as Mock).mockReturnValueOnce(unsubscribe);
 
     const { unmount } = render(
-      <LocalessDocument document={{ _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />
+      <LocalessDocument document={{ id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />
     );
     unmount();
 
@@ -62,7 +75,7 @@ describe('LocalessDocument', () => {
   it('renders an inline error when document.data is missing', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    render(<LocalessDocument document={{ _id: 'c1', _schema: 'page' } as any} />);
+    render(<LocalessDocument document={{ id: 'c1', _schema: 'page' } as any} />);
 
     expect(screen.getByText(/document\.data/)).toBeDefined();
   });

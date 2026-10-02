@@ -28,6 +28,8 @@ export function LiveEditListener({ id, origin, enableSync, debug }: LiveEditList
     loadLocalessSync(origin, { debug }).then(() => {
       if (cancelled) return;
       unsubscribe = window.localess?.on(['input', 'change', 'save', 'publish', 'unpublish'], async event => {
+        // The page may render several documents, each with its own listener.
+        if (event.documentId !== id) return;
         try {
           const { localessLiveEditAction } = await import('./live-edit-action');
           await localessLiveEditAction({

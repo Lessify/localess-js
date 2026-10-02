@@ -6,7 +6,7 @@ An Astro app in `server` output mode, rendering [Localess](https://github.com/Le
 
 - The `localess({...})` integration registered in `astro.config.mjs`, with `componentsDir` auto-discovery and `enableFallbackComponent`
 - A `[...path]` catch-all route resolving any CMS slug per-request
-- Live Visual Editor preview (`livePreview: true`) via the integration's live-preview middleware, with the catch-all route calling `getLivePayload(Astro)` to prefer the draft payload over an API fetch (the integration's dev-toolbar "Localess" app is a links panel, unrelated to preview)
+- Live Visual Editor preview (`livePreview: true`) via the integration's live-preview middleware, with the catch-all route calling `getLivePayload(Astro, document.id)` to render the draft of the document being edited (the integration's dev-toolbar "Localess" app is a links panel, unrelated to preview)
 - Rich text rendering and `resolveAsset()` (`richtext-test.astro`)
 - Locale-aware routing and a light/dark theme toggle wired up in `src/layouts/Layout.astro` — UX patterns on top of the integration, not part of its API
 

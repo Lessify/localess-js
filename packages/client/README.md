@@ -300,20 +300,21 @@ import { localessEditableField } from "@localess/client";
 When your application is loaded inside the Localess Visual Editor, you can subscribe to editing events via `window.localess`.
 
 ```ts
+// `content` is the Content object fetched for this page
 if (window.localess) {
   // Subscribe to a single event — `event` is typed to that event's variant, no narrowing needed
   window.localess.on('change', (event) => {
-    setPageData(event.data);
+    if (event.documentId === content.id) setPageData(event.data);
   });
 
   // Subscribe to multiple events — `event` is narrowed to the union of those variants
   window.localess.on(['input', 'change'], (event) => {
-    setPageData(event.data);
+    if (event.documentId === content.id) setPageData(event.data);
   });
 
   // Shorthand for on(['input', 'change'], ...)
   window.localess.onChange((event) => {
-    setPageData(event.data);
+    if (event.documentId === content.id) setPageData(event.data);
   });
 }
 ```
@@ -324,15 +325,17 @@ The `LocalessSync` interface (`on`, `onChange`) and the event types (`EventToApp
 
 | Event         | Payload                                              | Description                                                                  |
 |---------------|------------------------------------------------------|------------------------------------------------------------------------------|
-| `input`       | `{ type: 'input', data: any }`                       | Fired while a field is being edited (real-time)                              |
-| `change`      | `{ type: 'change', data: any }`                      | Fired after a field value is confirmed                                       |
-| `save`        | `{ type: 'save' }`                                   | Fired when content is saved                                                  |
-| `publish`     | `{ type: 'publish' }`                                | Fired when content is published                                              |
-| `unpublish`   | `{ type: 'unpublish' }`                              | Fired when content is unpublished                                            |
+| `input`       | `{ type: 'input', documentId: string, data: any }`   | Fired while a field is being edited (real-time)                              |
+| `change`      | `{ type: 'change', documentId: string, data: any }`  | Fired after a field value is confirmed                                       |
+| `save`        | `{ type: 'save', documentId: string }`               | Fired when content is saved                                                  |
+| `publish`     | `{ type: 'publish', documentId: string }`            | Fired when content is published                                              |
+| `unpublish`   | `{ type: 'unpublish', documentId: string }`          | Fired when content is unpublished                                            |
 | `pong`        | `{ type: 'pong' }`                                   | Heartbeat response from the editor                                           |
 | `enterSchema` | `{ type: 'enterSchema', id, schema, field?, root? }` | Fired when entering a schema element; `root` is `true` for the document root |
 | `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }`        | Fired when hovering over a schema element                                    |
 | `leaveSchema` | `{ type: 'leaveSchema' }`                            | Fired when leaving a schema element                                          |
+
+`documentId` is the `id` of the `Content` being edited (as returned by the Localess API). A page that renders several documents receives every document's events, so custom handlers should compare `event.documentId` to their content's `id` before applying `event.data`.
 
 ---
 

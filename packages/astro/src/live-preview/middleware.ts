@@ -4,7 +4,8 @@ import options from 'virtual:localess-options';
 
 /**
  * Intercepts Visual Editor live-preview POST requests (sent by `handleLocalessMessage`)
- * and stashes the draft content into `context.locals._localess_preview_data` so page
+ * and stashes the draft content, with the id of the document it belongs to, into
+ * `context.locals._localess_preview_data` so page
  * frontmatter can prefer it over a fresh API fetch — see `getLivePayload`.
  *
  * Validates the request is same-origin (`Sec-Fetch-Site: same-origin`, set automatically
@@ -24,8 +25,8 @@ export const onRequest = defineMiddleware(async ({ request, locals }, next) => {
     if (sameOrigin && expectedSpaceId) {
       try {
         const body = await request.clone().json();
-        if (body?.spaceId === expectedSpaceId && body?.data) {
-          locals._localess_preview_data = { data: body.data };
+        if (body?.spaceId === expectedSpaceId && typeof body?.documentId === 'string' && body?.data) {
+          locals._localess_preview_data = { documentId: body.documentId, data: body.data };
         }
       } catch (error) {
         console.error('[Localess] Error reading live-preview request body:', error);

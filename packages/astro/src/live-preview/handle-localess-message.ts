@@ -37,7 +37,7 @@ export async function handleLocalessMessage(event: EventToApp): Promise<void> {
 
   timeout = setTimeout(async () => {
     try {
-      await patchWithUpdatedContent(event.data);
+      await patchWithUpdatedContent(event.documentId, event.data);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         return;
@@ -47,13 +47,13 @@ export async function handleLocalessMessage(event: EventToApp): Promise<void> {
   }, DEBOUNCE_DELAY_MS);
 }
 
-async function patchWithUpdatedContent(data: unknown): Promise<void> {
+async function patchWithUpdatedContent(documentId: string, data: unknown): Promise<void> {
   abortController = new AbortController();
 
   const response = await fetch(location.href, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data, spaceId: window.__localessSpaceId }),
+    body: JSON.stringify({ documentId, data, spaceId: window.__localessSpaceId }),
     signal: abortController.signal,
   });
 

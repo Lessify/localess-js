@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as state from '../client';
@@ -49,6 +49,24 @@ describe('useLocaless', () => {
 
     unmount();
     expect(active).toBe(0);
+  });
+
+  it('applies edits to the fetched document only', async () => {
+    (fetch as any).mockImplementation(() => Promise.resolve(jsonResponse({ id: 'c1', _schema: 'page', data: { title: 'Hello' } })));
+    let callback: ((event: any) => void) | undefined;
+    vi.spyOn(state, 'localessSyncOn').mockImplementation((_event, cb) => {
+      callback = cb as (event: any) => void;
+      return () => undefined;
+    });
+
+    const { result } = renderHook(() => useLocaless('home'));
+    await waitFor(() => expect(callback).toBeDefined());
+
+    act(() => callback!({ type: 'input', documentId: 'header', data: { title: 'Header' } }));
+    expect(result.current?.data).toEqual({ title: 'Hello' });
+
+    act(() => callback!({ type: 'input', documentId: 'c1', data: { title: 'Edited' } }));
+    expect(result.current?.data).toEqual({ title: 'Edited' });
   });
 
   it('joins an array slug with slashes when building the request', async () => {

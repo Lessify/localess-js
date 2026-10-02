@@ -69,7 +69,9 @@ await sync.ready();
 
 // Each returns an unsubscribe function — also safe to call before the script has loaded.
 const unsubscribe = sync.onChange(event => {
-  // Fired on `change` and `input` — re-render with event.data
+  // Fired on `change` and `input` for every document on the page — re-render with event.data
+  // only when event.documentId matches your content's id
+  if (event.documentId === content.id) render(event.data);
 });
 
 sync.on(['save', 'publish', 'unpublish'], event => {

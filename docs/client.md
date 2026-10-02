@@ -373,13 +373,16 @@ import { localessEditable, localessEditableField } from "@localess/client";
 ### Editor Events
 
 ```typescript
+// `content` is the Content object fetched for this page
 if (window.localess) {
   // `event` is narrowed to the subscribed variant(s) via EventToAppOf<T> — no manual type check needed
   window.localess.on(['input', 'change'], (event) => {
-    setPageData(event.data);
+    if (event.documentId === content.id) setPageData(event.data);
   });
   // Shorthand for the same subscription
-  const unsubscribe = window.localess.onChange((event) => setPageData(event.data));
+  const unsubscribe = window.localess.onChange((event) => {
+    if (event.documentId === content.id) setPageData(event.data);
+  });
   // `on`/`onChange` return an unsubscribe function; `off(event, callback)` does the same
   unsubscribe();
 }
@@ -387,15 +390,17 @@ if (window.localess) {
 
 | Event         | Payload                                              | When                                                                        |
 |---------------|------------------------------------------------------|-----------------------------------------------------------------------------|
-| `input`       | `{ type: 'input', data: any }`                       | User typing in a field (real-time)                                          |
-| `change`      | `{ type: 'change', data: any }`                      | Field value confirmed                                                       |
-| `save`        | `{ type: 'save' }`                                   | Content saved                                                               |
-| `publish`     | `{ type: 'publish' }`                                | Content published                                                           |
-| `unpublish`   | `{ type: 'unpublish' }`                              | Content unpublished                                                         |
+| `input`       | `{ type: 'input', documentId: string, data: any }`   | User typing in a field (real-time)                                          |
+| `change`      | `{ type: 'change', documentId: string, data: any }`  | Field value confirmed                                                       |
+| `save`        | `{ type: 'save', documentId: string }`               | Content saved                                                               |
+| `publish`     | `{ type: 'publish', documentId: string }`            | Content published                                                           |
+| `unpublish`   | `{ type: 'unpublish', documentId: string }`          | Content unpublished                                                         |
 | `pong`        | `{ type: 'pong' }`                                   | Editor heartbeat response                                                   |
 | `enterSchema` | `{ type: 'enterSchema', id, schema, field?, root? }` | Editor cursor enters a schema block; `root` is `true` for the document root |
 | `hoverSchema` | `{ type: 'hoverSchema', id, schema, field? }`        | Editor cursor hovers a schema block                                         |
 | `leaveSchema` | `{ type: 'leaveSchema' }`                            | Editor cursor leaves a schema block                                         |
+
+`documentId` is the `id` of the `Content` being edited (as returned by the Localess API). A page that renders several documents receives every document's events, so custom handlers should compare `event.documentId` to their content's `id` before applying `event.data`.
 
 ## Asset Transform Parameters
 

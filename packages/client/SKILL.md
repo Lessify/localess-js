@@ -309,9 +309,12 @@ import { localessEditable, localessEditableField } from "@localess/client";
 
 ```typescript
 // Only available when app is loaded inside the Localess Visual Editor iframe
+// `content` is the Content object fetched for this page
 if (window.localess) {
   window.localess.on(['input', 'change'], (event) => {
-    setPageData(event.data); // Real-time preview update — event is narrowed to the 'input' | 'change' variant, no type check needed
+    // Real-time preview update — event is narrowed to the 'input' | 'change' variant, no type check needed.
+    // Skip edits for other documents on the page (e.g. a shared header).
+    if (event.documentId === content.id) setPageData(event.data);
   });
   // No .off() method — subscribe once on mount
 }
@@ -334,6 +337,8 @@ if (window.localess) {
 | `enterSchema` | User enters a schema element          |
 | `hoverSchema` | User hovers over a schema element     |
 | `leaveSchema` | User leaves a schema element          |
+
+`input`, `change`, `save`, `publish`, and `unpublish` carry `documentId: string` — the `id` of the `Content` being edited. Compare it to your content's `id` before applying `event.data`.
 
 ---
 

@@ -79,7 +79,7 @@ Falls back to `fallbackComponent` (if registered) when the schema key is unregis
 
 ## `<LocalessDocument>`
 
-Wraps `<LocalessComponent>` and subscribes to Visual Editor `input`/`change` events automatically (when `enableSync` is active), re-rendering with the updated content in place. Does not fetch content — pass the full `Content` object as `document`.
+Wraps `<LocalessComponent>` and subscribes to Visual Editor `input`/`change` events automatically (when `enableSync` is active) (only events whose `documentId` matches its `document.id`), re-rendering with the updated content in place. Does not fetch content — pass the full `Content` object as `document`.
 
 ```svelte
 <script lang="ts">
@@ -153,6 +153,8 @@ Subscribes to Visual Editor bridge events (`input`, `change`, etc.) and exposes 
 
 <p>{$latest?.data}</p>
 ```
+
+The store doesn't filter by document — `input`/`change`/`save`/`publish`/`unpublish` carry `documentId` (the edited `Content.id`); compare it to your content's `id` before using `data`.
 
 ---
 

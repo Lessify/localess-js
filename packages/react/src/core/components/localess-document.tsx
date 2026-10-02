@@ -63,9 +63,10 @@ export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>((
   useEffect(
     () =>
       localessSyncOnChange(event => {
-        setContentData(event.data);
+        // The page may render several documents; only this one's edits apply here.
+        if (event.documentId === document.id) setContentData(event.data);
       }),
-    []
+    [document.id]
   );
 
   if (!contentData) {

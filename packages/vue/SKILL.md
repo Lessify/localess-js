@@ -81,7 +81,7 @@ Falls back to `fallbackComponent` (if registered) when the schema key is unregis
 
 ## `<LocalessDocument>`
 
-Wraps `<LocalessComponent>` and subscribes to Visual Editor `input`/`change` events automatically (when `enableSync` is active), re-rendering with the updated content in place. Also re-syncs when the `document` prop itself changes — important for SSR frameworks like Nuxt, where client-side navigation to a new slug reuses the same component instance rather than remounting it.
+Wraps `<LocalessComponent>` and subscribes to Visual Editor `input`/`change` events automatically (when `enableSync` is active) (only events whose `documentId` matches its `document.id`), re-rendering with the updated content in place. Also re-syncs when the `document` prop itself changes — important for SSR frameworks like Nuxt, where client-side navigation to a new slug reuses the same component instance rather than remounting it.
 
 ```vue
 <script setup lang="ts">
@@ -162,6 +162,8 @@ import { useLocalessSync } from '@localess/vue';
 const latestChange = useLocalessSync(['input', 'change']);
 </script>
 ```
+
+The composable doesn't filter by document — `input`/`change`/`save`/`publish`/`unpublish` carry `documentId` (the edited `Content.id`); compare it to your content's `id` before using `data`.
 
 ### Rich text — `<LocalessRichText>`, `useLocalessRichText`, `useLocalessRichTextHtml`
 

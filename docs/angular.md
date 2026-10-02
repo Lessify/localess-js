@@ -131,7 +131,7 @@ provideLocaless(
 }
 ```
 
-`[llComponent]` (`LocalessComponentDirective`; inputs `llComponent`, `links`, `references`, `assets`) resolves an item's `_schema` via the registry and creates the matching component with `ViewContainerRef.createComponent` directly at the `ng-container` anchor — no wrapper element — recreating the component only when its `_schema` changes. Every registered component, including the fallback, must extend `SchemaComponent` — `withLocalessComponents()` types entries as `AnySchemaComponent` (`Type<SchemaComponent<any>>`), so `data`/`links`/`references`/`assets` are always set unconditionally. Unmatched keys log a console error and render the fallback (or nothing). `<ll-document>` (`LocalessDocument`, `document: Content<T>` required input) additionally subscribes to `LocalessSyncService.onChange` so Visual Editor edits replace the rendered data live.
+`[llComponent]` (`LocalessComponentDirective`; inputs `llComponent`, `links`, `references`, `assets`) resolves an item's `_schema` via the registry and creates the matching component with `ViewContainerRef.createComponent` directly at the `ng-container` anchor — no wrapper element — recreating the component only when its `_schema` changes. Every registered component, including the fallback, must extend `SchemaComponent` — `withLocalessComponents()` types entries as `AnySchemaComponent` (`Type<SchemaComponent<any>>`), so `data`/`links`/`references`/`assets` are always set unconditionally. Unmatched keys log a console error and render the fallback (or nothing). `<ll-document>` (`LocalessDocument`, `document: Content<T>` required input) additionally subscribes to `LocalessSyncService.onChange` so Visual Editor edits replace the rendered data live — only events whose `documentId` matches its `document().id`.
 
 ## Components
 
@@ -210,10 +210,11 @@ Set `enableSync: !environment.production` in `provideLocaless()`. `LocalessSyncS
 > The sync script load is deferred to `ApplicationRef.whenStable()` via `provideAppInitializer`, rather than started when `provideLocaless()` runs. The script hooks every `[data-ll-id]` element as soon as the editor pongs, and `LocalessComponentDirective` destroys and recreates its server-rendered DOM once `LocalessComponentResolver` resolves the component — so with an eager load, a lazily registered schema whose loader settled during that handshake ended up unhooked and unclickable in the editor for the rest of the session. `LocalessComponentResolver` wraps each lazy loader in a `PendingTasks` task, so `whenStable()` waits for it under zoneless change detection as well as with zone.js (which also makes SSR serialization wait for lazily registered schemas).
 
 ```typescript
-import { ContentData, localessSyncEvent, LocalessSyncService } from '@localess/angular';
+import { Content, ContentData, localessSyncEvent, LocalessSyncService } from '@localess/angular';
 
 @Component({ ... })
 export class PageComponent {
+  readonly content = input.required<Content>();
   liveData = signal<ContentData | undefined>(undefined);
   readonly lastSaved = localessSyncEvent(['save', 'publish']); // latest event as a signal
 
@@ -221,7 +222,10 @@ export class PageComponent {
 
   constructor() {
     // In an injection context, so both are removed when the component is destroyed.
-    this.sync.onChange(event => this.liveData.set(event.data)); // `input` + `change` events
+    // `input` + `change` events; `documentId` tells this page's document apart from others on the page.
+    this.sync.onChange(event => {
+      if (event.documentId === this.content().id) this.liveData.set(event.data);
+    });
     this.sync.on(['save', 'publish'], event => console.info(event.type));
   }
 }
@@ -233,7 +237,7 @@ export class PageComponent {
 - `localessSyncEvent(event | event[])` — standalone function, injection context only: the latest event as a `Signal`, removed with its context.
 - `onChange(callback)` — shorthand for `on(['input', 'change'], callback)`.
 
-`on`/`onChange` are no-ops when `enabled()` is false and wait for `ready()` internally.
+`on`/`onChange` are no-ops when `enabled()` is false and wait for `ready()` internally. They don't filter by document: compare `event.documentId` to your content's `id` yourself.
 
 ## Rendering Modes
 

@@ -22,7 +22,7 @@ describe('LocalessDocument', () => {
     setComponentsForTest({ page: TitleProbe });
 
     const wrapper = mount(LocalessDocument, {
-      props: { document: { _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },
+      props: { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },
     });
 
     expect(wrapper.text()).toContain('Hello');
@@ -32,11 +32,11 @@ describe('LocalessDocument', () => {
     setComponentsForTest({ page: TitleProbe });
 
     const wrapper = mount(LocalessDocument, {
-      props: { document: { _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Home' } } as any },
+      props: { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Home' } } as any },
     });
     expect(wrapper.text()).toContain('Home');
 
-    await wrapper.setProps({ document: { _id: 'c2', _schema: 'page', data: { _schema: 'page', title: 'About' } } as any });
+    await wrapper.setProps({ document: { id: 'c2', _schema: 'page', data: { _schema: 'page', title: 'About' } } as any });
 
     expect(wrapper.text()).toContain('About');
   });
@@ -46,15 +46,30 @@ describe('LocalessDocument', () => {
     const spy = vi.spyOn(client, 'localessSyncOnChange');
 
     const wrapper = mount(LocalessDocument, {
-      props: { document: { _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },
+      props: { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },
     });
     expect(wrapper.text()).toContain('Hello');
 
     const [callback] = spy.mock.calls[0];
-    callback({ type: 'change', data: { _schema: 'page', title: 'Updated' } } as any);
+    callback({ type: 'change', documentId: 'c1', data: { _schema: 'page', title: 'Updated' } } as any);
     await wrapper.vm.$nextTick();
 
     expect(wrapper.text()).toContain('Updated');
+  });
+
+  it('ignores edits to another document on the same page', async () => {
+    setComponentsForTest({ page: TitleProbe });
+    const spy = vi.spyOn(client, 'localessSyncOnChange');
+
+    const wrapper = mount(LocalessDocument, {
+      props: { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },
+    });
+
+    const [callback] = spy.mock.calls[0];
+    callback({ type: 'change', documentId: 'header', data: { _schema: 'page', title: 'Header' } } as any);
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.text()).toContain('Hello');
   });
 
   it('removes its sync subscription on unmount', () => {
@@ -63,7 +78,7 @@ describe('LocalessDocument', () => {
     vi.spyOn(client, 'localessSyncOnChange').mockReturnValue(unsubscribe);
 
     const wrapper = mount(LocalessDocument, {
-      props: { document: { _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },
+      props: { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },
     });
     wrapper.unmount();
 
@@ -74,7 +89,7 @@ describe('LocalessDocument', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const wrapper = mount(LocalessDocument, {
-      props: { document: { _id: 'c1', _schema: 'page' } as any },
+      props: { document: { id: 'c1', _schema: 'page' } as any },
     });
 
     expect(wrapper.text()).toContain('document.data');

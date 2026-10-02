@@ -356,7 +356,7 @@ export function PageView({ slug }: { slug: string }) {
 
 Returns `Content<T> | undefined` — `undefined` while the initial fetch is in progress, or if it failed (the error is logged to the console). The hook calls `getLocalessClient()` in the browser, so the client-side `localessInit()` it relies on must use a public token.
 
-When `enableSync` is active and the page is rendered inside the Localess Visual Editor iframe, the hook automatically subscribes to `input` / `change` events and updates the returned content in place.
+When `enableSync` is active and the page is rendered inside the Localess Visual Editor iframe, the hook automatically subscribes to `input` / `change` events and updates the returned content in place — only for events whose `documentId` matches the fetched document's `id`.
 
 ---
 
@@ -432,9 +432,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
 | `document` | `Content<T>`             | ✅        | Full content response object (from `getContentBySlug`/`getContentById`)  |
 | `ref`      | `React.Ref<HTMLElement>` | ❌        | Forwarded to the rendered root element                                   |
 
-> `@localess/react/rsc`'s `LocalessDocument` is a Server Component — its live sync is driven by a Server Action, not client-side re-render, so no component registration is needed beyond the single server-side `localessInit()` call above. It renders a hidden client listener that forwards `input`, `change`, `save`, `publish`, and `unpublish` editor events to the Server Action, which caches the edited data and calls `revalidatePath`. It requires a live server at request time (not `output: 'export'`).
+> `@localess/react/rsc`'s `LocalessDocument` is a Server Component — its live sync is driven by a Server Action, not client-side re-render, so no component registration is needed beyond the single server-side `localessInit()` call above. It renders a hidden client listener that forwards `input`, `change`, `save`, `publish`, and `unpublish` editor events for its own `document.id` (matched against `event.documentId`) to the Server Action, which caches the edited data and calls `revalidatePath`. It requires a live server at request time (not `output: 'export'`).
 >
-> The default export's `LocalessDocument` (`@localess/react`) is a different implementation: a client-side component (uses `useState`/`useEffect`, so it must be rendered inside a `'use client'` boundary) that subscribes to `input` / `change` events itself when `enableSync` is active. It is also the fallback for `output: 'export'` live editing — see `docs/react.md`'s "Client-Side Fallback for Static Export" for the client-side registration step it requires.
+> The default export's `LocalessDocument` (`@localess/react`) is a different implementation: a client-side component (uses `useState`/`useEffect`, so it must be rendered inside a `'use client'` boundary) that subscribes to `input` / `change` events itself when `enableSync` is active, applying only those whose `documentId` matches its `document.id`. It is also the fallback for `output: 'export'` live editing — see `docs/react.md`'s "Client-Side Fallback for Static Export" for the client-side registration step it requires.
 
 ### Manual Integration
 
@@ -454,9 +454,9 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
     // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant.
     // Returns the unsubscribe function, so React removes the listener on unmount.
     return localessSyncOn(['input', 'change'], (event) => {
-      setPageData(event.data);
+      if (event.documentId === initialContent.id) setPageData(event.data);
     });
-  }, []);
+  }, [initialContent.id]);
 
   return (
     <main {...localessEditable(pageData)}>
@@ -614,9 +614,9 @@ export function PageClientManual({
     // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant.
     // Returns the unsubscribe function, so React removes the listener on unmount.
     return localessSyncOn(['input', 'change'], (event) => {
-      setPageData(event.data);
+      if (event.documentId === initialContent.id) setPageData(event.data);
     });
-  }, []);
+  }, [initialContent.id]);
 
   return (
     <main {...localessEditable(pageData)}>

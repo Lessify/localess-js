@@ -24,7 +24,8 @@ watch(
 let unsubscribe: (() => void) | undefined;
 onMounted(() => {
   unsubscribe = localessSyncOnChange(event => {
-    contentData.value = event.data;
+    // The page may render several documents; only this one's edits apply here.
+    if (event.documentId === props.document.id) contentData.value = event.data;
   });
 });
 onScopeDispose(() => unsubscribe?.());

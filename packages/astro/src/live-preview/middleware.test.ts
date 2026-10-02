@@ -19,11 +19,19 @@ describe('onRequest', () => {
 
   it('populates locals when the request is a validated preview POST', async () => {
     const data = { _id: '1', _schema: 'page' };
-    const context = makeContext({ body: { data, spaceId: 'space-1' } });
+    const context = makeContext({ body: { documentId: 'doc-1', data, spaceId: 'space-1' } });
 
     await onRequest(context as any, next);
 
-    expect(context.locals._localess_preview_data).toEqual({ data });
+    expect(context.locals._localess_preview_data).toEqual({ documentId: 'doc-1', data });
+  });
+
+  it('ignores a POST without a documentId', async () => {
+    const context = makeContext({ body: { data: { _id: '1' }, spaceId: 'space-1' } });
+
+    await onRequest(context as any, next);
+
+    expect(context.locals._localess_preview_data).toBeUndefined();
   });
 
   it('ignores GET requests', async () => {

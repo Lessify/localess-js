@@ -46,7 +46,7 @@ npm install @localess/svelte svelte
 
 ## `LocalessDocument` — static renderer + live sync
 
-Wraps `LocalessComponent` and subscribes to Visual Editor `input`/`change` events automatically when `enableSync` is active, updating the rendered content in place. Does not fetch content — pass the full `Content` object (e.g. from `getLocaless().getContentBySlug(...)` or a SvelteKit `load()` function) as the `document` prop.
+Wraps `LocalessComponent` and subscribes to Visual Editor `input`/`change` events automatically when `enableSync` is active (only events whose `documentId` matches its `document.id`), updating the rendered content in place. Does not fetch content — pass the full `Content` object (e.g. from `getLocaless().getContentBySlug(...)` or a SvelteKit `load()` function) as the `document` prop.
 
 ```svelte
 <script lang="ts">
@@ -97,6 +97,8 @@ There's no Vite plugin auto-discovering these from a folder. That was tried and 
 
 <p>{$latest?.data}</p>
 ```
+
+The store doesn't filter by document — compare `$latest.documentId` to your content's `id` before using its `data`.
 
 ## Rich Text Rendering
 

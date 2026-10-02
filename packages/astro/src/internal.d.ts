@@ -9,6 +9,7 @@
 declare namespace App {
   interface Locals {
     _localess_preview_data?: {
+      documentId?: string;
       data?: import('./models').ContentData;
     };
   }

@@ -144,21 +144,19 @@ Nested blocks go back through `<LocalessComponent>`, which looks each one up by 
 
 ## Live preview
 
-With `livePreview: true`, `getLivePayload(Astro)` returns the draft the author is currently editing, so you can render that instead of the published content:
+With `livePreview: true`, `getLivePayload(Astro, documentId)` returns the draft of the document being edited — only when the preview request was for that document — so pass the rendered document's `id` and overlay the draft on the published content:
 
 ```astro
 ---
-import { getLivePayload, getLocalessClient, type Content } from '@localess/astro';
+import { getLivePayload, getLocalessClient } from '@localess/astro';
+import LocalessComponent from '@localess/astro/LocalessComponent.astro';
 
-const preview = await getLivePayload(Astro);
-
-let document: Content;
-if (preview.data) {
-  document = { /* …envelope around preview.data… */ } as Content;
-} else {
-  document = await getLocalessClient().getContentBySlug(slug, { locale });
-}
+const content = await getLocalessClient().getContentBySlug(slug, { locale });
+const preview = await getLivePayload(Astro, content.id);
+const data = preview.data ?? content.data;
 ---
+
+<LocalessComponent data={data} links={content.links} references={content.references} assets={content.assets} />
 ```
 
 ---

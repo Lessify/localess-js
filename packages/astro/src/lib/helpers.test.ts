@@ -22,15 +22,22 @@ describe('getLocalessClient', () => {
 });
 
 describe('getLivePayload', () => {
-  it('returns the preview data when locals has it', async () => {
+  it('returns the preview data for the edited document', async () => {
     const data = { _id: '1', _schema: 'page' };
-    const result = await getLivePayload({ locals: { _localess_preview_data: { data } } });
+    const result = await getLivePayload({ locals: { _localess_preview_data: { documentId: 'doc-1', data } } }, 'doc-1');
 
     expect(result).toEqual({ data });
   });
 
+  it('returns an empty object for another document on the same page', async () => {
+    const data = { _id: '1', _schema: 'page' };
+    const result = await getLivePayload({ locals: { _localess_preview_data: { documentId: 'doc-1', data } } }, 'header');
+
+    expect(result).toEqual({});
+  });
+
   it('returns an empty object when locals has no preview data', async () => {
-    const result = await getLivePayload({ locals: {} });
+    const result = await getLivePayload({ locals: {} }, 'doc-1');
 
     expect(result).toEqual({});
   });

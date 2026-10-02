@@ -62,6 +62,8 @@ isBrowser(); isServer(); isIframe();
 `hoverSchema`, `leaveSchema`; `EventToAppType` is the string union of those names and
 `EventCallback` is `(event: EventToApp) => void`. `EventToAppOf<T>` narrows the callback payload, so subscribing to
 `'input' | 'change'` types `event.data`. `LocalessSync` is the `window.localess` contract.
+`input`, `change`, `save`, `publish`, and `unpublish` carry `documentId` (the edited `Content.id`);
+`sync.on`/`onChange` don't filter by it, so handlers compare it to their own document's `id`.
 
 ## Testing
 

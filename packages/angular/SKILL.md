@@ -165,7 +165,7 @@ export class UnknownBlockComponent extends SchemaComponent {}
 
 ### `<ll-document>` — render a full `Content` response
 
-`LocalessDocument` is the top-level entry point for a fetched page. It renders `document().data` through `[llComponent]` (passing the document's `links`/`references`/`assets`) and keeps it live: it subscribes to `LocalessSyncService.onChange` internally, so `input`/`change` events from the Visual Editor update the page without a full reload — no manual sync wiring needed. When `document().data` is missing it renders a placeholder message and logs a console error.
+`LocalessDocument` is the top-level entry point for a fetched page. It renders `document().data` through `[llComponent]` (passing the document's `links`/`references`/`assets`) and keeps it live: it subscribes to `LocalessSyncService.onChange` internally, so `input`/`change` events from the Visual Editor for its own `document().id` (matched against `event.documentId`) update the page without a full reload — no manual sync wiring needed. When `document().data` is missing it renders a placeholder message and logs a console error.
 
 ```ts
 import { Component, input } from '@angular/core';
@@ -565,8 +565,8 @@ The script is injected once the application is stable (`ApplicationRef.whenStabl
 Inject `LocalessSyncService` and use `onChange()` — it already covers the `enabled()` check (browser + Visual Editor iframe) and the `ready()` wait:
 
 ```ts
-import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { LocalessSyncService } from '@localess/angular';
+import { Component, DestroyRef, inject, input, signal } from '@angular/core';
+import { Content, ContentData, LocalessSyncService } from '@localess/angular';
 
 @Component({
   selector: 'app-slug',
@@ -575,11 +575,15 @@ import { LocalessSyncService } from '@localess/angular';
 })
 export class SlugComponent {
   private sync = inject(LocalessSyncService);
+  readonly content = input.required<Content>();
   liveContent = signal<ContentData | undefined>(undefined);
 
   constructor() {
     // Subscribed in an injection context, so it is removed when the component is destroyed.
-    this.sync.onChange(event => this.liveContent.set(event.data));
+    // Events arrive for every document on the page — keep only this one's.
+    this.sync.onChange(event => {
+      if (event.documentId === this.content().id) this.liveContent.set(event.data);
+    });
   }
 }
 ```
@@ -590,7 +594,9 @@ export class SlugComponent {
 private readonly destroyRef = inject(DestroyRef);
 
 ngOnInit(): void {
-  this.sync.onChange(event => this.liveContent.set(event.data), this.destroyRef);
+  this.sync.onChange(event => {
+    if (event.documentId === this.content().id) this.liveContent.set(event.data);
+  }, this.destroyRef);
 }
 ```
 
@@ -600,7 +606,7 @@ For just the latest event as a signal, use `localessSyncEvent(event)` in an inje
 readonly saved = localessSyncEvent(['save', 'publish']); // Signal<EventToAppOf<'save' | 'publish'> | undefined>
 ```
 
-`onChange(callback)` is shorthand for `on(['input', 'change'], callback)`: the `input` event fires on every keystroke, `change` fires when the editor saves. Render `liveContent()` instead of the server-fetched data when it is set, to give authors a live preview.
+`onChange(callback)` is shorthand for `on(['input', 'change'], callback)`: the `input` event fires on every keystroke, `change` fires when the editor saves. Render `liveContent()` instead of the server-fetched data when it is set, to give authors a live preview. Neither method filters by document: `input`/`change`/`save`/`publish`/`unpublish` carry `documentId` (the edited `Content.id`), so compare it to your content's `id` as above.
 
 For other event types (`save`, `publish`, `unpublish`, `pong`, `enterSchema`, `hoverSchema`, `leaveSchema`), use `on(event, callback)` — `event` is a single `EventToAppType` or an array, and the callback is narrowed to the matching variant(s) (`EventToAppOf<T>`):
 

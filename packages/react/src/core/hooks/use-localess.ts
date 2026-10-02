@@ -69,7 +69,7 @@ export const useLocaless = <T extends ContentData = ContentData>(
         // The effect may have been cleaned up while the fetch was in flight.
         if (cancelled) return;
         unsubscribe = localessSyncOn(['input', 'change'], event => {
-          setDocument({ ...document, data: event.data });
+          if (event.documentId === document.id) setDocument({ ...document, data: event.data });
         });
       } catch (error) {
         console.error('[Localess] useLocaless failed to fetch content : ', error);

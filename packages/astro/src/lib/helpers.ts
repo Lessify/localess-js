@@ -19,19 +19,24 @@ export function getLocalessClient(): LocalessClient {
  * (only present when `livePreview: true` and the current request is a validated
  * Visual Editor preview POST — see `live-preview/middleware.ts`).
  *
+ * Returns the draft only for the document being edited, so a page rendering several
+ * documents (e.g. a shared header plus the page) keeps the others as fetched.
+ *
+ * @param documentId The rendered document's `Content.id`.
+ *
  * @example
  * ```ts
- * const preview = await getLivePayload(Astro);
- * const data = preview.data ?? (await getLocalessClient().getContentBySlug('home')).data;
+ * const content = await getLocalessClient().getContentBySlug('home');
+ * const preview = await getLivePayload(Astro, content.id);
+ * const data = preview.data ?? content.data;
  * ```
  */
-export async function getLivePayload<T extends ContentData = ContentData>({
-  locals,
-}: {
-  locals: { _localess_preview_data?: { data?: T } };
-}): Promise<{ data?: T }> {
-  const { data } = locals._localess_preview_data ?? {};
-  return data ? { data } : {};
+export async function getLivePayload<T extends ContentData = ContentData>(
+  { locals }: { locals: { _localess_preview_data?: { documentId?: string; data?: T } } },
+  documentId: string
+): Promise<{ data?: T }> {
+  const { documentId: editedId, data } = locals._localess_preview_data ?? {};
+  return data && editedId === documentId ? { data } : {};
 }
 
 /**

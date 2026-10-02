@@ -20,7 +20,7 @@ describe('handleLocalessMessage', () => {
     const reload = vi.fn();
     vi.stubGlobal('location', { ...window.location, reload, href: 'https://example.com/' });
 
-    await handleLocalessMessage({ type: 'publish' } as any);
+    await handleLocalessMessage({ type: 'publish', documentId: 'doc-1' } as any);
 
     expect(reload).toHaveBeenCalledTimes(1);
   });
@@ -43,13 +43,13 @@ describe('handleLocalessMessage', () => {
     vi.stubGlobal('location', { ...window.location, href: 'https://example.com/' });
 
     const data = { _id: '1', _schema: 'page' };
-    await handleLocalessMessage({ type: 'input', data } as any);
+    await handleLocalessMessage({ type: 'input', documentId: 'doc-1', data } as any);
     expect(fetchSpy).not.toHaveBeenCalled();
 
     await vi.advanceTimersByTimeAsync(500);
     expect(fetchSpy).toHaveBeenCalledWith(
       'https://example.com/',
-      expect.objectContaining({ method: 'POST', body: JSON.stringify({ data, spaceId: 'space-1' }) })
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ documentId: 'doc-1', data, spaceId: 'space-1' }) })
     );
   });
 
@@ -59,7 +59,7 @@ describe('handleLocalessMessage', () => {
     );
     vi.stubGlobal('location', { ...window.location, href: 'https://example.com/' });
 
-    await handleLocalessMessage({ type: 'change', data: { _id: '1', _schema: 'page' } } as any);
+    await handleLocalessMessage({ type: 'change', documentId: 'doc-1', data: { _id: '1', _schema: 'page' } } as any);
     await vi.advanceTimersByTimeAsync(500);
     await vi.waitFor(() => expect(document.body.textContent).toContain('New'));
   });
@@ -71,7 +71,7 @@ describe('handleLocalessMessage', () => {
     );
     vi.stubGlobal('location', { ...window.location, href: 'https://example.com/' });
 
-    await handleLocalessMessage({ type: 'change', data: { _id: '1', _schema: 'page' } } as any);
+    await handleLocalessMessage({ type: 'change', documentId: 'doc-1', data: { _id: '1', _schema: 'page' } } as any);
     await vi.advanceTimersByTimeAsync(500);
     await vi.waitFor(() => expect(document.body.textContent).toContain('New'));
   }

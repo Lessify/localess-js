@@ -25,7 +25,8 @@
 
   $effect(() =>
     localessSyncOnChange(event => {
-      contentData = event.data;
+      // The page may render several documents; only this one's edits apply here.
+      if (event.documentId === document.id) contentData = event.data;
     })
   );
 </script>

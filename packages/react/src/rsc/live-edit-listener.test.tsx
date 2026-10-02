@@ -80,7 +80,7 @@ describe('LiveEditListener', () => {
     completeScriptLoad();
 
     await vi.waitFor(() => expect((window as any).localess).toBeDefined());
-    bridge.emit({ type: 'change', data: { title: 'Updated' } });
+    bridge.emit({ type: 'change', documentId: 'doc-1', data: { title: 'Updated' } });
 
     await vi.waitFor(() =>
       expect(localessLiveEditActionMock).toHaveBeenCalledWith({
@@ -92,17 +92,31 @@ describe('LiveEditListener', () => {
     );
   });
 
+  it('ignores events for another document on the same page', async () => {
+    enterEditorFrame();
+    const bridge = mockWindowLocaless();
+    render(<LiveEditListener id="doc-1" origin="https://cms.example.com" enableSync={true} />);
+    completeScriptLoad();
+    await vi.waitFor(() => expect(bridge.listenerCount()).toBe(1));
+
+    bridge.emit({ type: 'change', documentId: 'header', data: { title: 'Header' } });
+    bridge.emit({ type: 'save', documentId: 'header' });
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(localessLiveEditActionMock).not.toHaveBeenCalled();
+  });
+
   it('stops calling the action after unmount, e.g. on client-side navigation', async () => {
     enterEditorFrame();
     const bridge = mockWindowLocaless();
     const { unmount } = render(<LiveEditListener id="doc-1" origin="https://cms.example.com" enableSync={true} />);
     completeScriptLoad();
     await vi.waitFor(() => expect(bridge.listenerCount()).toBe(1));
-    bridge.emit({ type: 'change', data: { title: 'First' } });
+    bridge.emit({ type: 'change', documentId: 'doc-1', data: { title: 'First' } });
     await vi.waitFor(() => expect(localessLiveEditActionMock).toHaveBeenCalledTimes(1));
 
     unmount();
-    bridge.emit({ type: 'change', data: { title: 'Second' } });
+    bridge.emit({ type: 'change', documentId: 'doc-1', data: { title: 'Second' } });
     await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(bridge.listenerCount()).toBe(0);
@@ -126,7 +140,7 @@ describe('LiveEditListener', () => {
     completeScriptLoad();
 
     await vi.waitFor(() => expect((window as any).localess).toBeDefined());
-    bridge.emit({ type: 'change', data: { title: 'Updated' } });
+    bridge.emit({ type: 'change', documentId: 'doc-1', data: { title: 'Updated' } });
 
     await vi.waitFor(() => expect(errorSpy).toHaveBeenCalled());
   });

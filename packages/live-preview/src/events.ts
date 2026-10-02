@@ -1,14 +1,18 @@
 /** Every event the Localess Visual Editor can send to the previewed app. */
 export type EventToAppType = 'save' | 'publish' | 'unpublish' | 'pong' | 'input' | 'change' | 'enterSchema' | 'hoverSchema' | 'leaveSchema';
 
+/**
+ * Events that belong to one document carry its `documentId` (the `Content.id` returned by
+ * the API). A page rendering several documents applies them only to the matching one.
+ */
 export type EventToApp =
-  | { type: 'save' }
-  | { type: 'publish' }
-  | { type: 'unpublish' }
+  | { type: 'save'; documentId: string }
+  | { type: 'publish'; documentId: string }
+  | { type: 'unpublish'; documentId: string }
   | { type: 'pong' }
   | { type: 'leaveSchema' }
-  | { type: 'input'; data: any }
-  | { type: 'change'; data: any }
+  | { type: 'input'; documentId: string; data: any }
+  | { type: 'change'; documentId: string; data: any }
   /**
    * The editor opened a schema block in its form. `root` is `true` when it went back to the
    * document root, which the sync script treats as clearing the selection.

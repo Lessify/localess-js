@@ -101,7 +101,7 @@ describe('LocalessSyncService', () => {
       delete window.localess;
     });
 
-    const emit = (event: { type: string }) => listeners.get(event.type)?.forEach(callback => callback(event));
+    const emit = (event: { type: string; documentId?: string; data?: unknown }) => listeners.get(event.type)?.forEach(callback => callback(event));
     const settle = () => new Promise(resolve => setTimeout(resolve));
 
     it('returns a function that removes the subscription', async () => {
@@ -110,10 +110,10 @@ describe('LocalessSyncService', () => {
 
       const unsubscribe = service.on('save', callback);
       await settle();
-      emit({ type: 'save' });
+      emit({ type: 'save', documentId: 'doc-1' });
       unsubscribe();
       unsubscribe();
-      emit({ type: 'save' });
+      emit({ type: 'save', documentId: 'doc-1' });
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(detach).toHaveBeenCalledTimes(1);
@@ -141,10 +141,10 @@ describe('LocalessSyncService', () => {
       createService({ ...baseConfig, enableSync: true });
       const fixture = TestBed.createComponent(ConstructorSubscriber);
       await settle();
-      emit({ type: 'input' });
+      emit({ type: 'input', documentId: 'doc-1', data: {} });
 
       fixture.destroy();
-      emit({ type: 'change' });
+      emit({ type: 'change', documentId: 'doc-1', data: {} });
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(detach).toHaveBeenCalledTimes(1);
@@ -167,7 +167,7 @@ describe('LocalessSyncService', () => {
       await settle();
 
       fixture.destroy();
-      emit({ type: 'save' });
+      emit({ type: 'save', documentId: 'doc-1' });
 
       expect(callback).not.toHaveBeenCalled();
       expect(detach).toHaveBeenCalledTimes(1);
@@ -180,7 +180,7 @@ describe('LocalessSyncService', () => {
       service.on('save', callback);
       await settle();
       TestBed.resetTestingModule();
-      emit({ type: 'save' });
+      emit({ type: 'save', documentId: 'doc-1' });
 
       expect(callback).toHaveBeenCalledTimes(1);
     });
@@ -195,8 +195,8 @@ describe('LocalessSyncService', () => {
       expect(fixture.componentInstance.saved()).toBeUndefined();
       await settle();
 
-      emit({ type: 'publish' });
-      expect(fixture.componentInstance.saved()).toEqual({ type: 'publish' });
+      emit({ type: 'publish', documentId: 'doc-1' });
+      expect(fixture.componentInstance.saved()).toEqual({ type: 'publish', documentId: 'doc-1' });
 
       fixture.destroy();
       expect(detach).toHaveBeenCalledTimes(1);

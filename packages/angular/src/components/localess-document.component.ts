@@ -40,7 +40,10 @@ export class LocalessDocument<T extends ContentData = ContentData> {
 
   constructor() {
     // Called in the constructor, so the subscription is removed when this component is destroyed.
-    this.sync.onChange(event => this.contentData.set(event.data));
+    // The page may render several documents; only this one's edits apply here.
+    this.sync.onChange(event => {
+      if (event.documentId === this.document().id) this.contentData.set(event.data);
+    });
 
     effect(() => {
       if (!this.contentData()) {

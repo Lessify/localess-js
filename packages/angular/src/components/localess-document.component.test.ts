@@ -70,10 +70,21 @@ describe('LocalessDocument', () => {
     fixture.componentRef.setInput('document', { id: 'doc-1', data: { _id: '1', _schema: 'hero', title: 'Hello' } });
     await flush();
 
-    onChangeCallback?.({ type: 'change', data: { _id: '1', _schema: 'hero', title: 'Updated live' } } as EventToAppOf<'change'>);
+    onChangeCallback?.({ type: 'change', documentId: 'doc-1', data: { _id: '1', _schema: 'hero', title: 'Updated live' } });
     await flush();
 
     expect(fixture.nativeElement.textContent).toContain('hero: Updated live');
+  });
+
+  it('ignores edits to another document on the same page', async () => {
+    setup();
+    fixture.componentRef.setInput('document', { id: 'doc-1', data: { _id: '1', _schema: 'hero', title: 'Hello' } });
+    await flush();
+
+    onChangeCallback?.({ type: 'change', documentId: 'header', data: { _id: '2', _schema: 'hero', title: 'Header' } });
+    await flush();
+
+    expect(fixture.nativeElement.textContent).toContain('hero: Hello');
   });
 
   it('logs an error and renders nothing when the document has no data', async () => {
