@@ -25,24 +25,26 @@ export function LiveEditListener({ id, origin, enableSync, debug }: LiveEditList
     let cancelled = false;
     let unsubscribe: (() => void) | undefined;
 
-    loadLocalessSync(origin, { debug }).then(() => {
-      if (cancelled) return;
-      unsubscribe = window.localess?.on(['input', 'change', 'save', 'publish', 'unpublish'], async event => {
-        // The page may render several documents, each with its own listener.
-        if (event.documentId !== id) return;
-        try {
-          const { localessLiveEditAction } = await import('./live-edit-action');
-          await localessLiveEditAction({
-            id,
-            path: window.location.pathname,
-            type: event.type,
-            data: 'data' in event ? event.data : undefined,
-          });
-        } catch (error) {
-          console.error('[Localess] LiveEditListener: failed to run live edit action', error);
-        }
-      });
-    });
+    loadLocalessSync(origin, { debug })
+      .then(() => {
+        if (cancelled) return;
+        unsubscribe = window.localess?.on(['input', 'change', 'save', 'publish', 'unpublish'], async event => {
+          // The page may render several documents, each with its own listener.
+          if (event.documentId !== id) return;
+          try {
+            const { localessLiveEditAction } = await import('./live-edit-action');
+            await localessLiveEditAction({
+              id,
+              path: window.location.pathname,
+              type: event.type,
+              data: 'data' in event ? event.data : undefined,
+            });
+          } catch (error) {
+            console.error('[Localess] LiveEditListener: failed to run live edit action', error);
+          }
+        });
+      })
+      .catch(error => console.error('[Localess] Failed to load sync script.', error));
 
     return () => {
       cancelled = true;

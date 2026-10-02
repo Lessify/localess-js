@@ -65,9 +65,10 @@ export const useLocaless = <T extends ContentData = ContentData>(
     async function loadDocument() {
       try {
         const document = await client.getContentBySlug<T>(normalizedSlug, options);
-        setDocument(document);
-        // The effect may have been cleaned up while the fetch was in flight.
+        // The effect may have been cleaned up while the fetch was in flight, e.g. the slug changed
+        // and this response arrived after the newer one.
         if (cancelled) return;
+        setDocument(document);
         unsubscribe = localessSyncOn(['input', 'change'], event => {
           if (event.documentId === document.id) setDocument({ ...document, data: event.data });
         });

@@ -92,6 +92,17 @@ describe('LiveEditListener', () => {
     );
   });
 
+  it('logs a failed sync script load instead of leaving the rejection unhandled', async () => {
+    enterEditorFrame();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const failure = new Error('blocked');
+    vi.spyOn(utils, 'loadLocalessSync').mockRejectedValue(failure);
+
+    render(<LiveEditListener id="doc-1" origin="https://cms.example.com" enableSync={true} />);
+
+    await vi.waitFor(() => expect(errorSpy).toHaveBeenCalledWith('[Localess] Failed to load sync script.', failure));
+  });
+
   it('ignores events for another document on the same page', async () => {
     enterEditorFrame();
     const bridge = mockWindowLocaless();

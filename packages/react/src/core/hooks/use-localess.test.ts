@@ -51,6 +51,26 @@ describe('useLocaless', () => {
     expect(active).toBe(0);
   });
 
+  it('keeps the latest slug when an earlier request answers last', async () => {
+    const pending = new Map<string, (response: Response) => void>();
+    (fetch as any).mockImplementation((url: string) => {
+      const slug = url.includes('/slugs/about') ? 'about' : 'home';
+      return new Promise<Response>(resolve => pending.set(slug, resolve));
+    });
+
+    const { rerender, result } = renderHook(({ slug }) => useLocaless(slug), { initialProps: { slug: 'home' } });
+    await waitFor(() => expect(pending.has('home')).toBe(true));
+    rerender({ slug: 'about' });
+    await waitFor(() => expect(pending.has('about')).toBe(true));
+
+    pending.get('about')!(jsonResponse({ id: 'about', _schema: 'page', data: { title: 'About' } }));
+    await waitFor(() => expect(result.current?.data).toEqual({ title: 'About' }));
+    pending.get('home')!(jsonResponse({ id: 'home', _schema: 'page', data: { title: 'Home' } }));
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(result.current?.data).toEqual({ title: 'About' });
+  });
+
   it('applies edits to the fetched document only', async () => {
     (fetch as any).mockImplementation(() => Promise.resolve(jsonResponse({ id: 'c1', _schema: 'page', data: { title: 'Hello' } })));
     let callback: ((event: any) => void) | undefined;
