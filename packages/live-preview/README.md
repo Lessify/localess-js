@@ -68,11 +68,8 @@ sync.init(origin, enableSync);
 await sync.ready();
 
 // Each returns an unsubscribe function — also safe to call before the script has loaded.
-const unsubscribe = sync.onChange(event => {
-  // Fired on `change` and `input` for every document on the page — re-render with event.data
-  // only when event.documentId matches your content's id
-  if (event.documentId === content.id) render(event.data);
-});
+// The edits (`input`/`change`) of one document; other documents on the page are ignored.
+const unsubscribe = sync.onDocument(content.id, data => render(data));
 
 sync.on(['save', 'publish', 'unpublish'], event => {
   // Refetch, revalidate, whatever your framework needs
@@ -87,6 +84,7 @@ sync.on(['save', 'publish', 'unpublish'], event => {
 | `ready()` | Resolves once the script has loaded, or immediately when sync is off |
 | `on(event, cb)` | Subscribe to one or more editor events. No-op when sync is unusable |
 | `onChange(cb)` | Subscribe to `change` and `input` |
+| `onDocument(documentId, cb)` | Subscribe to `change` and `input` for one document; `cb(data, event)` receives the edited data |
 
 **Events:** `input`, `change`, `save`, `publish`, `unpublish`, `enterSchema`, `hoverSchema`, `leaveSchema`, `pong`.
 

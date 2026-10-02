@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { getLocalessClient, localessSyncOn } from '../client';
+import { getLocalessClient, localessSyncOnDocument } from '../client';
 import { Content, ContentData, ContentFetchParams } from '../models';
 
 /**
@@ -69,9 +69,7 @@ export const useLocaless = <T extends ContentData = ContentData>(
         // and this response arrived after the newer one.
         if (cancelled) return;
         setDocument(document);
-        unsubscribe = localessSyncOn(['input', 'change'], event => {
-          if (event.documentId === document.id) setDocument({ ...document, data: event.data });
-        });
+        unsubscribe = localessSyncOnDocument<T>(document.id, data => setDocument({ ...document, data }));
       } catch (error) {
         console.error('[Localess] useLocaless failed to fetch content : ', error);
       }

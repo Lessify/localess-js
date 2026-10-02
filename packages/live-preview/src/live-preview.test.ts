@@ -194,6 +194,28 @@ describe('createSyncController', () => {
     await vi.waitFor(() => expect(onChange).toHaveBeenCalledWith(callback));
   });
 
+  it("onDocument delivers only that document's edits, as data", async () => {
+    enterEditorFrame();
+    let listener: ((event: any) => void) | undefined;
+    const onChange = vi.fn(callback => {
+      listener = callback;
+      return () => undefined;
+    });
+    const sync = createSyncController();
+    sync.init('https://cms.example.com', true);
+    window.localess = { on: vi.fn(), onChange, off: vi.fn() };
+    document.getElementById(SCRIPT_ID)!.dispatchEvent(new Event('load'));
+
+    const callback = vi.fn();
+    sync.onDocument('doc-1', callback);
+    await vi.waitFor(() => expect(listener).toBeDefined());
+    listener!({ type: 'input', documentId: 'header', data: { title: 'Header' } });
+    const edit = { type: 'change', documentId: 'doc-1', data: { title: 'Edited' } };
+    listener!(edit);
+
+    expect(callback.mock.calls).toEqual([[{ title: 'Edited' }, edit]]);
+  });
+
   it('unsubscribes through the script once attached', async () => {
     enterEditorFrame();
     const detach = vi.fn();

@@ -23,37 +23,26 @@ describe('LocalessDocument', () => {
     expect(screen.getByText('Hello')).toBeInTheDocument();
   });
 
-  it('re-renders with updated content when the sync subscription fires an input/change event', async () => {
+  it('re-renders with the edits of its own document', async () => {
     localessInit({ ...baseOptions, components: { page: TitleProbe as any } });
-    const spy = vi.spyOn(state, 'localessSyncOnChange');
+    const spy = vi.spyOn(state, 'localessSyncOnDocument');
 
     render(LocalessDocument, { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any });
     expect(screen.getByText('Hello')).toBeInTheDocument();
 
-    const [callback] = spy.mock.calls[0];
-    callback({ type: 'change', documentId: 'c1', data: { _schema: 'page', title: 'Updated' } } as any);
+    // Subscribed to its own document only; filtering by id is covered by the sync controller's tests.
+    const [documentId, callback] = spy.mock.calls[0];
+    expect(documentId).toBe('c1');
+    callback({ _schema: 'page', title: 'Updated' } as any, {} as any);
     await tick();
 
     expect(screen.getByText('Updated')).toBeInTheDocument();
   });
 
-  it('ignores edits to another document on the same page', async () => {
-    localessInit({ ...baseOptions, components: { page: TitleProbe as any } });
-    const spy = vi.spyOn(state, 'localessSyncOnChange');
-
-    render(LocalessDocument, { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any });
-
-    const [callback] = spy.mock.calls[0];
-    callback({ type: 'change', documentId: 'header', data: { _schema: 'page', title: 'Header' } } as any);
-    await tick();
-
-    expect(screen.getByText('Hello')).toBeInTheDocument();
-  });
-
   it('removes its sync subscription on unmount', () => {
     localessInit({ ...baseOptions, components: { page: TitleProbe as any } });
     const unsubscribe = vi.fn();
-    vi.spyOn(state, 'localessSyncOnChange').mockReturnValue(unsubscribe);
+    vi.spyOn(state, 'localessSyncOnDocument').mockReturnValue(unsubscribe);
 
     const { unmount } = render(LocalessDocument, {
       document: { _id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any,

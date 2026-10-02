@@ -86,7 +86,17 @@ const latest = useLocalessSync(['input', 'change']);
 </script>
 ```
 
-`LocalessDocument` applies only events whose `documentId` matches its `document.id`; `useLocalessSync` doesn't filter, so compare `latest.value?.documentId` to your content's `id` before using its `data`.
+`LocalessDocument` applies only events whose `documentId` matches its `document.id` (via `localessSyncOnDocument`); `useLocalessSync` doesn't filter. For one document's edits, use `localessSyncOnDocument(documentId, callback)` — it calls `callback(data, event)` for `input`/`change` events of that document and returns an unsubscribe function:
+
+```ts
+import { onMounted, onScopeDispose, ref } from 'vue';
+import { localessSyncOnDocument } from '@localess/vue';
+
+const live = ref(props.document.data);
+let unsubscribe: (() => void) | undefined;
+onMounted(() => { unsubscribe = localessSyncOnDocument(props.document.id, data => (live.value = data)); });
+onScopeDispose(() => unsubscribe?.());
+```
 
 ## Rich Text Rendering
 
@@ -159,6 +169,7 @@ Nuxt's own payload transfer hydrates the server-fetched result to the client —
 | `normalizeComponentKey(name, naming?)` | Function | Applies a component naming strategy to a key, re-exported from `@localess/client` |
 | `useLocaless()` | Composable | Returns the injected `LocalessClient` |
 | `useLocalessSync(event)` | Composable | Visual Editor bridge event subscription, returns a `Ref` |
+| `localessSyncOnDocument(documentId, callback)` | Function | Subscribes to `input`/`change` for one document, calls `callback(data, event)`; returns an unsubscribe function |
 | `LocalessRichText` | Component | Renders a rich text field to native VNodes (`content`, `renderers?` props) |
 | `useLocalessRichText(doc, options?)` | Composable | Tiptap JSON → VNodes, returns a reactive `ComputedRef<VNodeChild>` |
 | `useLocalessRichTextHtml(doc, options?)` | Composable | Tiptap JSON → HTML string for `v-html`, returns `ComputedRef<string>` |

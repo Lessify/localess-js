@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useState } from 'react';
 
 import { FONT_BOLD, FONT_NORMAL } from '../../console';
-import { localessSyncOnChange } from '../client';
+import { localessSyncOnDocument } from '../client';
 import { LocalessComponent } from '../components';
 import { Content, ContentData } from '../models';
 
@@ -60,14 +60,8 @@ export type LocalessDocumentProps<T extends ContentData = ContentData> = {
  */
 export const LocalessDocument = forwardRef<HTMLElement, LocalessDocumentProps>(({ document }, ref) => {
   const [contentData, setContentData] = useState(document.data);
-  useEffect(
-    () =>
-      localessSyncOnChange(event => {
-        // The page may render several documents; only this one's edits apply here.
-        if (event.documentId === document.id) setContentData(event.data);
-      }),
-    [document.id]
-  );
+  // Only this document's edits apply; the page may render several documents.
+  useEffect(() => localessSyncOnDocument(document.id, data => setContentData(data)), [document.id]);
 
   if (!contentData) {
     console.error('LocalessDocument property %cdocument.data%c is not provided.', FONT_BOLD, FONT_NORMAL);

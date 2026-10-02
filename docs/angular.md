@@ -131,7 +131,7 @@ provideLocaless(
 }
 ```
 
-`[llComponent]` (`LocalessComponentDirective`; inputs `llComponent`, `links`, `references`, `assets`) resolves an item's `_schema` via the registry and creates the matching component with `ViewContainerRef.createComponent` directly at the `ng-container` anchor — no wrapper element — recreating the component only when its `_schema` changes. Every registered component, including the fallback, must extend `SchemaComponent` — `withLocalessComponents()` types entries as `AnySchemaComponent` (`Type<SchemaComponent<any>>`), so `data`/`links`/`references`/`assets` are always set unconditionally. Unmatched keys log a console error and render the fallback (or nothing). `<ll-document>` (`LocalessDocument`, `document: Content<T>` required input) additionally subscribes to `LocalessSyncService.onChange` so Visual Editor edits replace the rendered data live — only events whose `documentId` matches its `document().id`.
+`[llComponent]` (`LocalessComponentDirective`; inputs `llComponent`, `links`, `references`, `assets`) resolves an item's `_schema` via the registry and creates the matching component with `ViewContainerRef.createComponent` directly at the `ng-container` anchor — no wrapper element — recreating the component only when its `_schema` changes. Every registered component, including the fallback, must extend `SchemaComponent` — `withLocalessComponents()` types entries as `AnySchemaComponent` (`Type<SchemaComponent<any>>`), so `data`/`links`/`references`/`assets` are always set unconditionally. Unmatched keys log a console error and render the fallback (or nothing). `<ll-document>` (`LocalessDocument`, `document: Content<T>` required input) additionally subscribes to `LocalessSyncService.onDocument` (re-subscribing when `document` changes) so Visual Editor edits replace the rendered data live — only events whose `documentId` matches its `document().id`.
 
 ## Components
 
@@ -222,10 +222,8 @@ export class PageComponent {
 
   constructor() {
     // In an injection context, so both are removed when the component is destroyed.
-    // `input` + `change` events; `documentId` tells this page's document apart from others on the page.
-    this.sync.onChange(event => {
-      if (event.documentId === this.content().id) this.liveData.set(event.data);
-    });
+    // `input` + `change` events for this document only, with the edited data.
+    this.sync.onDocument(this.content().id, data => this.liveData.set(data));
     this.sync.on(['save', 'publish'], event => console.info(event.type));
   }
 }
@@ -236,8 +234,9 @@ export class PageComponent {
 - `on(event | event[], callback, destroyRef?)` — subscribe to any `EventToAppType`: `save`, `publish`, `unpublish`, `pong`, `input`, `change`, `enterSchema`, `hoverSchema`, `leaveSchema`; callback narrowed via `EventToAppOf<T>`. Returns an unsubscribe function. Cleanup is automatic when called in an injection context (the caller's `DestroyRef`); elsewhere pass `destroyRef` or call the returned function.
 - `localessSyncEvent(event | event[])` — standalone function, injection context only: the latest event as a `Signal`, removed with its context.
 - `onChange(callback)` — shorthand for `on(['input', 'change'], callback)`.
+- `onDocument(documentId, callback, destroyRef?)` — `input`/`change` for one document only (`event.documentId === documentId`); calls `callback(data, event)` with the edited content data. Same return and cleanup as `on`.
 
-`on`/`onChange` are no-ops when `enabled()` is false and wait for `ready()` internally. They don't filter by document: compare `event.documentId` to your content's `id` yourself.
+`on`/`onChange`/`onDocument` are no-ops when `enabled()` is false and wait for `ready()` internally. `on`/`onChange` don't filter by document — use `onDocument` for one document's edits.
 
 ## Rendering Modes
 

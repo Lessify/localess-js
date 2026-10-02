@@ -41,41 +41,42 @@ describe('LocalessDocument', () => {
     expect(wrapper.text()).toContain('About');
   });
 
-  it('re-renders with updated content when the sync subscription fires an input/change event', async () => {
+  it('re-renders with the edits of its own document', async () => {
     setComponentsForTest({ page: TitleProbe });
-    const spy = vi.spyOn(client, 'localessSyncOnChange');
+    const spy = vi.spyOn(client, 'localessSyncOnDocument');
 
     const wrapper = mount(LocalessDocument, {
       props: { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },
     });
     expect(wrapper.text()).toContain('Hello');
 
-    const [callback] = spy.mock.calls[0];
-    callback({ type: 'change', documentId: 'c1', data: { _schema: 'page', title: 'Updated' } } as any);
+    // Subscribed to its own document only; filtering by id is covered by the sync controller's tests.
+    const [documentId, callback] = spy.mock.calls[0];
+    expect(documentId).toBe('c1');
+    callback({ _schema: 'page', title: 'Updated' } as any, {} as any);
     await wrapper.vm.$nextTick();
 
     expect(wrapper.text()).toContain('Updated');
   });
 
-  it('ignores edits to another document on the same page', async () => {
+  it('subscribes again when the document prop changes', async () => {
     setComponentsForTest({ page: TitleProbe });
-    const spy = vi.spyOn(client, 'localessSyncOnChange');
+    const unsubscribe = vi.fn();
+    const spy = vi.spyOn(client, 'localessSyncOnDocument').mockReturnValue(unsubscribe);
 
     const wrapper = mount(LocalessDocument, {
-      props: { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },
+      props: { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Home' } } as any },
     });
+    await wrapper.setProps({ document: { id: 'c2', _schema: 'page', data: { _schema: 'page', title: 'About' } } as any });
 
-    const [callback] = spy.mock.calls[0];
-    callback({ type: 'change', documentId: 'header', data: { _schema: 'page', title: 'Header' } } as any);
-    await wrapper.vm.$nextTick();
-
-    expect(wrapper.text()).toContain('Hello');
+    expect(spy.mock.calls.map(([id]) => id)).toEqual(['c1', 'c2']);
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 
   it('removes its sync subscription on unmount', () => {
     setComponentsForTest({ page: TitleProbe });
     const unsubscribe = vi.fn();
-    vi.spyOn(client, 'localessSyncOnChange').mockReturnValue(unsubscribe);
+    vi.spyOn(client, 'localessSyncOnDocument').mockReturnValue(unsubscribe);
 
     const wrapper = mount(LocalessDocument, {
       props: { document: { id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any },

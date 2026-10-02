@@ -33,7 +33,7 @@
  * ```
  */
 
-export { isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncReady } from '../core/client';
+export { isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncOnDocument, localessSyncReady } from '../core/client';
 export * from '../core/components/localess-component';
 export * from '../core/hooks';
 export * from '../ssr';

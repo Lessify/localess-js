@@ -388,6 +388,8 @@ if (window.localess) {
 }
 ```
 
+Framework SDKs filter for you: `localessSyncOnDocument(documentId, callback)` (React, Vue, Svelte) or `LocalessSyncService.onDocument` (Angular) calls back with one document's edited data.
+
 | Event         | Payload                                              | When                                                                        |
 |---------------|------------------------------------------------------|-----------------------------------------------------------------------------|
 | `input`       | `{ type: 'input', documentId: string, data: any }`   | User typing in a field (real-time)                                          |

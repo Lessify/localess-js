@@ -120,6 +120,19 @@ describe('LocalessSyncService', () => {
       expect(detach).toHaveBeenCalledTimes(1);
     });
 
+    it("onDocument() delivers only the given document's edits, as data", async () => {
+      const service = createService({ ...baseConfig, enableSync: true });
+      const callback = vi.fn();
+
+      service.onDocument('doc-1', callback);
+      await settle();
+      emit({ type: 'input', documentId: 'header', data: { title: 'Header' } });
+      emit({ type: 'change', documentId: 'doc-1', data: { title: 'Edited' } });
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback.mock.calls[0][0]).toEqual({ title: 'Edited' });
+    });
+
     it('never attaches when unsubscribed before the script is ready', async () => {
       let ready!: () => void;
       const service = createService({ ...baseConfig, enableSync: true }, new Promise<void>(resolve => (ready = resolve)));

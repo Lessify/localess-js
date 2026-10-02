@@ -5,6 +5,7 @@ import { FONT_BOLD, FONT_NORMAL } from '../console';
 import {
   type AssetTransformParams,
   type ContentAsset,
+  type ContentData,
   type EventToAppOf,
   type EventToAppType,
   type LocalessClient,
@@ -206,7 +207,7 @@ export function localessSyncReady(): Promise<void> {
  *
  * @example
  * ```ts
- * useEffect(() => localessSyncOn(['input', 'change'], event => setContentData(event.data)), []);
+ * useEffect(() => localessSyncOn('save', () => router.refresh()), []);
  * ```
  */
 export function localessSyncOn<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): () => void {
@@ -228,11 +229,35 @@ export function localessSyncOn<T extends EventToAppType>(event: T | T[], callbac
  *
  * @example
  * ```ts
- * useEffect(() => localessSyncOnChange(event => setContentData(event.data)), []);
+ * useEffect(() => localessSyncOnChange(event => console.log(event.documentId, event.data)), []);
  * ```
  */
 export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): () => void {
   return _sync.onChange(callback);
+}
+
+/**
+ * Subscribes to the live edits (`input` and `change`) of one document and calls `callback` with
+ * the edited content. Edits to other documents on the page — a shared header, or the previous page
+ * after a link was clicked in the preview — are ignored.
+ *
+ * The usual way to apply live edits yourself; {@link LocalessDocument} and {@link useLocaless}
+ * use it internally. No-op if sync isn't enabled or usable (see {@link isSyncEnabled}).
+ *
+ * @param documentId - The rendered document's `Content.id`.
+ * @param callback - Called with the edited content data, and the raw event.
+ * @returns A function that removes the subscription — return it from `useEffect`.
+ *
+ * @example
+ * ```ts
+ * useEffect(() => localessSyncOnDocument(content.id, data => setPageData(data)), [content.id]);
+ * ```
+ */
+export function localessSyncOnDocument<T extends ContentData = ContentData>(
+  documentId: string,
+  callback: (data: T, event: EventToAppOf<'change' | 'input'>) => void
+): () => void {
+  return _sync.onDocument(documentId, callback);
 }
 
 export function getOrigin() {

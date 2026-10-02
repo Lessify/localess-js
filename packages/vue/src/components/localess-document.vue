@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onScopeDispose, ref, watch, watchEffect } from 'vue';
 
-import { localessSyncOnChange } from '../client';
+import { localessSyncOnDocument } from '../client';
 import { ContentData, LocalessDocumentProps} from '../models';
 import LocalessComponent from './localess-component.vue';
 
@@ -22,12 +22,18 @@ watch(
 );
 
 let unsubscribe: (() => void) | undefined;
-onMounted(() => {
-  unsubscribe = localessSyncOnChange(event => {
-    // The page may render several documents; only this one's edits apply here.
-    if (event.documentId === props.document.id) contentData.value = event.data;
+// Only this document's edits apply; the page may render several documents.
+function subscribe(documentId: string) {
+  unsubscribe?.();
+  unsubscribe = localessSyncOnDocument(documentId, data => {
+    contentData.value = data;
   });
-});
+}
+onMounted(() => subscribe(props.document.id));
+watch(
+  () => props.document.id,
+  documentId => subscribe(documentId)
+);
 onScopeDispose(() => unsubscribe?.());
 
 watchEffect(() => {

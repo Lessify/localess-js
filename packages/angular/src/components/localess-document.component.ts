@@ -39,10 +39,10 @@ export class LocalessDocument<T extends ContentData = ContentData> {
   readonly contentData = linkedSignal<ContentData | undefined>(() => this.document().data);
 
   constructor() {
-    // Called in the constructor, so the subscription is removed when this component is destroyed.
-    // The page may render several documents; only this one's edits apply here.
-    this.sync.onChange(event => {
-      if (event.documentId === this.document().id) this.contentData.set(event.data);
+    // Only this document's edits apply; the page may render several documents. Re-subscribes when
+    // the document changes (e.g. route reuse), and the cleanup also runs when this component is destroyed.
+    effect(onCleanup => {
+      onCleanup(this.sync.onDocument(this.document().id, data => this.contentData.set(data)));
     });
 
     effect(() => {

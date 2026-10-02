@@ -98,7 +98,17 @@ There's no Vite plugin auto-discovering these from a folder. That was tried and 
 <p>{$latest?.data}</p>
 ```
 
-The store doesn't filter by document — compare `$latest.documentId` to your content's `id` before using its `data`.
+The store doesn't filter by document. For one document's edits, use `localessSyncOnDocument(documentId, callback)` — it calls `callback(data, event)` for that document's `input`/`change` events and returns an unsubscribe function to return from `$effect`:
+
+```svelte
+<script lang="ts">
+  import { localessSyncOnDocument } from '@localess/svelte';
+
+  let { document } = $props();
+  let live = $state(document.data);
+  $effect(() => localessSyncOnDocument(document.id, data => (live = data)));
+</script>
+```
 
 ## Rich Text Rendering
 
@@ -163,6 +173,7 @@ SvelteKit's own `data`-prop serialization hydrates the server-fetched result to 
 | `localessEditable` | Action | Applies `data-ll-id`/`data-ll-schema` |
 | `localessEditableField(name)` | Function | Applies `data-ll-field`, spread onto an element |
 | `localessSync(event)` | Function | Visual Editor bridge event subscription, returns a `Readable` |
+| `localessSyncOnDocument(documentId, callback)` | Function | Subscribes to `input`/`change` for one document, calls `callback(data, event)`; returns an unsubscribe function |
 | `LocalessRichText` | Component | Renders a rich text field (`content`, `renderers?` props), reactive via `$derived` |
 | `escapeHtml`, `escapeAttr`, `sanitizeUrl` | Functions | Escaping and link-href allowlist for custom string renderers, re-exported from `@localess/richtext` |
 | `LocalessApiError` | Class | Re-exported from `@localess/client` |

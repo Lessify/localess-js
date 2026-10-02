@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
 import { LOCALESS_COMPONENTS } from '../localess.components';
-import type { Content, EventToAppOf } from '../models';
+import type { Content, ContentData } from '../models';
 import { LocalessClientService } from '../services/client.service';
 import { LocalessComponentResolver } from '../services/component-resolver.service';
 import { LocalessSyncService } from '../services/sync.service';
@@ -28,10 +28,10 @@ function flushAsync(): Promise<void> {
 
 describe('LocalessDocument', () => {
   let fixture: ComponentFixture<HostComponent>;
-  let onChangeCallback: ((event: EventToAppOf<'change' | 'input'>) => void) | undefined;
+  let subscriptions: { documentId: string; callback: (data: ContentData) => void; active: boolean }[];
 
   function setup(): void {
-    onChangeCallback = undefined;
+    subscriptions = [];
     TestBed.configureTestingModule({
       imports: [HostComponent],
       providers: [
@@ -41,8 +41,10 @@ describe('LocalessDocument', () => {
         {
           provide: LocalessSyncService,
           useValue: {
-            onChange: (callback: (event: EventToAppOf<'change' | 'input'>) => void) => {
-              onChangeCallback = callback;
+            onDocument: (documentId: string, callback: (data: ContentData) => void) => {
+              const subscription = { documentId, callback, active: true };
+              subscriptions.push(subscription);
+              return () => (subscription.active = false);
             },
           },
         },
@@ -70,21 +72,24 @@ describe('LocalessDocument', () => {
     fixture.componentRef.setInput('document', { id: 'doc-1', data: { _id: '1', _schema: 'hero', title: 'Hello' } });
     await flush();
 
-    onChangeCallback?.({ type: 'change', documentId: 'doc-1', data: { _id: '1', _schema: 'hero', title: 'Updated live' } });
+    subscriptions[0].callback({ _id: '1', _schema: 'hero', title: 'Updated live' });
     await flush();
 
     expect(fixture.nativeElement.textContent).toContain('hero: Updated live');
   });
 
-  it('ignores edits to another document on the same page', async () => {
+  // Filtering by documentId itself is covered in LocalessSyncService.onDocument's tests.
+  it('subscribes to its own document, and follows a document change', async () => {
     setup();
     fixture.componentRef.setInput('document', { id: 'doc-1', data: { _id: '1', _schema: 'hero', title: 'Hello' } });
     await flush();
-
-    onChangeCallback?.({ type: 'change', documentId: 'header', data: { _id: '2', _schema: 'hero', title: 'Header' } });
+    fixture.componentRef.setInput('document', { id: 'doc-2', data: { _id: '2', _schema: 'hero', title: 'About' } });
     await flush();
 
-    expect(fixture.nativeElement.textContent).toContain('hero: Hello');
+    expect(subscriptions.map(it => [it.documentId, it.active])).toEqual([
+      ['doc-1', false],
+      ['doc-2', true],
+    ]);
   });
 
   it('logs an error and renders nothing when the document has no data', async () => {

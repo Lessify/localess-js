@@ -3,7 +3,7 @@ import type { Component } from 'vue';
 
 export { localessClient };
 
-import { type EventToAppOf, type EventToAppType, type LocalessClient, type LocalessClientOptions } from './models';
+import { type ContentData, type EventToAppOf, type EventToAppType, type LocalessClient, type LocalessClientOptions } from './models';
 import { createSyncController } from './utils';
 
 export type LocalessVueInitOptions = LocalessClientOptions & {
@@ -53,6 +53,18 @@ export function localessSyncOn<T extends EventToAppType>(event: T | T[], callbac
 /** Subscribes to `input` and `change`. Returns a function that removes the subscription. */
 export function localessSyncOnChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): () => void {
   return _sync.onChange(callback);
+}
+
+/**
+ * Subscribes to the live edits (`input` and `change`) of one document, matched by its `Content.id`,
+ * and calls `callback` with the edited content. Edits to other documents on the page are ignored.
+ * Returns a function that removes the subscription.
+ */
+export function localessSyncOnDocument<T extends ContentData = ContentData>(
+  documentId: string,
+  callback: (data: T, event: EventToAppOf<'change' | 'input'>) => void
+): () => void {
+  return _sync.onDocument(documentId, callback);
 }
 
 /** @internal test-only helper to reset the component registry between test cases. */

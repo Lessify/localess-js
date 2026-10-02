@@ -2,7 +2,7 @@
   import { untrack } from 'svelte';
 
   import { FONT_BOLD, FONT_NORMAL } from '../console';
-  import { localessSyncOnChange } from '../client';
+  import { localessSyncOnDocument } from '../client';
   import LocalessComponent from './LocalessComponent.svelte';
   import type { LocalessDocumentProps, ContentData } from '../models';
 
@@ -24,9 +24,9 @@
   });
 
   $effect(() =>
-    localessSyncOnChange(event => {
-      // The page may render several documents; only this one's edits apply here.
-      if (event.documentId === document.id) contentData = event.data;
+    // Only this document's edits apply; the page may render several documents.
+    localessSyncOnDocument<T>(document.id, data => {
+      contentData = data;
     })
   );
 </script>

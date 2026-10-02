@@ -165,7 +165,7 @@ export default defineConfig({
 
 ## Visual Editor sync
 
-`useLocalessSync()` exposes the live-editing state when you need to react to editor events yourself. With `enableSync: true` and the page running inside the Visual Editor iframe, `<LocalessDocument>` already re-renders on every keystroke for its own document (matched by `document.id`) — most apps need nothing further. `useLocalessSync()` doesn't filter: compare `event.documentId` to your content's `id`.
+`useLocalessSync()` exposes the live-editing state when you need to react to editor events yourself. With `enableSync: true` and the page running inside the Visual Editor iframe, `<LocalessDocument>` already re-renders on every keystroke for its own document (matched by `document.id`) — most apps need nothing further. `useLocalessSync()` doesn't filter; for one document's edits use `localessSyncOnDocument(documentId, callback)`, which calls `callback(data, event)` and returns an unsubscribe function (call it in `onMounted`, remove it in `onScopeDispose`).
 
 ---
 

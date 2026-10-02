@@ -154,7 +154,21 @@ Subscribes to Visual Editor bridge events (`input`, `change`, etc.) and exposes 
 <p>{$latest?.data}</p>
 ```
 
-The store doesn't filter by document — `input`/`change`/`save`/`publish`/`unpublish` carry `documentId` (the edited `Content.id`); compare it to your content's `id` before using `data`.
+The store doesn't filter by document — `input`/`change`/`save`/`publish`/`unpublish` carry `documentId` (the edited `Content.id`). For one document's edits, use `localessSyncOnDocument`.
+
+## `localessSyncOnDocument(documentId, callback)`
+
+Subscribes to `input`/`change` events whose `documentId` matches and calls `callback(data, event)` with the edited content data. Returns an unsubscribe function — return it from `$effect`. No-ops like `localessSync`; `LocalessDocument` uses it internally.
+
+```svelte
+<script lang="ts">
+  import { localessSyncOnDocument } from '@localess/svelte';
+
+  let { document } = $props();
+  let live = $state(document.data);
+  $effect(() => localessSyncOnDocument(document.id, data => (live = data)));
+</script>
+```
 
 ---
 
@@ -242,6 +256,7 @@ export { localessEditableField }    // Field-level data-ll-field attribute, spre
 
 // Reactivity
 export { localessSync }             // Visual Editor bridge event subscription, returns a Readable
+export { localessSyncOnDocument }    // input/change for one document -> callback(data, event); returns unsubscribe
 export { LocalessRichText }         // Rich text component (content, renderers?), reactive via $derived
 export { escapeHtml, escapeAttr, sanitizeUrl } // Escaping + link-href allowlist for string renderers (re-exported from @localess/richtext)
 

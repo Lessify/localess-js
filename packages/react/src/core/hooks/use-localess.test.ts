@@ -34,7 +34,7 @@ describe('useLocaless', () => {
   it('keeps exactly one sync subscription across slug changes, and none after unmount', async () => {
     (fetch as any).mockImplementation(() => Promise.resolve(jsonResponse({ _id: 'c1', _schema: 'page', data: {} })));
     let active = 0;
-    vi.spyOn(state, 'localessSyncOn').mockImplementation(() => {
+    vi.spyOn(state, 'localessSyncOnDocument').mockImplementation(() => {
       active++;
       return () => active--;
     });
@@ -71,21 +71,20 @@ describe('useLocaless', () => {
     expect(result.current?.data).toEqual({ title: 'About' });
   });
 
-  it('applies edits to the fetched document only', async () => {
+  it('applies the edits of the fetched document', async () => {
     (fetch as any).mockImplementation(() => Promise.resolve(jsonResponse({ id: 'c1', _schema: 'page', data: { title: 'Hello' } })));
-    let callback: ((event: any) => void) | undefined;
-    vi.spyOn(state, 'localessSyncOn').mockImplementation((_event, cb) => {
-      callback = cb as (event: any) => void;
+    let subscription: { documentId: string; callback: (data: any) => void } | undefined;
+    vi.spyOn(state, 'localessSyncOnDocument').mockImplementation((documentId, callback) => {
+      subscription = { documentId, callback };
       return () => undefined;
     });
 
     const { result } = renderHook(() => useLocaless('home'));
-    await waitFor(() => expect(callback).toBeDefined());
+    await waitFor(() => expect(subscription).toBeDefined());
+    // Filtering by id is covered by the sync controller's tests.
+    expect(subscription!.documentId).toBe('c1');
 
-    act(() => callback!({ type: 'input', documentId: 'header', data: { title: 'Header' } }));
-    expect(result.current?.data).toEqual({ title: 'Hello' });
-
-    act(() => callback!({ type: 'input', documentId: 'c1', data: { title: 'Edited' } }));
+    act(() => subscription!.callback({ title: 'Edited' }));
     expect(result.current?.data).toEqual({ title: 'Edited' });
   });
 

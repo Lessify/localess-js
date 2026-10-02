@@ -311,18 +311,18 @@ import { localessEditable, localessEditableField } from "@localess/client";
 // Only available when app is loaded inside the Localess Visual Editor iframe
 // `content` is the Content object fetched for this page
 if (window.localess) {
-  window.localess.on(['input', 'change'], (event) => {
+  const unsubscribe = window.localess.on(['input', 'change'], (event) => {
     // Real-time preview update — event is narrowed to the 'input' | 'change' variant, no type check needed.
     // Skip edits for other documents on the page (e.g. a shared header).
     if (event.documentId === content.id) setPageData(event.data);
   });
-  // No .off() method — subscribe once on mount
+  // Call unsubscribe() (or window.localess.off(...)) when the page is torn down
 }
 ```
 
 > `on`'s callback type is inferred from the event(s) passed in — subscribing to `['input', 'change']` narrows `event` to the variant carrying `data`, so no manual `event.type === ...` check is needed inside the callback.
 
-`window.localess.onChange(callback)` is shorthand for `on(['input', 'change'], callback)` — it fires only for content-change events, with `callback` narrowed to that variant.
+`window.localess.onChange(callback)` is shorthand for `on(['input', 'change'], callback)` — it fires only for content-change events, with `callback` narrowed to that variant. Framework SDKs filter for you: `localessSyncOnDocument(documentId, callback)` (React, Vue, Svelte) or `LocalessSyncService.onDocument` (Angular) calls back with one document's edited data.
 
 **Event types:**
 

@@ -1,7 +1,7 @@
 import { assertInInjectionContext, DestroyRef, inject, Injectable, type Signal, signal } from '@angular/core';
 
 import { LOCALESS_CONFIG, LOCALESS_SYNC_READY } from '../localess.config';
-import type { EventToAppOf, EventToAppType } from '../models';
+import type { ContentData, EventToAppOf, EventToAppType } from '../models';
 import { isBrowser, isIframe } from '../utils';
 
 /**
@@ -89,6 +89,32 @@ export class LocalessSyncService {
    */
   onChange(callback: (event: EventToAppOf<'change' | 'input'>) => void, destroyRef?: DestroyRef): () => void {
     return this.subscribe(sync => sync.onChange(callback), destroyRef);
+  }
+
+  /**
+   * Subscribes to the live edits (`input` and `change`) of one document and calls `callback` with
+   * the edited content. Edits to other documents on the page — a shared header, or the previous page
+   * after a link was clicked in the preview — are ignored. `<ll-document>` uses it internally.
+   *
+   * No-op if sync isn't enabled or usable in the current context (see {@link enabled}).
+   *
+   * @param documentId - The rendered document's `Content.id`.
+   * @param callback - Called with the edited content data, and the raw event.
+   * @param destroyRef - Removes the subscription when destroyed; defaults to the caller's injection context.
+   * @returns A function that removes the subscription, also before the script has loaded.
+   */
+  onDocument<T extends ContentData = ContentData>(
+    documentId: string,
+    callback: (data: T, event: EventToAppOf<'change' | 'input'>) => void,
+    destroyRef?: DestroyRef
+  ): () => void {
+    return this.subscribe(
+      sync =>
+        sync.onChange(event => {
+          if (event.documentId === documentId) callback(event.data, event);
+        }),
+      destroyRef
+    );
   }
 
   private subscribe(attach: (sync: NonNullable<Window['localess']>) => () => void, destroyRef = injectionContextDestroyRef()): () => void {

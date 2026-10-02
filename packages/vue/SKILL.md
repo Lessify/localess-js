@@ -163,7 +163,21 @@ const latestChange = useLocalessSync(['input', 'change']);
 </script>
 ```
 
-The composable doesn't filter by document — `input`/`change`/`save`/`publish`/`unpublish` carry `documentId` (the edited `Content.id`); compare it to your content's `id` before using `data`.
+The composable doesn't filter by document — `input`/`change`/`save`/`publish`/`unpublish` carry `documentId` (the edited `Content.id`). For one document's edits, use `localessSyncOnDocument`.
+
+### `localessSyncOnDocument(documentId, callback)`
+
+Subscribes to `input`/`change` events whose `documentId` matches and calls `callback(data, event)` with the edited content data. Returns an unsubscribe function; no-ops like `useLocalessSync`. `LocalessDocument` uses it internally.
+
+```ts
+import { onMounted, onScopeDispose, ref } from 'vue';
+import { localessSyncOnDocument } from '@localess/vue';
+
+const live = ref(props.document.data);
+let unsubscribe: (() => void) | undefined;
+onMounted(() => { unsubscribe = localessSyncOnDocument(props.document.id, data => (live.value = data)); });
+onScopeDispose(() => unsubscribe?.());
+```
 
 ### Rich text — `<LocalessRichText>`, `useLocalessRichText`, `useLocalessRichTextHtml`
 
@@ -272,6 +286,7 @@ export { normalizeComponentKey }    // Applies a component naming strategy to a 
 // Composables
 export { useLocaless }              // Returns the injected LocalessClient
 export { useLocalessSync }          // Visual Editor bridge event subscription
+export { localessSyncOnDocument }   // input/change for one document -> callback(data, event); returns unsubscribe
 export { useLocalessRichText }      // Tiptap JSON -> VNodes (reactive)
 export { useLocalessRichTextHtml }  // Tiptap JSON -> HTML string (reactive, for v-html)
 

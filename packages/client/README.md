@@ -319,7 +319,7 @@ if (window.localess) {
 }
 ```
 
-The `LocalessSync` interface (`on`, `onChange`) and the event types (`EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) are re-exported (deprecated) from `@localess/live-preview`, which declares `Window.localess` globally. `on()` and `onChange()` return a function that removes the subscription; `off(event, callback)` removes one directly.
+The `LocalessSync` interface (`on`, `onChange`) and the event types (`EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) are re-exported (deprecated) from `@localess/live-preview`, which declares `Window.localess` globally. `on()` and `onChange()` return a function that removes the subscription; `off(event, callback)` removes one directly. Framework SDKs filter for you: `localessSyncOnDocument(documentId, callback)` (React, Vue, Svelte) or `LocalessSyncService.onDocument` (Angular) calls back with one document's edited data.
 
 ### Available Event Types
 

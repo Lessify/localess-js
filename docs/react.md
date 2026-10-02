@@ -23,7 +23,7 @@ React integration layer for Localess. Builds on `@localess/client` and adds a co
 The smallest bundle. It exports `LocalessServerComponent` / `LocalessServerDocument` (server-safe, no sync attributes) in place of the default `LocalessComponent` / `LocalessDocument`, and does NOT include:
 - `LocalessComponent` / `LocalessDocument` (available from the default export and `/rsc`)
 - `useLocaless` hook (requires `'use client'`)
-- `isSyncEnabled`, `localessSyncOn`, `localessSyncOnChange`, `localessSyncReady` (not meaningful without live editing)
+- `isSyncEnabled`, `localessSyncOn`, `localessSyncOnChange`, `localessSyncOnDocument`, `localessSyncReady` (not meaningful without live editing)
 
 `localessEditable`, `localessEditableField`, `isBrowser`, `isIframe`, `isServer`, `loadLocalessSync`, `buildAssetQueryString`, `LocalessRichText` / `renderRichText`, `LocalessApiError`, and the sync event types (`LocalessSync`, `EventToApp`, `EventToAppOf`, `EventCallback`, `EventToAppType`) ARE included — they're cheap to bundle and harmless outside a client context. `/ssr` also re-exports `localessClient`, the raw `@localess/client` factory, for build-time scripts (see "Static Prerendering").
 
@@ -35,7 +35,7 @@ Re-exports everything from `/ssr` (including `localessClient`), plus:
 - `LocalessComponent` — server-safe (no `'use client'`), usable directly in a Server Component
 - `LocalessDocument` — the live-editing entry point for App Router: a Server Component whose live sync is driven by a Server Action, with no client-side component registration needed. Requires a live server at request time (not usable under `output: 'export'`). This is a different implementation from the default export's `LocalessDocument`, which `/rsc` does **not** export
 - `useLocaless` hook (requires `'use client'`)
-- `isSyncEnabled`, `localessSyncOn`, `localessSyncOnChange`, `localessSyncReady`
+- `isSyncEnabled`, `localessSyncOn`, `localessSyncOnChange`, `localessSyncOnDocument`, `localessSyncReady`
 
 ## Installation
 
@@ -129,7 +129,7 @@ Rendering logic:
 Accepts the full `Content<T>` as `document`, delegates rendering to `LocalessComponent` (passing `data`, `assets`, `links`, `references`), and adds live sync. Does not fetch content — pass server-preloaded data as props. There are two implementations:
 
 - **`@localess/react/rsc`** — a Server Component. Live sync is driven by a Server Action (see "How `/rsc` Live Sync Works"). Use this in Next.js App Router.
-- **`@localess/react`** — a client-side component: holds `document.data` in `useState` and subscribes to `input`/`change` via `localessSyncOnChange` when `enableSync` is active, applying only events whose `documentId` matches its own `document.id`. It calls React hooks, so render it inside a `'use client'` boundary.
+- **`@localess/react`** — a client-side component: holds `document.data` in `useState` and subscribes to `input`/`change` via `localessSyncOnDocument` when `enableSync` is active, applying only events whose `documentId` matches its own `document.id`. It calls React hooks, so render it inside a `'use client'` boundary.
 
 ```tsx
 import { getLocalessClient, LocalessDocument } from "@localess/react/rsc";
@@ -485,18 +485,16 @@ Full control. Initialise state with server data; subscribe to sync events yourse
 ```tsx
 'use client';
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react/rsc";
+import { LocalessComponent, localessEditable, localessSyncOnDocument } from "@localess/react/rsc";
 
 export function PageClient({ initialContent }) {
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
     // No-op unless isSyncEnabled(); waits for localessSyncReady() internally.
-    // `event` is narrowed to the 'input' | 'change' variant (has `data`).
+    // Fires on 'input' / 'change' for this document only, with the edited data.
     // Returns the unsubscribe function, so React removes the listener on unmount.
-    return localessSyncOn(['input', 'change'], (event) => {
-      if (event.documentId === initialContent.id) setPageData(event.data);
-    });
+    return localessSyncOnDocument(initialContent.id, (data) => setPageData(data));
   }, [initialContent.id]);
 
   return (
@@ -620,7 +618,8 @@ For a standalone client outside the singleton (build-time path enumeration), use
 - `isSyncEnabled()` — `true` only when `enableSync: true` was passed to `localessInit`, code is running in the browser, and the page is inside the Visual Editor iframe.
 - `isSyncConfigured()` (default export only) — the raw `enableSync` flag without that gating. Read it server-side and pass it down as a prop when a Client Component (a separate module graph) needs to know.
 - `localessSyncReady()` — resolves once the sync script has loaded (immediately when sync is off); never rejects.
-- `localessSyncOn(event | event[], callback)` / `localessSyncOnChange(callback)` — subscribe to `window.localess` events; both no-op unless `isSyncEnabled()` and await `localessSyncReady()` internally, and return an unsubscribe function (also safe before the script has loaded) to return from `useEffect`. Event types: `input`, `change`, `save`, `publish`, `unpublish`, `pong`, `enterSchema`, `hoverSchema`, `leaveSchema`.
+- `localessSyncOn(event | event[], callback)` / `localessSyncOnChange(callback)` — subscribe to `window.localess` events; both no-op unless `isSyncEnabled()` and await `localessSyncReady()` internally, and return an unsubscribe function (also safe before the script has loaded) to return from `useEffect`. Event types: `input`, `change`, `save`, `publish`, `unpublish`, `pong`, `enterSchema`, `hoverSchema`, `leaveSchema`. Neither filters by document.
+- `localessSyncOnDocument(documentId, callback)` — subscribes to `input`/`change` for one document only (`event.documentId === documentId`) and calls `callback(data, event)` with the edited content data; same gating and unsubscribe return as above.
 
 ## Exports Reference
 
@@ -628,7 +627,7 @@ For a standalone client outside the singleton (build-time path enumeration), use
 // Default export (@localess/react)
 export { localessInit, getLocalessClient, getOrigin }
 export { getComponent, getFallbackComponent }
-export { isSyncEnabled, isSyncConfigured, localessSyncReady, localessSyncOn, localessSyncOnChange }
+export { isSyncEnabled, isSyncConfigured, localessSyncReady, localessSyncOn, localessSyncOnChange, localessSyncOnDocument }
 export { LocalessComponent, LocalessDocument, LocalessRichText }   // LocalessDocument here = client-side, useState-based
 export { renderRichText, sanitizeUrl }                           // sanitizeUrl re-exported from @localess/richtext
 export { resolveAsset, resolveAssetOriginal, resolveAssetDownload }
@@ -659,7 +658,7 @@ export type { LocalessServerComponentProps, LocalessServerDocumentProps /* + all
 
 // @localess/react/rsc — everything from /ssr, plus:
 export { LocalessComponent, LocalessDocument /* Server Component, Server-Action sync */, useLocaless }
-export { isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncReady }
+export { isSyncEnabled, localessSyncOn, localessSyncOnChange, localessSyncOnDocument, localessSyncReady }
 export type { LocalessDocumentProps }
 
 // @localess/react/vite — build-time only

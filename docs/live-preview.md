@@ -48,6 +48,7 @@ sync.isDebug();                  // the debug flag forwarded to the script
 sync.ready();                    // resolves when loaded, or immediately
 sync.on(event, cb);              // no-op unless usable; returns an unsubscribe function
 sync.onChange(cb);
+sync.onDocument(documentId, cb); // input/change for one document only; cb(data, event)
 ```
 
 A factory, not module state: React's App Router bundles Server and Client Components into separate
@@ -68,7 +69,7 @@ isBrowser(); isServer(); isIframe();
 `EventCallback` is `(event: EventToApp) => void`. `EventToAppOf<T>` narrows the callback payload, so subscribing to
 `'input' | 'change'` types `event.data`. `LocalessSync` is the `window.localess` contract.
 `input`, `change`, `save`, `publish`, and `unpublish` carry `documentId` (the edited `Content.id`);
-`sync.on`/`onChange` don't filter by it, so handlers compare it to their own document's `id`.
+`sync.on`/`onChange` don't filter by it; `sync.onDocument(documentId, cb)` does, passing the edited `data`.
 
 ## Testing
 

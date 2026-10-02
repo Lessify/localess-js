@@ -7,10 +7,10 @@ import { LocalessDocument } from './localess-document';
 
 vi.mock('../client', async importOriginal => {
   const actual = await importOriginal<typeof import('../client')>();
-  return { ...actual, localessSyncOnChange: vi.fn() };
+  return { ...actual, localessSyncOnDocument: vi.fn() };
 });
 
-import { localessSyncOnChange } from '../client';
+import { localessSyncOnDocument } from '../client';
 
 const baseOptions = { origin: 'https://cms.example.com', spaceId: 'space-1', token: 'token-123' };
 
@@ -21,7 +21,7 @@ function Page({ data }: any) {
 describe('LocalessDocument', () => {
   afterEach(() => {
     cleanup();
-    (localessSyncOnChange as Mock).mockClear();
+    (localessSyncOnDocument as Mock).mockClear();
   });
 
   it('renders the registered component using document.data', () => {
@@ -32,37 +32,26 @@ describe('LocalessDocument', () => {
     expect(screen.getByText('Hello')).toBeDefined();
   });
 
-  it('re-renders with updated content when the sync subscription fires an input/change event', () => {
+  it('re-renders with the edits of its own document', () => {
     localessInit({ ...baseOptions, components: { page: Page } });
 
     render(<LocalessDocument document={{ id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
     expect(screen.getByText('Hello')).toBeDefined();
 
-    const [syncCallback] = (localessSyncOnChange as Mock).mock.calls[0];
+    // Subscribed to its own document only; filtering by id is covered by the sync controller's tests.
+    const [documentId, syncCallback] = (localessSyncOnDocument as Mock).mock.calls[0];
+    expect(documentId).toBe('c1');
     act(() => {
-      syncCallback({ documentId: 'c1', data: { _schema: 'page', title: 'Updated' } });
+      syncCallback({ _schema: 'page', title: 'Updated' });
     });
 
     expect(screen.getByText('Updated')).toBeDefined();
   });
 
-  it('ignores edits to another document on the same page', () => {
-    localessInit({ ...baseOptions, components: { page: Page } });
-
-    render(<LocalessDocument document={{ id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />);
-
-    const [syncCallback] = (localessSyncOnChange as Mock).mock.calls[0];
-    act(() => {
-      syncCallback({ documentId: 'header', data: { _schema: 'page', title: 'Header' } });
-    });
-
-    expect(screen.getByText('Hello')).toBeDefined();
-  });
-
   it('removes its sync subscription on unmount', () => {
     localessInit({ ...baseOptions, components: { page: Page } });
     const unsubscribe = vi.fn();
-    (localessSyncOnChange as Mock).mockReturnValueOnce(unsubscribe);
+    (localessSyncOnDocument as Mock).mockReturnValueOnce(unsubscribe);
 
     const { unmount } = render(
       <LocalessDocument document={{ id: 'c1', _schema: 'page', data: { _schema: 'page', title: 'Hello' } } as any} />

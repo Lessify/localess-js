@@ -438,24 +438,22 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
 
 ### Manual Integration
 
-If you manage content state yourself without `useLocaless` or `LocalessDocument`, subscribe to editor events with `localessSyncOn` (a wrapper over `window.localess.on`):
+If you manage content state yourself without `useLocaless` or `LocalessDocument`, subscribe to your document's edits with `localessSyncOnDocument` (or to any editor event with `localessSyncOn`, a wrapper over `window.localess.on`):
 
 ```tsx
 'use client';
 
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react";
+import { LocalessComponent, localessEditable, localessSyncOnDocument } from "@localess/react";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClient({ initialContent }: { initialContent: Content<Page> }) {
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
-    // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant.
+    // No-op if sync isn't enabled/usable; fires on 'input' | 'change' for this document only.
     // Returns the unsubscribe function, so React removes the listener on unmount.
-    return localessSyncOn(['input', 'change'], (event) => {
-      if (event.documentId === initialContent.id) setPageData(event.data);
-    });
+    return localessSyncOnDocument(initialContent.id, (data) => setPageData(data));
   }, [initialContent.id]);
 
   return (
@@ -482,9 +480,9 @@ export function PageClient({ initialContent }: { initialContent: Content<Page> }
 | `hoverSchema` | Editor cursor hovers over a schema block      |
 | `leaveSchema` | Editor cursor leaves a schema block           |
 
-> `window.localess` only exposes `.on()` and `.onChange()` — there is no `.off()` method.
+> `window.localess` exposes `.on()`, `.onChange()` and `.off()`; `.on()` and `.onChange()` also return a function that removes the subscription.
 
-`localessSyncOn(event, callback)` wraps `.on()`; `localessSyncOnChange(callback)` wraps `.onChange()` — equivalent to `localessSyncOn(['input', 'change'], callback)`, firing only for content-change events (`callback` receives the `input`/`change` variant, not the full `EventToApp` union). Both handle the `isSyncEnabled()` check and the `localessSyncReady()` wait internally. Both return an unsubscribe function — return it from `useEffect` so the listener is removed on unmount. `localessSyncReady()` resolves once the sync script has loaded (immediately if sync is not enabled) and never rejects.
+`localessSyncOn(event, callback)` wraps `.on()`; `localessSyncOnChange(callback)` wraps `.onChange()` — equivalent to `localessSyncOn(['input', 'change'], callback)`, firing only for content-change events (`callback` receives the `input`/`change` variant, not the full `EventToApp` union). Both handle the `isSyncEnabled()` check and the `localessSyncReady()` wait internally. Both return an unsubscribe function — return it from `useEffect` so the listener is removed on unmount. Neither filters by document; `localessSyncOnDocument(documentId, callback)` subscribes to `input`/`change` for one document (`event.documentId === documentId`) and calls `callback(data, event)` with the edited data. `localessSyncReady()` resolves once the sync script has loaded (immediately if sync is not enabled) and never rejects.
 
 ---
 
@@ -599,7 +597,7 @@ Full control over state and sync subscription. Use when you need custom logic ar
 'use client';
 
 import { useEffect, useState } from "react";
-import { LocalessComponent, localessEditable, localessSyncOn } from "@localess/react";
+import { LocalessComponent, localessEditable, localessSyncOnDocument } from "@localess/react";
 import type { Content, Page } from "./.localess/localess";
 
 export function PageClientManual({
@@ -611,11 +609,9 @@ export function PageClientManual({
   const [pageData, setPageData] = useState(initialContent.data);
 
   useEffect(() => {
-    // No-op if sync isn't enabled/usable; `event` is narrowed to the 'input' | 'change' variant.
+    // No-op if sync isn't enabled/usable; fires on 'input' | 'change' for this document only.
     // Returns the unsubscribe function, so React removes the listener on unmount.
-    return localessSyncOn(['input', 'change'], (event) => {
-      if (event.documentId === initialContent.id) setPageData(event.data);
-    });
+    return localessSyncOnDocument(initialContent.id, (data) => setPageData(data));
   }, [initialContent.id]);
 
   return (
@@ -803,7 +799,7 @@ The table below shows which symbols are available in each runtime export.
 | `useLocaless`                                          |         ✅         |           ❌           |           ✅           |
 | `localessEditable` / `localessEditableField`           |         ✅         |           ✅           |           ✅           |
 | `isBrowser` / `isIframe`                               |         ✅         |           ✅           |           ✅           |
-| `isSyncEnabled` / `localessSyncOn` / `localessSyncOnChange` / `localessSyncReady` |         ✅         |           ❌           |           ✅           |
+| `isSyncEnabled` / `localessSyncOn` / `localessSyncOnChange` / `localessSyncOnDocument` / `localessSyncReady` |         ✅         |           ❌           |           ✅           |
 | `isSyncConfigured` / `getOrigin`                       |         ✅         |           ❌           |           ❌           |
 | Sync event types (`LocalessSync`, `EventToApp`, `EventToAppOf`, `EventToAppType`, `EventCallback`) |         ✅         |           ✅           |           ✅           |
 

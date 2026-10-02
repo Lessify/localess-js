@@ -43,6 +43,12 @@ export interface SyncController {
   on<T extends EventToAppType>(event: T | T[], callback: (event: EventToAppOf<T>) => void): Unsubscribe;
   /** Subscribes to `change` and `input`. Same semantics as {@link on}. */
   onChange(callback: (event: EventToAppOf<'change' | 'input'>) => void): Unsubscribe;
+  /**
+   * Subscribes to the content edits (`input` and `change`) of one document, matched by its
+   * `documentId` (`Content.id`), and calls `callback` with the edited data. Edits to other
+   * documents on the page are ignored. Same semantics as {@link on}.
+   */
+  onDocument(documentId: string, callback: (data: any, event: EventToAppOf<'change' | 'input'>) => void): Unsubscribe;
   /** @internal Resets state between test cases. */
   reset(): void;
 }
@@ -90,6 +96,13 @@ export function createSyncController(sdk?: string): SyncController {
     },
     onChange(callback) {
       return subscribe(sync => sync.onChange(callback));
+    },
+    onDocument(documentId, callback) {
+      return subscribe(sync =>
+        sync.onChange(event => {
+          if (event.documentId === documentId) callback(event.data, event);
+        })
+      );
     },
     reset() {
       enabled = false;

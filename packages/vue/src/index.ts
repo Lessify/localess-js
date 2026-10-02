@@ -1,4 +1,4 @@
-export { localessClient } from './client';
+export { localessClient, localessSyncOnDocument } from './client';
 export { default as LocalessComponent } from './components/localess-component.vue';
 export { default as LocalessDocument } from './components/localess-document.vue';
 export { LocalessRichText } from './components/localess-rich-text';
