@@ -16,7 +16,7 @@ let _origin: string | undefined = undefined;
 let _client: LocalessClient | undefined = undefined;
 let _components: Record<string, React.ElementType> = {};
 let _fallbackComponent: React.ElementType | undefined = undefined;
-const _sync = createSyncController();
+const _sync = createSyncController('@localess/react');
 let _assetPathPrefix = '';
 
 /**

@@ -101,7 +101,8 @@ describe('LocalessSyncService', () => {
       delete window.localess;
     });
 
-    const emit = (event: { type: string; documentId?: string; data?: unknown }) => listeners.get(event.type)?.forEach(callback => callback(event));
+    const emit = (event: { type: string; documentId?: string; data?: unknown }) =>
+      listeners.get(event.type)?.forEach(callback => callback(event));
     const settle = () => new Promise(resolve => setTimeout(resolve));
 
     it('returns a function that removes the subscription', async () => {

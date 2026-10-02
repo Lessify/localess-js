@@ -48,7 +48,7 @@ export interface SyncController {
 }
 
 /** Creates an independent {@link SyncController}. */
-export function createSyncController(): SyncController {
+export function createSyncController(sdk?: string): SyncController {
   let enabled = false;
   let debugEnabled = false;
   let promise: Promise<void> | undefined;
@@ -77,7 +77,7 @@ export function createSyncController(): SyncController {
       if (!enableSync) return;
       enabled = true;
       debugEnabled = debug === true;
-      promise = loadLocalessSync(origin, { debug: debugEnabled }).catch(error => {
+      promise = loadLocalessSync(origin, { debug: debugEnabled, sdk }).catch(error => {
         console.error('[Localess] Failed to load sync script.', error);
       });
     },

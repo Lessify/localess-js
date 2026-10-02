@@ -66,8 +66,8 @@ describe('LiveEditListener', () => {
     render(<LiveEditListener id="doc-1" origin="https://cms.example.com" enableSync={true} debug={true} />);
 
     expect(load.mock.calls).toEqual([
-      ['https://cms.example.com', { debug: undefined }],
-      ['https://cms.example.com', { debug: true }],
+      ['https://cms.example.com', { debug: undefined, sdk: '@localess/react' }],
+      ['https://cms.example.com', { debug: true, sdk: '@localess/react' }],
     ]);
   });
 

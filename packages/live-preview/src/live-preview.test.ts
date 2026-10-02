@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { version } from '../package.json';
 import { localessEditable, localessEditableField } from './editable';
 import { isBrowser, isIframe, isServer } from './platform';
 import { resetSyncForTest } from './sync';
@@ -109,6 +110,21 @@ describe('createSyncController', () => {
 
     expect(document.getElementById(SCRIPT_ID)!.getAttribute('data-debug')).toBe('true');
     expect(sync.isDebug()).toBe(true);
+  });
+
+  it('labels the script with the SDK that loads it, at this package version', () => {
+    enterEditorFrame();
+    const sync = createSyncController('@localess/react');
+    sync.init('https://cms.example.com', true);
+
+    expect(document.getElementById(SCRIPT_ID)!.getAttribute('data-sdk')).toBe(`@localess/react@${version}`);
+  });
+
+  it('labels the script as live-preview when no SDK is given', () => {
+    enterEditorFrame();
+    createSyncController().init('https://cms.example.com', true);
+
+    expect(document.getElementById(SCRIPT_ID)!.getAttribute('data-sdk')).toBe(`@localess/live-preview@${version}`);
   });
 
   it('logs the script load only in debug mode', async () => {

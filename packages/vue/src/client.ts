@@ -15,7 +15,7 @@ export type LocalessVueInitOptions = LocalessClientOptions & {
 let _client: LocalessClient | undefined = undefined;
 let _components: Record<string, Component> = {};
 let _fallbackComponent: Component | undefined = undefined;
-const _sync = createSyncController();
+const _sync = createSyncController('@localess/vue');
 
 export function localessInit(options: LocalessVueInitOptions): LocalessClient {
   const { components, fallbackComponent, enableSync, ...restOptions } = options;

@@ -20,7 +20,7 @@ Spread these onto the elements the editor should be able to select. No configura
 ## Sync script
 
 ```ts
-loadLocalessSync(origin: string, options?: { debug?: boolean }): Promise<void>
+loadLocalessSync(origin: string, options?: { debug?: boolean; sdk?: string }): Promise<void>
 ```
 
 `origin` is an explicit argument, not read from configuration. The script is served by the Localess
@@ -32,10 +32,15 @@ No-ops outside a browser and outside the Visual Editor iframe. Concurrent caller
 `debug: true` sets `data-debug` on the script tag, turning on the script's snackbars in the preview and
 its console logging. Without it the script stays quiet apart from one `console.info` on connect.
 
+`sdk` is the package name of the SDK loading the script, e.g. `@localess/react`. It is set as
+`data-sdk="@localess/react@<version>"`, using this package's version (all `@localess/*` packages are
+released together), and the script reports it to the Visual Editor in its handshake, which shows it in
+the connection status. Defaults to `@localess/live-preview`. Each framework SDK passes its own name.
+
 ## Sync controller
 
 ```ts
-const sync: SyncController = createSyncController();
+const sync: SyncController = createSyncController(sdk?); // sdk: e.g. '@localess/react', see above
 sync.init(origin, enableSync, debug?); // records the flags, starts loading when enabled
 sync.isEnabled();                // enabled AND in a browser AND framed
 sync.isConfigured();             // the raw flag, ungated

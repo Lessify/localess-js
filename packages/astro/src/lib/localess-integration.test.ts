@@ -74,8 +74,8 @@ describe('localessIntegration', () => {
         .map(([, code]) => code)
         .join('\n');
 
-    expect(pageScript(quiet.injectScript)).toContain('{ debug: false }');
-    expect(pageScript(debug.injectScript)).toContain('{ debug: true }');
+    expect(pageScript(quiet.injectScript)).toContain("{ debug: false, sdk: '@localess/astro' }");
+    expect(pageScript(debug.injectScript)).toContain("{ debug: true, sdk: '@localess/astro' }");
   });
 
   it('throws when livePreview is true but output is not server', () => {

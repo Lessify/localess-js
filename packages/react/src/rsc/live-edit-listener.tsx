@@ -25,7 +25,7 @@ export function LiveEditListener({ id, origin, enableSync, debug }: LiveEditList
     let cancelled = false;
     let unsubscribe: (() => void) | undefined;
 
-    loadLocalessSync(origin, { debug })
+    loadLocalessSync(origin, { debug, sdk: '@localess/react' })
       .then(() => {
         if (cancelled) return;
         unsubscribe = window.localess?.on(['input', 'change', 'save', 'publish', 'unpublish'], async event => {

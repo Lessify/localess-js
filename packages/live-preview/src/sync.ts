@@ -1,3 +1,4 @@
+import { version } from '../package.json';
 import { isIframe, isServer } from './platform';
 
 const JS_SYNC_ID = 'localess-js-sync';
@@ -10,6 +11,12 @@ export interface LoadLocalessSyncOptions {
    * the preview and its console logging. Off by default, so content editors see neither.
    */
   debug?: boolean;
+  /**
+   * Package name of the SDK loading the script, e.g. `@localess/react`. Reported to the Visual
+   * Editor with this package's version (all `@localess/*` packages are released together), so the
+   * editor can show which SDK the page runs. Defaults to `@localess/live-preview`.
+   */
+  sdk?: string;
 }
 
 /**
@@ -64,6 +71,7 @@ export function loadLocalessSync(origin: string, options: LoadLocalessSyncOption
     if (options.debug) {
       script.setAttribute('data-debug', 'true');
     }
+    script.setAttribute('data-sdk', `${options.sdk ?? '@localess/live-preview'}@${version}`);
 
     script.onerror = error => reject(error);
     script.onload = () => {

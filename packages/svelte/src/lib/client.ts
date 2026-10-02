@@ -9,7 +9,7 @@ import { createSyncController } from './utils';
 let _client: LocalessClient | undefined = undefined;
 let _components: Record<string, Component<any>> = {};
 let _fallbackComponent: Component<any> | undefined = undefined;
-const _sync = createSyncController();
+const _sync = createSyncController('@localess/svelte');
 
 export function localessInit(options: LocalessSvelteInitOptions): LocalessClient {
   const { components, fallbackComponent, enableSync, ...restOptions } = options;
