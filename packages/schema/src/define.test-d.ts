@@ -34,6 +34,11 @@ describe('define type-level behavior', () => {
     defineSchema({ id: 'Bad3', type: 'NODE', fields: [{ name: 'tags', kind: 'OPTIONS' }] });
   });
 
+  it('narrows SCHEMAS requiring schemas', () => {
+    // @ts-expect-error schemas is required on SCHEMAS fields
+    defineSchema({ id: 'Bad4', type: 'NODE', fields: [{ name: 'blocks', kind: 'SCHEMAS' }] });
+  });
+
   it('normalizes SCHEMAS by-value refs to id literals', () => {
     const Leaf = defineSchema({ id: 'Leaf', type: 'NODE' });
     const Twig = defineSchema({ id: 'Twig', type: 'NODE' });

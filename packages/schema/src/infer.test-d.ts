@@ -36,7 +36,7 @@ const Page = defineSchema({
     { name: 'count', kind: 'NUMBER' },
     { name: 'published', kind: 'BOOLEAN', required: true },
     { name: 'blocks', kind: 'SCHEMAS', schemas: [Button] },
-    { name: 'any', kind: 'SCHEMA' },
+    { name: 'any', kind: 'SCHEMA', schemas: [Button, Section] },
   ],
 });
 
@@ -93,7 +93,7 @@ void richConfig;
 const NoNodesRoot = defineSchema({
   id: 'NoNodesRoot',
   type: 'ROOT',
-  fields: [{ name: 'any', kind: 'SCHEMA' }],
+  fields: [{ name: 'any', kind: 'SCHEMA', schemas: [] }],
 });
 const noNodesConfig = defineConfig({ schemas: [NoNodesRoot] });
 void noNodesConfig;
@@ -157,7 +157,7 @@ describe('fallback branches', () => {
     expectTypeOf<OrphanContent['kind']>().toEqualTypeOf<string | undefined>();
   });
 
-  it('unrestricted SCHEMA in a config with no NODE schemas degrades to the minimal shape', () => {
+  it('SCHEMA with an empty allow-list degrades to the minimal shape', () => {
     type NoNodesContent = InferContent<typeof NoNodesRoot, typeof noNodesConfig>;
     expectTypeOf<NonNullable<NoNodesContent['any']>>().toEqualTypeOf<{ _id: string; _schema: string }>();
   });
@@ -193,7 +193,7 @@ describe('InferContent', () => {
     expectTypeOf<SectionContent['body']>().toEqualTypeOf<ContentRichText | undefined>();
   });
 
-  it('SCHEMAS resolves to the allowed schemas content array; unrestricted SCHEMA to all NODE content', () => {
+  it('SCHEMAS resolves to the allowed schemas content array; SCHEMA to the union of its allowed schemas', () => {
     expectTypeOf<PageContent['blocks']>().toEqualTypeOf<ButtonContent[] | undefined>();
     type AnyBlock = NonNullable<PageContent['any']>;
     expectTypeOf<AnyBlock['_schema']>().toEqualTypeOf<'Button' | 'Section'>();

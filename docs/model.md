@@ -57,7 +57,7 @@ Moved here from `@localess/schema` (ADR 009) — the wire-format types every `Sc
 | `SchemaFieldOption`, `SchemaFieldOptions` | `OPTION`/`OPTIONS` — required `source` (ENUM schema id); `OPTIONS` adds `minValues?`, `maxValues?` |
 | `SchemaFieldReference`, `SchemaFieldReferences` | `REFERENCE`/`REFERENCES` — `path?` |
 | `SchemaFieldAsset`, `SchemaFieldAssets` | `ASSET`/`ASSETS` — `fileTypes?: AssetFileType[]`, `fileType?: AssetFileType` |
-| `SchemaFieldSchema`, `SchemaFieldSchemas` | `SCHEMA`/`SCHEMAS` — `schemas?: string[]` (allowed schema ids; unrestricted when absent) |
+| `SchemaFieldSchema`, `SchemaFieldSchemas` | `SCHEMA`/`SCHEMAS` — `schemas?: string[]` (allowed NODE schema ids; when absent or empty the editor can add no block) |
 | `SchemaComponentExport` | Wire shape of a `ROOT`/`NODE` schema — `{ id, type, displayName?, description?, labels?, previewField?, fields? }` |
 | `SchemaEnumExport` | Wire shape of an `ENUM` schema — `{ id, type: 'ENUM', displayName?, description?, labels?, values? }` |
 | `SchemaExport` | `SchemaComponentExport \| SchemaEnumExport` — what `@localess/cli`'s `schema pull`/`push` and `@localess/schema`'s `toSchemaExport()` produce/consume |

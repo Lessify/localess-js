@@ -242,6 +242,21 @@ describe('emitSchemaFiles', () => {
     expect(files.get('lone.ts')).toContain(`schemas: ['Ghost']`);
   });
 
+  it('emits an empty schemas list for a SCHEMA/SCHEMAS field the server holds without one', () => {
+    const files = emitSchemaFiles([
+      {
+        id: 'Lone',
+        type: 'NODE',
+        fields: [
+          { name: 'hero', kind: 'SCHEMA' },
+          { name: 'blocks', kind: 'SCHEMAS' },
+        ],
+      },
+    ]);
+    expect(files.get('lone.ts')).toContain(`defineField({ name: 'hero', kind: 'SCHEMA', schemas: [] })`);
+    expect(files.get('lone.ts')).toContain(`defineField({ name: 'blocks', kind: 'SCHEMAS', schemas: [] })`);
+  });
+
   it('index.ts exports a defineConfig with every schema', () => {
     const index = emitSchemaFiles(schemas).get('index.ts')!;
     expect(index).toContain(`import { defineConfig } from '@localess/schema';`);

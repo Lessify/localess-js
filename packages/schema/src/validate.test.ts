@@ -104,6 +104,30 @@ describe('validate', () => {
         ],
       })
     ).toContain('field/schema-ref-is-enum');
+    // SCHEMA/SCHEMAS refs pointing at a ROOT are errors — the editor only offers NODE schemas
+    expect(
+      issuesOf({
+        schemas: [
+          { id: 'Page', type: 'ROOT' },
+          { id: 'Comp', type: 'NODE', fields: [{ name: 'blocks', kind: 'SCHEMAS', schemas: ['Page'] }] },
+        ],
+      })
+    ).toContain('field/schema-ref-is-root');
+    // SCHEMA/SCHEMAS must list at least one schema — the editor offers nothing otherwise
+    expect(issuesOf({ schemas: [{ id: 'Comp', type: 'NODE', fields: [{ name: 'hero', kind: 'SCHEMA' } as never] }] })).toContain(
+      'field/missing-schemas'
+    );
+    expect(issuesOf({ schemas: [{ id: 'Comp', type: 'NODE', fields: [{ name: 'blocks', kind: 'SCHEMAS', schemas: [] }] }] })).toContain(
+      'field/missing-schemas'
+    );
+    expect(
+      issuesOf({
+        schemas: [
+          { id: 'Leaf', type: 'NODE' },
+          { id: 'Comp', type: 'NODE', fields: [{ name: 'blocks', kind: 'SCHEMAS', schemas: ['Leaf'] }] },
+        ],
+      })
+    ).toEqual([]);
     // previewField must exist
     expect(issuesOf({ schemas: [{ id: 'Comp', type: 'NODE', previewField: 'nope', fields: [] }] })).toContain(
       'schema/unknown-preview-field'

@@ -95,13 +95,13 @@ export interface SchemaFieldBoolean extends SchemaFieldBase {
 
 export interface SchemaFieldSchema extends SchemaFieldBase {
   kind: 'SCHEMA';
-  /** Allowed schema ids; unrestricted when absent. */
+  /** Allowed NODE schema ids. The Studio editor offers only these; when absent or empty, no block can be added. */
   schemas?: string[];
 }
 
 export interface SchemaFieldSchemas extends SchemaFieldBase {
   kind: 'SCHEMAS';
-  /** Allowed schema ids; unrestricted when absent. */
+  /** Allowed NODE schema ids. The Studio editor offers only these; when absent or empty, no block can be added. */
   schemas?: string[];
 }
 

@@ -28,7 +28,7 @@ export interface LocalessSchemaConfig {
 type FieldInputOf<F> = F extends { kind: 'OPTION' | 'OPTIONS' }
   ? Omit<DeepReadonly<F>, 'source'> & { readonly source: string | EnumDefinition }
   : F extends { kind: 'SCHEMA' | 'SCHEMAS' }
-    ? Omit<DeepReadonly<F>, 'schemas'> & { readonly schemas?: readonly (string | ComponentDefinition)[] }
+    ? Omit<DeepReadonly<F>, 'schemas'> & { readonly schemas: readonly (string | ComponentDefinition)[] }
     : DeepReadonly<F>;
 
 /**
@@ -142,8 +142,8 @@ export function defineEnum<const TId extends string, const TValues extends reado
  * - `OPTIONS` — `source` (required, same as `OPTION`), `minValues?`, `maxValues?`
  * - `REFERENCE` / `REFERENCES` — `path?`
  * - `ASSET` / `ASSETS` — `fileTypes?`, `fileType?`
- * - `SCHEMA` / `SCHEMAS` — `schemas?` (allowed definitions from `defineSchema`, or their ids;
- *   every `NODE` schema in the config is allowed when omitted)
+ * - `SCHEMA` / `SCHEMAS` — `schemas` (required: the allowed `NODE` definitions from `defineSchema`,
+ *   or their ids — the Studio editor offers exactly these, so an empty list leaves the field unusable)
  *
  * Full field-kind reference, including the type each kind infers to: `docs/schema.md`.
  *

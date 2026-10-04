@@ -85,9 +85,18 @@ function orderedEntries(field: SchemaField): [string, unknown][] {
     });
 }
 
+/**
+ * `schemas` is required by `defineField` on SCHEMA/SCHEMAS, but the server can hold such a field
+ * without one. Emitting `[]` keeps the pulled file compiling and matches the editor, which offers
+ * no block either way; `validate()` then reports it as `field/missing-schemas`.
+ */
+function withRequiredSchemas(field: SchemaField): SchemaField {
+  return (field.kind === 'SCHEMA' || field.kind === 'SCHEMAS') && field.schemas === undefined ? { ...field, schemas: [] } : field;
+}
+
 function printFields(fields: SchemaField[], byId: Set<string>, printWidth: number): string {
   const lines = fields.map(field => {
-    const entries = orderedEntries(field).map(([key, val]) => {
+    const entries = orderedEntries(withRequiredSchemas(field)).map(([key, val]) => {
       if (key === 'source' && typeof val === 'string' && byId.has(val)) return `source: ${val}`;
       if (key === 'schemas' && Array.isArray(val)) {
         const items = val.map(ref => (typeof ref === 'string' && byId.has(ref) ? ref : quote(String(ref))));

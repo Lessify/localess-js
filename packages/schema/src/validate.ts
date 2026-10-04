@@ -103,12 +103,21 @@ export function validate(config: LocalessSchemaConfig): ValidationResult {
         }
       }
       if (field.kind === 'SCHEMA' || field.kind === 'SCHEMAS') {
+        if (!field.schemas || field.schemas.length === 0) {
+          error('field/missing-schemas', fieldPath, `${field.kind} field must list at least one NODE schema in 'schemas'`);
+        }
         for (const ref of field.schemas ?? []) {
           const target = byId.get(ref);
           if (!target) {
             error('field/unresolved-schema-ref', fieldPath, `schemas ref '${ref}' does not resolve to a schema in the config`);
           } else if (target.type === 'ENUM') {
-            error('field/schema-ref-is-enum', fieldPath, `schemas ref '${ref}' must be a ROOT or NODE schema, not an ENUM`);
+            error('field/schema-ref-is-enum', fieldPath, `schemas ref '${ref}' must be a NODE schema, not an ENUM`);
+          } else if (target.type === 'ROOT') {
+            error(
+              'field/schema-ref-is-root',
+              fieldPath,
+              `schemas ref '${ref}' must be a NODE schema; the editor never offers a ROOT schema`
+            );
           }
         }
       }

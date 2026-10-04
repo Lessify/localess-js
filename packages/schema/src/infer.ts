@@ -6,16 +6,6 @@ type Prettify<T> = { [K in keyof T]: T[K] } & {};
 
 type SchemasOf<C> = C extends { schemas: readonly (infer D)[] } ? D : never;
 type FindById<C, Id> = Extract<SchemasOf<C>, { id: Id }>;
-// Guarded with the [X] extends [never] tuple trick: checking `never extends { id: infer Id
-// extends string }` directly (non-distributively, since Extract<...> isn't a naked type param
-// here) is vacuously true, and an infer with no candidate to match falls back to its constraint
-// (`string`) rather than `never` — so an empty extraction must be special-cased before the infer.
-type NodeIds<C> = [Extract<SchemasOf<C>, { type: 'NODE' }>] extends [never]
-  ? never
-  : Extract<SchemasOf<C>, { type: 'NODE' }> extends { id: infer Id extends string }
-    ? Id
-    : never;
-
 type EnumValuesUnion<E> = E extends { values: readonly SchemaEnumValue[] }
   ? E extends { values: readonly { value: infer V extends string }[] }
     ? V
@@ -29,10 +19,10 @@ export type InferEnum<E> = EnumValuesUnion<E>;
 // behavior of the CLI's existing codegen when a schema reference can't be resolved.
 type ResolveEnum<Id extends string, C> = [FindById<C, Id>] extends [never] ? string : EnumValuesUnion<FindById<C, Id>>;
 
-// SCHEMA/SCHEMAS: an explicit allow-list narrows to those schemas; an absent list means every
-// NODE schema registered in the config is allowed.
-type AllowedIds<F, C> = F extends { schemas: readonly (infer Id extends string)[] } ? Id : NodeIds<C>;
-type ResolveSchemaContent<F, C> = [AllowedIds<F, C>] extends [never] ? { _id: string; _schema: string } : ContentByIds<AllowedIds<F, C>, C>;
+// SCHEMA/SCHEMAS: the allow-list is exactly what the Studio editor offers. An empty or absent
+// list (rejected by `validate`) degrades to the minimal block shape.
+type AllowedIds<F> = F extends { schemas: readonly (infer Id extends string)[] } ? Id : never;
+type ResolveSchemaContent<F, C> = [AllowedIds<F>] extends [never] ? { _id: string; _schema: string } : ContentByIds<AllowedIds<F>, C>;
 type ContentByIds<Id extends string, C> = Id extends unknown ? InferContent<FindById<C, Id>, C> : never;
 
 type FieldValue<F, C> = F extends { kind: 'TEXT' | 'TEXTAREA' | 'MARKDOWN' | 'COLOR' | 'DATE' | 'DATETIME' }
@@ -78,7 +68,10 @@ export type InferContent<S, C> = S extends { type: 'ROOT' | 'NODE'; id: infer Id
   ? Prettify<{ _id: string; _schema: Id } & FieldsObject<S, C>>
   : never;
 
-// Same never-guard as NodeIds — see comment there.
+// Guarded with the [X] extends [never] tuple trick: checking `never extends { id: infer Id
+// extends string }` directly (non-distributively, since Extract<...> isn't a naked type param
+// here) is vacuously true, and an infer with no candidate to match falls back to its constraint
+// (`string`) rather than `never` — so an empty extraction must be special-cased before the infer.
 type RootIds<C> = [Extract<SchemasOf<C>, { type: 'ROOT' }>] extends [never]
   ? never
   : Extract<SchemasOf<C>, { type: 'ROOT' }> extends { id: infer Id extends string }

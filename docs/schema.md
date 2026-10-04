@@ -105,13 +105,13 @@ Types (all `export type`):
 | `InferContent<S, C>` | Content type of one schema definition `S`, resolved against config `C` |
 | `InferEnum<E>` | Literal union of an enum definition's values |
 
-Every inferred content type carries `_id: string` and `_schema` as the schema id literal. `required: true` fields become non-optional keys; every other field is optional. `OPTION` fields resolve to the literal union of the referenced enum's values (not plain `string`), `OPTIONS` to an array of that union; `SCHEMA`/`SCHEMAS` fields resolve to the allowed schemas' content types (or every `NODE` schema in the config when `schemas` is omitted), `SCHEMAS` as an array.
+Every inferred content type carries `_id: string` and `_schema` as the schema id literal. `required: true` fields become non-optional keys; every other field is optional. `OPTION` fields resolve to the literal union of the referenced enum's values (not plain `string`), `OPTIONS` to an array of that union; `SCHEMA`/`SCHEMAS` fields resolve to the allowed schemas' content types, `SCHEMAS` as an array.
 
 Fallbacks when a reference can't be resolved against the config:
 
 - `OPTION`/`OPTIONS` whose `source` id is not in the config → `string` / `string[]` (matching the CLI's `type generate` behavior for unresolved refs).
 - `InferEnum` of an enum with no `values` → `string`.
-- Unrestricted `SCHEMA`/`SCHEMAS` in a config with no `NODE` schemas → `{ _id: string; _schema: string }` / array of it.
+- `SCHEMA`/`SCHEMAS` with an empty `schemas` list (a `validate()` error) → `{ _id: string; _schema: string }` / array of it.
 - `InferContentData` of a config with no `ROOT` schema → `never`.
 
 ## Field Kinds
@@ -128,7 +128,7 @@ Fallbacks when a reference can't be resolved against the config:
 | `LINK` | — | `ContentLink` |
 | `REFERENCE` / `REFERENCES` | `path?` | `ContentReference` / `ContentReference[]` |
 | `ASSET` / `ASSETS` | `fileTypes?: AssetFileType[]`, `fileType?: AssetFileType` | `ContentAsset` / `ContentAsset[]` |
-| `SCHEMA` / `SCHEMAS` | `schemas?` (allowed ids or `defineSchema` results; unrestricted when absent) | allowed schemas' content type / array of it |
+| `SCHEMA` / `SCHEMAS` | `schemas` (required: allowed `NODE` ids or `defineSchema` results — the editor offers exactly these) | allowed schemas' content type / array of it |
 
 Every kind also accepts the base properties from `SchemaFieldBase`: `displayName?`, `required?`, `description?`, `defaultValue?`, `translatable?`. `AssetFileType` is `'ANY' | 'IMAGE' | 'VIDEO' | 'TEXT' | 'AUDIO' | 'APPLICATION'`.
 
@@ -156,7 +156,9 @@ Non-throwing: `{ ok: boolean, issues: ValidationIssue[] }`, where `ValidationIss
 | `field/unresolved-source` | `OPTION`/`OPTIONS` `source` is the id of a schema in the config |
 | `field/source-not-enum` | ...and that schema is an `ENUM` |
 | `field/unresolved-schema-ref` | Each `SCHEMA`/`SCHEMAS` `schemas` entry is the id of a schema in the config |
-| `field/schema-ref-is-enum` | ...and that schema is a `ROOT`/`NODE`, not an `ENUM` |
+| `field/schema-ref-is-enum` | ...and that schema is a `NODE`, not an `ENUM` |
+| `field/schema-ref-is-root` | ...nor a `ROOT` — the Studio editor only offers `NODE` schemas |
+| `field/missing-schemas` | Each `SCHEMA`/`SCHEMAS` field lists at least one schema in `schemas` — with none the editor can add no block |
 
 Not covered by `validate()`: stray properties from the wrong field kind (use `defineField`), duplicate field names / schema ids (`defineSchema` / `defineConfig` throw on those).
 

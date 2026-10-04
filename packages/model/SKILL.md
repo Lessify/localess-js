@@ -52,7 +52,7 @@ See `docs/model.md` in the repo (or the type table below) for the full list.
 | `SchemaFieldOptions` | `SchemaFieldBase & { kind: 'OPTIONS'; source: string; minValues?: number; maxValues?: number }` |
 | `SchemaFieldReference`, `SchemaFieldReferences` | `SchemaFieldBase & { kind: 'REFERENCE' \| 'REFERENCES'; path?: string }` |
 | `SchemaFieldAsset`, `SchemaFieldAssets` | `SchemaFieldBase & { kind: 'ASSET' \| 'ASSETS'; fileTypes?: AssetFileType[]; fileType?: AssetFileType }` |
-| `SchemaFieldSchema`, `SchemaFieldSchemas` | `SchemaFieldBase & { kind: 'SCHEMA' \| 'SCHEMAS'; schemas?: string[] }` (allowed schema ids; unrestricted when absent) |
+| `SchemaFieldSchema`, `SchemaFieldSchemas` | `SchemaFieldBase & { kind: 'SCHEMA' \| 'SCHEMAS'; schemas?: string[] }` (allowed NODE schema ids; when absent or empty the editor can add no block) |
 | `SchemaComponentExport` | `{ id, type: 'ROOT' \| 'NODE', displayName?, description?, labels?, previewField?, fields?: SchemaField[] }` |
 | `SchemaEnumExport` | `{ id, type: 'ENUM', displayName?, description?, labels?, values?: SchemaEnumValue[] }` |
 | `SchemaExport` | `SchemaComponentExport \| SchemaEnumExport` |

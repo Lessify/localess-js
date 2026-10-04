@@ -26,6 +26,13 @@ describe('defineField type-level behavior', () => {
     defineField({ name: 'opt', kind: 'OPTION' });
   });
 
+  it('requires SCHEMA/SCHEMAS.schemas', () => {
+    // @ts-expect-error schemas is required on SCHEMA fields
+    defineField({ name: 'hero', kind: 'SCHEMA' });
+    // @ts-expect-error schemas is required on SCHEMAS fields
+    defineField({ name: 'blocks', kind: 'SCHEMAS' });
+  });
+
   it('preserves the by-value enum ref literal on source', () => {
     const ButtonType = defineEnum({ id: 'ButtonType', values: [{ name: 'P', value: 'primary' }] });
     const f = defineField({ name: 'kind', kind: 'OPTION', source: ButtonType });

@@ -111,16 +111,15 @@ in `schemas`. Both are normalized to string ids at runtime by `defineSchema`,
 matching the wire format exactly — but the *type* keeps the literal id, so
 `InferContent` resolves `OPTION` fields to the referenced enum's literal
 value union instead of plain `string`, and `SCHEMA`/`SCHEMAS` fields to the
-allowed schemas' content types (or every `NODE` schema in the config when the
-`schemas` list is omitted).
+allowed schemas' content types.
 
 Fallbacks when a reference can't be resolved against the config:
 
 - `OPTION`/`OPTIONS` whose `source` id is not in the config → `string` (or
   `string[]`), mirroring the CLI's `type generate` behavior.
 - `InferEnum` of an enum with no `values` → `string`.
-- Unrestricted `SCHEMA`/`SCHEMAS` (no `schemas` list) in a config with no
-  `NODE` schemas → `{ _id: string; _schema: string }` (or an array of it).
+- `SCHEMA`/`SCHEMAS` with an empty `schemas` list (a `validate()` error) →
+  `{ _id: string; _schema: string }` (or an array of it).
 - `InferContentData` of a config with no `ROOT` schema → `never`.
 
 ## Field kinds
@@ -142,7 +141,7 @@ everything else is optional.
 | `LINK` | — | `ContentLink` |
 | `REFERENCE` / `REFERENCES` | `path?` | `ContentReference` / `ContentReference[]` |
 | `ASSET` / `ASSETS` | `fileTypes?: AssetFileType[]`, `fileType?: AssetFileType` | `ContentAsset` / `ContentAsset[]` |
-| `SCHEMA` / `SCHEMAS` | `schemas?` (allowed ids or `defineSchema` results; unrestricted when absent) | allowed schemas' content type / array of it |
+| `SCHEMA` / `SCHEMAS` | `schemas` (required: allowed `NODE` ids or `defineSchema` results — the editor offers exactly these) | allowed schemas' content type / array of it |
 
 `AssetFileType` is `'ANY' | 'IMAGE' | 'VIDEO' | 'TEXT' | 'AUDIO' | 'APPLICATION'`.
 
@@ -175,7 +174,9 @@ schema in the config is checked, not just the first. Rules and their `code`:
 | `field/unresolved-source` | `OPTION`/`OPTIONS` `source` must be the id of a schema in the config. |
 | `field/source-not-enum` | ...and that schema must be an `ENUM`. |
 | `field/unresolved-schema-ref` | Every `SCHEMA`/`SCHEMAS` `schemas` entry must be the id of a schema in the config. |
-| `field/schema-ref-is-enum` | ...and that schema must be `ROOT` or `NODE`, not `ENUM`. |
+| `field/schema-ref-is-enum` | ...and that schema must be `NODE`, not `ENUM`. |
+| `field/schema-ref-is-root` | ...nor `ROOT` — the Studio editor only offers `NODE` schemas. |
+| `field/missing-schemas` | A `SCHEMA`/`SCHEMAS` field must list at least one schema in `schemas`; with none the editor can add no block. |
 
 `validate` does not check for stray properties from the wrong field kind —
 use `defineField` for that (above). Duplicate field names and duplicate
