@@ -130,7 +130,7 @@ Fallbacks when a reference can't be resolved against the config:
 | `ASSET` / `ASSETS` | `fileTypes?: AssetFileType[]`, `fileType?: AssetFileType` | `ContentAsset` / `ContentAsset[]` |
 | `SCHEMA` / `SCHEMAS` | `schemas` (required: allowed `NODE` ids or `defineSchema` results — the editor offers exactly these) | allowed schemas' content type / array of it |
 
-Every kind also accepts the base properties from `SchemaFieldBase`: `displayName?`, `required?`, `description?`, `defaultValue?`, `translatable?`. `AssetFileType` is `'ANY' | 'IMAGE' | 'VIDEO' | 'TEXT' | 'AUDIO' | 'APPLICATION'`.
+Every kind also accepts the base properties from `SchemaFieldBase`: `displayName?`, `required?`, `description?`, `defaultValue?`, `translatable?` — except that `translatable` is rejected on `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS` (compile time and `validate()`), which the Studio editor never translates. `AssetFileType` is `'ANY' | 'IMAGE' | 'VIDEO' | 'TEXT' | 'AUDIO' | 'APPLICATION'`.
 
 `ContentAsset`, `ContentLink`, `ContentReference`, and `ContentRichText` are re-exported from `@localess/model`, the shared domain-model package (see ADR 009), as is the whole schema wire model (`SchemaField`, `SchemaExport`, …) — `packages/schema/src/models.ts` is just `export * from '@localess/model'`.
 
@@ -158,6 +158,7 @@ Non-throwing: `{ ok: boolean, issues: ValidationIssue[] }`, where `ValidationIss
 | `field/unresolved-schema-ref` | Each `SCHEMA`/`SCHEMAS` `schemas` entry is the id of a schema in the config |
 | `field/schema-ref-is-enum` | ...and that schema is a `NODE`, not an `ENUM` |
 | `field/schema-ref-is-root` | ...nor a `ROOT` — the Studio editor only offers `NODE` schemas |
+| `field/translatable-unsupported` | `translatable` is not set on `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS` — the Studio editor never translates them |
 | `field/missing-schemas` | Each `SCHEMA`/`SCHEMAS` field lists at least one schema in `schemas` — with none the editor can add no block |
 
 Not covered by `validate()`: stray properties from the wrong field kind (use `defineField`), duplicate field names / schema ids (`defineSchema` / `defineConfig` throw on those).

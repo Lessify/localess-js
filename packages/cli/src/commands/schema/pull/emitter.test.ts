@@ -242,6 +242,28 @@ describe('emitSchemaFiles', () => {
     expect(files.get('lone.ts')).toContain(`schemas: ['Ghost']`);
   });
 
+  it('drops translatable from REFERENCE/REFERENCES/SCHEMA/SCHEMAS fields, keeping it elsewhere', () => {
+    const files = emitSchemaFiles([
+      {
+        id: 'Lone',
+        type: 'NODE',
+        fields: [
+          { name: 'author', kind: 'REFERENCE', translatable: true },
+          { name: 'related', kind: 'REFERENCES', translatable: true },
+          { name: 'hero', kind: 'SCHEMA', schemas: ['Ghost'], translatable: true },
+          { name: 'blocks', kind: 'SCHEMAS', schemas: ['Ghost'], translatable: true },
+          { name: 'title', kind: 'TEXT', translatable: true },
+        ],
+      },
+    ]);
+    const file = files.get('lone.ts')!;
+    expect(file).toContain(`defineField({ name: 'author', kind: 'REFERENCE' })`);
+    expect(file).toContain(`defineField({ name: 'related', kind: 'REFERENCES' })`);
+    expect(file).toContain(`defineField({ name: 'hero', kind: 'SCHEMA', schemas: ['Ghost'] })`);
+    expect(file).toContain(`defineField({ name: 'blocks', kind: 'SCHEMAS', schemas: ['Ghost'] })`);
+    expect(file).toContain(`defineField({ name: 'title', kind: 'TEXT', translatable: true })`);
+  });
+
   it('emits an empty schemas list for a SCHEMA/SCHEMAS field the server holds without one', () => {
     const files = emitSchemaFiles([
       {

@@ -34,6 +34,13 @@ describe('define type-level behavior', () => {
     defineSchema({ id: 'Bad3', type: 'NODE', fields: [{ name: 'tags', kind: 'OPTIONS' }] });
   });
 
+  it('rejects translatable on a raw REFERENCE/SCHEMAS field literal', () => {
+    // @ts-expect-error translatable is not valid on REFERENCE fields
+    defineSchema({ id: 'Bad5', type: 'NODE', fields: [{ name: 'author', kind: 'REFERENCE', translatable: true }] });
+    // @ts-expect-error translatable is not valid on SCHEMAS fields
+    defineSchema({ id: 'Bad6', type: 'NODE', fields: [{ name: 'blocks', kind: 'SCHEMAS', schemas: ['Leaf'], translatable: true }] });
+  });
+
   it('narrows SCHEMAS requiring schemas', () => {
     // @ts-expect-error schemas is required on SCHEMAS fields
     defineSchema({ id: 'Bad4', type: 'NODE', fields: [{ name: 'blocks', kind: 'SCHEMAS' }] });

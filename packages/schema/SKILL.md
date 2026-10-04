@@ -126,6 +126,8 @@ Fallbacks when a reference can't be resolved against the config:
 
 Every field carries `name`, `kind`, and the base optional properties
 (`displayName`, `required`, `description`, `defaultValue`, `translatable`).
+`translatable` is rejected on `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS` — at compile time and by
+`validate()` — since the Studio editor never translates those kinds.
 `required: true` fields are non-optional keys on the inferred content type;
 everything else is optional.
 
@@ -176,6 +178,7 @@ schema in the config is checked, not just the first. Rules and their `code`:
 | `field/unresolved-schema-ref` | Every `SCHEMA`/`SCHEMAS` `schemas` entry must be the id of a schema in the config. |
 | `field/schema-ref-is-enum` | ...and that schema must be `NODE`, not `ENUM`. |
 | `field/schema-ref-is-root` | ...nor `ROOT` — the Studio editor only offers `NODE` schemas. |
+| `field/translatable-unsupported` | `translatable` must not be set on `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS`; the Studio editor never translates them. |
 | `field/missing-schemas` | A `SCHEMA`/`SCHEMAS` field must list at least one schema in `schemas`; with none the editor can add no block. |
 
 `validate` does not check for stray properties from the wrong field kind —

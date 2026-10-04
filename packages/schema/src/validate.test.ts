@@ -113,6 +113,25 @@ describe('validate', () => {
         ],
       })
     ).toContain('field/schema-ref-is-root');
+    // REFERENCE/REFERENCES/SCHEMA/SCHEMAS cannot be translatable — the editor never translates them
+    for (const field of [
+      { name: 'author', kind: 'REFERENCE', translatable: true },
+      { name: 'related', kind: 'REFERENCES', translatable: true },
+      { name: 'hero', kind: 'SCHEMA', schemas: ['Leaf'], translatable: true },
+      { name: 'blocks', kind: 'SCHEMAS', schemas: ['Leaf'], translatable: true },
+    ]) {
+      expect(
+        issuesOf({
+          schemas: [
+            { id: 'Leaf', type: 'NODE' },
+            { id: 'Comp', type: 'NODE', fields: [field as never] },
+          ],
+        })
+      ).toEqual(['field/translatable-unsupported']);
+    }
+    expect(issuesOf({ schemas: [{ id: 'Comp', type: 'NODE', fields: [{ name: 'title', kind: 'TEXT', translatable: true }] }] })).toEqual(
+      []
+    );
     // SCHEMA/SCHEMAS must list at least one schema — the editor offers nothing otherwise
     expect(issuesOf({ schemas: [{ id: 'Comp', type: 'NODE', fields: [{ name: 'hero', kind: 'SCHEMA' } as never] }] })).toContain(
       'field/missing-schemas'

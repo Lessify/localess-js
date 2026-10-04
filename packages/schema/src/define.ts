@@ -28,8 +28,13 @@ export interface LocalessSchemaConfig {
 type FieldInputOf<F> = F extends { kind: 'OPTION' | 'OPTIONS' }
   ? Omit<DeepReadonly<F>, 'source'> & { readonly source: string | EnumDefinition }
   : F extends { kind: 'SCHEMA' | 'SCHEMAS' }
-    ? Omit<DeepReadonly<F>, 'schemas'> & { readonly schemas: readonly (string | ComponentDefinition)[] }
-    : DeepReadonly<F>;
+    ? Omit<DeepReadonly<F>, 'schemas' | 'translatable'> & {
+        readonly schemas: readonly (string | ComponentDefinition)[];
+        readonly translatable?: never;
+      }
+    : F extends { kind: 'REFERENCE' | 'REFERENCES' }
+      ? Omit<DeepReadonly<F>, 'translatable'> & { readonly translatable?: never }
+      : DeepReadonly<F>;
 
 /**
  * A field as authored: OPTION/OPTIONS source and SCHEMA/SCHEMAS schemas accept by-value refs.
@@ -134,7 +139,8 @@ export function defineEnum<const TId extends string, const TValues extends reado
  * of a field's origin. See `docs/decisions/008-schema-package.md`.
  *
  * Every `kind` accepts `name` (required), plus `displayName?`, `required?`, `description?`,
- * `defaultValue?`, `translatable?`. Kind-specific extras:
+ * `defaultValue?`, and — except on `REFERENCE` / `REFERENCES` / `SCHEMA` / `SCHEMAS`, which the
+ * Studio editor never translates — `translatable?`. Kind-specific extras:
  * - `TEXT` / `TEXTAREA` / `RICH_TEXT` / `MARKDOWN` — `minLength?`, `maxLength?`
  * - `NUMBER` — `minValue?`, `maxValue?`
  * - `COLOR` / `DATE` / `DATETIME` / `BOOLEAN` / `LINK` — no extras

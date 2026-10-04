@@ -16,6 +16,7 @@ const RESERVED_SCHEMA_IDS = [
   'Content',
 ];
 const RESERVED_FIELD_NAMES = ['_id', '_schema'];
+const UNTRANSLATABLE_FIELD_KINDS: readonly string[] = ['REFERENCE', 'REFERENCES', 'SCHEMA', 'SCHEMAS'];
 
 export interface ValidationIssue {
   severity: 'error' | 'warning';
@@ -93,6 +94,13 @@ export function validate(config: LocalessSchemaConfig): ValidationResult {
       }
       if (field.defaultValue && field.defaultValue.length > 250) {
         error('field/default-value-too-long', fieldPath, 'Field defaultValue exceeds 250 characters');
+      }
+      if (field.translatable && UNTRANSLATABLE_FIELD_KINDS.includes(field.kind)) {
+        error(
+          'field/translatable-unsupported',
+          fieldPath,
+          `${field.kind} fields cannot be translatable; the Studio editor never translates them`
+        );
       }
       if (field.kind === 'OPTION' || field.kind === 'OPTIONS') {
         const source = byId.get(field.source);

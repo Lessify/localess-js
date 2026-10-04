@@ -44,6 +44,10 @@ export interface SchemaFieldBase {
   required?: boolean;
   description?: string;
   defaultValue?: string;
+  /**
+   * Holds a value per locale. Never applies to `REFERENCE`, `REFERENCES`, `SCHEMA` or `SCHEMAS` —
+   * the Studio editor does not translate those kinds (nested blocks translate their own fields).
+   */
   translatable?: boolean;
 }
 

@@ -33,6 +33,22 @@ describe('defineField type-level behavior', () => {
     defineField({ name: 'blocks', kind: 'SCHEMAS' });
   });
 
+  it('rejects translatable on kinds the editor never translates', () => {
+    // @ts-expect-error translatable is not valid on a REFERENCE field
+    defineField({ name: 'author', kind: 'REFERENCE', translatable: true });
+    // @ts-expect-error translatable is not valid on a REFERENCES field
+    defineField({ name: 'related', kind: 'REFERENCES', translatable: true });
+    // @ts-expect-error translatable is not valid on a SCHEMA field
+    defineField({ name: 'hero', kind: 'SCHEMA', schemas: ['Leaf'], translatable: true });
+    // @ts-expect-error translatable is not valid on a SCHEMAS field
+    defineField({ name: 'blocks', kind: 'SCHEMAS', schemas: ['Leaf'], translatable: true });
+  });
+
+  it('still allows translatable on other kinds', () => {
+    defineField({ name: 'title', kind: 'TEXT', translatable: true });
+    defineField({ name: 'image', kind: 'ASSET', translatable: true });
+  });
+
   it('preserves the by-value enum ref literal on source', () => {
     const ButtonType = defineEnum({ id: 'ButtonType', values: [{ name: 'P', value: 'primary' }] });
     const f = defineField({ name: 'kind', kind: 'OPTION', source: ButtonType });

@@ -49,7 +49,7 @@ Moved here from `@localess/schema` (ADR 009) — the wire-format types every `Sc
 | `SchemaFieldKind` | Field kind discriminator — the 18 exact backend enum values (`'TEXT'`, `'NUMBER'`, `'ASSET'`, `'SCHEMAS'`, …) |
 | `AssetFileType` | Restriction for `ASSET`/`ASSETS` fields — `'ANY' \| 'IMAGE' \| 'VIDEO' \| 'TEXT' \| 'AUDIO' \| 'APPLICATION'` |
 | `SchemaEnumValue` | A single named value of an `ENUM` schema — `{ name, value }` |
-| `SchemaFieldBase` | Properties every field kind shares — `{ name, kind, displayName?, required?, description?, defaultValue?, translatable? }` |
+| `SchemaFieldBase` | Properties every field kind shares — `{ name, kind, displayName?, required?, description?, defaultValue?, translatable? }` (`translatable` never applies to `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS`) |
 | `SchemaField` | Discriminated union of all 18 field-kind interfaces below, each extending `SchemaFieldBase` — see `@localess/schema`'s field-kind table for inferred content types |
 | `SchemaFieldText`, `SchemaFieldTextarea`, `SchemaFieldRichText`, `SchemaFieldMarkdown` | Text-like kinds — `minLength?`, `maxLength?` |
 | `SchemaFieldNumber` | `NUMBER` — `minValue?`, `maxValue?` |

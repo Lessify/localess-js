@@ -43,7 +43,7 @@ See `docs/model.md` in the repo (or the type table below) for the full list.
 | `SchemaFieldKind` | `'TEXT' \| 'TEXTAREA' \| 'RICH_TEXT' \| 'MARKDOWN' \| 'NUMBER' \| 'COLOR' \| 'DATE' \| 'DATETIME' \| 'BOOLEAN' \| 'OPTION' \| 'OPTIONS' \| 'LINK' \| 'REFERENCE' \| 'REFERENCES' \| 'ASSET' \| 'ASSETS' \| 'SCHEMA' \| 'SCHEMAS'` |
 | `AssetFileType` | `'ANY' \| 'IMAGE' \| 'VIDEO' \| 'TEXT' \| 'AUDIO' \| 'APPLICATION'` |
 | `SchemaEnumValue` | `{ name: string; value: string }` |
-| `SchemaFieldBase` | `{ name, kind, displayName?, required?, description?, defaultValue?, translatable? }` |
+| `SchemaFieldBase` | `{ name, kind, displayName?, required?, description?, defaultValue?, translatable? }` (`translatable` never applies to `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS`) |
 | `SchemaField` | Union of `SchemaFieldText \| SchemaFieldTextarea \| SchemaFieldRichText \| SchemaFieldMarkdown \| SchemaFieldNumber \| SchemaFieldColor \| SchemaFieldDate \| SchemaFieldDateTime \| SchemaFieldBoolean \| SchemaFieldSchema \| SchemaFieldSchemas \| SchemaFieldOption \| SchemaFieldOptions \| SchemaFieldLink \| SchemaFieldReference \| SchemaFieldReferences \| SchemaFieldAsset \| SchemaFieldAssets` (each extends `SchemaFieldBase`) |
 | `SchemaFieldText`, `SchemaFieldTextarea`, `SchemaFieldRichText`, `SchemaFieldMarkdown` | `SchemaFieldBase & { kind: 'TEXT' \| 'TEXTAREA' \| 'RICH_TEXT' \| 'MARKDOWN'; minLength?: number; maxLength?: number }` |
 | `SchemaFieldNumber` | `SchemaFieldBase & { kind: 'NUMBER'; minValue?: number; maxValue?: number }` |

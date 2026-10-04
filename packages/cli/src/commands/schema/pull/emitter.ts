@@ -85,18 +85,30 @@ function orderedEntries(field: SchemaField): [string, unknown][] {
     });
 }
 
+const UNTRANSLATABLE_KINDS: readonly string[] = ['REFERENCE', 'REFERENCES', 'SCHEMA', 'SCHEMAS'];
+
 /**
- * `schemas` is required by `defineField` on SCHEMA/SCHEMAS, but the server can hold such a field
- * without one. Emitting `[]` keeps the pulled file compiling and matches the editor, which offers
- * no block either way; `validate()` then reports it as `field/missing-schemas`.
+ * Adapts a server field to what `defineField` accepts, so a pulled file always compiles. The server
+ * can hold fields `defineField` rejects, and the editor treats both the same way either way:
+ * - SCHEMA/SCHEMAS without `schemas` get `[]` — the editor offers no block either way, and
+ *   `validate()` reports it as `field/missing-schemas`.
+ * - `translatable` on REFERENCE/REFERENCES/SCHEMA/SCHEMAS is dropped — the editor never translates
+ *   those kinds.
  */
-function withRequiredSchemas(field: SchemaField): SchemaField {
-  return (field.kind === 'SCHEMA' || field.kind === 'SCHEMAS') && field.schemas === undefined ? { ...field, schemas: [] } : field;
+function toAuthoringField(field: SchemaField): SchemaField {
+  let out: SchemaField = field;
+  if ((out.kind === 'SCHEMA' || out.kind === 'SCHEMAS') && out.schemas === undefined) out = { ...out, schemas: [] };
+  if (out.translatable !== undefined && UNTRANSLATABLE_KINDS.includes(out.kind)) {
+    const { translatable, ...rest } = out;
+    void translatable;
+    out = rest as SchemaField;
+  }
+  return out;
 }
 
 function printFields(fields: SchemaField[], byId: Set<string>, printWidth: number): string {
   const lines = fields.map(field => {
-    const entries = orderedEntries(withRequiredSchemas(field)).map(([key, val]) => {
+    const entries = orderedEntries(toAuthoringField(field)).map(([key, val]) => {
       if (key === 'source' && typeof val === 'string' && byId.has(val)) return `source: ${val}`;
       if (key === 'schemas' && Array.isArray(val)) {
         const items = val.map(ref => (typeof ref === 'string' && byId.has(ref) ? ref : quote(String(ref))));
