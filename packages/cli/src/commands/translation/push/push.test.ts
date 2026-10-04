@@ -220,6 +220,26 @@ describe('translationPushCommand', () => {
   });
 
   describe('--type update-existing', () => {
+    it('warns that a plain pull file carries fallback-locale text and points to --raw', async () => {
+      loggedIn({ 'nav.home': 'Home page' });
+      mockClient();
+      const logSpy = vi.spyOn(console, 'log');
+
+      await translationPushCommand.parseAsync(['de', '-p', 'translations.json', '-t', 'update-existing', '-y'], { from: 'user' });
+
+      expect(logLines(logSpy).some(line => line.includes('fallback locale') && line.includes('--raw'))).toBe(true);
+    });
+
+    it('does not warn for add-missing', async () => {
+      loggedIn({ 'nav.home': 'Home page' });
+      mockClient();
+      const logSpy = vi.spyOn(console, 'log');
+
+      await translationPushCommand.parseAsync(['de', '-p', 'translations.json'], { from: 'user' });
+
+      expect(logLines(logSpy).some(line => line.includes('--raw'))).toBe(false);
+    });
+
     it('previews via a server dry run, prompts, and pushes when confirmed', async () => {
       loggedIn({ 'nav.home': 'Home page' });
       const { updateTranslations } = mockClient({

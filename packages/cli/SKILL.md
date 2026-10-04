@@ -189,6 +189,8 @@ localess translation push de --path ./locales/de.json --format nested
 
 Download translations from Localess to a local JSON file. Keys are sorted alphabetically (recursively for `nested`) so output is stable and git-diff-friendly. Pulls the published version unless `--draft` is given.
 
+By default the file is what the app is served: any key with no value in `<locale>` holds the **fallback locale's text**. That suits bundling translations into an app, but not files you edit and push back — `push --type update-existing` would save that fallback text as `<locale>` translations. Use `--raw` for those: it writes only the values actually stored for the locale, leaving gaps as gaps (needs a platform newer than 4.0.0, and the **Development Tools** permission). A locale the space doesn't have is refused rather than silently served as the fallback locale (checked when the token can read the space).
+
 ```bash
 localess translation pull <locale> --path <file> [options]
 ```
@@ -206,6 +208,7 @@ localess translation pull <locale> --path <file> [options]
 | `-p, --path <path>`     | required  | Output file path                     |
 | `-f, --format <format>` | `flat`    | File format: `flat` or `nested`      |
 | `--draft`               | `false`   | Pull the draft version of translations |
+| `--raw`                 | `false`   | Pull only the values stored for the locale, without fallback filling. For files you edit and push back. Cannot be combined with `--draft` |
 | `-v, --verbose`         | `false`   | Print verbose debug output           |
 
 **Examples:**
@@ -219,6 +222,10 @@ localess translation pull de --path ./locales/de.json --format nested
 
 # Pull draft (unpublished) translations
 localess translation pull en --path ./locales/en.json --draft
+
+# Pull only stored German values, to edit and push back
+localess translation pull de --path ./locales/de.json --raw
+localess translation push de --path ./locales/de.json --type update-existing
 ```
 
 ---

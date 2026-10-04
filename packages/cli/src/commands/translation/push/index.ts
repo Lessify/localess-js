@@ -93,6 +93,14 @@ export const translationPushCommand = new Command('push')
     }
 
     const { verb, past } = PUSH_TYPE_LABELS[options.type];
+    if (options.type === TranslationUpdateType.UPDATE_EXISTING) {
+      console.log(
+        chalk.dim(
+          `A file from a plain "translation pull" holds the fallback locale's text for keys with no "${locale}" value, ` +
+            `and this would save that text as "${locale}" translations. Pull with --raw for files you edit and push back.`
+        )
+      );
+    }
     try {
       const needsConfirmation = options.type !== TranslationUpdateType.ADD_MISSING && !options.yes && !options.dryRun;
       if (needsConfirmation) {

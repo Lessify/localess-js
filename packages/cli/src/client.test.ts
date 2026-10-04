@@ -47,6 +47,17 @@ describe('localessCliClient', () => {
     expect(fetch).toHaveBeenCalledWith('https://cms.example.com/api/v1/spaces/space-1?token=token-123', expect.anything());
   });
 
+  it('getTranslationValues requests the stored values for the locale and returns them', async () => {
+    vi.mocked(fetch).mockImplementation(() => Promise.resolve(jsonResponse({ 'nav.home': 'Startseite' })));
+    const client = localessCliClient(baseOptions);
+
+    await expect(client.getTranslationValues('de')).resolves.toEqual({ 'nav.home': 'Startseite' });
+    expect(fetch).toHaveBeenCalledWith(
+      'https://cms.example.com/api/v1/spaces/space-1/translations/de/values?token=token-123',
+      expect.anything()
+    );
+  });
+
   it('getSpace returns the parsed space on success', async () => {
     vi.mocked(fetch).mockImplementation(() => Promise.resolve(jsonResponse({ id: 'space-1', name: 'Demo Space' })));
     const client = localessCliClient(baseOptions);

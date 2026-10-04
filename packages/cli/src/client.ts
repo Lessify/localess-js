@@ -202,19 +202,21 @@ function renderErrorBox(title: string, rows: [label: string, value: string][]): 
   return lines.join('\n');
 }
 
-async function parseJsonOrThrow<T>(response: Response, url: string, methodLabel: string, tokensUrl: string): Promise<T> {
+async function parseJsonOrThrow<T>(response: Response, url: string, methodLabel: string, tokensUrl: string, silent = false): Promise<T> {
   if (!response.ok) {
     const body = await response.json().catch(() => undefined);
     const hint = hintForStatus(response.status, body, tokensUrl);
     const bodyCode = extractErrorCode(body);
-    console.error(
-      renderErrorBox(`Localess API Error — ${methodLabel}`, [
-        ['Status', `${response.status} ${response.statusText}`],
-        ...(bodyCode ? ([['Code', bodyCode]] as [string, string][]) : []),
-        ['URL', redactToken(url)],
-        ['Hint', hint],
-      ])
-    );
+    if (!silent) {
+      console.error(
+        renderErrorBox(`Localess API Error — ${methodLabel}`, [
+          ['Status', `${response.status} ${response.statusText}`],
+          ...(bodyCode ? ([['Code', bodyCode]] as [string, string][]) : []),
+          ['URL', redactToken(url)],
+          ['Hint', hint],
+        ])
+      );
+    }
     throw new LocalessApiError(response.status, response.statusText, redactToken(url), body, hint);
   }
   return response.json();
@@ -253,7 +255,11 @@ export function localessCliClient(options: LocalessCliClientOptions) {
     },
   };
 
-  async function getSpace(): Promise<Space> {
+  /**
+   * The space's metadata, locales included. Needs the `DEV_TOOLS` permission.
+   * @param request.silent throw without printing the error box, for optional checks
+   */
+  async function getSpace(request: { silent?: boolean } = {}): Promise<Space> {
     if (options.debug) {
       console.log(LOG_GROUP, 'getSpace()');
     }
@@ -265,7 +271,7 @@ export function localessCliClient(options: LocalessCliClientOptions) {
     if (options.debug) {
       console.log(LOG_GROUP, 'getSpace status : ', response.status);
     }
-    return parseJsonOrThrow<Space>(response, url, 'getSpace', tokensSettingsUrl(normalizedOrigin, options.spaceId));
+    return parseJsonOrThrow<Space>(response, url, 'getSpace', tokensSettingsUrl(normalizedOrigin, options.spaceId), request.silent);
   }
 
   async function getSchemas(): Promise<SchemaExport[]> {
@@ -297,6 +303,26 @@ export function localessCliClient(options: LocalessCliClientOptions) {
       console.log(LOG_GROUP, 'getOpenApi status : ', response.status);
     }
     return parseJsonOrThrow<OpenAPIObject>(response, url, 'getOpenApi', tokensSettingsUrl(normalizedOrigin, options.spaceId));
+  }
+
+  /**
+   * The values stored for one locale, without fallback filling — keys the locale has no value
+   * for are absent. Unlike `getTranslations` (the published file, gaps filled from the fallback
+   * locale), safe to edit and push back. Needs a platform newer than 4.0.0.
+   */
+  async function getTranslationValues(locale: string): Promise<Translations> {
+    if (options.debug) {
+      console.log(LOG_GROUP, 'getTranslationValues() locale : ', locale);
+    }
+    const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${encodeURIComponent(locale)}/values?token=${options.token}`;
+    if (options.debug) {
+      console.log(LOG_GROUP, 'getTranslationValues fetch url : ', redactToken(url));
+    }
+    const response = await fetchWithRetry(url, fetchOptions, options.retryCount, options.retryDelay, options.debug);
+    if (options.debug) {
+      console.log(LOG_GROUP, 'getTranslationValues status : ', response.status);
+    }
+    return parseJsonOrThrow<Translations>(response, url, 'getTranslationValues', tokensSettingsUrl(normalizedOrigin, options.spaceId));
   }
 
   async function updateTranslations(
@@ -368,7 +394,7 @@ export function localessCliClient(options: LocalessCliClientOptions) {
     return parseJsonOrThrow<SchemaPushResponse>(response, url, 'pushSchemas', tokensSettingsUrl(normalizedOrigin, options.spaceId));
   }
 
-  return { ...cdn, getSpace, getSchemas, getOpenApi, updateTranslations, pushSchemas };
+  return { ...cdn, getSpace, getSchemas, getOpenApi, getTranslationValues, updateTranslations, pushSchemas };
 }
 
 export type LocalessCliClient = ReturnType<typeof localessCliClient>;
