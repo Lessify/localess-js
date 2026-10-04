@@ -47,6 +47,11 @@ export interface SyncController {
    * Subscribes to the content edits (`input` and `change`) of one document, matched by its
    * `documentId` (`Content.id`), and calls `callback` with the edited data. Edits to other
    * documents on the page are ignored. Same semantics as {@link on}.
+   *
+   * A subscriber that attaches after the document was already edited — the editor sends its
+   * current state as a `change` the moment the preview connects — is called once straight away
+   * with the latest edit, so a component that mounts late (after a fetch, a lazy route, a
+   * client-side navigation) still shows what the editor shows.
    */
   onDocument(documentId: string, callback: (data: any, event: EventToAppOf<'change' | 'input'>) => void): Unsubscribe;
   /** @internal Resets state between test cases. */
@@ -58,6 +63,9 @@ export function createSyncController(sdk?: string): SyncController {
   let enabled = false;
   let debugEnabled = false;
   let promise: Promise<void> | undefined;
+
+  /** The latest edit per document, so a late {@link SyncController.onDocument} subscriber catches up. */
+  const latestEdits = new Map<string, EventToAppOf<'change' | 'input'>>();
 
   const ready = (): Promise<void> => promise ?? Promise.resolve();
   const isEnabled = () => enabled && isBrowser() && isIframe();
@@ -83,9 +91,20 @@ export function createSyncController(sdk?: string): SyncController {
       if (!enableSync) return;
       enabled = true;
       debugEnabled = debug === true;
-      promise = loadLocalessSync(origin, { debug: debugEnabled, sdk }).catch(error => {
-        console.error('[Localess] Failed to load sync script.', error);
-      });
+      promise = loadLocalessSync(origin, { debug: debugEnabled, sdk })
+        .catch(error => {
+          console.error('[Localess] Failed to load sync script.', error);
+        })
+        .then(() => {
+          // Registered before any subscriber attaches (they all wait on this promise), so no edit is
+          // missed. Same condition as `subscribe`: the script object is there, whatever the load reported.
+          if (!isEnabled() || !window.localess) return;
+          window.localess.onChange(event => {
+            if (event.documentId) latestEdits.set(event.documentId, event);
+          });
+          // A new connection is followed by the editor's current state, so earlier edits no longer apply.
+          window.localess.on('pong', () => latestEdits.clear());
+        });
     },
     isEnabled,
     isConfigured: () => enabled,
@@ -98,16 +117,20 @@ export function createSyncController(sdk?: string): SyncController {
       return subscribe(sync => sync.onChange(callback));
     },
     onDocument(documentId, callback) {
-      return subscribe(sync =>
-        sync.onChange(event => {
+      return subscribe(sync => {
+        const unsubscribe = sync.onChange(event => {
           if (event.documentId === documentId) callback(event.data, event);
-        })
-      );
+        });
+        const latest = latestEdits.get(documentId);
+        if (latest) callback(latest.data, latest);
+        return unsubscribe;
+      });
     },
     reset() {
       enabled = false;
       debugEnabled = false;
       promise = undefined;
+      latestEdits.clear();
     },
   };
 }

@@ -70,6 +70,7 @@ isBrowser(); isServer(); isIframe();
 `'input' | 'change'` types `event.data`. `LocalessSync` is the `window.localess` contract.
 `input`, `change`, `save`, `publish`, and `unpublish` carry `documentId` (the edited `Content.id`);
 `sync.on`/`onChange` don't filter by it; `sync.onDocument(documentId, cb)` does, passing the edited `data`.
+A subscriber that attaches after the document was already edited is called once straight away with the latest edit — the editor sends its current state as a `change` the moment the preview connects, and a component that mounts after that (behind a fetch, a lazy route, a client-side navigation) would otherwise show its fetched copy until the next edit.
 
 ## Testing
 

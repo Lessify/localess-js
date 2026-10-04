@@ -295,7 +295,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale?: 
 
 ### Manual Integration
 
-If you manage content state yourself without `useLocaless` or `LocalessDocument`, subscribe to your document's edits with `localessSyncOnDocument` (or to any editor event with `localessSyncOn`, a wrapper over `window.localess.on`):
+If you manage content state yourself without `useLocaless` or `LocalessDocument`, subscribe to your document's edits with `localessSyncOnDocument` (or to any editor event with `localessSyncOn`, a wrapper over `window.localess.on`). A subscriber that attaches after the document was already edited is called once straight away with the latest edit — the editor sends its current state as a `change` the moment the preview connects, and a component that mounts after that (behind a fetch, a lazy route, a client-side navigation) would otherwise show its fetched copy until the next edit. `useLocaless`, which subscribes only once its fetch returns, relies on this.
 
 ```tsx
 'use client';

@@ -216,6 +216,99 @@ describe('createSyncController', () => {
     expect(callback.mock.calls).toEqual([[{ title: 'Edited' }, edit]]);
   });
 
+  describe('onDocument catching up on earlier edits', () => {
+    /** A stand-in for the sync script: real subscribe/unsubscribe, and \`emit\` plays the editor. */
+    function fakeSync() {
+      const listeners = new Map<string, Set<(event: any) => void>>();
+      const on = (types: string | string[], callback: (event: any) => void) => {
+        const list = Array.isArray(types) ? types : [types];
+        for (const type of list) {
+          if (!listeners.has(type)) listeners.set(type, new Set());
+          listeners.get(type)!.add(callback);
+        }
+        return () => list.forEach(type => listeners.get(type)?.delete(callback));
+      };
+      return {
+        localess: { on, onChange: (callback: (event: any) => void) => on(['input', 'change'], callback), off: vi.fn() },
+        emit: (event: { type: string; documentId?: string; data?: unknown }) =>
+          [...(listeners.get(event.type) ?? [])].forEach(callback => callback(event)),
+      };
+    }
+
+    async function connected() {
+      enterEditorFrame();
+      const fake = fakeSync();
+      const sync = createSyncController();
+      sync.init('https://cms.example.com', true);
+      window.localess = fake.localess as never;
+      document.getElementById(SCRIPT_ID)!.dispatchEvent(new Event('load'));
+      await sync.ready();
+      return { sync, emit: fake.emit };
+    }
+
+    it("replays the editor's connect-time state to a subscriber that attaches afterwards", async () => {
+      const { sync, emit } = await connected();
+      // What the editor sends right after pong, before e.g. useLocaless has finished its fetch.
+      const current = { type: 'change', documentId: 'doc-1', data: { title: 'Unsaved' } };
+      emit({ type: 'pong' });
+      emit(current);
+
+      const callback = vi.fn();
+      sync.onDocument('doc-1', callback);
+
+      await vi.waitFor(() => expect(callback).toHaveBeenCalledWith({ title: 'Unsaved' }, current));
+    });
+
+    it('replays only the latest edit, then keeps delivering live edits once', async () => {
+      const { sync, emit } = await connected();
+      emit({ type: 'change', documentId: 'doc-1', data: { title: 'First' } });
+      emit({ type: 'input', documentId: 'doc-1', data: { title: 'Second' } });
+
+      const callback = vi.fn();
+      sync.onDocument('doc-1', callback);
+      await vi.waitFor(() => expect(callback).toHaveBeenCalledTimes(1));
+      emit({ type: 'input', documentId: 'doc-1', data: { title: 'Third' } });
+
+      expect(callback.mock.calls.map(([data]) => data.title)).toEqual(['Second', 'Third']);
+    });
+
+    it("does not replay another document's edits", async () => {
+      const { sync, emit } = await connected();
+      emit({ type: 'change', documentId: 'header', data: { title: 'Header' } });
+
+      const callback = vi.fn();
+      sync.onDocument('doc-1', callback);
+      await sync.ready();
+      await Promise.resolve();
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('forgets earlier edits when the editor reconnects', async () => {
+      const { sync, emit } = await connected();
+      emit({ type: 'change', documentId: 'doc-1', data: { title: 'Before' } });
+      emit({ type: 'pong' });
+
+      const callback = vi.fn();
+      sync.onDocument('doc-1', callback);
+      await sync.ready();
+      await Promise.resolve();
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('a subscriber attached before the edit gets it live, not twice', async () => {
+      const { sync, emit } = await connected();
+      const callback = vi.fn();
+      sync.onDocument('doc-1', callback);
+      await sync.ready();
+      await Promise.resolve();
+      emit({ type: 'change', documentId: 'doc-1', data: { title: 'Live' } });
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('unsubscribes through the script once attached', async () => {
     enterEditorFrame();
     const detach = vi.fn();
@@ -240,14 +333,17 @@ describe('createSyncController', () => {
     const sync = createSyncController();
     sync.init('https://cms.example.com', true);
 
-    sync.on('save', vi.fn())();
-    sync.onChange(vi.fn())();
+    const onSave = vi.fn();
+    const onEdit = vi.fn();
+    sync.on('save', onSave)();
+    sync.onChange(onEdit)();
     window.localess = { on, onChange, off: vi.fn() };
     document.getElementById(SCRIPT_ID)!.dispatchEvent(new Event('load'));
     await sync.ready();
 
-    expect(on).not.toHaveBeenCalled();
-    expect(onChange).not.toHaveBeenCalled();
+    // The controller's own edit recorder does attach; the cancelled subscriptions must not.
+    expect(on).not.toHaveBeenCalledWith('save', onSave);
+    expect(onChange).not.toHaveBeenCalledWith(onEdit);
   });
 
   it('returns a harmless unsubscribe when sync is unusable', () => {

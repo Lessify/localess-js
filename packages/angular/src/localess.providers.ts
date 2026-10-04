@@ -2,15 +2,15 @@ import { IMAGE_LOADER, ImageLoaderConfig } from '@angular/common';
 import { ApplicationRef, EnvironmentProviders, inject, makeEnvironmentProviders, provideAppInitializer } from '@angular/core';
 
 import { LocalessFeature } from './localess.components';
-import { LOCALESS_CONFIG, LOCALESS_SYNC_READY, LocalessConfig } from './localess.config';
-import type { AssetTransformParams } from './models';
+import { LOCALESS_CONFIG, LOCALESS_LATEST_EDITS, LOCALESS_SYNC_READY, LocalessConfig } from './localess.config';
+import type { AssetTransformParams, EventToAppOf } from './models';
 import { LocalessAssetService } from './services/asset.service';
 import { LocalessClientService } from './services/client.service';
 import { LocalessComponentResolver } from './services/component-resolver.service';
 import { LocalessContentService } from './services/content.service';
 import { LocalessSyncService } from './services/sync.service';
 import { LocalessTranslationService } from './services/translation.service';
-import { buildAssetQueryString, loadLocalessSync } from './utils';
+import { buildAssetQueryString, isBrowser, isIframe, loadLocalessSync } from './utils';
 
 export type LocalessOptions = {
   /**
@@ -61,6 +61,7 @@ export function provideLocaless(options: LocalessOptions, ...features: LocalessF
   const assetPathPrefix = `${options.origin}/api/v1/spaces/${options.spaceId}/assets/`;
 
   let syncReady: Promise<void> = Promise.resolve();
+  const latestEdits = new Map<string, EventToAppOf<'change' | 'input'>>();
   let appStable: (() => void) | undefined = undefined;
   if (options.enableSync) {
     if (options.debug) {
@@ -82,6 +83,16 @@ export function provideLocaless(options: LocalessOptions, ...features: LocalessF
       .then(() => loadLocalessSync(options.origin, { debug: options.debug, sdk: '@localess/angular' }))
       .catch(error => {
         console.error('[Localess] Failed to load sync script.', error);
+      })
+      .then(() => {
+        // Registered before any LocalessSyncService subscriber attaches (they all wait on
+        // syncReady), so the editor's connect-time state is never missed.
+        if (!isBrowser() || !isIframe() || !window.localess) return;
+        window.localess.onChange(event => {
+          if (event.documentId) latestEdits.set(event.documentId, event);
+        });
+        // A new connection is followed by the editor's current state, so earlier edits no longer apply.
+        window.localess.on('pong', () => latestEdits.clear());
       });
   }
 
@@ -97,6 +108,10 @@ export function provideLocaless(options: LocalessOptions, ...features: LocalessF
       {
         provide: LOCALESS_SYNC_READY,
         useValue: syncReady,
+      },
+      {
+        provide: LOCALESS_LATEST_EDITS,
+        useValue: latestEdits,
       },
       {
         provide: IMAGE_LOADER,

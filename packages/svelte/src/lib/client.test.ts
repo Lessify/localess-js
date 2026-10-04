@@ -93,7 +93,7 @@ describe('client', () => {
     enterEditorFrame();
     localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
     const on = vi.fn();
-    (window as any).localess = { on };
+    (window as any).localess = { on, onChange: vi.fn() };
     syncScript()?.dispatchEvent(new Event('load'));
     const callback = vi.fn();
 
@@ -106,7 +106,7 @@ describe('client', () => {
     enterEditorFrame();
     localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
     const onChange = vi.fn();
-    (window as any).localess = { onChange };
+    (window as any).localess = { on: vi.fn(), onChange };
     syncScript()?.dispatchEvent(new Event('load'));
     const callback = vi.fn();
 

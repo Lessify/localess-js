@@ -234,7 +234,7 @@ export class PageComponent {
 - `on(event | event[], callback, destroyRef?)` — subscribe to any `EventToAppType`: `save`, `publish`, `unpublish`, `pong`, `input`, `change`, `enterSchema`, `hoverSchema`, `leaveSchema`; callback narrowed via `EventToAppOf<T>`. Returns an unsubscribe function. Cleanup is automatic when called in an injection context (the caller's `DestroyRef`); elsewhere pass `destroyRef` or call the returned function.
 - `localessSyncEvent(event | event[])` — standalone function, injection context only: the latest event as a `Signal`, removed with its context.
 - `onChange(callback)` — shorthand for `on(['input', 'change'], callback)`.
-- `onDocument(documentId, callback, destroyRef?)` — `input`/`change` for one document only (`event.documentId === documentId`); calls `callback(data, event)` with the edited content data. Same return and cleanup as `on`.
+- `onDocument(documentId, callback, destroyRef?)` — `input`/`change` for one document only (`event.documentId === documentId`); calls `callback(data, event)` with the edited content data. Same return and cleanup as `on`. A subscriber that attaches after the document was already edited is called once straight away with the latest edit (recorded by `provideLocaless` from the moment the sync script loads), so a component that mounts late still shows what the editor shows.
 
 `on`/`onChange`/`onDocument` are no-ops when `enabled()` is false and wait for `ready()` internally. `on`/`onChange` don't filter by document — use `onDocument` for one document's edits.
 

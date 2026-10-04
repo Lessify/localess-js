@@ -1,5 +1,7 @@
 import { InjectionToken } from '@angular/core';
 
+import type { EventToAppOf } from './models';
+
 export type LocalessConfig = {
   /**
    * A fully qualified domain name with protocol (http/https) and port.
@@ -60,4 +62,16 @@ export const defaultConfig: LocalessConfig = {
 export const LOCALESS_SYNC_READY = new InjectionToken<Promise<void>>('LOCALESS_SYNC_READY', {
   providedIn: 'root',
   factory: () => Promise.resolve(),
+});
+
+/**
+ * The latest Visual Editor edit per document (`Content.id`), recorded by `provideLocaless` from the
+ * moment the sync script loads. `LocalessSyncService.onDocument` replays it to a subscriber that
+ * attaches later, so a late-mounted document still shows what the editor shows.
+ *
+ * @internal
+ */
+export const LOCALESS_LATEST_EDITS = new InjectionToken<Map<string, EventToAppOf<'change' | 'input'>>>('LOCALESS_LATEST_EDITS', {
+  providedIn: 'root',
+  factory: () => new Map(),
 });

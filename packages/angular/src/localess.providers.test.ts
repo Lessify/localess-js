@@ -5,7 +5,7 @@ import { vi } from 'vitest';
 
 import { SchemaComponent } from './components/schema.component';
 import { LOCALESS_COMPONENTS, withLocalessComponents } from './localess.components';
-import { LOCALESS_SYNC_READY } from './localess.config';
+import { LOCALESS_LATEST_EDITS, LOCALESS_SYNC_READY } from './localess.config';
 import { provideLocaless } from './localess.providers';
 
 type ImageLoaderFn = (config: ImageLoaderConfig) => string;
@@ -70,6 +70,37 @@ describe('provideLocaless', () => {
     // Not framed in the test environment, so loadLocalessSync no-ops rather than injecting —
     // what matters is that it was not reached until stability, and that it resolves.
     await expect(syncReady).resolves.toBeUndefined();
+  });
+
+  it('records the latest edit per document once the script is ready, and forgets them on reconnect', async () => {
+    vi.spyOn(window, 'top', 'get').mockReturnValue({} as Window);
+    const listeners = new Map<string, Set<(event: unknown) => void>>();
+    const on = (types: string | string[], callback: (event: unknown) => void) => {
+      for (const type of Array.isArray(types) ? types : [types]) {
+        (listeners.get(type) ?? listeners.set(type, new Set()).get(type)!).add(callback);
+      }
+      return () => undefined;
+    };
+    const emit = (event: { type: string; documentId?: string; data?: unknown }) =>
+      listeners.get(event.type)?.forEach(callback => callback(event));
+    // Already present, so loadLocalessSync resolves without injecting a script tag.
+    window.localess = { on, onChange: (callback: (event: unknown) => void) => on(['input', 'change'], callback), off: vi.fn() } as never;
+    TestBed.configureTestingModule({
+      providers: [
+        provideLocaless({ ...validOptions, enableSync: true }),
+        { provide: ApplicationRef, useValue: { whenStable: () => Promise.resolve() } },
+      ],
+    });
+
+    await TestBed.inject(LOCALESS_SYNC_READY);
+    const latestEdits = TestBed.inject(LOCALESS_LATEST_EDITS);
+    const edit = { type: 'change', documentId: 'doc-1', data: { title: 'Unsaved' } };
+    emit(edit);
+    expect(latestEdits.get('doc-1')).toEqual(edit);
+
+    emit({ type: 'pong' });
+    expect(latestEdits.size).toBe(0);
+    delete (window as { localess?: unknown }).localess;
   });
 
   it('passes debug through to the sync script', async () => {

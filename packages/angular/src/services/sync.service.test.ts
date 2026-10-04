@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
-import { LOCALESS_CONFIG, LOCALESS_SYNC_READY, LocalessConfig } from '../localess.config';
+import { LOCALESS_CONFIG, LOCALESS_LATEST_EDITS, LOCALESS_SYNC_READY, LocalessConfig } from '../localess.config';
 import { localessSyncEvent, LocalessSyncService } from './sync.service';
 
 describe('LocalessSyncService', () => {
@@ -12,12 +12,17 @@ describe('LocalessSyncService', () => {
     token: 'token-123',
   };
 
-  function createService(config: LocalessConfig, syncReady: Promise<void> = Promise.resolve()): LocalessSyncService {
+  function createService(
+    config: LocalessConfig,
+    syncReady: Promise<void> = Promise.resolve(),
+    latestEdits: Map<string, unknown> = new Map()
+  ): LocalessSyncService {
     TestBed.configureTestingModule({
       providers: [
         LocalessSyncService,
         { provide: LOCALESS_CONFIG, useValue: config },
         { provide: LOCALESS_SYNC_READY, useValue: syncReady },
+        { provide: LOCALESS_LATEST_EDITS, useValue: latestEdits },
       ],
     });
     return TestBed.inject(LocalessSyncService);
@@ -131,6 +136,29 @@ describe('LocalessSyncService', () => {
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(callback.mock.calls[0][0]).toEqual({ title: 'Edited' });
+    });
+
+    it('onDocument() replays the latest edit to a subscriber that attaches after it', async () => {
+      const latest = { type: 'change', documentId: 'doc-1', data: { title: 'Unsaved' } };
+      const service = createService({ ...baseConfig, enableSync: true }, Promise.resolve(), new Map([['doc-1', latest]]));
+      const callback = vi.fn();
+
+      service.onDocument('doc-1', callback);
+      await settle();
+      emit({ type: 'input', documentId: 'doc-1', data: { title: 'Then live' } });
+
+      expect(callback.mock.calls.map(([data]) => data.title)).toEqual(['Unsaved', 'Then live']);
+    });
+
+    it("onDocument() does not replay another document's edit", async () => {
+      const latest = { type: 'change', documentId: 'header', data: { title: 'Header' } };
+      const service = createService({ ...baseConfig, enableSync: true }, Promise.resolve(), new Map([['header', latest]]));
+      const callback = vi.fn();
+
+      service.onDocument('doc-1', callback);
+      await settle();
+
+      expect(callback).not.toHaveBeenCalled();
     });
 
     it('never attaches when unsubscribed before the script is ready', async () => {

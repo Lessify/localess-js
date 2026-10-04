@@ -562,7 +562,7 @@ The Localess Visual Editor enables live in-browser content editing. Set `enableS
 
 The script is injected once the application is stable (`ApplicationRef.whenStable()`), not during bootstrap. The sync script hooks every `[data-ll-id]` element it can see the moment the editor answers its ping, so loading it eagerly raced the first render: a lazily registered schema component destroys and recreates its server-rendered DOM when its loader resolves, and elements recreated after that handshake stayed unclickable in the editor. `LocalessComponentResolver` registers each lazy loader as a `PendingTasks` task so stability accounts for it under zoneless change detection too.
 
-Inject `LocalessSyncService` and use `onDocument()` — it already covers the `enabled()` check (browser + Visual Editor iframe) and the `ready()` wait:
+Inject `LocalessSyncService` and use `onDocument()` — it already covers the `enabled()` check (browser + Visual Editor iframe) and the `ready()` wait. A subscriber that attaches after the document was already edited is called once straight away with the latest edit (recorded by `provideLocaless` from the moment the sync script loads), so a component that mounts late still shows what the editor shows.
 
 ```ts
 import { Component, DestroyRef, inject, input, signal } from '@angular/core';

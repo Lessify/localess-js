@@ -167,7 +167,7 @@ The composable doesn't filter by document — `input`/`change`/`save`/`publish`/
 
 ### `localessSyncOnDocument(documentId, callback)`
 
-Subscribes to `input`/`change` events whose `documentId` matches and calls `callback(data, event)` with the edited content data. Returns an unsubscribe function; no-ops like `useLocalessSync`. `LocalessDocument` uses it internally.
+Subscribes to `input`/`change` events whose `documentId` matches and calls `callback(data, event)` with the edited content data. Returns an unsubscribe function; no-ops like `useLocalessSync`. `LocalessDocument` uses it internally. A subscriber that attaches after the document was already edited is called once straight away with the latest edit — the editor sends its current state as a `change` the moment the preview connects, and a component that mounts after that (behind a fetch, a lazy route, a client-side navigation) would otherwise show its fetched copy until the next edit.
 
 ```ts
 import { onMounted, onScopeDispose, ref } from 'vue';

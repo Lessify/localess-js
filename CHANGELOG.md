@@ -65,6 +65,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - **`@localess/richtext`: blockquotes and horizontal rules were dropped** — quote text included — by every
   renderer.
+- **Visual Editor: a document subscribed to after the preview connected missed the editor's current state.**
+  The editor sends it once, as a `change`, right after connecting; a later subscriber — `useLocaless` (which
+  subscribes once its fetch returns), a lazily mounted `LocalessDocument`, a page reached by client-side
+  navigation — kept showing its fetched copy (e.g. published content instead of the draft, or without unsaved
+  edits) until the next edit. `@localess/live-preview`'s `onDocument` (and so `localessSyncOnDocument` in
+  React, Vue and Svelte) and Angular's `LocalessSyncService.onDocument` now replay the latest edit to a late
+  subscriber.
 - **`@localess/cli`: `translation pull` of a locale the space doesn't have** silently saved the fallback
   locale's file; it now fails and lists the space's locales (when the token can read the space).
   `translation push --type update-existing` warns that a plain `pull` file holds fallback-locale text.

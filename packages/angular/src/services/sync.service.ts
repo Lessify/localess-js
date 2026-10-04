@@ -1,6 +1,6 @@
 import { assertInInjectionContext, DestroyRef, inject, Injectable, type Signal, signal } from '@angular/core';
 
-import { LOCALESS_CONFIG, LOCALESS_SYNC_READY } from '../localess.config';
+import { LOCALESS_CONFIG, LOCALESS_LATEST_EDITS, LOCALESS_SYNC_READY } from '../localess.config';
 import type { ContentData, EventToAppOf, EventToAppType } from '../models';
 import { isBrowser, isIframe } from '../utils';
 
@@ -39,6 +39,7 @@ import { isBrowser, isIframe } from '../utils';
 export class LocalessSyncService {
   private readonly config = inject(LOCALESS_CONFIG);
   private readonly syncReadyPromise = inject(LOCALESS_SYNC_READY);
+  private readonly latestEdits = inject(LOCALESS_LATEST_EDITS);
 
   /**
    * Returns `true` when `enableSync: true` was passed to `provideLocaless`, the code is
@@ -96,6 +97,10 @@ export class LocalessSyncService {
    * the edited content. Edits to other documents on the page — a shared header, or the previous page
    * after a link was clicked in the preview — are ignored. `<ll-document>` uses it internally.
    *
+   * A subscriber that attaches after the document was already edited — the editor sends its current
+   * state as a `change` the moment the preview connects — is called once straight away with the
+   * latest edit, so a component that mounts late still shows what the editor shows.
+   *
    * No-op if sync isn't enabled or usable in the current context (see {@link enabled}).
    *
    * @param documentId - The rendered document's `Content.id`.
@@ -108,13 +113,14 @@ export class LocalessSyncService {
     callback: (data: T, event: EventToAppOf<'change' | 'input'>) => void,
     destroyRef?: DestroyRef
   ): () => void {
-    return this.subscribe(
-      sync =>
-        sync.onChange(event => {
-          if (event.documentId === documentId) callback(event.data, event);
-        }),
-      destroyRef
-    );
+    return this.subscribe(sync => {
+      const detach = sync.onChange(event => {
+        if (event.documentId === documentId) callback(event.data, event);
+      });
+      const latest = this.latestEdits.get(documentId);
+      if (latest) callback(latest.data as T, latest);
+      return detach;
+    }, destroyRef);
   }
 
   private subscribe(attach: (sync: NonNullable<Window['localess']>) => () => void, destroyRef = injectionContextDestroyRef()): () => void {
