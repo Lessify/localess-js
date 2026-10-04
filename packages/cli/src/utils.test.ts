@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { dotToNestedObject, nestedObjectToFlat, sortObjectKeys } from './utils';
+import { dotToNestedObject, nestedObjectToFlat, sortObjectKeys, toNestedTranslations } from './utils';
 
 describe('sortObjectKeys', () => {
   it('should sort top-level keys alphabetically', () => {
@@ -171,5 +171,29 @@ describe('nestedObjectToFlat + dotToNestedObject roundtrip', () => {
   it('should roundtrip nested → flat → nested', () => {
     const nested = { a: { b: '1', c: '2' }, nav: { home: 'Home', about: 'About' } };
     expect(dotToNestedObject(nestedObjectToFlat(nested))).toEqual(nested);
+  });
+});
+
+describe('toNestedTranslations', () => {
+  it('nests keys without collisions and drops nothing', () => {
+    expect(toNestedTranslations({ 'nav.home': 'Home', title: 'T' })).toEqual({
+      nested: { nav: { home: 'Home' }, title: 'T' },
+      dropped: [],
+    });
+  });
+
+  it('keeps child keys and drops a parent value', () => {
+    expect(toNestedTranslations({ button: 'Button', 'button.save': 'Save' })).toEqual({
+      nested: { button: { save: 'Save' } },
+      dropped: ['button'],
+    });
+  });
+
+  it('drops every parent in a chain, whatever the key order', () => {
+    expect(toNestedTranslations({ 'a.b.c': 'C', a: 'A', 'a.b': 'B' })).toEqual({ nested: { a: { b: { c: 'C' } } }, dropped: ['a', 'a.b'] });
+  });
+
+  it('does not treat a shared prefix without a dot as a parent', () => {
+    expect(toNestedTranslations({ nav: 'N', navbar: 'B' })).toEqual({ nested: { nav: 'N', navbar: 'B' }, dropped: [] });
   });
 });

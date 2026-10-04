@@ -1,10 +1,14 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { printDiffReport } from './diff-report';
 
 describe('printDiffReport', () => {
   beforeEach(() => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
+  });
+  // Re-spying an existing spy keeps its calls, so without this each test also sees earlier tests' output.
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('returns zeroed counts and prints "In sync." for an empty diff', () => {
@@ -45,5 +49,33 @@ describe('printDiffReport', () => {
     const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
     expect(logs.some(line => line.includes('Unchanged (1)'))).toBe(true);
     expect(logs.some(line => line.includes('same.key'))).toBe(true);
+  });
+
+  it('uses custom labels for section headers and the summary when given', () => {
+    printDiffReport(
+      [
+        { label: 'new.key', status: 'create' },
+        { label: 'changed.key', status: 'update' },
+        { label: 'stale.key', status: 'stale' },
+      ],
+      { noun: 'translation', labels: { create: 'Only in file', update: 'Different', stale: 'Only in Localess' } }
+    );
+
+    const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
+    expect(logs.some(line => line.includes('Only in file (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('Different (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('Only in Localess (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('Create (1)'))).toBe(false);
+    expect(logs.some(line => line.includes('1 only in file') && line.includes('1 different') && line.includes('1 only in Localess'))).toBe(
+      true
+    );
+  });
+
+  it('keeps the default wording when no labels are given', () => {
+    printDiffReport([{ label: 'new.key', status: 'create' }], { noun: 'schema' });
+
+    const logs = vi.mocked(console.log).mock.calls.map(call => call.join(' '));
+    expect(logs.some(line => line.includes('Create (1)'))).toBe(true);
+    expect(logs.some(line => line.includes('1 created') && line.includes('0 updated') && line.includes('0 stale'))).toBe(true);
   });
 });

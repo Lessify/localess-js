@@ -86,3 +86,18 @@ export function dotToNestedObject(input: Record<string, string>): Record<string,
   }
   return result;
 }
+
+/**
+ * Nests dotted translation keys. A key that is also the parent of other keys (`button` beside
+ * `button.save`) can't be both a value and an object, so the child keys are kept and the parent's
+ * own value is dropped; `dropped` lists those keys so the caller can warn.
+ */
+export function toNestedTranslations(input: Record<string, string>): { nested: Record<string, unknown>; dropped: string[] } {
+  const keys = Object.keys(input);
+  const dropped = keys.filter(key => keys.some(other => other.startsWith(`${key}.`))).sort();
+  const kept: Record<string, string> = {};
+  for (const key of keys) {
+    if (!dropped.includes(key)) kept[key] = input[key];
+  }
+  return { nested: dotToNestedObject(kept), dropped };
+}

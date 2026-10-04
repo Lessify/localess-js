@@ -122,7 +122,7 @@ export LOCALESS_SKIP_VERSION_CHECK=1
 
 ## `localess translation push`
 
-Upload a local JSON translation file to Localess. Prints only the keys the selected `--type` acts on, as `+`/`~`/`-` lines under a summary such as `Added 1 translation in locale "en".` or, with `--dry-run`, `Dry run: would add 1 translation in locale "en":` (`No translations to add for locale "en".` when there is nothing to do). It does not print a full diff; use `translation diff` for that. `update-existing` and `delete-missing` first ask the server for a dry run, list the affected keys and prompt for confirmation (skippable with `-y, --yes`, automatically skipped under `--dry-run`, and nothing is pushed when the dry run reports no keys); `add-missing` never prompts since it is additive-only. Declining the prompt prints `Aborted.` and exits `1`.
+Upload a local JSON translation file to Localess. Prints only the keys the selected `--type` acts on, as `+`/`~`/`-` lines under a summary such as `Added 1 translation in locale "en".` or, with `--dry-run`, `Dry run: would add 1 translation in locale "en":` (`No translations to add for locale "en".` when there is nothing to do). It does not print a full diff; use `translation diff` for that. `update-existing`, `delete-missing-key` and `delete-missing-value` first ask the server for a dry run, list the affected keys and prompt for confirmation (skippable with `-y, --yes`, automatically skipped under `--dry-run`, and nothing is pushed when the dry run reports no keys); `add-missing` never prompts since it is additive-only. Declining the prompt prints `Aborted.` and exits `1`.
 
 The server responds with `{ message, ids, dryRun? }`, where `ids` lists only the keys the push type wrote (or would write).
 
@@ -145,7 +145,10 @@ localess translation push <locale> --path <file> [options]
 |---|---|---|
 | `add-missing` | Only adds keys absent from Localess | Never |
 | `update-existing` | Only updates keys already in Localess — overwrites edits made in Localess since your last pull | Prompted |
-| `delete-missing` | Deletes Localess keys absent from the local file | Prompted |
+| `delete-missing-key` | Deletes keys absent from the local file **in every locale** — run it with a complete file (normally the source locale) | Prompted |
+| `delete-missing-value` | Removes only `<locale>`'s value of keys absent from the local file; other locales keep theirs | Prompted |
+
+The two delete strategies differ in scope: `delete-missing-key` deletes keys **from every locale** — the pushed `<locale>` only selects the file — so run it with a complete file, normally the source locale; `delete-missing-value` removes only `<locale>`'s value and leaves other languages untouched. The preview, prompt and summary state the scope (`… in every locale` / `the "de" value of … (other locales keep theirs)`).
 
 ### File formats
 
@@ -164,14 +167,15 @@ localess translation push <locale> --path <file> [options]
 ```bash
 localess translation push en --path ./locales/en.json
 localess translation push de --path ./locales/de.json --type update-existing
-localess translation push de --path ./locales/de.json --type delete-missing
+localess translation push de --path ./locales/de.json --type delete-missing-value
+localess translation push en --path ./locales/en.json --type delete-missing-key
 localess translation push fr --path ./locales/fr.json --dry-run
 localess translation push de --path ./locales/de.json --format nested
 ```
 
 ## `localess translation pull`
 
-Download translations from Localess to a local JSON file. Keys are sorted alphabetically (recursively for `nested`) for stable, diff-friendly output.
+Download translations from Localess to a local JSON file. Keys are sorted alphabetically (recursively for `nested`) for stable, diff-friendly output. In `nested`, a key that is also the parent of other keys (`button` beside `button.save`) keeps its child keys; its own value is left out and listed in a warning. Use `flat` to keep every key.
 
 By default the file is what the app is served: any key with no value in `<locale>` holds the **fallback locale's text**. That suits bundling translations into an app, but not files you edit and push back — `push --type update-existing` would save that fallback text as `<locale>` translations. Use `--raw` for those: it writes only the values actually stored for the locale, leaving gaps as gaps (needs a platform newer than 4.0.0, and the **Development Tools** permission). A locale the space doesn't have is refused rather than silently served as the fallback locale (checked when the token can read the space).
 
@@ -196,7 +200,7 @@ localess translation pull de --path ./locales/de.json --raw
 
 ## `localess translation diff`
 
-Read-only comparison between a local translations file and the space — groups keys into `Create`/`Update`/`Stale` sections (color-coded, git-diff style `+`/`~`/`-` symbols); unchanged keys collapse into a count by default. Exits `1` on any drift — use as a CI gate.
+Read-only comparison between a local translations file and the space — published by default, the draft with `--draft`, or the values stored for the locale with `--raw` (exactly what `push` acts on). Groups keys into `Only in file`/`Different`/`Only in Localess` sections (color-coded, git-diff style `+`/`~`/`-` symbols; direction-neutral labels); unchanged keys collapse into a count by default. Exits `1` on any drift — use as a CI gate. A locale the space doesn't have is refused (checked when the token can read the space).
 
 ```bash
 localess translation diff <locale> --path <file> [options]
@@ -207,15 +211,41 @@ localess translation diff <locale> --path <file> [options]
 | `-p, --path <path>` | required | Path to the local translations file |
 | `-f, --format <format>` | `flat` | File format: `flat` or `nested` |
 | `--draft` | `false` | Compare against the draft version |
+| `--raw` | `false` | Compare against stored values, without fallback filling — what `push` acts on. Cannot be combined with `--draft` |
 | `-a, --all` | `false` | Also print unchanged keys |
 | `-v, --verbose` | `false` | Print verbose debug output |
 
 ```bash
 localess translation diff en --path ./locales/en.json
 localess translation diff en --path ./locales/en.json --all
+localess translation diff de --path ./locales/de.json --raw
 ```
 
-Report layout: `Create (n)` / `Update (n)` / `Stale (n)` sections (empty ones omitted), an `N unchanged (use --all to show)` line, then either `N translation(s) differ: a created, b updated, c stale.` or `In sync.`.
+Report layout: `Only in file (n)` / `Different (n)` / `Only in Localess (n)` sections (empty ones omitted), an `N unchanged (use --all to show)` line, then either `N translation(s) differ: a only in file, b different, c only in Localess.` or `In sync.`.
+
+### Syncing translations
+
+The translation commands are stateless building blocks: each has a fixed direction, and you choose the direction
+per locale and per step.
+
+| Source (`pull`, `diff`) | Flag |
+|---|---|
+| published, fallback-filled | *(default)* |
+| draft, fallback-filled | `--draft` |
+| stored values, no fallback filling | `--raw` |
+
+- `pull` replaces the file with Localess's version — Localess wins.
+- `push --type …` applies one operation from the file — the file wins: `add-missing`, `update-existing`,
+  `delete-missing-key` (every locale), `delete-missing-value` (this locale only).
+- `diff` shows `Only in file` / `Different` / `Only in Localess` against the same source `pull` would use and
+  exits 1 on drift; `diff --raw` predicts exactly what `push` would act on.
+
+Typical setups:
+
+- **Code owns everything:** `push --type add-missing` and `update-existing` per locale; `diff --raw` as a CI gate.
+- **Localess owns everything:** `pull` per locale at build time; translators edit in Localess.
+- **Code owns keys and the source language, translators own the rest:** `push en --type add-missing` /
+  `update-existing` / `delete-missing-key` from the source file; `pull <locale>` for the other locales.
 
 ## `localess type generate`
 
@@ -299,7 +329,7 @@ localess schema pull --print-width 100
 
 ### `localess schema diff <entry>`
 
-Read-only comparison, same grouped/colored report format as `translation diff` — `Create`/`Update`/`Stale` sections, unchanged schemas collapsed into a count by default. Equality is key-sorted JSON of each `SchemaExport`, matching the server's change detection. Exits `1` on any drift — use as a CI gate. Does not run `validate()` first (unlike `push`).
+Read-only comparison, same grouped/colored report layout as `translation diff`, with schema-specific `Create`/`Update`/`Stale` sections; unchanged schemas collapsed into a count by default. Equality is key-sorted JSON of each `SchemaExport`, matching the server's change detection. Exits `1` on any drift — use as a CI gate. Does not run `validate()` first (unlike `push`).
 
 ```bash
 localess schema diff ./schemas/index.ts

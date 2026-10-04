@@ -7,7 +7,10 @@ export type TranslationUpdate = {
 export enum TranslationUpdateType {
   ADD_MISSING = 'add-missing',
   UPDATE_EXISTING = 'update-existing',
-  DELETE_MISSING = 'delete-missing',
+  /** Deletes keys absent from the file entirely — every locale's value, not just the pushed one. */
+  DELETE_MISSING_KEY = 'delete-missing-key',
+  /** Removes only the pushed locale's value of keys absent from the file; other locales keep theirs. */
+  DELETE_MISSING_VALUE = 'delete-missing-value',
 }
 
 export enum TranslationFileFormat {

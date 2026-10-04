@@ -42,6 +42,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- **`@localess/cli`: `translation diff` reports `Only in file` / `Different` / `Only in Localess`** instead of
+  `Create` / `Update` / `Stale`, which assumed a push; it refuses a locale the space doesn't have and `--raw` with
+  `--draft`, like `pull`. **`translation pull --format nested`** keeps child keys when a key is also a parent and warns
+  about the dropped parent values, instead of failing or losing a value depending on key order.
+- **Breaking — `@localess/cli`: `translation push --type delete-missing` is replaced by `delete-missing-key` and
+  `delete-missing-value`.** `delete-missing` deleted keys absent from the file **in every locale**, though the command
+  is run per locale — so `push de --type delete-missing` with a `de.json` that lagged behind the source deleted those
+  keys' English text too. `delete-missing-key` keeps that behaviour under a name that says so (and its preview, prompt
+  and summary say "in every locale"); `delete-missing-value` removes only the pushed locale's values. `delete-missing`
+  is no longer accepted. Needs a platform release with the same change.
 - **Breaking — `@localess/model`: `translatable` moved off `SchemaFieldBase`.** It now lives on the new
   `SchemaFieldTranslatable`, mixed into every field kind except `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS`,
   which the Studio editor never translates. Reading `field.translatable` on a `SchemaField` union now needs a
@@ -62,6 +72,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- **`@localess/cli`: `translation diff --raw`** compares against the values stored for the locale, without fallback
+  filling — exactly what `translation push` acts on.
 - **`@localess/live-preview`: `LocalessSync` types `version` and `inEditor`**, which the sync script already
   exposes on `window.localess`. `inEditor` turns `true` once the Visual Editor answers the handshake.
 - **`@localess/richtext`: `blockquote` and `horizontalRule` nodes**, matching the Studio editor, in the model,

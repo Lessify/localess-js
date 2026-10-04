@@ -109,7 +109,9 @@ Recommended for **CI/CD pipelines** — no `localess login` step needed.
 
 ### Push Translations
 
-Upload a local JSON translation file to Localess. Prints only the keys the selected `--type` acts on, as `+`/`~`/`-` lines under a summary such as `Added 1 translation in locale "en".` or, with `--dry-run`, `Dry run: would add 1 translation in locale "en":` (`No translations to add for locale "en".` when there is nothing to do). It does not print a full diff; use `translation diff` for that. `update-existing` and `delete-missing` first ask the server for a dry run, list the affected keys and prompt for confirmation (skippable with `-y, --yes`, automatically skipped under `--dry-run`, and nothing is pushed when the dry run reports no keys); `add-missing` never prompts since it is additive-only. Declining the prompt prints `Aborted.` and exits `1`.
+Upload a local JSON translation file to Localess. Prints only the keys the selected `--type` acts on, as `+`/`~`/`-` lines under a summary such as `Added 1 translation in locale "en".` or, with `--dry-run`, `Dry run: would add 1 translation in locale "en":` (`No translations to add for locale "en".` when there is nothing to do). It does not print a full diff; use `translation diff` for that. `update-existing`, `delete-missing-key` and `delete-missing-value` first ask the server for a dry run, list the affected keys and prompt for confirmation (skippable with `-y, --yes`, automatically skipped under `--dry-run`, and nothing is pushed when the dry run reports no keys); `add-missing` never prompts since it is additive-only. Declining the prompt prints `Aborted.` and exits `1`.
+
+The two delete strategies differ in scope: `delete-missing-key` deletes keys **from every locale** — the pushed `<locale>` only selects the file — so run it with a complete file, normally the source locale; `delete-missing-value` removes only `<locale>`'s value and leaves other languages untouched. The preview, prompt and summary state the scope (`… in every locale` / `the "de" value of … (other locales keep theirs)`).
 
 The server responds with `{ message, ids, dryRun? }`, where `ids` lists only the keys the push type wrote (or would write).
 
@@ -129,9 +131,9 @@ localess translation push <locale> --path <file> [options]
 |-------------------------|---------------|---------------------------------------------------------------------------|
 | `-p, --path <path>`     | required      | Path to the translations JSON file                                        |
 | `-f, --format <format>` | `flat`        | File format: `flat` or `nested`                                           |
-| `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing`, `update-existing`, `delete-missing`       |
+| `-t, --type <type>`     | `add-missing` | Update strategy: `add-missing`, `update-existing`, `delete-missing-key`, `delete-missing-value` |
 | `--dry-run`             | `false`       | Preview changes without applying them (also skips the confirmation prompt) |
-| `-y, --yes`             | `false`       | Skip the confirmation prompt for `update-existing`/`delete-missing`       |
+| `-y, --yes`             | `false`       | Skip the confirmation prompt for `update-existing`/`delete-missing-key`/`delete-missing-value` |
 | `-v, --verbose`         | `false`       | Print verbose debug output                                                |
 
 **Update Strategies:**
@@ -140,7 +142,8 @@ localess translation push <locale> --path <file> [options]
 |-------------------|--------------------------------------------------------------------------------|--------------------------------------|
 | `add-missing`     | Only adds keys that don't yet exist in Localess — safe for unattended CI       | Never                                |
 | `update-existing` | Only updates keys that already exist in Localess — **overwrites any edits made in Localess since your last pull** | Prompted (unless `-y`/`--dry-run`, or nothing differs) |
-| `delete-missing`  | Deletes keys in Localess that are absent from the local file                   | Prompted (unless `-y`/`--dry-run`, or nothing is stale) |
+| `delete-missing-key` | Deletes keys absent from the local file **in every locale**, not just `<locale>` — run it with a complete file (normally the source locale) | Prompted (unless `-y`/`--dry-run`, or nothing is stale) |
+| `delete-missing-value` | Removes only `<locale>`'s value of keys absent from the local file; other locales keep theirs | Prompted (unless `-y`/`--dry-run`, or nothing is stale) |
 
 **File Formats:**
 
@@ -173,8 +176,11 @@ localess translation push de --path ./locales/de.json --type update-existing
 # Same, but skip the confirmation prompt (e.g. scripted/CI use)
 localess translation push de --path ./locales/de.json --type update-existing --yes
 
-# Delete keys in Localess absent from the local file — prompts for confirmation
-localess translation push de --path ./locales/de.json --type delete-missing
+# Remove German values for keys absent from de.json; English and other locales keep theirs
+localess translation push de --path ./locales/de.json --type delete-missing-value
+
+# Delete keys absent from the source file, in every locale — prompts for confirmation
+localess translation push en --path ./locales/en.json --type delete-missing-key
 
 # Preview changes without applying
 localess translation push fr --path ./locales/fr.json --dry-run
@@ -206,7 +212,7 @@ localess translation pull <locale> --path <file> [options]
 | Flag                    | Default   | Description                          |
 |-------------------------|-----------|--------------------------------------|
 | `-p, --path <path>`     | required  | Output file path                     |
-| `-f, --format <format>` | `flat`    | File format: `flat` or `nested`      |
+| `-f, --format <format>` | `flat`    | File format: `flat` or `nested`. In `nested`, a key that is also the parent of other keys (`button` beside `button.save`) keeps its child keys; its own value is left out and listed in a warning. Use `flat` to keep every key. |
 | `--draft`               | `false`   | Pull the draft version of translations |
 | `--raw`                 | `false`   | Pull only the values stored for the locale, without fallback filling. For files you edit and push back. Cannot be combined with `--draft` |
 | `-v, --verbose`         | `false`   | Print verbose debug output           |
@@ -232,7 +238,7 @@ localess translation push de --path ./locales/de.json --type update-existing
 
 ### Diff Translations
 
-Read-only comparison between a local translations file and the space — groups keys into `Create`/`Update`/`Stale` sections (color-coded, git-diff style `+`/`~`/`-` symbols). `unchanged` keys are collapsed into a single count by default (`--all` to list them) so drift stays visible even with thousands of translations. Exits `1` if anything differs (CI drift gate), `0` when everything is `unchanged`. Compares against the published version unless `--draft` is given (note that `push` always previews against draft). Does not modify anything; use `push` to apply changes.
+Read-only comparison between a local translations file and the space — groups keys into `Only in file`/`Different`/`Only in Localess` sections (color-coded, git-diff style `+`/`~`/`-` symbols; the labels are direction-neutral, since the same difference means "push would add it" or "pull would remove it"). `unchanged` keys are collapsed into a single count by default (`--all` to list them) so drift stays visible even with thousands of translations. Exits `1` if anything differs (CI drift gate), `0` when everything is `unchanged`. Compares against the published version by default, the draft with `--draft`, or the values stored for the locale with `--raw` — exactly what `push` acts on. A locale the space doesn't have is refused (checked when the token can read the space). Does not modify anything; use `push` to apply changes.
 
 ```bash
 localess translation diff <locale> --path <file> [options]
@@ -251,6 +257,7 @@ localess translation diff <locale> --path <file> [options]
 | `-p, --path <path>`     | required | Path to the local translations file       |
 | `-f, --format <format>` | `flat`   | File format: `flat` or `nested`           |
 | `--draft`                | `false`  | Compare against the draft version         |
+| `--raw`                  | `false`  | Compare against the values stored for the locale, without fallback filling — what `push` acts on. Cannot be combined with `--draft` |
 | `-a, --all`              | `false`  | Also print unchanged keys                 |
 | `-v, --verbose`          | `false`  | Print verbose debug output                |
 
@@ -263,6 +270,9 @@ localess translation diff en --path ./locales/en.json
 # Compare against draft translations
 localess translation diff en --path ./locales/en.json --draft
 
+# Compare against stored values — what push would act on
+localess translation diff de --path ./locales/de.json --raw
+
 # Also list unchanged keys
 localess translation diff en --path ./locales/en.json --all
 
@@ -273,24 +283,49 @@ localess translation diff en --path ./locales/en.json --all
 **Sample output** (2000 translations, 6 changed):
 
 ```
-Create (2)
+Only in file (2)
   + new.key
   + another.new.key
 
-Update (2)
+Different (2)
   ~ changed.key
   ~ nested.other.key
 
-Stale (2)
+Only in Localess (2)
   - removed.key
   - old.unused.key
 
 1994 unchanged (use --all to show)
 
-6 translation(s) differ: 2 created, 2 updated, 2 stale.
+6 translation(s) differ: 2 only in file, 2 different, 2 only in Localess.
 ```
 
-When nothing differs the report ends with `In sync.` instead. Sections are printed in the order `Create`, `Update`, `Stale`, then `Unchanged` (only with `--all`); empty sections are omitted.
+When nothing differs the report ends with `In sync.` instead. Sections are printed in the order `Only in file`, `Different`, `Only in Localess`, then `Unchanged` (only with `--all`); empty sections are omitted.
+
+### Syncing translations
+
+The translation commands are stateless building blocks: each has a fixed direction, and you choose the direction
+per locale and per step.
+
+| Source (`pull`, `diff`) | Flag |
+|---|---|
+| published, fallback-filled | *(default)* |
+| draft, fallback-filled | `--draft` |
+| stored values, no fallback filling | `--raw` |
+
+- `pull` replaces the file with Localess's version — Localess wins.
+- `push --type …` applies one operation from the file — the file wins: `add-missing`, `update-existing`,
+  `delete-missing-key` (every locale), `delete-missing-value` (this locale only).
+- `diff` shows `Only in file` / `Different` / `Only in Localess` against the same source `pull` would use and
+  exits 1 on drift; `diff --raw` predicts exactly what `push` would act on.
+
+Typical setups:
+
+- **Code owns everything:** `push --type add-missing` and `update-existing` per locale; `diff --raw` as a CI gate.
+- **Localess owns everything:** `pull` per locale at build time; translators edit in Localess.
+- **Code owns keys and the source language, translators own the rest:** `push en --type add-missing` /
+  `update-existing` / `delete-missing-key` from the source file; `pull <locale>` for the other locales.
+
 
 ---
 

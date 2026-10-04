@@ -232,4 +232,16 @@ describe('translationPullCommand', () => {
 
     expect(getTranslations).toHaveBeenCalledWith('en', { version: 'draft' });
   });
+
+  it('writes a nested file keeping child keys, and warns about dropped parent values', async () => {
+    vi.mocked(getSession).mockResolvedValue({ isLoggedIn: true, origin: 'https://cms.example.com', space: 'space-1', token: 'token-123' });
+    const getTranslations = vi.fn().mockResolvedValue({ button: 'Button', 'button.save': 'Save' });
+    vi.mocked(localessCliClient).mockReturnValue({ getTranslations } as unknown as ReturnType<typeof localessCliClient>);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await translationPullCommand.parseAsync(['en', '-p', 'en.json', '-f', 'nested'], { from: 'user' });
+
+    expect(writeFile).toHaveBeenCalledWith('en.json', JSON.stringify({ button: { save: 'Save' } }, null, 2));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('button'));
+  });
 });

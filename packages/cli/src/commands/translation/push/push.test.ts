@@ -295,34 +295,80 @@ describe('translationPushCommand', () => {
     });
   });
 
-  describe('--type delete-missing', () => {
-    it('lists the keys to delete, prompts, and pushes when confirmed', async () => {
-      loggedIn({ 'nav.home': 'Home' });
+  describe('--type delete-missing-key', () => {
+    it('says every locale is affected, prompts, and pushes when confirmed', async () => {
+      loggedIn({ 'nav.home': 'Hallo' });
       const { updateTranslations } = mockClient({
-        updateTranslations: vi.fn().mockResolvedValue({ message: 'Deleted 1 translation', ids: ['nav.old'] }),
+        updateTranslations: vi.fn().mockResolvedValue({ message: 'Deleted 1 translation key', ids: ['nav.old'] }),
       });
       confirmMock.mockResolvedValue(true);
       const logSpy = vi.spyOn(console, 'log');
 
-      await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'delete-missing'], { from: 'user' });
+      await translationPushCommand.parseAsync(['de', '-p', 'translations.json', '-t', 'delete-missing-key'], { from: 'user' });
 
-      expect(logLines(logSpy).some(line => line.includes('- nav.old'))).toBe(true);
-      expect(confirmMock).toHaveBeenCalledWith(expect.objectContaining({ message: 'Delete 1 translation from Localess?' }));
-      expect(updateTranslations).toHaveBeenNthCalledWith(2, 'en', 'delete-missing', { 'nav.home': 'Home' }, undefined);
+      const logs = logLines(logSpy);
+      expect(logs.some(line => line.includes('This will delete 1 translation key in every locale:'))).toBe(true);
+      expect(logs.some(line => line.includes('- nav.old'))).toBe(true);
+      expect(confirmMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: `Delete 1 translation key from Localess — every locale's value, not just "de"? This can't be undone.`,
+        })
+      );
+      expect(updateTranslations).toHaveBeenNthCalledWith(2, 'de', 'delete-missing-key', { 'nav.home': 'Hallo' }, undefined);
+      expect(logs.some(line => line.includes('Deleted 1 translation key in every locale.'))).toBe(true);
     });
 
     it('aborts without pushing when the user declines confirmation', async () => {
       loggedIn({ 'nav.home': 'Home' });
       const { updateTranslations } = mockClient({
-        updateTranslations: vi.fn().mockResolvedValue({ message: '[DryRun] Would delete 1 translation', ids: ['nav.old'], dryRun: true }),
+        updateTranslations: vi
+          .fn()
+          .mockResolvedValue({ message: '[DryRun] Would delete 1 translation key', ids: ['nav.old'], dryRun: true }),
       });
       confirmMock.mockResolvedValue(false);
       const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
 
-      await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'delete-missing'], { from: 'user' });
+      await translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'delete-missing-key'], { from: 'user' });
 
       expect(exitSpy).toHaveBeenCalledWith(1);
       expect(updateTranslations).toHaveBeenCalledTimes(1);
     });
+  });
+
+  describe('--type delete-missing-value', () => {
+    it('says only the pushed locale is affected, prompts, and pushes when confirmed', async () => {
+      loggedIn({ 'nav.home': 'Hallo' });
+      const { updateTranslations } = mockClient({
+        updateTranslations: vi.fn().mockResolvedValue({ message: 'Removed 2 locale values', ids: ['nav.a', 'nav.b'] }),
+      });
+      confirmMock.mockResolvedValue(true);
+      const logSpy = vi.spyOn(console, 'log');
+
+      await translationPushCommand.parseAsync(['de', '-p', 'translations.json', '-t', 'delete-missing-value'], { from: 'user' });
+
+      const logs = logLines(logSpy);
+      expect(logs.some(line => line.includes('This will remove the "de" value of 2 translations (other locales keep theirs):'))).toBe(true);
+      expect(confirmMock).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Remove the "de" value of 2 translations? Other locales keep theirs.' })
+      );
+      expect(updateTranslations).toHaveBeenNthCalledWith(2, 'de', 'delete-missing-value', { 'nav.home': 'Hallo' }, undefined);
+      expect(logs.some(line => line.includes('Removed the "de" value of 2 translations (other locales keep theirs).'))).toBe(true);
+    });
+  });
+
+  it('rejects the former delete-missing type', async () => {
+    loggedIn({ 'nav.home': 'Home' });
+    const { updateTranslations } = mockClient();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('exit');
+    });
+
+    await expect(
+      translationPushCommand.parseAsync(['en', '-p', 'translations.json', '-t', 'delete-missing'], { from: 'user' })
+    ).rejects.toThrow('exit');
+
+    expect(errorSpy).toHaveBeenCalledWith('Invalid type provided. Possible values are :', expect.arrayContaining(['delete-missing-key']));
+    expect(updateTranslations).not.toHaveBeenCalled();
   });
 });

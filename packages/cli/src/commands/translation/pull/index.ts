@@ -1,10 +1,11 @@
 import { Command } from 'commander';
 
-import { type LocalessCliClient, localessCliClient } from '../../../client';
+import { localessCliClient } from '../../../client';
 import { writeFile } from '../../../file';
 import { LocalessApiError, TranslationFileFormat } from '../../../models';
 import { getSession } from '../../../session';
-import { dotToNestedObject, sortObjectKeys } from '../../../utils';
+import { sortObjectKeys, toNestedTranslations } from '../../../utils';
+import { explainRawUnsupported, fetchTranslations, findUnknownLocale, resolveTranslationSource, type TranslationSource } from '../source';
 
 export type TranslationsPullOptions = {
   path: string;
@@ -13,19 +14,6 @@ export type TranslationsPullOptions = {
   raw?: boolean;
   verbose?: boolean;
 };
-
-/**
- * The space's locale ids, or `undefined` when they can't be read — reading the space needs the
- * `DEV_TOOLS` permission, which a plain pull does not, so a token without it skips the check.
- */
-async function spaceLocaleIds(client: LocalessCliClient): Promise<string[] | undefined> {
-  try {
-    const space = await client.getSpace({ silent: true });
-    return space.locales?.map(it => it.id);
-  } catch {
-    return undefined;
-  }
-}
 
 export const translationPullCommand = new Command('pull')
   .argument('<locale>', 'Locale to pull')
@@ -45,9 +33,13 @@ export const translationPullCommand = new Command('pull')
       console.error('Invalid format provided. Possible values are :', Object.values(TranslationFileFormat));
       process.exit(1);
     }
-    if (options.raw && options.draft) {
-      console.error('--raw and --draft cannot be combined: --raw already reads the current, unpublished values.');
+    let source: TranslationSource;
+    try {
+      source = resolveTranslationSource(options);
+    } catch (error) {
+      console.error((error as Error).message);
       process.exit(1);
+      return;
     }
 
     const session = await getSession();
@@ -63,10 +55,11 @@ export const translationPullCommand = new Command('pull')
       ...(options.verbose ? { debug: true } : {}),
     });
 
-    if (!options.raw) {
-      // The published endpoint silently serves the fallback locale for a locale the space lacks.
-      const localeIds = await spaceLocaleIds(client);
-      if (localeIds && !localeIds.includes(locale)) {
+    // The published and draft endpoints silently serve the fallback locale for a locale the space
+    // lacks; the stored-values endpoint answers 400 itself.
+    if (source !== 'raw') {
+      const localeIds = await findUnknownLocale(client, locale);
+      if (localeIds) {
         console.error(`Locale '${locale}' is not in this space. Available locales: ${localeIds.join(', ')}`);
         process.exit(1);
       }
@@ -74,27 +67,29 @@ export const translationPullCommand = new Command('pull')
 
     console.log('Pulling translations from Localess for locale:', locale);
     try {
-      const translations = options.raw
-        ? await client.getTranslationValues(locale)
-        : await client.getTranslations(locale, { version: options.draft ? 'draft' : undefined });
+      const translations = await fetchTranslations(client, locale, source);
 
       console.log('Saving translations in file:', options.path);
       if (options.format === TranslationFileFormat.FLAT) {
         await writeFile(options.path, JSON.stringify(sortObjectKeys(translations), null, 2));
       } else if (options.format === TranslationFileFormat.NESTED) {
-        const nestedTranslations = sortObjectKeys(dotToNestedObject(translations));
-        await writeFile(options.path, JSON.stringify(nestedTranslations, null, 2));
+        const { nested, dropped } = toNestedTranslations(translations);
+        if (dropped.length > 0) {
+          console.warn(
+            `${dropped.length} key(s) are also parents of other keys and can't hold a value in the nested format; their values were left out: ${dropped.join(', ')}. Use --format flat to keep them.`
+          );
+        }
+        await writeFile(options.path, JSON.stringify(sortObjectKeys(nested), null, 2));
       }
       console.log('Successfully saved translations from Localess');
-      if (!options.raw) {
+      if (source !== 'raw') {
         console.log('Keys without a value in this locale were filled from the fallback locale. To edit and push back, pull with --raw.');
       }
     } catch (error) {
       if (!(error instanceof LocalessApiError)) {
         console.error('Failed to pull translations from Localess:', error);
-      } else if (options.raw && error.status === 404) {
-        console.error('--raw needs a Localess platform newer than 4.0.0, which serves stored translation values.');
       }
+      explainRawUnsupported(error, source);
       process.exit(1);
     }
   });
