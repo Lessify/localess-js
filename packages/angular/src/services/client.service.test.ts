@@ -15,13 +15,11 @@ describe('LocalessClientService', () => {
 
   it('builds an asset link identical to a direct localessClient() call', () => {
     const service = createService();
-    expect(service.assetLink('images/logo.png')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png');
+    expect(service.assetLink('asset-1')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1');
   });
 
   it('appends transform params to the asset link', () => {
     const service = createService();
-    expect(service.assetLink('images/logo.png', { w: 800 })).toBe(
-      'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png?w=800'
-    );
+    expect(service.assetLink('asset-1', { w: 800 })).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1?w=800');
   });
 });

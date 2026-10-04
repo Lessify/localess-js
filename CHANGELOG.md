@@ -10,6 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Security
 
+- **`@localess/client`: caller values were inserted into request URLs unencoded.** A slug passed straight from
+  a visitor's URL — the common catch-all route pattern — could reshape the request: `../../schemas`,
+  `../../links` or `../..` resolved to other endpoints of the space and sent the app's token there, returning
+  their response (e.g. links to unpublished documents) as content; `?` or `#` in a slug cut the token off.
+  Slugs are now encoded segment by segment, `id`, `locale`, `parentSlug`, `kind` and asset ids are encoded, and
+  a slug with an empty, `.` or `..` segment is rejected as a `404` `LocalessApiError` without a request.
+  `@localess/cli` encodes the locale of `translation push` too.
 - **`@localess/richtext`: `sanitizeUrl` could be bypassed with obfuscated schemes (stored XSS).**
   `java\tscript:…`, `java&#x09;script:…` (after HTML-parser entity decoding) and hrefs with leading
   control characters were treated as scheme-less and passed through, while browsers strip those

@@ -176,6 +176,15 @@ describe('localessCliClient', () => {
     );
   });
 
+  it('updateTranslations encodes the locale into its path segment', async () => {
+    vi.mocked(fetch).mockImplementation(() => Promise.resolve(jsonResponse({ message: 'ok', ids: [] })));
+    const client = localessCliClient(baseOptions);
+
+    await client.updateTranslations('de/../x', 'add-missing' as never, {});
+
+    expect(fetch).toHaveBeenCalledWith('https://cms.example.com/api/v1/spaces/space-1/translations/de%2F..%2Fx', expect.anything());
+  });
+
   it('updateTranslations throws when the request ultimately fails', async () => {
     vi.mocked(fetch).mockImplementation(() => Promise.reject(new Error('network down')));
     const client = localessCliClient({ ...baseOptions, retryCount: 0 });

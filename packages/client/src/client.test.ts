@@ -54,7 +54,7 @@ describe('localessClient', () => {
       const result = await client.getLinks({ kind: 'DOCUMENT', parentSlug: 'legal/policy', excludeChildren: true });
 
       expect(fetch).toHaveBeenCalledWith(
-        'https://cms.example.com/api/v1/spaces/space-1/links?token=token-123&kind=DOCUMENT&parentSlug=legal/policy&excludeChildren=true',
+        'https://cms.example.com/api/v1/spaces/space-1/links?token=token-123&kind=DOCUMENT&parentSlug=legal%2Fpolicy&excludeChildren=true',
         expect.any(Object)
       );
       expect(result).toEqual({ items: [] });
@@ -364,6 +364,56 @@ describe('localessClient', () => {
     });
   });
 
+  describe('URL encoding of caller values', () => {
+    const base = 'https://cms.example.com/api/v1/spaces/space-1';
+    const requested = () => (fetch as any).mock.calls[0][0] as string;
+
+    it('encodes slug segments, keeping / between them', async () => {
+      (fetch as any).mockResolvedValue(jsonResponse({}));
+      await localessClient(baseOptions).getContentBySlug('blog/café & co');
+
+      expect(requested()).toBe(`${base}/contents/slugs/blog/caf%C3%A9%20%26%20co?token=token-123`);
+    });
+
+    // A visitor-controlled catch-all route must not be able to add query parameters or cut off
+    // the token: the whole value stays inside the path segment.
+    it.each(['home?version=draft&x=', 'a#b'])('keeps %s inside the slug path', async slug => {
+      (fetch as any).mockResolvedValue(jsonResponse({}));
+      await localessClient(baseOptions).getContentBySlug(slug);
+
+      const url = new URL(requested());
+      expect(url.searchParams.get('token')).toBe('token-123');
+      expect(url.searchParams.get('version')).toBeNull();
+      expect(url.hash).toBe('');
+    });
+
+    // `URL` resolves dot segments (encoded or not), which would send the token to another endpoint,
+    // e.g. ../../schemas. No document can have such a slug, so it is a 404 without a request.
+    it.each(['..', '../../schemas', 'blog/./post', 'a//b', '', 'blog/'])('rejects %j as not found without a request', async slug => {
+      const error = await localessClient(baseOptions)
+        .getContentBySlug(slug)
+        .catch(e => e);
+
+      expect(error).toBeInstanceOf(LocalessApiError);
+      expect(error.status).toBe(404);
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('encodes the id, locales and asset ids', async () => {
+      (fetch as any).mockImplementation(() => Promise.resolve(jsonResponse({})));
+      const client = localessClient(baseOptions);
+
+      await client.getContentById('a/b', { locale: 'en&x=1' });
+      await client.getTranslations('de/../x');
+
+      expect((fetch as any).mock.calls[0][0]).toBe(`${base}/contents/a%2Fb?token=token-123&locale=en%26x%3D1`);
+      expect((fetch as any).mock.calls[1][0]).toBe(`${base}/translations/de%2F..%2Fx?token=token-123`);
+      expect(client.assetLink('a/b')).toBe(`${base}/assets/a%2Fb`);
+      expect(client.assetOriginalLink('a/b')).toBe(`${base}/assets/a%2Fb/original`);
+      expect(client.assetDownloadLink('a/b')).toBe(`${base}/assets/a%2Fb/download`);
+    });
+  });
+
   describe('getContentBySlug', () => {
     it('builds the URL with version, locale and resolve params', async () => {
       (fetch as any).mockResolvedValue(jsonResponse({ _id: 'c1' }));
@@ -514,20 +564,18 @@ describe('localessClient', () => {
   describe('assetLink', () => {
     it('builds a link from an asset URI string', () => {
       const client = localessClient(baseOptions);
-      expect(client.assetLink('images/logo.png')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png');
+      expect(client.assetLink('asset-1')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1');
     });
 
     it('builds a link from a ContentAsset object', () => {
       const client = localessClient(baseOptions);
-      expect(client.assetLink({ kind: 'ASSET', uri: 'images/logo.png' })).toBe(
-        'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png'
-      );
+      expect(client.assetLink({ kind: 'ASSET', uri: 'asset-1' })).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1');
     });
 
     it('appends transform params as a query string', () => {
       const client = localessClient(baseOptions);
-      expect(client.assetLink('images/logo.png', { w: 800, h: 600 })).toBe(
-        'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png?w=800&h=600'
+      expect(client.assetLink('asset-1', { w: 800, h: 600 })).toBe(
+        'https://cms.example.com/api/v1/spaces/space-1/assets/asset-1?w=800&h=600'
       );
     });
   });
@@ -535,42 +583,38 @@ describe('localessClient', () => {
   describe('assetOriginalLink', () => {
     it('builds a link from an asset URI string', () => {
       const client = localessClient(baseOptions);
-      expect(client.assetOriginalLink('images/logo.png')).toBe(
-        'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/original'
-      );
+      expect(client.assetOriginalLink('asset-1')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1/original');
     });
 
     it('builds a link from a ContentAsset object', () => {
       const client = localessClient(baseOptions);
-      expect(client.assetOriginalLink({ kind: 'ASSET', uri: 'images/logo.png' })).toBe(
-        'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/original'
+      expect(client.assetOriginalLink({ kind: 'ASSET', uri: 'asset-1' })).toBe(
+        'https://cms.example.com/api/v1/spaces/space-1/assets/asset-1/original'
       );
     });
 
     it('differs from assetLink, which returns a re-encoded rendition', () => {
       const client = localessClient(baseOptions);
-      expect(client.assetOriginalLink('images/logo.png')).not.toBe(client.assetLink('images/logo.png'));
+      expect(client.assetOriginalLink('asset-1')).not.toBe(client.assetLink('asset-1'));
     });
   });
 
   describe('assetDownloadLink', () => {
     it('builds a link from an asset URI string', () => {
       const client = localessClient(baseOptions);
-      expect(client.assetDownloadLink('images/logo.png')).toBe(
-        'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download'
-      );
+      expect(client.assetDownloadLink('asset-1')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1/download');
     });
 
     it('builds a link from a ContentAsset object', () => {
       const client = localessClient(baseOptions);
-      expect(client.assetDownloadLink({ kind: 'ASSET', uri: 'images/logo.png' })).toBe(
-        'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download'
+      expect(client.assetDownloadLink({ kind: 'ASSET', uri: 'asset-1' })).toBe(
+        'https://cms.example.com/api/v1/spaces/space-1/assets/asset-1/download'
       );
     });
 
     it('appends no query string', () => {
       const client = localessClient(baseOptions);
-      expect(client.assetDownloadLink('images/logo.png')).not.toContain('?');
+      expect(client.assetDownloadLink('asset-1')).not.toContain('?');
     });
   });
 

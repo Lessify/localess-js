@@ -16,37 +16,33 @@ describe('LocalessAssetService', () => {
 
   it('builds a URL from the origin, space id, and asset uri', () => {
     const service = createService();
-    expect(service.link('images/logo.png')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png');
+    expect(service.link('asset-1')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1');
   });
 
   it('accepts a ContentAsset object', () => {
     const service = createService();
-    expect(service.link({ kind: 'ASSET', uri: 'images/logo.png' } as never)).toBe(
-      'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png'
-    );
+    expect(service.link({ kind: 'ASSET', uri: 'asset-1' } as never)).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1');
   });
 
   it('appends transform params as a query string', () => {
     const service = createService();
-    expect(service.link('images/logo.png', { w: 800, h: 600 })).toBe(
-      'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png?w=800&h=600'
-    );
+    expect(service.link('asset-1', { w: 800, h: 600 })).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1?w=800&h=600');
   });
 
   it('builds an original passthrough URL', () => {
     const service = createService();
-    expect(service.originalLink('images/logo.png')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/original');
+    expect(service.originalLink('asset-1')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1/original');
   });
 
   it('builds a download URL', () => {
     const service = createService();
-    expect(service.downloadLink('images/logo.png')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download');
+    expect(service.downloadLink('asset-1')).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1/download');
   });
 
   it('accepts a ContentAsset object on the download helper', () => {
     const service = createService();
-    const asset = { kind: 'ASSET', uri: 'images/logo.png' } as never;
+    const asset = { kind: 'ASSET', uri: 'asset-1' } as never;
 
-    expect(service.downloadLink(asset)).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download');
+    expect(service.downloadLink(asset)).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/asset-1/download');
   });
 });

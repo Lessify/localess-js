@@ -312,6 +312,7 @@ All three params types also accept `fetchInit` (see [Framework caching](#framewo
 `getLinks`, `getContentBySlug`, `getContentById`, and `getTranslations` throw instead of returning empty data on failure.
 
 - A non-2xx HTTP response rejects with a `LocalessApiError` — `status`, `statusText`, `url` (token redacted), `body` (the API's parsed response body, if any), and `hint` (a status-specific, human-readable explanation of the likely cause; 401/403 link to `{origin}/features/spaces/{spaceId}/settings/tokens`, and any `message`/`status`/`code`/`details` fields in the body are folded in).
+- Every caller-supplied value is URL-encoded (slugs segment by segment, keeping `/`), so a slug taken from a visitor's URL can't add query parameters or drop the token. A slug with an empty, `.` or `..` segment — which no document can have, and which `URL` would otherwise resolve onto a different endpoint — is rejected with a `LocalessApiError` of status `404` without a request, so it reaches your not-found handling.
 - A failure to reach the API at all (DNS, connection refused, TLS, etc.) rejects with a `LocalessNetworkError` — `origin`, `url` (token redacted), `hint`, and `cause` (the underlying error).
 - Both are also logged via `console.error` as a boxed summary before being thrown (ANSI colour only in a TTY, and never when `NO_COLOR` or `NEXT_RUNTIME` is set).
 

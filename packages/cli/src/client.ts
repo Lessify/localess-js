@@ -336,7 +336,7 @@ export function localessCliClient(options: LocalessCliClientOptions) {
       console.log(LOG_GROUP, 'updateTranslations() type : ', type);
       console.log(LOG_GROUP, 'updateTranslations() values : ', JSON.stringify(values));
     }
-    const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}`;
+    const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${encodeURIComponent(locale)}`;
     if (options.debug) {
       console.log(LOG_GROUP, 'updateTranslations fetch url : ', url);
     }

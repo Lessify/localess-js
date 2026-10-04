@@ -5,8 +5,9 @@ import { AssetTransformParams } from '../models';
  *
  * Requests above this are rejected rather than clamped, so the limit is mirrored here to fail
  * at the call site instead of as a `400`. It bounds the decoded bitmap the API has to hold —
- * an 8192px edge is roughly 200MB of raw pixels — and is not a statement about the source
- * image: upscaling beyond the stored dimensions is allowed.
+ * an 8192px edge is roughly 200MB of raw pixels. It is not the source image's size: a request
+ * larger than the source (but within this limit) is redirected to the source's own dimensions,
+ * never upscaled — see `AssetTransformParams.w`.
  */
 const MAX_DIMENSION = 8192;
 

@@ -439,6 +439,23 @@ function cacheKey(url: string): string {
   }
 }
 
+/** Encodes a caller-supplied value for a URL path segment or query value. */
+function encode(value: string): string {
+  return encodeURIComponent(value);
+}
+
+/**
+ * Encodes a full slug for the `/contents/slugs/*` route segment by segment, so `/` keeps
+ * separating them. Returns `undefined` for a slug no Localess document can have — an empty, `.` or
+ * `..` segment. Those can't be encoded away (`URL` resolves `..` and `%2e%2e` alike), and would
+ * otherwise send the token to a different endpoint, e.g. `../../schemas`.
+ */
+function encodeSlugPath(slug: string): string | undefined {
+  const segments = slug.split('/');
+  if (segments.some(segment => segment === '' || segment === '.' || segment === '..')) return undefined;
+  return segments.map(encode).join('/');
+}
+
 function redactToken(url: string): string {
   return url.replace(/([?&]token=)[^&]*/, '$1***');
 }
@@ -816,11 +833,11 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       }
       let kind = '';
       if (params?.kind) {
-        kind = `&kind=${params.kind}`;
+        kind = `&kind=${encode(params.kind)}`;
       }
       let parentSlug = '';
       if (params?.parentSlug) {
-        parentSlug = `&parentSlug=${params.parentSlug}`;
+        parentSlug = `&parentSlug=${encode(params.parentSlug)}`;
       }
       let excludeChildren = '';
       if (params?.excludeChildren) {
@@ -848,11 +865,16 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (params?.version && params.version == 'draft') {
         version = `&version=${params.version}`;
       }
-      const locale = params?.locale ? `&locale=${params.locale}` : '';
+      const locale = params?.locale ? `&locale=${encode(params.locale)}` : '';
       const resolveReference = params?.resolveReference ? `&resolveReference=${params.resolveReference}` : '';
       const resolveLink = params?.resolveLink ? `&resolveLink=${params.resolveLink}` : '';
       const resolveAsset = params?.resolveAsset ? `&resolveAsset=${params.resolveAsset}` : '';
-      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/slugs/${slug}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}${resolveAsset}`;
+      const slugPath = encodeSlugPath(slug);
+      if (slugPath === undefined) {
+        // Not a slug any document can have — answered as not found, without a request.
+        throw new LocalessApiError(404, 'Not Found', `slugs/${slug}`, undefined, 'The slug has an empty, "." or ".." segment.');
+      }
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/slugs/${slugPath}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}${resolveAsset}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getContentBySlug fetch url : ', url);
       }
@@ -874,11 +896,11 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (params?.version && params.version == 'draft') {
         version = `&version=${params.version}`;
       }
-      const locale = params?.locale ? `&locale=${params.locale}` : '';
+      const locale = params?.locale ? `&locale=${encode(params.locale)}` : '';
       const resolveReference = params?.resolveReference ? `&resolveReference=${params.resolveReference}` : '';
       const resolveLink = params?.resolveLink ? `&resolveLink=${params.resolveLink}` : '';
       const resolveAsset = params?.resolveAsset ? `&resolveAsset=${params.resolveAsset}` : '';
-      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/${id}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}${resolveAsset}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/contents/${encode(id)}?token=${options.token}${version}${locale}${resolveReference}${resolveLink}${resolveAsset}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getContentById fetch url : ', url);
       }
@@ -900,7 +922,7 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
       if (params?.version && params.version == 'draft') {
         version = `&version=${params.version}`;
       }
-      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${locale}?token=${options.token}${version}`;
+      const url = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/translations/${encode(locale)}?token=${options.token}${version}`;
       if (options.debug) {
         console.log(LOG_GROUP, 'getTranslations fetch url : ', url);
       }
@@ -919,19 +941,19 @@ export function localessClient(options: LocalessClientOptions): LocalessClient {
 
     assetLink(asset: ContentAsset | string, params?: AssetTransformParams): string {
       const uri = typeof asset === 'string' ? asset : asset.uri;
-      const base = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${uri}`;
+      const base = `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${encode(uri)}`;
       const qs = buildAssetQueryString(params);
       return qs ? `${base}?${qs}` : base;
     },
 
     assetOriginalLink(asset: ContentAsset | string): string {
       const uri = typeof asset === 'string' ? asset : asset.uri;
-      return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${uri}/original`;
+      return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${encode(uri)}/original`;
     },
 
     assetDownloadLink(asset: ContentAsset | string): string {
       const uri = typeof asset === 'string' ? asset : asset.uri;
-      return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${uri}/download`;
+      return `${normalizedOrigin}/api/v1/spaces/${options.spaceId}/assets/${encode(uri)}/download`;
     },
   };
 }
