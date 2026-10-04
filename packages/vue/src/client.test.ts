@@ -106,7 +106,7 @@ describe('state', () => {
   it('localessSyncOn attaches a listener once sync is enabled and ready', async () => {
     enterEditorFrame();
     localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
-    window.localess = { on: vi.fn(), onChange: vi.fn(), off: vi.fn() };
+    window.localess = { version: 'v1', inEditor: true, on: vi.fn(), onChange: vi.fn(), off: vi.fn() };
     syncScript()?.dispatchEvent(new Event('load'));
     const callback = vi.fn();
 
@@ -118,7 +118,7 @@ describe('state', () => {
   it('localessSyncOnChange attaches a listener once sync is enabled and ready', async () => {
     enterEditorFrame();
     localessInit({ origin: 'https://example.com', spaceId: 'space-1', token: 'public-token', enableSync: true });
-    window.localess = { on: vi.fn(), onChange: vi.fn(), off: vi.fn() };
+    window.localess = { version: 'v1', inEditor: true, on: vi.fn(), onChange: vi.fn(), off: vi.fn() };
     syncScript()?.dispatchEvent(new Event('load'));
     const callback = vi.fn();
 
