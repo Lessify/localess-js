@@ -84,6 +84,9 @@ function renderNode(node: LocalessRichTextNodeWithKey, ctx: Ctx): ReactNode {
     return React.createElement(React.Fragment, { key }, children);
   }
   const attrs = processAttrs(node.type, (node as any).attrs, { attrMap: REACT_ATTR_MAP });
+  if (spec.void) {
+    return React.createElement(spec.tag!, { key, ...attrs });
+  }
   if (spec.children) {
     let inner: ReactNode = children;
     for (let i = spec.children.length - 1; i >= 0; i--) {

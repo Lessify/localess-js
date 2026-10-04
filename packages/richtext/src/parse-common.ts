@@ -3,7 +3,7 @@ import type { LocalessRichTextDocument } from './model';
 /**
  * What to do with input that has no representation in the Localess rich text
  * model — the model is closed and matches the Studio editor exactly, so a
- * `<table>` or a blockquote has nowhere to go.
+ * `<table>` or an `<img>` has nowhere to go.
  *
  * - `unwrap` — keep the text content, drop the wrapper (default)
  * - `skip` — drop the element and everything inside it
@@ -23,7 +23,7 @@ export interface RichTextParseOptions {
 
 /** One unsupported element type, and what the parser did with it. */
 export interface RichTextUnsupportedReport {
-  /** Element or construct name, e.g. `table`, `blockquote`, `img`. */
+  /** Element or construct name, e.g. `table`, `img`. */
   element: string;
   action: 'unwrapped' | 'skipped';
   /** How many times it occurred in this parse. */

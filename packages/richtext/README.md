@@ -45,7 +45,7 @@ const html = renderRichTextToHtml(content.data.content);
 
 `renderRichTextToHtml(input, options?)` accepts a whole document, a single node, an array of nodes, or the loose `ContentRichText` from `@localess/model` — and returns `''` for `null`/`undefined`, so you don't need to guard an empty field.
 
-**Supported:** headings (h1–h6), paragraphs, bold, italic, strikethrough, underline, code, code blocks, ordered and unordered lists, and links. Link `href`s pass a protocol allowlist — `javascript:` and `data:` are stripped. Unknown node types are skipped rather than throwing.
+**Supported:** headings (h1–h6), paragraphs, bold, italic, strikethrough, underline, code, code blocks, blockquotes, horizontal rules, ordered and unordered lists, and links. Link `href`s pass a protocol allowlist — `javascript:` and `data:` are stripped. Unknown node types are skipped rather than throwing.
 
 ### Overriding a node type
 
@@ -114,7 +114,7 @@ const { doc } = parseHtmlToRichText('<h1>Title</h1><p>Body</p>');
 const { doc: fromMarkdown } = parseMarkdownToRichText('# Title\n\nBody');
 ```
 
-Both return `{ doc, unsupported }`. The model is closed — it matches the Studio editor exactly — so a construct with nowhere to go, like a `<table>` or a blockquote, is **reported** rather than silently lost:
+Both return `{ doc, unsupported }`. The model is closed — it matches the Studio editor exactly — so a construct with nowhere to go, like a `<table>` or an `<img>`, is **reported** rather than silently lost:
 
 ```ts
 const { doc, unsupported } = parseHtmlToRichText(legacyHtml);

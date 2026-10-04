@@ -6,10 +6,13 @@ import { describe, expect, it } from 'vitest';
 import { LocalessRichText } from './components/localess-rich-text';
 import { renderRichText, sanitizeUrl } from './richtext';
 
+/** React serializes void elements XHTML-style (`<hr/>`); the fixtures use the HTML form. */
+const toHtmlVoid = (markup: string) => markup.replace(/<hr\/>/g, '<hr>');
+
 describe('renderRichText fixture parity', () => {
   for (const fixture of richTextFixtures) {
     it(fixture.title, () => {
-      expect(renderToStaticMarkup(<>{renderRichText(fixture.input)}</>)).toBe(fixture.expected);
+      expect(toHtmlVoid(renderToStaticMarkup(<>{renderRichText(fixture.input)}</>))).toBe(fixture.expected);
     });
   }
 });

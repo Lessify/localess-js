@@ -43,6 +43,7 @@ Nodes: `doc`, `paragraph` → `<p>`, `heading` (`level` 1–6 → `<h1>`…`<h6>
 any other level falls back to `<h1>`), `bulletList` → `<ul>`, `orderedList`
 → `<ol>` (`start` emitted only when present and not `1`), `listItem` → `<li>`,
 `codeBlock` → `<pre><code>` (`language` → `class="language-x"` on `<code>`),
+`blockquote` → `<blockquote>`, `horizontalRule` → `<hr>` (void, no closing tag),
 `text`. Marks: `bold` → `<strong>`, `italic` → `<em>`, `strike` → `<s>`,
 `underline` → `<u>`, `code` → `<code>`, `link` → `<a>` (`target`, `rel`,
 sanitized `href`, `class`, in that order; `null`/empty attrs are dropped).
@@ -157,13 +158,14 @@ class RichTextParseError extends Error { element: string }
 ```
 
 Both are **subset** parsers matched to the closed model — not HTML5-conformant, not CommonMark.
-HTML covers `p`, `h1`–`h6`, `ul`, `ol` (`start`), `li`, `pre`/`code` (`language-*`) and the marks
+HTML covers `p`, `h1`–`h6`, `ul`, `ol` (`start`), `li`, `pre`/`code` (`language-*`), `blockquote`, `hr` and the marks
 `strong`/`b`, `em`/`i`, `s`/`strike`/`del`, `u`, `code`, `a`; `div`/`span` are transparent and
 `script`/`style` are always dropped. Markdown covers ATX and setext headings, paragraphs, bullet and
-ordered lists (nested, `start`), fenced and indented code blocks, `**bold**`, `*italic*`,
+ordered lists (nested, `start`), fenced and indented code blocks, blockquotes (nested, lazy
+continuation), thematic breaks (`---`, `***`, `___`), `**bold**`, `*italic*`,
 `~~strike~~`, `` `code` ``, `[text](href)` and backslash escapes.
 
-Anything else goes through `unsupported` and is listed in the result — return the report to the
+Anything else (e.g. `<table>`, `<img>`, Markdown pipe tables) goes through `unsupported` and is listed in the result — return the report to the
 caller, do not assume a clean parse. One warning per element type per parse, silent in production.
 
 Link hrefs pass the renderer's `sanitizeUrl` allowlist: `javascript:` and `data:` become `""`, including entity-encoded tab/newline/control-character obfuscations.

@@ -89,6 +89,9 @@ function renderNode(node: LocalessRichTextNodeWithKey, ctx: Ctx): VNodeChild {
     return h(Fragment, { key }, children);
   }
   const attrs = processAttrs(node.type, (node as any).attrs);
+  if (spec.void) {
+    return h(spec.tag!, { key, ...attrs });
+  }
   if (spec.children) {
     let inner: VNodeChild = children;
     for (let i = spec.children.length - 1; i >= 0; i--) {

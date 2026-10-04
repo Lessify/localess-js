@@ -20,7 +20,13 @@ const MARK_TAGS: Record<string, LocalessRichTextMark['type']> = {
 const HEADING_TAGS: Record<string, 1 | 2 | 3 | 4 | 5 | 6> = { h1: 1, h2: 2, h3: 3, h4: 4, h5: 5, h6: 6 };
 
 /** Block tags the model represents directly. */
-const BLOCK_TAGS = new Set(['p', 'ul', 'ol', 'li', 'pre', ...Object.keys(HEADING_TAGS)]);
+const BLOCK_TAGS = new Set(['p', 'ul', 'ol', 'li', 'pre', 'blockquote', ...Object.keys(HEADING_TAGS)]);
+
+/** Nodes whose content is inline only — a `horizontalRule` cannot live inside them. */
+const INLINE_CONTAINERS = new Set<LocalessRichTextNode['type']>(['paragraph', 'heading', 'codeBlock']);
+
+/** Nodes that hold blocks, so bare text inside them is wrapped in a paragraph. */
+const BLOCK_CONTAINERS = new Set<LocalessRichTextNode['type']>(['listItem', 'blockquote']);
 
 /** Tags that carry no meaning of their own — their children are simply kept. */
 const TRANSPARENT_TAGS = new Set(['html', 'body', 'head', 'div', 'section', 'article', 'main', 'span', 'font', 'tbody', 'thead']);
@@ -149,6 +155,14 @@ export function tokensToNodes(tokens: HtmlToken[], tracker: UnsupportedTracker):
       continue;
     }
 
+    if (name === 'hr') {
+      // Browsers close an open `<p>` at `<hr>`; inside other inline-only blocks it has nowhere to go.
+      if (top().tag === 'p') closeFrame();
+      if (stack.some(frame => frame.node && INLINE_CONTAINERS.has(frame.node.type))) continue;
+      top().children.push({ type: 'horizontalRule' });
+      continue;
+    }
+
     const markType = MARK_TAGS[name];
     if (markType) {
       const frame = top();
@@ -187,6 +201,7 @@ export function tokensToNodes(tokens: HtmlToken[], tracker: UnsupportedTracker):
         const start = Number.parseInt(attrs.start ?? '', 10);
         node = Number.isFinite(start) && start !== 1 ? { type: 'orderedList', attrs: { start } } : { type: 'orderedList' };
       } else if (name === 'li') node = { type: 'listItem' };
+      else if (name === 'blockquote') node = { type: 'blockquote' };
       else {
         node = { type: 'codeBlock' };
         preformatted = true;
@@ -219,8 +234,8 @@ export function tokensToNodes(tokens: HtmlToken[], tracker: UnsupportedTracker):
 /**
  * Post-pass matching the model's shape rules:
  * `<pre>` wraps a `<code>` in the renderer, so the parser lifts that `code`
- * mark back onto the `codeBlock`'s `language`, and list items always hold
- * blocks rather than bare text.
+ * mark back onto the `codeBlock`'s `language`, and list items and blockquotes
+ * always hold blocks rather than bare text.
  */
 function finalize(nodes: LocalessRichTextNode[]): LocalessRichTextNode[] {
   return nodes.map(node => {
@@ -240,8 +255,8 @@ function finalize(nodes: LocalessRichTextNode[]): LocalessRichTextNode[] {
     }
 
     const finalized = finalize(content);
-    if (node.type === 'listItem' && finalized.some(child => child.type === 'text')) {
-      // A bare `<li>text</li>` becomes `listItem > paragraph > text`.
+    if (BLOCK_CONTAINERS.has(node.type) && finalized.some(child => child.type === 'text')) {
+      // A bare `<li>text</li>` or `<blockquote>text</blockquote>` gets its text wrapped in a paragraph.
       const wrapped: LocalessRichTextNode[] = [];
       let run: LocalessRichTextNode[] = [];
       for (const child of finalized) {

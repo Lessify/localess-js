@@ -165,7 +165,7 @@ import LocalessRichText from '@localess/astro/LocalessRichText.astro';
 <LocalessRichText content={data.body} />
 ```
 
-Props: `content: LocalessRichTextInput` (a rich text document, node, or node array — `ContentRichText` values fit), and optional `renderers`. Built on `@localess/richtext` — no TipTap at runtime. Supports headings 1–6, paragraphs, bold/italic/strike/underline/code, ordered/unordered lists, code blocks, and links. Per-node customization via the string-based `renderers` prop; each renderer receives the node (with `attrs`) plus pre-rendered `children` HTML:
+Props: `content: LocalessRichTextInput` (a rich text document, node, or node array — `ContentRichText` values fit), and optional `renderers`. Built on `@localess/richtext` — no TipTap at runtime. Supports headings 1–6, paragraphs, bold/italic/strike/underline/code, ordered/unordered lists, code blocks, blockquotes, horizontal rules, and links. Per-node customization via the string-based `renderers` prop; each renderer receives the node (with `attrs`) plus pre-rendered `children` HTML:
 
 ```astro
 <LocalessRichText content={data.body} renderers={{ paragraph: ({ children }) => `<p class="prose">${children}</p>` }} />

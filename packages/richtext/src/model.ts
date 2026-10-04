@@ -33,6 +33,8 @@ export type LocalessRichTextNode =
   | { type: 'orderedList'; attrs?: { start?: number }; content?: LocalessRichTextNode[] }
   | { type: 'listItem'; content?: LocalessRichTextNode[] }
   | { type: 'codeBlock'; attrs?: { language?: string | null }; content?: LocalessRichTextNode[] }
+  | { type: 'blockquote'; content?: LocalessRichTextNode[] }
+  | { type: 'horizontalRule' }
   | { type: 'text'; text: string; marks?: LocalessRichTextMark[] };
 
 /** A node with an optional stable key injected by `normalizeInput(input, { withKeys: true })`. */

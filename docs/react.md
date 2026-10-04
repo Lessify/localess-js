@@ -602,7 +602,7 @@ Per-node/per-mark overrides are React components receiving the node's fields plu
 />
 ```
 
-Supported elements: headings (h1–h6), paragraphs, bold, italic, strikethrough, underline, ordered/unordered lists, code, code blocks, links. Link `href`s pass a protocol allowlist (`javascript:`/`data:` are stripped) — also the `attrs.href` a custom `link` renderer receives. `sanitizeUrl` applies the same allowlist to URLs you build yourself. Unknown node types are skipped with a dev-only warning unless a renderer for that type is provided.
+Supported elements: headings (h1–h6), paragraphs, bold, italic, strikethrough, underline, ordered/unordered lists, code, code blocks, blockquotes, horizontal rules, links. Link `href`s pass a protocol allowlist (`javascript:`/`data:` are stripped) — also the `attrs.href` a custom `link` renderer receives. `sanitizeUrl` applies the same allowlist to URLs you build yourself. Unknown node types are skipped with a dev-only warning unless a renderer for that type is provided.
 
 ## Accessing the Client
 

@@ -1,3 +1,4 @@
+import { Blockquote } from '@tiptap/extension-blockquote';
 import { Bold } from '@tiptap/extension-bold';
 import { BulletList } from '@tiptap/extension-bullet-list';
 import { Code } from '@tiptap/extension-code';
@@ -5,6 +6,7 @@ import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { Document } from '@tiptap/extension-document';
 import { Heading } from '@tiptap/extension-heading';
 import { History } from '@tiptap/extension-history';
+import { HorizontalRule } from '@tiptap/extension-horizontal-rule';
 import { Italic } from '@tiptap/extension-italic';
 import { Link } from '@tiptap/extension-link';
 import { ListItem } from '@tiptap/extension-list-item';
@@ -35,6 +37,8 @@ const CMS_EXTENSIONS = [
   BulletList,
   Code,
   CodeBlockLowlight,
+  Blockquote,
+  HorizontalRule,
   Link,
 ];
 

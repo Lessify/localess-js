@@ -64,6 +64,9 @@ function renderNode(node: LocalessRichTextNode, ctx: Ctx): string {
     return renderNodes((node as any).content ?? [], ctx);
   }
   const attrs = processAttrs(node.type, (node as any).attrs);
+  if (spec.void) {
+    return openTag(spec.tag!, attrs);
+  }
   const children = renderNodes((node as any).content ?? [], ctx);
   if (spec.children) {
     let inner = children;
@@ -101,12 +104,16 @@ function renderSegments(segments: MarkTreeSegment[], ctx: Ctx): string {
   return out;
 }
 
-function wrapTag(tag: string, attrs: Record<string, any>, children: string): string {
+function openTag(tag: string, attrs: Record<string, any>): string {
   let open = `<${tag}`;
   for (const [name, value] of Object.entries(attrs)) {
     open += ` ${name}="${escapeAttr(String(value))}"`;
   }
-  return `${open}>${children}</${tag}>`;
+  return `${open}>`;
+}
+
+function wrapTag(tag: string, attrs: Record<string, any>, children: string): string {
+  return `${openTag(tag, attrs)}${children}</${tag}>`;
 }
 
 function warnUnknown(ctx: Ctx, type: string): void {

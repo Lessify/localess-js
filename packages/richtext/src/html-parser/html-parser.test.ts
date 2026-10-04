@@ -98,6 +98,30 @@ describe('block nodes', () => {
     expect(block.content[0].text).toBe('line 1\n  indented');
   });
 
+  it('parses a blockquote', () => {
+    expect(content('<blockquote><p>a</p></blockquote>')).toEqual([
+      { type: 'blockquote', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a' }] }] },
+    ]);
+  });
+
+  it('wraps bare blockquote text in a paragraph', () => {
+    expect(content('<blockquote>a</blockquote>')).toEqual([
+      { type: 'blockquote', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a' }] }] },
+    ]);
+  });
+
+  it('parses a horizontal rule', () => {
+    expect(content('<p>a</p><hr><p>b</p>').map(node => node.type)).toEqual(['paragraph', 'horizontalRule', 'paragraph']);
+  });
+
+  it('closes an open paragraph at a horizontal rule, as browsers do', () => {
+    expect(content('<p>a<hr>b</p>').map(node => node.type)).toEqual(['paragraph', 'horizontalRule', 'paragraph']);
+  });
+
+  it('drops a horizontal rule inside a heading', () => {
+    expect(renderRichTextToHtml(parse('<h1>a<hr>b</h1>').doc)).toBe('<h1>ab</h1>');
+  });
+
   it('wraps loose top-level text in a paragraph', () => {
     expect(content('bare text')).toEqual([{ type: 'paragraph', content: [{ type: 'text', text: 'bare text' }] }]);
   });
@@ -216,15 +240,15 @@ describe('unsupported policy', () => {
   });
 
   it('counts repeated occurrences accurately', () => {
-    const { unsupported } = parse('<blockquote>a</blockquote><blockquote>b</blockquote><blockquote>c</blockquote>');
+    const { unsupported } = parse('<aside>a</aside><aside>b</aside><aside>c</aside>');
 
-    expect(unsupported).toEqual([{ element: 'blockquote', action: 'unwrapped', count: 3 }]);
+    expect(unsupported).toEqual([{ element: 'aside', action: 'unwrapped', count: 3 }]);
   });
 
   it('reports each element type separately', () => {
-    const { unsupported } = parse('<blockquote>a</blockquote><table><td>b</td></table>');
+    const { unsupported } = parse('<aside>a</aside><table><td>b</td></table>');
 
-    expect(unsupported.map(u => u.element).sort()).toEqual(['blockquote', 'table', 'td']);
+    expect(unsupported.map(u => u.element).sort()).toEqual(['aside', 'table', 'td']);
   });
 
   it('is empty for fully representable input', () => {
@@ -242,7 +266,7 @@ describe('warnings', () => {
   it('warns once per unsupported element type per parse', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
-    parse('<blockquote>a</blockquote><blockquote>b</blockquote>');
+    parse('<aside>a</aside><aside>b</aside>');
 
     expect(warn).toHaveBeenCalledTimes(1);
   });
@@ -250,7 +274,7 @@ describe('warnings', () => {
   it('warns separately for different element types', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
-    parse('<blockquote>a</blockquote><table>b</table>');
+    parse('<aside>a</aside><table>b</table>');
 
     expect(warn.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
@@ -258,8 +282,8 @@ describe('warnings', () => {
   it('resets between parses', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
-    parse('<blockquote>a</blockquote>');
-    parse('<blockquote>b</blockquote>');
+    parse('<aside>a</aside>');
+    parse('<aside>b</aside>');
 
     expect(warn).toHaveBeenCalledTimes(2);
   });
@@ -270,7 +294,7 @@ describe('warnings', () => {
     process.env.NODE_ENV = 'production';
 
     try {
-      parse('<blockquote>a</blockquote>');
+      parse('<aside>a</aside>');
       expect(warn).not.toHaveBeenCalled();
     } finally {
       process.env.NODE_ENV = previous;

@@ -9,20 +9,16 @@ const BULLET_ITEM = /^(\s*)[-*+]\s+(.*)$/;
 const ORDERED_ITEM = /^(\s*)(\d{1,9})[.)]\s+(.*)$/;
 const THEMATIC_BREAK = /^ {0,3}(?:(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,})$/;
 const BLOCKQUOTE = /^ {0,3}> ?(.*)$/;
-
-/** Constructs the model cannot represent, reported through the unsupported policy. */
-const UNSUPPORTED_BLOCKS: Array<{ pattern: RegExp; name: string }> = [
-  { pattern: THEMATIC_BREAK, name: 'thematic break' },
-  { pattern: BLOCKQUOTE, name: 'blockquote' },
-];
+const TABLE_ROW = /^ {0,3}\|.*\|\s*$/;
+const TABLE_DELIMITER = /^ {0,3}\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
 
 /**
  * Parses Markdown block structure into model nodes.
  *
  * A documented **subset**, not CommonMark: ATX and setext headings,
- * paragraphs, bullet and ordered lists, fenced and indented code blocks. Tables,
- * images, blockquotes, thematic breaks, footnotes, and reference links have no
- * representation in the model and go through the unsupported policy.
+ * paragraphs, bullet and ordered lists, fenced and indented code blocks,
+ * blockquotes, and thematic breaks. Pipe tables have no representation in the
+ * model and go through the unsupported policy.
  */
 export function parseBlocks(markdown: string, tracker: UnsupportedTracker): LocalessRichTextNode[] {
   const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
@@ -76,6 +72,36 @@ function parseLines(lines: string[], tracker: UnsupportedTracker): LocalessRichT
       continue;
     }
 
+    // Checked before lists: `* * *` and `- - -` are breaks, not list items.
+    if (THEMATIC_BREAK.test(line)) {
+      nodes.push({ type: 'horizontalRule' });
+      index++;
+      continue;
+    }
+
+    if (BLOCKQUOTE.test(line)) {
+      const quoted: string[] = [];
+      while (index < lines.length) {
+        const current = lines[index];
+        const match = BLOCKQUOTE.exec(current);
+        if (match) {
+          quoted.push(match[1]);
+          index++;
+          continue;
+        }
+        // Lazy continuation: an unmarked line continues a paragraph still open in the quote.
+        if (current.trim() !== '' && quoted[quoted.length - 1].trim() !== '' && !startsBlock(current)) {
+          quoted.push(current);
+          index++;
+          continue;
+        }
+        break;
+      }
+      const content = parseLines(quoted, tracker);
+      nodes.push(content.length ? { type: 'blockquote', content } : { type: 'blockquote' });
+      continue;
+    }
+
     const listItem = BULLET_ITEM.exec(line) ?? ORDERED_ITEM.exec(line);
     if (listItem) {
       const [list, consumed] = parseList(lines, index, tracker);
@@ -84,17 +110,23 @@ function parseLines(lines: string[], tracker: UnsupportedTracker): LocalessRichT
       continue;
     }
 
-    const unsupportedBlock = UNSUPPORTED_BLOCKS.find(entry => entry.pattern.test(line));
-    if (unsupportedBlock) {
-      const action = tracker.record(unsupportedBlock.name);
-      if (action === 'skip') {
+    if (TABLE_ROW.test(line) && index + 1 < lines.length && TABLE_DELIMITER.test(lines[index + 1])) {
+      const rows: string[] = [];
+      while (index < lines.length && lines[index].trim() !== '' && lines[index].includes('|')) {
+        if (!TABLE_DELIMITER.test(lines[index])) rows.push(lines[index]);
         index++;
-        continue;
       }
-      // Unwrap: keep the text, drop the construct.
-      const inner = BLOCKQUOTE.exec(line)?.[1] ?? '';
-      if (inner.trim() !== '') nodes.push({ type: 'paragraph', content: parseInline(inner) });
-      index++;
+      if (tracker.record('table') === 'skip') continue;
+      // Unwrap: keep each row's cell text as a paragraph, drop the grid.
+      for (const row of rows) {
+        const cells = row
+          .trim()
+          .replace(/^\||\|$/g, '')
+          .split('|')
+          .map(cell => cell.trim())
+          .filter(cell => cell !== '');
+        if (cells.length) nodes.push({ type: 'paragraph', content: parseInline(cells.join(' ')) });
+      }
       continue;
     }
 
@@ -108,10 +140,7 @@ function parseLines(lines: string[], tracker: UnsupportedTracker): LocalessRichT
         index++;
         break;
       }
-      if (
-        paragraph.length > 0 &&
-        (ATX_HEADING.test(current) || FENCE.test(current) || BULLET_ITEM.test(current) || ORDERED_ITEM.test(current))
-      ) {
+      if (paragraph.length > 0 && startsBlock(current)) {
         break;
       }
       paragraph.push(current.trim());
@@ -126,6 +155,18 @@ function parseLines(lines: string[], tracker: UnsupportedTracker): LocalessRichT
   }
 
   return nodes;
+}
+
+/** Whether a line opens a block that interrupts a paragraph. */
+function startsBlock(line: string): boolean {
+  return (
+    ATX_HEADING.test(line) ||
+    FENCE.test(line) ||
+    THEMATIC_BREAK.test(line) ||
+    BLOCKQUOTE.test(line) ||
+    BULLET_ITEM.test(line) ||
+    ORDERED_ITEM.test(line)
+  );
 }
 
 /** A blank line inside an indented code block only continues it if more indented content follows. */
@@ -170,6 +211,7 @@ function parseList(lines: string[], start: number, tracker: UnsupportedTracker):
       continue;
     }
 
+    if (THEMATIC_BREAK.test(line)) break;
     const match = BULLET_ITEM.exec(line) ?? ORDERED_ITEM.exec(line);
     if (!match || indentOf(line) < baseIndent) break;
     if (indentOf(line) > baseIndent) break; // Handled as nested content below.

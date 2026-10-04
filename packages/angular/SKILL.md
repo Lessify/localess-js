@@ -527,7 +527,7 @@ import { LocalessRichTextPipe } from '@localess/angular';
 <div [innerHTML]="data.body | llRichText"></div>
 ```
 
-The pipe accepts `LocalessRichTextInput` (a doc, node, node array, `ContentRichText`, or `null`/`undefined` → empty). An optional argument passes per-node string renderers (`LocalessRichTextRenderers<string>`): `data.body | llRichText:renderers`. Supports paragraphs, headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, and links; link `href`s are sanitized (`javascript:`/`data:` stripped), including the `attrs.href` a custom `link` renderer receives. Renderers return HTML that is trusted as-is, so escape what you interpolate: `escapeAttr` for attribute values, `escapeHtml` for text (both exported, with `sanitizeUrl`).
+The pipe accepts `LocalessRichTextInput` (a doc, node, node array, `ContentRichText`, or `null`/`undefined` → empty). An optional argument passes per-node string renderers (`LocalessRichTextRenderers<string>`): `data.body | llRichText:renderers`. Supports paragraphs, headings (H1–H6), bold, italic, strike, underline, bullet lists, ordered lists, code, code blocks, blockquotes, horizontal rules, and links; link `href`s are sanitized (`javascript:`/`data:` stripped), including the `attrs.href` a custom `link` renderer receives. Renderers return HTML that is trusted as-is, so escape what you interpolate: `escapeAttr` for attribute values, `escapeHtml` for text (both exported, with `sanitizeUrl`).
 
 ### `<ll-rich-text>` — Rich Text component
 

@@ -5,6 +5,8 @@ export interface RichTextRenderSpec {
   resolve?: (attrs: Record<string, any> | undefined) => string;
   /** Render children inside this element. */
   content?: boolean;
+  /** Void element (`<hr>`): no children, no closing tag. */
+  void?: boolean;
   /** Static nested structure; node attrs attach to the child with `content: true`. */
   children?: Array<{ tag: string; content?: boolean }>;
 }
@@ -27,6 +29,8 @@ export const NODE_RENDER_MAP: Record<string, RichTextRenderSpec | null> = {
   orderedList: { tag: 'ol', content: true },
   listItem: { tag: 'li', content: true },
   codeBlock: { tag: 'pre', children: [{ tag: 'code', content: true }] },
+  blockquote: { tag: 'blockquote', content: true },
+  horizontalRule: { tag: 'hr', void: true },
 };
 
 export const MARK_RENDER_MAP: Record<string, RichTextRenderSpec> = {

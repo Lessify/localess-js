@@ -10,7 +10,8 @@ The typed node/mark unions match exactly what the Localess Studio editor can
 produce today:
 
 - **Nodes:** `doc`, `paragraph`, `heading` (levels 1–6), `bulletList`,
-  `orderedList` (`start`), `listItem`, `codeBlock` (`language`), `text`.
+  `orderedList` (`start`), `listItem`, `codeBlock` (`language`), `blockquote`,
+  `horizontalRule`, `text`.
 - **Marks:** `bold`, `italic`, `strike`, `underline`, `code`,
   `link` (`href`, `target`, `rel`, `class`).
 
@@ -33,7 +34,8 @@ allowed), `LocalessRichTextRendererProps<TOut>` (`type`, `attrs?`, `text?`,
 
 Rendering details that match TipTap: an invalid `heading.level` falls back to
 `<h1>`; `orderedList` emits `start` only when present and not `1`; `codeBlock`
-renders `<pre><code class="language-x">`; `link` attrs are emitted in the order
+renders `<pre><code class="language-x">`; `horizontalRule` renders a bare `<hr>`
+(void, no closing tag); `link` attrs are emitted in the order
 `target`, `rel`, `href`, `class`, dropping `null`/empty values.
 
 Unknown node types are **skipped** (unknown marks: their children are still
@@ -236,6 +238,7 @@ matching the renderer's behaviour for unknown node types.
 | Supported | Notes |
 |---|---|
 | `p`, `h1`–`h6`, `ul`, `ol` (`start`), `li`, `pre`/`code` | `class="language-x"` becomes `codeBlock.attrs.language` |
+| `blockquote`, `hr` | bare text in a blockquote is wrapped in a paragraph; `<hr>` closes an open `<p>`, and is dropped inside a heading or code block |
 | `strong`/`b`, `em`/`i`, `s`/`strike`/`del`, `u`, `code`, `a` | aliases map to the one model mark |
 | `div`, `span`, `section`, `article`, `main` | transparent — children kept, wrapper dropped |
 | `script`, `style` | always dropped with their content, whatever the policy |
@@ -251,11 +254,13 @@ zero-dependency guarantee. A differential test against `happy-dom` covers the su
 |---|---|
 | ATX (`# x`) and setext headings | tables |
 | paragraphs, soft-wrapped | images *(kept as literal text)* |
-| bullet and ordered lists, nested, with `start` | blockquotes |
-| fenced and indented code blocks | thematic breaks |
-| `**bold**`, `*italic*`, `~~strike~~`, `` `code` `` | footnotes |
-| `[text](href)`, `<...>` destinations | reference links, autolinks |
-| backslash escapes | link titles *(dropped — no model field)* |
+| bullet and ordered lists, nested, with `start` | footnotes |
+| fenced and indented code blocks | reference links, autolinks |
+| blockquotes, nested, with lazy continuation | link titles *(dropped — no model field)* |
+| thematic breaks (`---`, `***`, `___`) | |
+| `**bold**`, `*italic*`, `~~strike~~`, `` `code` `` | |
+| `[text](href)`, `<...>` destinations | |
+| backslash escapes | |
 
 **No CommonMark compliance is claimed.** Most of the spec maps to nodes the model does not have. A
 differential test against `markdown-it` covers the supported subset only.

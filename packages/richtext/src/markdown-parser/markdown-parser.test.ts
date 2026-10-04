@@ -193,43 +193,91 @@ describe('href sanitization', () => {
   });
 });
 
-describe('unsupported policy', () => {
-  it('unwraps a blockquote by default, keeping its text', () => {
-    const { doc, unsupported } = parse('> quoted');
-
-    expect(renderRichTextToHtml(doc)).toBe('<p>quoted</p>');
-    expect(unsupported).toEqual([{ element: 'blockquote', action: 'unwrapped', count: 1 }]);
+describe('blockquotes', () => {
+  it('parses a blockquote', () => {
+    expect(html('> quoted')).toBe('<blockquote><p>quoted</p></blockquote>');
   });
 
-  it('skips a blockquote with skip', () => {
-    const { doc, unsupported } = parse('> quoted', { unsupported: 'skip' });
+  it('joins consecutive quoted lines into one paragraph', () => {
+    expect(html('> one\n> two')).toBe('<blockquote><p>one two</p></blockquote>');
+  });
+
+  it('keeps blocks inside a blockquote', () => {
+    expect(html('> # T\n>\n> - a')).toBe('<blockquote><h1>T</h1><ul><li><p>a</p></li></ul></blockquote>');
+  });
+
+  it('continues a quoted paragraph lazily', () => {
+    expect(html('> one\ntwo')).toBe('<blockquote><p>one two</p></blockquote>');
+  });
+
+  it('ends at a blank line', () => {
+    expect(html('> one\n\ntwo')).toBe('<blockquote><p>one</p></blockquote><p>two</p>');
+  });
+
+  it('nests', () => {
+    expect(html('> > deep')).toBe('<blockquote><blockquote><p>deep</p></blockquote></blockquote>');
+  });
+});
+
+describe('thematic breaks', () => {
+  it.each(['---', '***', '___', '- - -', '* * *'])('parses %s', marker => {
+    expect(html(`a\n\n${marker}\n\nb`)).toBe('<p>a</p><hr><p>b</p>');
+  });
+
+  it('interrupts a paragraph', () => {
+    expect(html('a\n***')).toBe('<p>a</p><hr>');
+  });
+
+  it('still reads --- under a paragraph as a setext heading', () => {
+    expect(html('a\n---')).toBe('<h2>a</h2>');
+  });
+
+  it('ends a list', () => {
+    expect(html('- a\n* * *')).toBe('<ul><li><p>a</p></li></ul><hr>');
+  });
+});
+
+describe('unsupported policy', () => {
+  const table = '| a | b |\n|---|---|\n| c | d |';
+
+  it('unwraps a table by default, keeping each row as a paragraph', () => {
+    const { doc, unsupported } = parse(table);
+
+    expect(renderRichTextToHtml(doc)).toBe('<p>a b</p><p>c d</p>');
+    expect(unsupported).toEqual([{ element: 'table', action: 'unwrapped', count: 1 }]);
+  });
+
+  it('skips a table with skip', () => {
+    const { doc, unsupported } = parse(table, { unsupported: 'skip' });
 
     expect(renderRichTextToHtml(doc)).toBe('');
-    expect(unsupported).toEqual([{ element: 'blockquote', action: 'skipped', count: 1 }]);
+    expect(unsupported).toEqual([{ element: 'table', action: 'skipped', count: 1 }]);
   });
 
   it('throws with throw', () => {
-    expect(() => parse('> quoted', { unsupported: 'throw' })).toThrow(RichTextParseError);
+    expect(() => parse(table, { unsupported: 'throw' })).toThrow(RichTextParseError);
   });
 
-  it('reports a thematic break', () => {
-    expect(parse('a\n\n***\n\nb').unsupported.map(u => u.element)).toContain('thematic break');
+  it('does not treat a lone pipe row as a table', () => {
+    expect(parse('| not a table |').unsupported).toEqual([]);
   });
 
   it('counts repeated occurrences', () => {
-    expect(parse('> a\n\n> b').unsupported[0].count).toBe(2);
+    expect(parse(`${table}\n\n${table}`).unsupported[0].count).toBe(2);
   });
 
   it('is empty for fully representable input', () => {
-    expect(parse('# T\n\ntext\n\n- a\n\n```\nx\n```').unsupported).toEqual([]);
+    expect(parse('# T\n\ntext\n\n- a\n\n> q\n\n---\n\n```\nx\n```').unsupported).toEqual([]);
   });
 });
 
 describe('warnings', () => {
+  const table = '| a | b |\n|---|---|\n| c | d |';
+
   it('warns once per unsupported construct per parse', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
-    parse('> a\n\n> b');
+    parse(`${table}\n\n${table}`);
 
     expect(warn).toHaveBeenCalledTimes(1);
   });
@@ -240,7 +288,7 @@ describe('warnings', () => {
     process.env.NODE_ENV = 'production';
 
     try {
-      parse('> a');
+      parse(table);
       expect(warn).not.toHaveBeenCalled();
     } finally {
       process.env.NODE_ENV = previous;

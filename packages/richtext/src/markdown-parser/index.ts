@@ -14,14 +14,16 @@ export { RichTextParseError } from '../parse-common';
  * |---|---|
  * | ATX (`# x`) and setext headings | tables |
  * | paragraphs | images |
- * | bullet and ordered lists (incl. nesting and `start`) | blockquotes |
- * | fenced and indented code blocks | thematic breaks |
- * | `**bold**`, `*italic*`, `~~strike~~`, `` `code` `` | footnotes |
- * | `[text](href)` | reference links, autolinks |
+ * | bullet and ordered lists (incl. nesting and `start`) | footnotes |
+ * | fenced and indented code blocks | reference links, autolinks |
+ * | blockquotes (incl. nesting and lazy continuation) | |
+ * | thematic breaks (`---`, `***`, `___`) | |
+ * | `**bold**`, `*italic*`, `~~strike~~`, `` `code` `` | |
+ * | `[text](href)` | |
  *
- * Unrepresentable constructs go through {@link RichTextParseOptions.unsupported}
- * and are listed in the result. Inline syntax with no model equivalent (images,
- * raw HTML) is kept as literal text rather than dropped.
+ * Pipe tables go through {@link RichTextParseOptions.unsupported} and are
+ * listed in the result. Inline syntax with no model equivalent (images, raw
+ * HTML) is kept as literal text rather than dropped.
  *
  * Link hrefs pass through the same allowlist the renderer applies.
  *

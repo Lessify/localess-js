@@ -61,6 +61,7 @@
     "@localess/model": "*"
   },
   "devDependencies": {
+    "@tiptap/extension-blockquote": "^3.30.2",
     "@tiptap/extension-bold": "^3.22.5",
     "@tiptap/extension-bullet-list": "^3.22.5",
     "@tiptap/extension-code": "^3.22.5",
@@ -68,6 +69,7 @@
     "@tiptap/extension-document": "^3.22.5",
     "@tiptap/extension-heading": "^3.22.5",
     "@tiptap/extension-history": "^3.22.5",
+    "@tiptap/extension-horizontal-rule": "^3.30.2",
     "@tiptap/extension-italic": "^3.22.5",
     "@tiptap/extension-link": "^3.22.5",
     "@tiptap/extension-list-item": "^3.22.5",

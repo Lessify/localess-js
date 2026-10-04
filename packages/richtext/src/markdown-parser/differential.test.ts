@@ -7,8 +7,8 @@ import { parseMarkdownToRichText } from './index';
 /**
  * Differential test against `markdown-it`, on the supported subset only.
  *
- * The parser does not claim CommonMark compliance — the model has no tables,
- * images, or blockquotes — so this compares only constructs the model can
+ * The parser does not claim CommonMark compliance — the model has no tables
+ * or images — so this compares only constructs the model can
  * represent, and normalizes away formatting `markdown-it` emits that the model
  * deliberately drops (newlines between blocks, `<li>` without a wrapping `<p>`).
  *
@@ -41,6 +41,11 @@ describe('agrees with markdown-it on the supported subset', () => {
     '```\nx = 1\n```',
     '```ts\nconst x = 1;\n```',
     'para one\n\npara two',
+    '> quoted',
+    '> # T\n>\n> - a',
+    '> > deep',
+    'a\n\n---\n\nb',
+    '* * *',
   ];
 
   for (const markdown of cases) {
