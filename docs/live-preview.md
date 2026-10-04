@@ -67,7 +67,9 @@ isBrowser(); isServer(); isIframe();
 `EventToApp` covers `save`, `publish`, `unpublish`, `pong`, `input`, `change`, `enterSchema`,
 `hoverSchema`, `leaveSchema`; `EventToAppType` is the string union of those names and
 `EventCallback` is `(event: EventToApp) => void`. `EventToAppOf<T>` narrows the callback payload, so subscribing to
-`'input' | 'change'` types `event.data`. `LocalessSync` is the `window.localess` contract.
+`'input' | 'change'` types `event.data`. `LocalessSync` is the `window.localess` contract: `on`/`onChange`/`off`, plus read-only `version` (the loaded
+script's generation, e.g. `'v1'`) and `inEditor` — `true` once the editor has answered the handshake, so a
+more precise "the Visual Editor is attached" signal than `isEnabled()` (browser + iframe).
 `input`, `change`, `save`, `publish`, and `unpublish` carry `documentId` (the edited `Content.id`);
 `sync.on`/`onChange` don't filter by it; `sync.onDocument(documentId, cb)` does, passing the edited `data`.
 A subscriber that attaches after the document was already edited is called once straight away with the latest edit — the editor sends its current state as a `change` the moment the preview connects, and a component that mounts after that (behind a fetch, a lazy route, a client-side navigation) would otherwise show its fetched copy until the next edit.

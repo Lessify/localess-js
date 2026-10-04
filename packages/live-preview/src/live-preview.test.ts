@@ -155,7 +155,7 @@ describe('createSyncController', () => {
   it('does not subscribe when sync is unusable', () => {
     // Not framed, so sync is configured but unusable — the bridge must not be touched.
     const on = vi.fn();
-    window.localess = { on, onChange: vi.fn(), off: vi.fn() };
+    window.localess = { version: 'v1', inEditor: true, on, onChange: vi.fn(), off: vi.fn() };
     const sync = createSyncController();
     sync.init('https://cms.example.com', true);
 
@@ -175,7 +175,7 @@ describe('createSyncController', () => {
     // already-loaded early return and skip the path under test.
     const script = document.getElementById(SCRIPT_ID);
     expect(script).not.toBeNull();
-    window.localess = { on, onChange: vi.fn(), off: vi.fn() };
+    window.localess = { version: 'v1', inEditor: true, on, onChange: vi.fn(), off: vi.fn() };
     script!.dispatchEvent(new Event('load'));
 
     const callback = vi.fn();
@@ -192,7 +192,7 @@ describe('createSyncController', () => {
 
     const script = document.getElementById(SCRIPT_ID);
     expect(script).not.toBeNull();
-    window.localess = { on: vi.fn(), onChange, off: vi.fn() };
+    window.localess = { version: 'v1', inEditor: true, on: vi.fn(), onChange, off: vi.fn() };
     script!.dispatchEvent(new Event('load'));
 
     const callback = vi.fn();
@@ -210,7 +210,7 @@ describe('createSyncController', () => {
     });
     const sync = createSyncController();
     sync.init('https://cms.example.com', true);
-    window.localess = { on: vi.fn(), onChange, off: vi.fn() };
+    window.localess = { version: 'v1', inEditor: true, on: vi.fn(), onChange, off: vi.fn() };
     document.getElementById(SCRIPT_ID)!.dispatchEvent(new Event('load'));
 
     const callback = vi.fn();
@@ -322,7 +322,7 @@ describe('createSyncController', () => {
     const on = vi.fn(() => detach);
     const sync = createSyncController();
     sync.init('https://cms.example.com', true);
-    window.localess = { on, onChange: vi.fn(), off: vi.fn() };
+    window.localess = { version: 'v1', inEditor: true, on, onChange: vi.fn(), off: vi.fn() };
     document.getElementById(SCRIPT_ID)!.dispatchEvent(new Event('load'));
 
     const unsubscribe = sync.on('save', vi.fn());
@@ -344,7 +344,7 @@ describe('createSyncController', () => {
     const onEdit = vi.fn();
     sync.on('save', onSave)();
     sync.onChange(onEdit)();
-    window.localess = { on, onChange, off: vi.fn() };
+    window.localess = { version: 'v1', inEditor: true, on, onChange, off: vi.fn() };
     document.getElementById(SCRIPT_ID)!.dispatchEvent(new Event('load'));
     await sync.ready();
 

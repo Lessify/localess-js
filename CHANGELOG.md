@@ -62,6 +62,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- **`@localess/live-preview`: `LocalessSync` types `version` and `inEditor`**, which the sync script already
+  exposes on `window.localess`. `inEditor` turns `true` once the Visual Editor answers the handshake.
 - **`@localess/richtext`: `blockquote` and `horizontalRule` nodes**, matching the Studio editor, in the model,
   the HTML renderer and every framework renderer, and in the HTML and Markdown parsers (`>` quotes, `---` /
   `***` / `___` rules). The Markdown parser now reports pipe tables through the `unsupported` policy.

@@ -34,6 +34,13 @@ export type Unsubscribe = () => void;
 
 /** The bridge object the sync script installs on `window`. */
 export interface LocalessSync {
+  /** Generation of the loaded sync script, e.g. `'v1'` for `sync-v1.js`. */
+  readonly version: string;
+  /**
+   * `true` once the Visual Editor has answered the handshake (`ping` → `pong`), i.e. the page is
+   * actually connected to the editor — not just loaded in an iframe. Starts `false`.
+   */
+  readonly inEditor: boolean;
   /** Subscribes to `input` and `change`. */
   onChange: (callback: (event: EventToAppOf<'change' | 'input'>) => void) => Unsubscribe;
   /** Subscribes to one or more editor events. */
