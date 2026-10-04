@@ -248,10 +248,11 @@ describe('emitSchemaFiles', () => {
         id: 'Lone',
         type: 'NODE',
         fields: [
-          { name: 'author', kind: 'REFERENCE', translatable: true },
-          { name: 'related', kind: 'REFERENCES', translatable: true },
-          { name: 'hero', kind: 'SCHEMA', schemas: ['Ghost'], translatable: true },
-          { name: 'blocks', kind: 'SCHEMAS', schemas: ['Ghost'], translatable: true },
+          // Leftover flags the server may still hold: the wire type no longer allows them here.
+          { name: 'author', kind: 'REFERENCE', translatable: true } as unknown as SchemaField,
+          { name: 'related', kind: 'REFERENCES', translatable: true } as unknown as SchemaField,
+          { name: 'hero', kind: 'SCHEMA', schemas: ['Ghost'], translatable: true } as unknown as SchemaField,
+          { name: 'blocks', kind: 'SCHEMAS', schemas: ['Ghost'], translatable: true } as unknown as SchemaField,
           { name: 'title', kind: 'TEXT', translatable: true },
         ],
       },

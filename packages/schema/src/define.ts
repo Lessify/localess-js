@@ -25,15 +25,18 @@ export interface LocalessSchemaConfig {
   schemas: readonly SchemaDefinition[];
 }
 
+// The wire types already leave `translatable` off REFERENCE/REFERENCES/SCHEMA/SCHEMAS. The explicit
+// `never` is still needed: excess-property checks don't reach a const-inferred `defineField`
+// argument, so without it a stray `translatable` alongside `schemas` would compile.
 type FieldInputOf<F> = F extends { kind: 'OPTION' | 'OPTIONS' }
   ? Omit<DeepReadonly<F>, 'source'> & { readonly source: string | EnumDefinition }
   : F extends { kind: 'SCHEMA' | 'SCHEMAS' }
-    ? Omit<DeepReadonly<F>, 'schemas' | 'translatable'> & {
+    ? Omit<DeepReadonly<F>, 'schemas'> & {
         readonly schemas: readonly (string | ComponentDefinition)[];
         readonly translatable?: never;
       }
     : F extends { kind: 'REFERENCE' | 'REFERENCES' }
-      ? Omit<DeepReadonly<F>, 'translatable'> & { readonly translatable?: never }
+      ? DeepReadonly<F> & { readonly translatable?: never }
       : DeepReadonly<F>;
 
 /**

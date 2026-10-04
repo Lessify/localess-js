@@ -1,6 +1,6 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import type { SchemaEnumValue, SchemaExport, SchemaField } from './models';
+import type { SchemaEnumValue, SchemaExport, SchemaField, TranslatableSchemaFieldKind } from './models';
 
 describe('wire models', () => {
   it('narrows fields by kind', () => {
@@ -30,6 +30,29 @@ describe('wire models', () => {
     // @ts-expect-error 'PDF' is not a valid AssetFileType
     const bad: SchemaField = { name: 'hero', kind: 'ASSET', fileType: 'PDF' };
     void bad;
+  });
+  it('carries translatable only on translatable kinds', () => {
+    const text: SchemaField = { name: 'title', kind: 'TEXT', translatable: true };
+    const asset: SchemaField = { name: 'image', kind: 'ASSET', translatable: true };
+    void text;
+    void asset;
+    // @ts-expect-error translatable is not valid on a REFERENCE field
+    const reference: SchemaField = { name: 'author', kind: 'REFERENCE', translatable: true };
+    // @ts-expect-error translatable is not valid on a SCHEMAS field
+    const blocks: SchemaField = { name: 'blocks', kind: 'SCHEMAS', schemas: ['Leaf'], translatable: true };
+    void reference;
+    void blocks;
+  });
+  it('TranslatableSchemaFieldKind matches the kinds whose interface has translatable', () => {
+    type KindsWithTranslatable =
+      Extract<SchemaField, { translatable?: boolean }> extends infer F
+        ? F extends { kind: infer K }
+          ? 'translatable' extends keyof F
+            ? K
+            : never
+          : never
+        : never;
+    expectTypeOf<TranslatableSchemaFieldKind>().toEqualTypeOf<KindsWithTranslatable>();
   });
   it('requires name and value strings on SchemaEnumValue', () => {
     const value: SchemaEnumValue = { name: 'Primary', value: 'primary' };

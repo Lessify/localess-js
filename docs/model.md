@@ -49,7 +49,9 @@ Moved here from `@localess/schema` (ADR 009) — the wire-format types every `Sc
 | `SchemaFieldKind` | Field kind discriminator — the 18 exact backend enum values (`'TEXT'`, `'NUMBER'`, `'ASSET'`, `'SCHEMAS'`, …) |
 | `AssetFileType` | Restriction for `ASSET`/`ASSETS` fields — `'ANY' \| 'IMAGE' \| 'VIDEO' \| 'TEXT' \| 'AUDIO' \| 'APPLICATION'` |
 | `SchemaEnumValue` | A single named value of an `ENUM` schema — `{ name, value }` |
-| `SchemaFieldBase` | Properties every field kind shares — `{ name, kind, displayName?, required?, description?, defaultValue?, translatable? }` (`translatable` never applies to `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS`) |
+| `SchemaFieldBase` | Properties every field kind shares — `{ name, kind, displayName?, required?, description?, defaultValue? }` |
+| `SchemaFieldTranslatable` | `{ translatable?: boolean }`, mixed into every kind except `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS` — the Studio editor never translates those. On a `SchemaField` union, narrow by `kind` or check `'translatable' in field` before reading it |
+| `TranslatableSchemaFieldKind` | The kinds that accept `translatable` — `SchemaFieldKind` minus `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS` |
 | `SchemaField` | Discriminated union of all 18 field-kind interfaces below, each extending `SchemaFieldBase` — see `@localess/schema`'s field-kind table for inferred content types |
 | `SchemaFieldText`, `SchemaFieldTextarea`, `SchemaFieldRichText`, `SchemaFieldMarkdown` | Text-like kinds — `minLength?`, `maxLength?` |
 | `SchemaFieldNumber` | `NUMBER` — `minValue?`, `maxValue?` |

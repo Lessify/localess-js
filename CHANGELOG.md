@@ -33,6 +33,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   `LocalessDocument` with sync enabled, `type` is a known event, `path` is a same-site absolute path,
   and `data` is an object. `LocalessDocument` no longer reads the live-edit cache when sync is off.
 
+### Changed
+
+- **Breaking — `@localess/model`: `translatable` moved off `SchemaFieldBase`.** It now lives on the new
+  `SchemaFieldTranslatable`, mixed into every field kind except `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS`,
+  which the Studio editor never translates. Reading `field.translatable` on a `SchemaField` union now needs a
+  `kind` narrowing or a `'translatable' in field` check. New `TranslatableSchemaFieldKind` type.
+- **Breaking — `@localess/schema`: `translatable` is rejected on `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS`**,
+  at compile time and by `validate()` (`field/translatable-unsupported`). `localess schema pull` drops a
+  leftover flag the server may hold on those kinds.
+- **Breaking — `@localess/schema`: `SCHEMA`/`SCHEMAS` fields must list their allowed schemas.** `schemas` is
+  required by `defineField`/`defineSchema`, and `validate()` reports a missing or empty list
+  (`field/missing-schemas`) and a ROOT schema in it (`field/schema-ref-is-root`) — the Studio editor offers
+  exactly the listed NODE schemas, so such a field could hold no block. Type inference no longer treats an
+  omitted list as "every NODE schema". `localess schema pull` writes `schemas: []` for a field the server holds
+  without one, so the pulled file compiles and `validate()` flags it.
+- **`@localess/astro`: `enableSync` (without `livePreview`) now reloads after `save`/`publish`/`unpublish`**
+  instead of on `change`. The editor sends a `change` every time the preview connects, so the page reloaded
+  in a loop for as long as it was open in the Visual Editor (SSR and static output alike). A reload can't show
+  unsaved edits anyway; use `livePreview` for those.
+
+### Added
+
+- **`@localess/richtext`: `blockquote` and `horizontalRule` nodes**, matching the Studio editor, in the model,
+  the HTML renderer and every framework renderer, and in the HTML and Markdown parsers (`>` quotes, `---` /
+  `***` / `___` rules). The Markdown parser now reports pipe tables through the `unsupported` policy.
+- **`@localess/cli`: `translation pull --raw`** pulls only the values stored for the locale, without filling
+  gaps from the fallback locale — for files you edit and push back. Needs a platform newer than 4.0.0.
+
+### Fixed
+
+- **`@localess/richtext`: blockquotes and horizontal rules were dropped** — quote text included — by every
+  renderer.
+- **`@localess/cli`: `translation pull` of a locale the space doesn't have** silently saved the fallback
+  locale's file; it now fails and lists the space's locales (when the token can read the space).
+  `translation push --type update-existing` warns that a plain `pull` file holds fallback-locale text.
+
 ## [4.0.1] - 2026-09-15
 
 > **First complete v4 release.** `4.0.0` was published on 2026-09-05/06 for four packages only —

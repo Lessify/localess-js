@@ -1,4 +1,5 @@
 import type { LocalessSchemaConfig, SchemaDefinition } from './define';
+import type { TranslatableSchemaFieldKind } from './models';
 
 const SCHEMA_ID_PATTERN = /^[a-zA-Z][a-zA-Z0-9]+$/;
 const FIELD_NAME_PATTERN = /^[a-z][a-zA-Z0-9_]*[a-zA-Z0-9]$/;
@@ -16,7 +17,23 @@ const RESERVED_SCHEMA_IDS = [
   'Content',
 ];
 const RESERVED_FIELD_NAMES = ['_id', '_schema'];
-const UNTRANSLATABLE_FIELD_KINDS: readonly string[] = ['REFERENCE', 'REFERENCES', 'SCHEMA', 'SCHEMAS'];
+// A Record, so adding or removing a translatable kind in @localess/model fails to compile here.
+const TRANSLATABLE_FIELD_KINDS: Record<TranslatableSchemaFieldKind, true> = {
+  TEXT: true,
+  TEXTAREA: true,
+  RICH_TEXT: true,
+  MARKDOWN: true,
+  NUMBER: true,
+  COLOR: true,
+  DATE: true,
+  DATETIME: true,
+  BOOLEAN: true,
+  OPTION: true,
+  OPTIONS: true,
+  LINK: true,
+  ASSET: true,
+  ASSETS: true,
+};
 
 export interface ValidationIssue {
   severity: 'error' | 'warning';
@@ -95,7 +112,7 @@ export function validate(config: LocalessSchemaConfig): ValidationResult {
       if (field.defaultValue && field.defaultValue.length > 250) {
         error('field/default-value-too-long', fieldPath, 'Field defaultValue exceeds 250 characters');
       }
-      if (field.translatable && UNTRANSLATABLE_FIELD_KINDS.includes(field.kind)) {
+      if ('translatable' in field && field.translatable && !(field.kind in TRANSLATABLE_FIELD_KINDS)) {
         error(
           'field/translatable-unsupported',
           fieldPath,

@@ -44,56 +44,61 @@ export interface SchemaFieldBase {
   required?: boolean;
   description?: string;
   defaultValue?: string;
-  /**
-   * Holds a value per locale. Never applies to `REFERENCE`, `REFERENCES`, `SCHEMA` or `SCHEMAS` —
-   * the Studio editor does not translate those kinds (nested blocks translate their own fields).
-   */
+}
+
+/**
+ * Mixed into the field kinds that can hold a value per locale. `REFERENCE`, `REFERENCES`,
+ * `SCHEMA` and `SCHEMAS` don't: the Studio editor never translates them, and nested blocks
+ * translate their own fields.
+ */
+export interface SchemaFieldTranslatable {
+  /** Holds a value per locale. */
   translatable?: boolean;
 }
 
-export interface SchemaFieldText extends SchemaFieldBase {
+export interface SchemaFieldText extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'TEXT';
   minLength?: number;
   maxLength?: number;
 }
 
-export interface SchemaFieldTextarea extends SchemaFieldBase {
+export interface SchemaFieldTextarea extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'TEXTAREA';
   minLength?: number;
   maxLength?: number;
 }
 
-export interface SchemaFieldRichText extends SchemaFieldBase {
+export interface SchemaFieldRichText extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'RICH_TEXT';
   minLength?: number;
   maxLength?: number;
 }
 
-export interface SchemaFieldMarkdown extends SchemaFieldBase {
+export interface SchemaFieldMarkdown extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'MARKDOWN';
   minLength?: number;
   maxLength?: number;
 }
 
-export interface SchemaFieldNumber extends SchemaFieldBase {
+export interface SchemaFieldNumber extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'NUMBER';
   minValue?: number;
   maxValue?: number;
 }
 
-export interface SchemaFieldColor extends SchemaFieldBase {
+export interface SchemaFieldColor extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'COLOR';
 }
 
-export interface SchemaFieldDate extends SchemaFieldBase {
+export interface SchemaFieldDate extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'DATE';
 }
 
-export interface SchemaFieldDateTime extends SchemaFieldBase {
+export interface SchemaFieldDateTime extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'DATETIME';
 }
 
-export interface SchemaFieldBoolean extends SchemaFieldBase {
+export interface SchemaFieldBoolean extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'BOOLEAN';
 }
 
@@ -109,13 +114,13 @@ export interface SchemaFieldSchemas extends SchemaFieldBase {
   schemas?: string[];
 }
 
-export interface SchemaFieldOption extends SchemaFieldBase {
+export interface SchemaFieldOption extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'OPTION';
   /** Id of the ENUM schema providing the options. */
   source: string;
 }
 
-export interface SchemaFieldOptions extends SchemaFieldBase {
+export interface SchemaFieldOptions extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'OPTIONS';
   /** Id of the ENUM schema providing the options. */
   source: string;
@@ -123,7 +128,7 @@ export interface SchemaFieldOptions extends SchemaFieldBase {
   maxValues?: number;
 }
 
-export interface SchemaFieldLink extends SchemaFieldBase {
+export interface SchemaFieldLink extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'LINK';
 }
 
@@ -137,13 +142,13 @@ export interface SchemaFieldReferences extends SchemaFieldBase {
   path?: string;
 }
 
-export interface SchemaFieldAsset extends SchemaFieldBase {
+export interface SchemaFieldAsset extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'ASSET';
   fileTypes?: AssetFileType[];
   fileType?: AssetFileType;
 }
 
-export interface SchemaFieldAssets extends SchemaFieldBase {
+export interface SchemaFieldAssets extends SchemaFieldBase, SchemaFieldTranslatable {
   kind: 'ASSETS';
   fileTypes?: AssetFileType[];
   fileType?: AssetFileType;
@@ -169,6 +174,9 @@ export type SchemaField =
   | SchemaFieldReferences
   | SchemaFieldAsset
   | SchemaFieldAssets;
+
+/** Field kinds that accept `translatable` — every kind except REFERENCE, REFERENCES, SCHEMA and SCHEMAS. */
+export type TranslatableSchemaFieldKind = Exclude<SchemaFieldKind, 'REFERENCE' | 'REFERENCES' | 'SCHEMA' | 'SCHEMAS'>;
 
 /** Export (wire) representation of a ROOT/NODE schema — matches the Localess backend SchemaExport. */
 export interface SchemaComponentExport {

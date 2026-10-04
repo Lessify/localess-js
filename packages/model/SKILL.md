@@ -43,15 +43,17 @@ See `docs/model.md` in the repo (or the type table below) for the full list.
 | `SchemaFieldKind` | `'TEXT' \| 'TEXTAREA' \| 'RICH_TEXT' \| 'MARKDOWN' \| 'NUMBER' \| 'COLOR' \| 'DATE' \| 'DATETIME' \| 'BOOLEAN' \| 'OPTION' \| 'OPTIONS' \| 'LINK' \| 'REFERENCE' \| 'REFERENCES' \| 'ASSET' \| 'ASSETS' \| 'SCHEMA' \| 'SCHEMAS'` |
 | `AssetFileType` | `'ANY' \| 'IMAGE' \| 'VIDEO' \| 'TEXT' \| 'AUDIO' \| 'APPLICATION'` |
 | `SchemaEnumValue` | `{ name: string; value: string }` |
-| `SchemaFieldBase` | `{ name, kind, displayName?, required?, description?, defaultValue?, translatable? }` (`translatable` never applies to `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS`) |
+| `SchemaFieldBase` | `{ name, kind, displayName?, required?, description?, defaultValue? }` |
+| `SchemaFieldTranslatable` | `{ translatable?: boolean }` — mixed into every kind except `REFERENCE`/`REFERENCES`/`SCHEMA`/`SCHEMAS`, which the Studio editor never translates. On a `SchemaField` union, narrow by `kind` (or check `'translatable' in field`) before reading it |
+| `TranslatableSchemaFieldKind` | `SchemaFieldKind` minus `'REFERENCE' \| 'REFERENCES' \| 'SCHEMA' \| 'SCHEMAS'` |
 | `SchemaField` | Union of `SchemaFieldText \| SchemaFieldTextarea \| SchemaFieldRichText \| SchemaFieldMarkdown \| SchemaFieldNumber \| SchemaFieldColor \| SchemaFieldDate \| SchemaFieldDateTime \| SchemaFieldBoolean \| SchemaFieldSchema \| SchemaFieldSchemas \| SchemaFieldOption \| SchemaFieldOptions \| SchemaFieldLink \| SchemaFieldReference \| SchemaFieldReferences \| SchemaFieldAsset \| SchemaFieldAssets` (each extends `SchemaFieldBase`) |
-| `SchemaFieldText`, `SchemaFieldTextarea`, `SchemaFieldRichText`, `SchemaFieldMarkdown` | `SchemaFieldBase & { kind: 'TEXT' \| 'TEXTAREA' \| 'RICH_TEXT' \| 'MARKDOWN'; minLength?: number; maxLength?: number }` |
-| `SchemaFieldNumber` | `SchemaFieldBase & { kind: 'NUMBER'; minValue?: number; maxValue?: number }` |
-| `SchemaFieldColor`, `SchemaFieldDate`, `SchemaFieldDateTime`, `SchemaFieldBoolean`, `SchemaFieldLink` | `SchemaFieldBase & { kind: 'COLOR' \| 'DATE' \| 'DATETIME' \| 'BOOLEAN' \| 'LINK' }` — no extras |
-| `SchemaFieldOption` | `SchemaFieldBase & { kind: 'OPTION'; source: string }` (`source` = ENUM schema id) |
-| `SchemaFieldOptions` | `SchemaFieldBase & { kind: 'OPTIONS'; source: string; minValues?: number; maxValues?: number }` |
+| `SchemaFieldText`, `SchemaFieldTextarea`, `SchemaFieldRichText`, `SchemaFieldMarkdown` | `SchemaFieldBase & SchemaFieldTranslatable & { kind: 'TEXT' \| 'TEXTAREA' \| 'RICH_TEXT' \| 'MARKDOWN'; minLength?: number; maxLength?: number }` |
+| `SchemaFieldNumber` | `SchemaFieldBase & SchemaFieldTranslatable & { kind: 'NUMBER'; minValue?: number; maxValue?: number }` |
+| `SchemaFieldColor`, `SchemaFieldDate`, `SchemaFieldDateTime`, `SchemaFieldBoolean`, `SchemaFieldLink` | `SchemaFieldBase & SchemaFieldTranslatable & { kind: 'COLOR' \| 'DATE' \| 'DATETIME' \| 'BOOLEAN' \| 'LINK' }` — no extras |
+| `SchemaFieldOption` | `SchemaFieldBase & SchemaFieldTranslatable & { kind: 'OPTION'; source: string }` (`source` = ENUM schema id) |
+| `SchemaFieldOptions` | `SchemaFieldBase & SchemaFieldTranslatable & { kind: 'OPTIONS'; source: string; minValues?: number; maxValues?: number }` |
 | `SchemaFieldReference`, `SchemaFieldReferences` | `SchemaFieldBase & { kind: 'REFERENCE' \| 'REFERENCES'; path?: string }` |
-| `SchemaFieldAsset`, `SchemaFieldAssets` | `SchemaFieldBase & { kind: 'ASSET' \| 'ASSETS'; fileTypes?: AssetFileType[]; fileType?: AssetFileType }` |
+| `SchemaFieldAsset`, `SchemaFieldAssets` | `SchemaFieldBase & SchemaFieldTranslatable & { kind: 'ASSET' \| 'ASSETS'; fileTypes?: AssetFileType[]; fileType?: AssetFileType }` |
 | `SchemaFieldSchema`, `SchemaFieldSchemas` | `SchemaFieldBase & { kind: 'SCHEMA' \| 'SCHEMAS'; schemas?: string[] }` (allowed NODE schema ids; when absent or empty the editor can add no block) |
 | `SchemaComponentExport` | `{ id, type: 'ROOT' \| 'NODE', displayName?, description?, labels?, previewField?, fields?: SchemaField[] }` |
 | `SchemaEnumExport` | `{ id, type: 'ENUM', displayName?, description?, labels?, values?: SchemaEnumValue[] }` |

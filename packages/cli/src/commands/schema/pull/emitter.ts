@@ -98,8 +98,8 @@ const UNTRANSLATABLE_KINDS: readonly string[] = ['REFERENCE', 'REFERENCES', 'SCH
 function toAuthoringField(field: SchemaField): SchemaField {
   let out: SchemaField = field;
   if ((out.kind === 'SCHEMA' || out.kind === 'SCHEMAS') && out.schemas === undefined) out = { ...out, schemas: [] };
-  if (out.translatable !== undefined && UNTRANSLATABLE_KINDS.includes(out.kind)) {
-    const { translatable, ...rest } = out;
+  if ('translatable' in out && UNTRANSLATABLE_KINDS.includes(out.kind)) {
+    const { translatable, ...rest } = out as SchemaField & { translatable?: boolean };
     void translatable;
     out = rest as SchemaField;
   }
