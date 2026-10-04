@@ -58,7 +58,9 @@ export function provideLocaless(options: LocalessOptions, ...features: LocalessF
   }
 
   const config: LocalessConfig = { ...options };
-  const assetPathPrefix = `${options.origin}/api/v1/spaces/${options.spaceId}/assets/`;
+  // Must match the URLs @localess/client builds, which strip trailing slashes from the origin —
+  // otherwise IMAGE_LOADER no longer recognises asset URLs and silently drops every transform.
+  const assetPathPrefix = `${options.origin.replace(/\/+$/, '')}/api/v1/spaces/${options.spaceId}/assets/`;
 
   let syncReady: Promise<void> = Promise.resolve();
   const latestEdits = new Map<string, EventToAppOf<'change' | 'input'>>();

@@ -94,6 +94,13 @@ describe('createSyncController', () => {
     expect(sync.isEnabled()).toBe(true);
   });
 
+  it('strips trailing slashes from the origin, as @localess/client does', () => {
+    enterEditorFrame();
+    createSyncController().init('https://cms.example.com//', true);
+
+    expect((document.getElementById(SCRIPT_ID) as HTMLScriptElement).src).toBe('https://cms.example.com/scripts/sync-v1.js');
+  });
+
   it('leaves the script in quiet mode unless debug is on', () => {
     enterEditorFrame();
     const sync = createSyncController();

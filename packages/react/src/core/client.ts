@@ -64,7 +64,8 @@ export function localessInit(options: LocalessOptions): LocalessClient {
   _client = localessClient(restOptions);
   _origin = restOptions.origin;
 
-  _assetPathPrefix = `${options.origin}/api/v1/spaces/${options.spaceId}/assets/`;
+  // Built like @localess/client builds asset URLs: trailing slashes stripped from the origin.
+  _assetPathPrefix = `${options.origin.replace(/\/+$/, '')}/api/v1/spaces/${options.spaceId}/assets/`;
 
   _components = components || {};
   _fallbackComponent = fallbackComponent;
@@ -284,7 +285,7 @@ export function getOrigin() {
  * ```
  */
 export function resolveAsset(asset: ContentAsset, params?: AssetTransformParams): string {
-  const base = `${_assetPathPrefix}${asset.uri}`;
+  const base = `${_assetPathPrefix}${encodeURIComponent(asset.uri)}`;
   const qs = buildAssetQueryString(params);
   return qs ? `${base}?${qs}` : base;
 }
@@ -306,7 +307,7 @@ export function resolveAsset(asset: ContentAsset, params?: AssetTransformParams)
  * ```
  */
 export function resolveAssetOriginal(asset: ContentAsset): string {
-  return `${_assetPathPrefix}${asset.uri}/original`;
+  return `${_assetPathPrefix}${encodeURIComponent(asset.uri)}/original`;
 }
 
 /**
@@ -324,5 +325,5 @@ export function resolveAssetOriginal(asset: ContentAsset): string {
  * ```
  */
 export function resolveAssetDownload(asset: ContentAsset): string {
-  return `${_assetPathPrefix}${asset.uri}/download`;
+  return `${_assetPathPrefix}${encodeURIComponent(asset.uri)}/download`;
 }

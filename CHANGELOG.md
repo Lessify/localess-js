@@ -79,6 +79,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   edits) until the next edit. `@localess/live-preview`'s `onDocument` (and so `localessSyncOnDocument` in
   React, Vue and Svelte) and Angular's `LocalessSyncService.onDocument` now replay the latest edit to a late
   subscriber.
+- **A trailing `/` in `origin` was only stripped by `@localess/client`.** `@localess/angular`'s `IMAGE_LOADER`
+  then no longer recognised asset URLs and silently dropped every transform — each `NgOptimizedImage`
+  `srcset` entry pointed at the full-size original. `@localess/react`'s `resolveAsset` / `resolveAssetOriginal`
+  / `resolveAssetDownload` and the sync script URL (`loadLocalessSync`, every framework) went through an extra
+  redirect (`//api/…`, `//scripts/…`). All now strip it like the client; React's asset helpers also encode the
+  asset id, matching `@localess/client`.
+- **`@localess/client`: `MAX_DIMENSION` JSDoc said a size above the source upscales** — the API redirects to the
+  source's own size instead, as `AssetTransformParams` already documented.
 - **`@localess/cli`: `translation pull` of a locale the space doesn't have** silently saved the fallback
   locale's file; it now fails and lists the space's locales (when the token can read the space).
   `translation push --type update-existing` warns that a plain `pull` file holds fallback-locale text.

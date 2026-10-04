@@ -66,7 +66,8 @@ export function loadLocalessSync(origin: string, options: LoadLocalessSyncOption
     const script = document.createElement('script');
     script.id = JS_SYNC_ID;
     script.type = 'text/javascript';
-    script.src = `${origin}/scripts/sync-v1.js`;
+    // Stripped like @localess/client does: `https://x//scripts/…` still loads, but only through a redirect.
+    script.src = `${origin.replace(/\/+$/, '')}/scripts/sync-v1.js`;
     script.async = true;
     if (options.debug) {
       script.setAttribute('data-debug', 'true');

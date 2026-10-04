@@ -44,8 +44,8 @@ describe('client', () => {
     const state = await import('./client');
     state.localessInit(baseOptions);
 
-    expect(state.resolveAsset({ kind: 'ASSET', uri: 'images/logo.png' } as any)).toBe(
-      'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png'
+    expect(state.resolveAsset({ kind: 'ASSET', uri: 'asset-1' } as any)).toBe(
+      'https://cms.example.com/api/v1/spaces/space-1/assets/asset-1'
     );
   });
 
@@ -53,8 +53,8 @@ describe('client', () => {
     const state = await import('./client');
     state.localessInit(baseOptions);
 
-    expect(state.resolveAsset({ kind: 'ASSET', uri: 'images/logo.png' } as any, { w: 800 })).toBe(
-      'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png?w=800'
+    expect(state.resolveAsset({ kind: 'ASSET', uri: 'asset-1' } as any, { w: 800 })).toBe(
+      'https://cms.example.com/api/v1/spaces/space-1/assets/asset-1?w=800'
     );
   });
 
@@ -62,17 +62,28 @@ describe('client', () => {
     const state = await import('./client');
     state.localessInit(baseOptions);
 
-    expect(state.resolveAssetOriginal({ kind: 'ASSET', uri: 'images/logo.png' } as any)).toBe(
-      'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/original'
+    expect(state.resolveAssetOriginal({ kind: 'ASSET', uri: 'asset-1' } as any)).toBe(
+      'https://cms.example.com/api/v1/spaces/space-1/assets/asset-1/original'
     );
+  });
+
+  it('asset URLs match @localess/client: trailing slashes stripped, the asset id encoded', async () => {
+    const state = await import('./client');
+    state.localessInit({ ...baseOptions, origin: 'https://cms.example.com/' });
+    const asset = { kind: 'ASSET', uri: 'a/b' } as any;
+
+    expect(state.resolveAsset(asset)).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/a%2Fb');
+    expect(state.resolveAssetOriginal(asset)).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/a%2Fb/original');
+    expect(state.resolveAssetDownload(asset)).toBe('https://cms.example.com/api/v1/spaces/space-1/assets/a%2Fb/download');
+    expect(state.resolveAsset(asset)).toBe(state.getLocalessClient().assetLink(asset));
   });
 
   it('resolveAssetDownload builds the attachment URL with no query string', async () => {
     const state = await import('./client');
     state.localessInit(baseOptions);
 
-    expect(state.resolveAssetDownload({ kind: 'ASSET', uri: 'images/logo.png' } as any)).toBe(
-      'https://cms.example.com/api/v1/spaces/space-1/assets/images/logo.png/download'
+    expect(state.resolveAssetDownload({ kind: 'ASSET', uri: 'asset-1' } as any)).toBe(
+      'https://cms.example.com/api/v1/spaces/space-1/assets/asset-1/download'
     );
   });
 

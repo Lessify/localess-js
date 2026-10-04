@@ -143,6 +143,12 @@ describe('provideLocaless — IMAGE_LOADER', () => {
     expect(loader()({ src: assetSrc, width: 640 })).toBe(`${assetSrc}?w=640`);
   });
 
+  // The prefix used to keep the trailing slash while @localess/client strips it, so no asset URL
+  // matched and every transform was silently dropped.
+  it('still applies transforms when the origin has a trailing slash', () => {
+    expect(loader({ ...validOptions, origin: 'https://cms.example.com/' })({ src: assetSrc, width: 640 })).toBe(`${assetSrc}?w=640`);
+  });
+
   it('returns the bare URL when there is nothing to append', () => {
     // Angular builds the `src` attribute with no width and no loaderParams.
     expect(loader()({ src: assetSrc })).toBe(assetSrc);
