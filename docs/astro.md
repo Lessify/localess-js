@@ -47,7 +47,7 @@ export default defineConfig({
 | `components` | schema key → component path (relative to `componentsDir`) | — | Explicit map merged with auto-discovery. See "Component registry". |
 | `enableFallbackComponent` | `boolean` | `false` | Render a fallback component for unknown schema keys instead of throwing. |
 | `customFallbackComponent` | `string` | built-in `FallbackComponent.astro` | Path (relative to `componentsDir`) to your own fallback component. |
-| `enableSync` | `boolean` | `false` | Reload-based Visual Editor sync. Ignored when `livePreview` is `true`. |
+| `enableSync` | `boolean` | `false` | Reload-on-save Visual Editor sync. Ignored when `livePreview` is `true`. |
 | `livePreview` | `boolean` | `false` | SSR-only live-patching Visual Editor sync. Requires `output: 'server'`. |
 
 ### Token handling
@@ -133,7 +133,7 @@ The built-in `FallbackComponent.astro` (also importable from `@localess/astro/Fa
 
 Two tiers, mutually exclusive (`livePreview` wins when both are set):
 
-- `enableSync: true` — loads the Localess sync script from `origin`, then on any `input`/`change` event debounces (~500ms) and reloads the page. Works under both SSR and static output.
+- `enableSync: true` — loads the Localess sync script from `origin` (click-to-select, hover outlines), then on `save`/`publish`/`unpublish` debounces (~500ms) and reloads the page. It deliberately ignores `input`/`change`: the editor sends a `change` on every connect, so reloading on it loops forever, and a reload cannot show unsaved edits anyway — use `livePreview` for that. Works under both SSR and static output, but under static output a reload only shows new content in `astro dev`; a production static build keeps serving its prerendered HTML, so there it provides click-to-select only.
 - `livePreview: true` — SSR-only (`output: 'server'`; the integration throws at config-setup time otherwise). `save`/`publish`/`unpublish` reload; `input`/`change` debounce (~500ms), POST the updated content to the current page, and `morphdom`-patch the response into the live DOM, keyed by `data-ll-id` (preserving the sync script's snackbar container and the editor's `ll-hover-highlight` class, which the server HTML knows nothing about). The integration wires this up for you: it injects a page script that calls `handleLocalessMessage` and registers `live-preview/middleware.ts` as `@localess/astro/middleware` (`order: 'pre'`), which accepts a preview POST only when it is same-origin (`Sec-Fetch-Site: same-origin`) and its body's `spaceId` matches the one passed to `localess()`.
 
 With `livePreview`, fetch the content in page frontmatter, then overlay the draft from `getLivePayload(Astro, documentId)`. The preview POST body carries the edited `documentId`, and `getLivePayload` returns the draft only when it matches the id you pass — so pass the rendered document's `id`, and a page rendering several documents (or one reached by clicking a link inside the preview) won't pick up another document's edits. The payload carries only `data` (no `links`/`references`/`assets`), and is empty on ordinary requests:

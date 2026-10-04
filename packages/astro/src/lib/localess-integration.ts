@@ -123,7 +123,7 @@ export function localessIntegration(options: LocalessOptions): AstroIntegration 
               import { loadLocalessSync } from "@localess/astro";
               let reloadTimeout;
               loadLocalessSync(${JSON.stringify(origin)}, { debug: ${JSON.stringify(debug === true)}, sdk: '@localess/astro' }).then(() => {
-                window.localess?.onChange(() => {
+                window.localess?.on(['save', 'publish', 'unpublish'], () => {
                   clearTimeout(reloadTimeout);
                   reloadTimeout = setTimeout(() => window.location.reload(), ${RELOAD_DEBOUNCE_MS});
                 });

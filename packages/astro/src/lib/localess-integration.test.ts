@@ -47,13 +47,78 @@ describe('localessIntegration', () => {
     );
   });
 
-  it('injects the reload-on-change script when enableSync is true and livePreview is false', () => {
+  it('injects the reload-on-save script when enableSync is true and livePreview is false', () => {
     const integration = localessIntegration({ ...baseOptions, enableSync: true });
     const { injectScript, addMiddleware } = runConfigSetup(integration);
 
     const pageScripts = injectScript.mock.calls.filter(([stage]) => stage === 'page').map(([, code]) => code);
     expect(pageScripts.some(code => code.includes('window.location.reload'))).toBe(true);
     expect(addMiddleware).not.toHaveBeenCalled();
+  });
+
+  describe('enableSync reload script against a simulated Visual Editor', () => {
+    /**
+     * Runs the injected page script with the sync script stubbed out, and returns the
+     * listener it registered plus a reload spy. The import is swapped for a stub because the
+     * real loader needs a browser iframe.
+     */
+    async function runEnableSyncScript() {
+      const { injectScript } = runConfigSetup(localessIntegration({ ...baseOptions, enableSync: true }));
+      const [, code] = injectScript.mock.calls.find(([stage]) => stage === 'page')!;
+      const listeners: Array<{ events: string[] | null; cb: (event: unknown) => void }> = [];
+      const reload = vi.fn();
+      const fakeWindow = {
+        localess: {
+          on: (events: string[], cb: (event: unknown) => void) => listeners.push({ events, cb }),
+          onChange: (cb: (event: unknown) => void) => listeners.push({ events: null, cb }),
+        },
+        location: { reload },
+      };
+      const body = code.replace(/import \{ loadLocalessSync \} from "@localess\/astro";/, '');
+      await new Function('window', 'loadLocalessSync', `return (async () => { ${body}; await Promise.resolve(); })();`)(fakeWindow, () =>
+        Promise.resolve()
+      );
+      await Promise.resolve();
+      const dispatch = (type: string) => {
+        for (const listener of listeners) {
+          if (listener.events === null ? type === 'input' || type === 'change' : listener.events.includes(type)) listener.cb({ type });
+        }
+      };
+      return { dispatch, reload };
+    }
+
+    it('does not reload on the change the editor sends right after connecting', async () => {
+      vi.useFakeTimers();
+      try {
+        const { dispatch, reload } = await runEnableSyncScript();
+
+        dispatch('pong');
+        dispatch('change');
+        dispatch('input');
+        vi.advanceTimersByTime(2000);
+
+        expect(reload).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it.each(['save', 'publish', 'unpublish'])('reloads once, debounced, after %s', async type => {
+      vi.useFakeTimers();
+      try {
+        const { dispatch, reload } = await runEnableSyncScript();
+
+        dispatch(type);
+        dispatch(type);
+        vi.advanceTimersByTime(499);
+        expect(reload).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(1);
+
+        expect(reload).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 
   it('injects the live-preview script and registers middleware when livePreview is true under SSR output', () => {

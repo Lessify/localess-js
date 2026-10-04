@@ -53,8 +53,11 @@ export type LocalessOptions = Omit<LocalessClientOptions, 'fetch' | 'cache'> & {
    */
   customFallbackComponent?: string;
   /**
-   * Enables the default Visual Editor sync tier: on any `input`/`change`/`save`/`publish`/`unpublish`
-   * event, debounce (~500ms) then reload the page. Ignored when `livePreview` is `true`.
+   * Enables the default Visual Editor sync tier: on `save`/`publish`/`unpublish`, debounce (~500ms)
+   * then reload the page. Unsaved `input`/`change` edits are not shown — use `livePreview` for that.
+   * Under static output a reload only shows new content in `astro dev`; a production static build
+   * keeps serving its prerendered HTML, so there this tier provides click-to-select only.
+   * Ignored when `livePreview` is `true`.
    * @default false
    */
   enableSync?: boolean;
