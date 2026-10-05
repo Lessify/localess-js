@@ -410,7 +410,7 @@ localess schema push ./schemas/index.ts --delete -y # sync, skip the deletion co
 
 ## Platform Compatibility Check
 
-The CLI and the Localess platform are released in lockstep. Before each command that talks to the platform, the CLI reads `<origin>/assets/version.json` and blocks the command (exit `1`, before any API call) if the platform's major version differs from the CLI's or the platform is below the command's minimum (currently `4.0.0` for every platform-facing command). `login`, `logout`, and `schema validate` are exempt. The check is skipped silently when no credentials are configured or the version can't be determined (non-2xx, unreachable, malformed, or a 3-second timeout). Set `LOCALESS_SKIP_VERSION_CHECK` to any value to bypass it.
+The CLI and the Localess platform are released in lockstep. Before each command that talks to the platform, the CLI reads `<origin>/assets/version.json` and blocks the command (exit `1`, before any API call) if the platform's major version differs from the CLI's or the platform is below the command's minimum (currently `4.1.0` for every platform-facing command). `login`, `logout`, and `schema validate` are exempt. The check is skipped silently when no credentials are configured or the version can't be determined (non-2xx, unreachable, malformed, or a 3-second timeout). Set `LOCALESS_SKIP_VERSION_CHECK` to any value to bypass it.
 
 ## Update Notifications
 

@@ -38,13 +38,13 @@ export const COMMAND_REQUIREMENTS: Record<string, string | null> = {
   login: null,
   logout: null,
   'schema validate': null,
-  'schema pull': '4.0.0',
-  'schema diff': '4.0.0',
-  'schema push': '4.0.0',
-  'translation pull': '4.0.0',
-  'translation push': '4.0.0',
-  'translation diff': '4.0.0',
-  'type generate': '4.0.0',
+  'schema pull': '4.1.0',
+  'schema diff': '4.1.0',
+  'schema push': '4.1.0',
+  'translation pull': '4.1.0',
+  'translation push': '4.1.0',
+  'translation diff': '4.1.0',
+  'type generate': '4.1.0',
 };
 
 /** Why a command cannot run against the platform it found. */

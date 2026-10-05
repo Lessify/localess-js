@@ -42,6 +42,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- **`@localess/cli`: every platform-facing command now requires platform `4.1.0`.** The translation
+  commands use 4.1.0 APIs (`delete-missing-key` / `delete-missing-value`, the `ids` array in push responses,
+  the stored-values endpoint behind `--raw`); against a 4.0.x platform `translation push` was rejected or
+  failed after writing. The CLI now blocks before any API call instead. Bypass with
+  `LOCALESS_SKIP_VERSION_CHECK=1`.
 - **`@localess/cli`: `translation diff` reports `Only in file` / `Different` / `Only in Localess`** instead of
   `Create` / `Update` / `Stale`, which assumed a push; it refuses a locale the space doesn't have and `--raw` with
   `--draft`, like `pull`. **`translation pull --format nested`** keeps child keys when a key is also a parent and warns

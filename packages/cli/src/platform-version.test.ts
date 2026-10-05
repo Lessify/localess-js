@@ -46,7 +46,7 @@ describe('incompatibilityReason', () => {
     expect(incompatibilityReason('3.0.0', '4.0.0', '3.0.0')).toBe('major-mismatch');
   });
 
-  // Not reachable through the matrix today, since every minimum is 4.0.0 and the major must
+  // Not reachable through the matrix today, since every minimum is 4.1.0 and the major must
   // match — so this guards the rule for when a command's minimum is first raised.
   it('reports a platform below the command minimum', () => {
     expect(incompatibilityReason('4.3.0', '4.1.0', '4.2.0')).toBe('below-minimum');
